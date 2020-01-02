@@ -1,12 +1,15 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
+import Tooltip from 'rc-tooltip';
+
+import TooltipOverlay from 'Components/TooltipOverlay';
 
 const leftSideClasses = 'text-sm text-primary-800 font-600 truncate';
 
 const NumberedList = ({ data, linkLeftOnly }) => {
     // eslint-disable-next-line no-unused-vars
-    const list = data.map(({ text, subText, url, component }, i) => {
+    const list = data.map(({ text, subText, url, component, tooltip }, i) => {
         const className = `flex items-center py-2 px-2 ${
             i !== 0 ? 'border-t border-base-300' : ''
         } ${url ? 'hover:bg-base-200' : ''}`;
@@ -47,9 +50,31 @@ const NumberedList = ({ data, linkLeftOnly }) => {
             );
         }
         return (
-            <li key={text} className={className}>
-                {content}
-            </li>
+            <>
+                {tooltip && (
+                    <li key={text} className={className}>
+                        <Tooltip
+                            placement="top"
+                            overlay={
+                                <TooltipOverlay
+                                    title={tooltip.title}
+                                    body={tooltip.body}
+                                    footer={tooltip.footer}
+                                />
+                            }
+                            mouseLeaveDelay={0}
+                            overlayClassName="opacity-100 max-w-1/3"
+                        >
+                            {content}
+                        </Tooltip>
+                    </li>
+                )}
+                {!tooltip && (
+                    <li key={text} className={className}>
+                        {content}
+                    </li>
+                )}
+            </>
         );
     });
     return <ul className="list-reset leading-loose">{list}</ul>;

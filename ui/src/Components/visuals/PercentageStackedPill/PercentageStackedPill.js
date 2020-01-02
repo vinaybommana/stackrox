@@ -1,20 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { colorTypes, defaultColorType } from 'constants/visuals/colors';
-
 import Tooltip from 'rc-tooltip';
 
-const TooltipOverlay = ({ title, body }) => {
-    if (!title || !body) return null;
-    return (
-        <div className="">
-            <h2 className="border-b border-primary-400 mb-1 pb-1 graph-hint-title text-sm">
-                {title}
-            </h2>
-            <div className="graph-hint-body py-1 text-xs">{body}</div>
-        </div>
-    );
-};
+import TooltipOverlay from 'Components/TooltipOverlay';
+import { colorTypes, defaultColorType } from 'constants/visuals/colors';
 
 const getBackgroundColor = colorType => {
     const color = colorTypes.find(datum => datum === colorType);

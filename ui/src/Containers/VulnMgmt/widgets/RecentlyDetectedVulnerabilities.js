@@ -22,10 +22,12 @@ export const RECENTLY_DETECTED_VULNERABILITIES = gql`
             cve
             cvss
             scoreVersion
+            deploymentCount
             imageCount
             isFixable
             envImpact
             lastScanned
+            summary
         }
     }
 `;
