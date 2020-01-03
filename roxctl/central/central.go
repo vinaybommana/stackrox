@@ -7,6 +7,7 @@ import (
 	"github.com/stackrox/rox/roxctl/central/deploy"
 	"github.com/stackrox/rox/roxctl/central/license"
 	"github.com/stackrox/rox/roxctl/central/userpki"
+	"github.com/stackrox/rox/roxctl/central/whoami"
 )
 
 // Command defines the central command tree
@@ -26,6 +27,7 @@ func Command() *cobra.Command {
 		debug.Command(),
 		license.Command(),
 		userpki.Command(),
+		whoami.Command(),
 	)
 	return c
 }
