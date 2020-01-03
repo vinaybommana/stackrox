@@ -1,4 +1,4 @@
-package componenttocve
+package dackbox
 
 import (
 	"github.com/gogo/protobuf/proto"
@@ -8,27 +8,27 @@ import (
 )
 
 var (
-	// Bucket stores the component to vulnerability edges.
-	Bucket = []byte("comp_to_vuln")
+	// Bucket stores the image to component edges.
+	Bucket = []byte("image_to_comp")
 
-	// Reader reads storage.CVEs directly from the store.
+	// Reader reads storage.ImageComponentEdges directly from the store.
 	Reader = crud.NewReader(
 		crud.WithAllocFunction(alloc),
 	)
 
-	// Upserter writes storage.CVEs directly to the store.
+	// Upserter writes storage.ImageComponentEdges directly to the store.
 	Upserter = crud.NewUpserter(
 		crud.WithKeyFunction(crud.PrefixKey(Bucket, keyFunc)),
 	)
 
-	// Deleter deletes vulns from the store.
+	// Deleter deletes the edges from the store.
 	Deleter = crud.NewDeleter(
 		crud.GCAllChildren(),
 	)
 )
 
 func init() {
-	globaldb.RegisterBucket(Bucket, "Component Vuln Edge")
+	globaldb.RegisterBucket(Bucket, "Image Component Edge")
 }
 
 func keyFunc(msg proto.Message) []byte {
@@ -36,5 +36,5 @@ func keyFunc(msg proto.Message) []byte {
 }
 
 func alloc() proto.Message {
-	return &storage.ComponentCVEEdge{}
+	return &storage.ImageComponentEdge{}
 }
