@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/facebookincubator/nvdtools/cvefeed/nvd/schema"
 	protoTypes "github.com/gogo/protobuf/types"
 	"github.com/graph-gophers/graphql-go"
 	"github.com/pkg/errors"
-	"github.com/stackrox/k8s-istio-cve-pusher/nvd"
 	clusterMappings "github.com/stackrox/rox/central/cluster/index/mappings"
 	"github.com/stackrox/rox/central/cve/converter"
 	"github.com/stackrox/rox/central/graphql/resolvers/loaders"
@@ -222,7 +222,7 @@ func vulnerabilities(ctx context.Context, root *Resolver, query *v1.Query) ([]*E
 
 // k8sIstioVulnerabilities returns the k8s/istio vulnerabilities that match the input query.
 func k8sIstioVulnerabilities(ctx context.Context, root *Resolver, query *v1.Query, ct converter.CveType) ([]*EmbeddedVulnerabilityResolver, error) {
-	var cves []*nvd.CVEEntry
+	var cves []*schema.NVDCVEFeedJSON10DefCVEItem
 	_, containsUnmatchableFields := search.FilterQueryWithMap(query, search.CombineOptionsMaps(clusterMappings.OptionsMap, mappings.VulnerabilityOptionsMap))
 	if containsUnmatchableFields {
 		return nil, nil
@@ -240,17 +240,17 @@ func k8sIstioVulnerabilities(ctx context.Context, root *Resolver, query *v1.Quer
 		return nil, err
 	}
 
-	var checkImpact func(context.Context, *storage.Cluster, *nvd.CVEEntry) (bool, error)
+	var checkImpact func(context.Context, *storage.Cluster, *schema.NVDCVEFeedJSON10DefCVEItem) (bool, error)
 
 	if ct == converter.K8s {
 		cves = root.k8sIstioCVEManager.GetK8sCves()
-		checkImpact = func(ctx context.Context, cluster *storage.Cluster, cve *nvd.CVEEntry) (bool, error) {
-			ok := isClusterAffectedByK8sCVE(ctx, cluster, cve)
+		checkImpact = func(ctx context.Context, cluster *storage.Cluster, cve *schema.NVDCVEFeedJSON10DefCVEItem) (bool, error) {
+			ok := isClusterAffectedByK8sCVE(cluster, cve)
 			return ok, nil
 		}
 	} else if ct == converter.Istio {
 		cves = root.k8sIstioCVEManager.GetIstioCves()
-		checkImpact = func(ctx context.Context, cluster *storage.Cluster, cve *nvd.CVEEntry) (bool, error) {
+		checkImpact = func(ctx context.Context, cluster *storage.Cluster, cve *schema.NVDCVEFeedJSON10DefCVEItem) (bool, error) {
 			ok, err := root.isClusterAffectedByIstioCVE(ctx, cluster, cve)
 			return ok, err
 		}
@@ -452,29 +452,29 @@ func (evr *EmbeddedVulnerabilityResolver) DeploymentCount(ctx context.Context, a
 	return deploymentLoader.CountFromQuery(ctx, search.ConjunctionQuery(deploymentBaseQuery, query))
 }
 
-func (resolver *Resolver) getNvdCVE(id string) *nvd.CVEEntry {
+func (resolver *Resolver) getNvdCVE(id string) *schema.NVDCVEFeedJSON10DefCVEItem {
 	for _, cve := range resolver.k8sIstioCVEManager.GetK8sAndIstioCves() {
-		if cve.CVE.Metadata.CVEID == id {
+		if cve.CVE.CVEDataMeta.ID == id {
 			return cve
 		}
 	}
 	return nil
 }
 
-func (resolver *Resolver) getAffectedClusterPercentage(ctx context.Context, cve *nvd.CVEEntry, ct converter.CveType) (float64, error) {
+func (resolver *Resolver) getAffectedClusterPercentage(ctx context.Context, cve *schema.NVDCVEFeedJSON10DefCVEItem, ct converter.CveType) (float64, error) {
 	clusters, err := resolver.ClusterDataStore.GetClusters(ctx)
 	if err != nil {
 		return 0, err
 	}
 
-	var checkImpact func(context.Context, *storage.Cluster, *nvd.CVEEntry) (bool, error)
+	var checkImpact func(context.Context, *storage.Cluster, *schema.NVDCVEFeedJSON10DefCVEItem) (bool, error)
 
 	if ct == converter.K8s {
-		checkImpact = func(ctx context.Context, cluster *storage.Cluster, entry *nvd.CVEEntry) (bool, error) {
-			return isClusterAffectedByK8sCVE(ctx, cluster, cve), nil
+		checkImpact = func(ctx context.Context, cluster *storage.Cluster, entry *schema.NVDCVEFeedJSON10DefCVEItem) (bool, error) {
+			return isClusterAffectedByK8sCVE(cluster, cve), nil
 		}
 	} else if ct == converter.Istio {
-		checkImpact = func(ctx context.Context, cluster *storage.Cluster, entry *nvd.CVEEntry) (bool, error) {
+		checkImpact = func(ctx context.Context, cluster *storage.Cluster, entry *schema.NVDCVEFeedJSON10DefCVEItem) (bool, error) {
 			ok, err := resolver.isClusterAffectedByIstioCVE(ctx, cluster, cve)
 			return ok, err
 		}

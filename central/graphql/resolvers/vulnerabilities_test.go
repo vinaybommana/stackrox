@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/facebookincubator/nvdtools/cvefeed/nvd/schema"
 	"github.com/golang/mock/gomock"
-	"github.com/stackrox/k8s-istio-cve-pusher/nvd"
 	clusterMocks "github.com/stackrox/rox/central/cluster/datastore/mocks"
 	"github.com/stackrox/rox/central/cve/converter"
 	imageMocks "github.com/stackrox/rox/central/image/datastore/mocks"
@@ -47,20 +47,20 @@ func TestIfSpecificVersionCVEAffectsCluster(t *testing.T) {
 		},
 	}
 
-	cve1 := nvd.CVEEntry{
-		CVE: nvd.CVE{
-			Metadata: nvd.CVEMetadata{
-				CVEID: "CVE-1",
+	cve1 := &schema.NVDCVEFeedJSON10DefCVEItem{
+		CVE: &schema.CVEJSON40{
+			CVEDataMeta: &schema.CVEJSON40CVEDataMeta{
+				ID: "CVE-1",
 			},
 		},
-		Configurations: nvd.Configuration{
-			Nodes: []nvd.Node{
+		Configurations: &schema.NVDCVEFeedJSON10DefConfigurations{
+			Nodes: []*schema.NVDCVEFeedJSON10DefNode{
 				{
 					Operator: "OR",
-					CPEMatch: []nvd.CPEMatch{
+					CPEMatch: []*schema.NVDCVEFeedJSON10DefCPEMatch{
 						{
 							Vulnerable: true,
-							CPE23Uri:   "cpe:2.3:a:kubernetes:kubernetes:1.15.3:*:*:*:*:*:*:*",
+							Cpe23Uri:   "cpe:2.3:a:kubernetes:kubernetes:1.15.3:*:*:*:*:*:*:*",
 						},
 					},
 				},
@@ -68,20 +68,20 @@ func TestIfSpecificVersionCVEAffectsCluster(t *testing.T) {
 		},
 	}
 
-	cve2 := nvd.CVEEntry{
-		CVE: nvd.CVE{
-			Metadata: nvd.CVEMetadata{
-				CVEID: "CVE-2",
+	cve2 := &schema.NVDCVEFeedJSON10DefCVEItem{
+		CVE: &schema.CVEJSON40{
+			CVEDataMeta: &schema.CVEJSON40CVEDataMeta{
+				ID: "CVE-2",
 			},
 		},
-		Configurations: nvd.Configuration{
-			Nodes: []nvd.Node{
+		Configurations: &schema.NVDCVEFeedJSON10DefConfigurations{
+			Nodes: []*schema.NVDCVEFeedJSON10DefNode{
 				{
 					Operator: "OR",
-					CPEMatch: []nvd.CPEMatch{
+					CPEMatch: []*schema.NVDCVEFeedJSON10DefCPEMatch{
 						{
 							Vulnerable: true,
-							CPE23Uri:   "cpe:2.3:a:kubernetes:kubernetes:1.14.3:*:*:*:*:*:*:*",
+							Cpe23Uri:   "cpe:2.3:a:kubernetes:kubernetes:1.14.3:*:*:*:*:*:*:*",
 						},
 					},
 				},
@@ -89,20 +89,20 @@ func TestIfSpecificVersionCVEAffectsCluster(t *testing.T) {
 		},
 	}
 
-	cve3 := nvd.CVEEntry{
-		CVE: nvd.CVE{
-			Metadata: nvd.CVEMetadata{
-				CVEID: "CVE-3",
+	cve3 := &schema.NVDCVEFeedJSON10DefCVEItem{
+		CVE: &schema.CVEJSON40{
+			CVEDataMeta: &schema.CVEJSON40CVEDataMeta{
+				ID: "CVE-3",
 			},
 		},
-		Configurations: nvd.Configuration{
-			Nodes: []nvd.Node{
+		Configurations: &schema.NVDCVEFeedJSON10DefConfigurations{
+			Nodes: []*schema.NVDCVEFeedJSON10DefNode{
 				{
 					Operator: "OR",
-					CPEMatch: []nvd.CPEMatch{
+					CPEMatch: []*schema.NVDCVEFeedJSON10DefCPEMatch{
 						{
 							Vulnerable: true,
-							CPE23Uri:   "cpe:2.3:a:kubernetes:kubernetes:1.15.3:alpha1:*:*:*:*:*:*",
+							Cpe23Uri:   "cpe:2.3:a:kubernetes:kubernetes:1.15.3:alpha1:*:*:*:*:*:*",
 						},
 					},
 				},
@@ -110,35 +110,35 @@ func TestIfSpecificVersionCVEAffectsCluster(t *testing.T) {
 		},
 	}
 
-	ret := isClusterAffectedByK8sCVE(context.Background(), cluster, &cve1)
+	ret := isClusterAffectedByK8sCVE(cluster, cve1)
 	assert.Equal(t, true, ret)
-	ret = isClusterAffectedByK8sCVE(context.Background(), cluster, &cve2)
+	ret = isClusterAffectedByK8sCVE(cluster, cve2)
 	assert.Equal(t, false, ret)
-	ret = isClusterAffectedByK8sCVE(context.Background(), cluster, &cve3)
+	ret = isClusterAffectedByK8sCVE(cluster, cve3)
 	assert.Equal(t, false, ret)
 
 	cluster.Status.OrchestratorMetadata.Version = "v1.15.3+build1"
-	ret = isClusterAffectedByK8sCVE(context.Background(), cluster, &cve1)
+	ret = isClusterAffectedByK8sCVE(cluster, cve1)
 	assert.Equal(t, true, ret)
-	ret = isClusterAffectedByK8sCVE(context.Background(), cluster, &cve2)
+	ret = isClusterAffectedByK8sCVE(cluster, cve2)
 	assert.Equal(t, false, ret)
-	ret = isClusterAffectedByK8sCVE(context.Background(), cluster, &cve3)
+	ret = isClusterAffectedByK8sCVE(cluster, cve3)
 	assert.Equal(t, false, ret)
 
 	cluster.Status.OrchestratorMetadata.Version = "v1.15.3-alpha1"
-	ret = isClusterAffectedByK8sCVE(context.Background(), cluster, &cve1)
+	ret = isClusterAffectedByK8sCVE(cluster, cve1)
 	assert.Equal(t, true, ret)
-	ret = isClusterAffectedByK8sCVE(context.Background(), cluster, &cve2)
+	ret = isClusterAffectedByK8sCVE(cluster, cve2)
 	assert.Equal(t, false, ret)
-	ret = isClusterAffectedByK8sCVE(context.Background(), cluster, &cve3)
+	ret = isClusterAffectedByK8sCVE(cluster, cve3)
 	assert.Equal(t, true, ret)
 
 	cluster.Status.OrchestratorMetadata.Version = "v1.15.3-alpha1+build1"
-	ret = isClusterAffectedByK8sCVE(context.Background(), cluster, &cve1)
+	ret = isClusterAffectedByK8sCVE(cluster, cve1)
 	assert.Equal(t, true, ret)
-	ret = isClusterAffectedByK8sCVE(context.Background(), cluster, &cve2)
+	ret = isClusterAffectedByK8sCVE(cluster, cve2)
 	assert.Equal(t, false, ret)
-	ret = isClusterAffectedByK8sCVE(context.Background(), cluster, &cve3)
+	ret = isClusterAffectedByK8sCVE(cluster, cve3)
 	assert.Equal(t, true, ret)
 }
 
@@ -153,26 +153,26 @@ func TestMultipleVersionCVEAffectsCluster(t *testing.T) {
 		},
 	}
 
-	cve1 := nvd.CVEEntry{
-		CVE: nvd.CVE{
-			Metadata: nvd.CVEMetadata{
-				CVEID: "CVE-1",
+	cve1 := &schema.NVDCVEFeedJSON10DefCVEItem{
+		CVE: &schema.CVEJSON40{
+			CVEDataMeta: &schema.CVEJSON40CVEDataMeta{
+				ID: "CVE-1",
 			},
 		},
-		Configurations: nvd.Configuration{
-			Nodes: []nvd.Node{
+		Configurations: &schema.NVDCVEFeedJSON10DefConfigurations{
+			Nodes: []*schema.NVDCVEFeedJSON10DefNode{
 				{
 					Operator: "OR",
-					CPEMatch: []nvd.CPEMatch{
+					CPEMatch: []*schema.NVDCVEFeedJSON10DefCPEMatch{
 						{
 							Vulnerable:            true,
-							CPE23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
+							Cpe23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
 							VersionStartIncluding: "1.10.1",
 							VersionEndExcluding:   "1.10.9",
 						},
 						{
 							Vulnerable:            true,
-							CPE23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
+							Cpe23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
 							VersionStartIncluding: "1.11.1",
 							VersionEndExcluding:   "1.11.9",
 						},
@@ -182,26 +182,26 @@ func TestMultipleVersionCVEAffectsCluster(t *testing.T) {
 		},
 	}
 
-	cve2 := nvd.CVEEntry{
-		CVE: nvd.CVE{
-			Metadata: nvd.CVEMetadata{
-				CVEID: "CVE-2",
+	cve2 := &schema.NVDCVEFeedJSON10DefCVEItem{
+		CVE: &schema.CVEJSON40{
+			CVEDataMeta: &schema.CVEJSON40CVEDataMeta{
+				ID: "CVE-2",
 			},
 		},
-		Configurations: nvd.Configuration{
-			Nodes: []nvd.Node{
+		Configurations: &schema.NVDCVEFeedJSON10DefConfigurations{
+			Nodes: []*schema.NVDCVEFeedJSON10DefNode{
 				{
 					Operator: "OR",
-					CPEMatch: []nvd.CPEMatch{
+					CPEMatch: []*schema.NVDCVEFeedJSON10DefCPEMatch{
 						{
 							Vulnerable:            true,
-							CPE23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
+							Cpe23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
 							VersionStartIncluding: "1.14.1",
 							VersionEndExcluding:   "1.14.9",
 						},
 						{
 							Vulnerable:            true,
-							CPE23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
+							Cpe23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
 							VersionStartIncluding: "1.15.1",
 							VersionEndExcluding:   "1.15.9",
 						},
@@ -211,26 +211,26 @@ func TestMultipleVersionCVEAffectsCluster(t *testing.T) {
 		},
 	}
 
-	cve3 := nvd.CVEEntry{
-		CVE: nvd.CVE{
-			Metadata: nvd.CVEMetadata{
-				CVEID: "CVE-3",
+	cve3 := &schema.NVDCVEFeedJSON10DefCVEItem{
+		CVE: &schema.CVEJSON40{
+			CVEDataMeta: &schema.CVEJSON40CVEDataMeta{
+				ID: "CVE-3",
 			},
 		},
-		Configurations: nvd.Configuration{
-			Nodes: []nvd.Node{
+		Configurations: &schema.NVDCVEFeedJSON10DefConfigurations{
+			Nodes: []*schema.NVDCVEFeedJSON10DefNode{
 				{
 					Operator: "OR",
-					CPEMatch: []nvd.CPEMatch{
+					CPEMatch: []*schema.NVDCVEFeedJSON10DefCPEMatch{
 						{
 							Vulnerable:            true,
-							CPE23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
+							Cpe23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
 							VersionStartIncluding: "1.16.5",
 							VersionEndIncluding:   "1.16.9",
 						},
 						{
 							Vulnerable:            true,
-							CPE23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
+							Cpe23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
 							VersionStartIncluding: "1.17.1",
 							VersionEndIncluding:   "1.17.9",
 						},
@@ -240,39 +240,39 @@ func TestMultipleVersionCVEAffectsCluster(t *testing.T) {
 		},
 	}
 
-	ret := isClusterAffectedByK8sCVE(context.Background(), cluster, &cve1)
+	ret := isClusterAffectedByK8sCVE(cluster, cve1)
 	assert.Equal(t, false, ret)
 
-	ret = isClusterAffectedByK8sCVE(context.Background(), cluster, &cve2)
+	ret = isClusterAffectedByK8sCVE(cluster, cve2)
 	assert.Equal(t, true, ret)
 
 	cluster.Status.OrchestratorMetadata.Version = "v1.15.1-beta1"
-	ret = isClusterAffectedByK8sCVE(context.Background(), cluster, &cve1)
+	ret = isClusterAffectedByK8sCVE(cluster, cve1)
 	assert.Equal(t, false, ret)
 
-	ret = isClusterAffectedByK8sCVE(context.Background(), cluster, &cve2)
+	ret = isClusterAffectedByK8sCVE(cluster, cve2)
 	assert.Equal(t, true, ret)
 
 	cluster.Status.OrchestratorMetadata.Version = "v1.15.9"
-	ret = isClusterAffectedByK8sCVE(context.Background(), cluster, &cve1)
+	ret = isClusterAffectedByK8sCVE(cluster, cve1)
 	assert.Equal(t, false, ret)
 
-	ret = isClusterAffectedByK8sCVE(context.Background(), cluster, &cve2)
+	ret = isClusterAffectedByK8sCVE(cluster, cve2)
 	assert.Equal(t, false, ret)
 
 	cluster.Status.OrchestratorMetadata.Version = "v1.15.1"
-	ret = isClusterAffectedByK8sCVE(context.Background(), cluster, &cve1)
+	ret = isClusterAffectedByK8sCVE(cluster, cve1)
 	assert.Equal(t, false, ret)
 
-	ret = isClusterAffectedByK8sCVE(context.Background(), cluster, &cve2)
+	ret = isClusterAffectedByK8sCVE(cluster, cve2)
 	assert.Equal(t, true, ret)
 
 	cluster.Status.OrchestratorMetadata.Version = "v1.16.4"
-	ret = isClusterAffectedByK8sCVE(context.Background(), cluster, &cve3)
+	ret = isClusterAffectedByK8sCVE(cluster, cve3)
 	assert.Equal(t, false, ret)
 
 	cluster.Status.OrchestratorMetadata.Version = "v1.17.4"
-	ret = isClusterAffectedByK8sCVE(context.Background(), cluster, &cve3)
+	ret = isClusterAffectedByK8sCVE(cluster, cve3)
 	assert.Equal(t, true, ret)
 }
 
@@ -286,36 +286,36 @@ func TestSingleAndMultipleVersionCVEAffectsCluster(t *testing.T) {
 			},
 		},
 	}
-	cve := nvd.CVEEntry{
-		CVE: nvd.CVE{
-			Metadata: nvd.CVEMetadata{
-				CVEID: "CVE-1",
+	cve := &schema.NVDCVEFeedJSON10DefCVEItem{
+		CVE: &schema.CVEJSON40{
+			CVEDataMeta: &schema.CVEJSON40CVEDataMeta{
+				ID: "CVE-1",
 			},
 		},
-		Configurations: nvd.Configuration{
-			Nodes: []nvd.Node{
+		Configurations: &schema.NVDCVEFeedJSON10DefConfigurations{
+			Nodes: []*schema.NVDCVEFeedJSON10DefNode{
 				{
 					Operator: "OR",
-					CPEMatch: []nvd.CPEMatch{
+					CPEMatch: []*schema.NVDCVEFeedJSON10DefCPEMatch{
 						{
 							Vulnerable:            true,
-							CPE23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
+							Cpe23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
 							VersionStartIncluding: "1.10.1",
 							VersionEndExcluding:   "1.10.9",
 						},
 						{
 							Vulnerable:            true,
-							CPE23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
+							Cpe23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
 							VersionStartIncluding: "1.11.1",
 							VersionEndExcluding:   "1.11.9",
 						},
 						{
 							Vulnerable: true,
-							CPE23Uri:   "cpe:2.3:a:kubernetes:kubernetes:1.10.3:alpha1:*:*:*:*:*:*",
+							Cpe23Uri:   "cpe:2.3:a:kubernetes:kubernetes:1.10.3:alpha1:*:*:*:*:*:*",
 						},
 						{
 							Vulnerable: true,
-							CPE23Uri:   "cpe:2.3:a:kubernetes:kubernetes:1.10.3:beta1:*:*:*:*:*:*",
+							Cpe23Uri:   "cpe:2.3:a:kubernetes:kubernetes:1.10.3:beta1:*:*:*:*:*:*",
 						},
 					},
 				},
@@ -323,19 +323,19 @@ func TestSingleAndMultipleVersionCVEAffectsCluster(t *testing.T) {
 		},
 	}
 
-	ret := isClusterAffectedByK8sCVE(context.Background(), cluster, &cve)
+	ret := isClusterAffectedByK8sCVE(cluster, cve)
 	assert.Equal(t, true, ret)
 
 	cluster.Status.OrchestratorMetadata.Version = "v1.10.3-alpha1"
-	ret = isClusterAffectedByK8sCVE(context.Background(), cluster, &cve)
+	ret = isClusterAffectedByK8sCVE(cluster, cve)
 	assert.Equal(t, true, ret)
 
 	cluster.Status.OrchestratorMetadata.Version = "v1.10.3-beta1"
-	ret = isClusterAffectedByK8sCVE(context.Background(), cluster, &cve)
+	ret = isClusterAffectedByK8sCVE(cluster, cve)
 	assert.Equal(t, true, ret)
 
 	cluster.Status.OrchestratorMetadata.Version = "v1.10.3-rc1"
-	ret = isClusterAffectedByK8sCVE(context.Background(), cluster, &cve)
+	ret = isClusterAffectedByK8sCVE(cluster, cve)
 	assert.Equal(t, true, ret)
 }
 
@@ -349,21 +349,21 @@ func TestCountCVEsAffectsCluster(t *testing.T) {
 			},
 		},
 	}
-	cves := []nvd.CVEEntry{
+	cves := []*schema.NVDCVEFeedJSON10DefCVEItem{
 		{
-			CVE: nvd.CVE{
-				Metadata: nvd.CVEMetadata{
-					CVEID: "CVE-1",
+			CVE: &schema.CVEJSON40{
+				CVEDataMeta: &schema.CVEJSON40CVEDataMeta{
+					ID: "CVE-1",
 				},
 			},
-			Configurations: nvd.Configuration{
-				Nodes: []nvd.Node{
+			Configurations: &schema.NVDCVEFeedJSON10DefConfigurations{
+				Nodes: []*schema.NVDCVEFeedJSON10DefNode{
 					{
 						Operator: "OR",
-						CPEMatch: []nvd.CPEMatch{
+						CPEMatch: []*schema.NVDCVEFeedJSON10DefCPEMatch{
 							{
 								Vulnerable:            true,
-								CPE23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
+								Cpe23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
 								VersionStartIncluding: "1.10.1",
 								VersionEndExcluding:   "1.10.9",
 							},
@@ -373,19 +373,19 @@ func TestCountCVEsAffectsCluster(t *testing.T) {
 			},
 		},
 		{
-			CVE: nvd.CVE{
-				Metadata: nvd.CVEMetadata{
-					CVEID: "CVE-2",
+			CVE: &schema.CVEJSON40{
+				CVEDataMeta: &schema.CVEJSON40CVEDataMeta{
+					ID: "CVE-2",
 				},
 			},
-			Configurations: nvd.Configuration{
-				Nodes: []nvd.Node{
+			Configurations: &schema.NVDCVEFeedJSON10DefConfigurations{
+				Nodes: []*schema.NVDCVEFeedJSON10DefNode{
 					{
 						Operator: "OR",
-						CPEMatch: []nvd.CPEMatch{
+						CPEMatch: []*schema.NVDCVEFeedJSON10DefCPEMatch{
 							{
 								Vulnerable: true,
-								CPE23Uri:   "cpe:2.3:a:kubernetes:kubernetes:1.10.6:*:*:*:*:*:*:*",
+								Cpe23Uri:   "cpe:2.3:a:kubernetes:kubernetes:1.10.6:*:*:*:*:*:*:*",
 							},
 						},
 					},
@@ -393,19 +393,19 @@ func TestCountCVEsAffectsCluster(t *testing.T) {
 			},
 		},
 		{
-			CVE: nvd.CVE{
-				Metadata: nvd.CVEMetadata{
-					CVEID: "CVE-3",
+			CVE: &schema.CVEJSON40{
+				CVEDataMeta: &schema.CVEJSON40CVEDataMeta{
+					ID: "CVE-3",
 				},
 			},
-			Configurations: nvd.Configuration{
-				Nodes: []nvd.Node{
+			Configurations: &schema.NVDCVEFeedJSON10DefConfigurations{
+				Nodes: []*schema.NVDCVEFeedJSON10DefNode{
 					{
 						Operator: "OR",
-						CPEMatch: []nvd.CPEMatch{
+						CPEMatch: []*schema.NVDCVEFeedJSON10DefCPEMatch{
 							{
 								Vulnerable:            true,
-								CPE23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
+								Cpe23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
 								VersionStartIncluding: "1.10.3",
 								VersionEndIncluding:   "1.10.7",
 							},
@@ -415,19 +415,19 @@ func TestCountCVEsAffectsCluster(t *testing.T) {
 			},
 		},
 		{
-			CVE: nvd.CVE{
-				Metadata: nvd.CVEMetadata{
-					CVEID: "CVE-4",
+			CVE: &schema.CVEJSON40{
+				CVEDataMeta: &schema.CVEJSON40CVEDataMeta{
+					ID: "CVE-4",
 				},
 			},
-			Configurations: nvd.Configuration{
-				Nodes: []nvd.Node{
+			Configurations: &schema.NVDCVEFeedJSON10DefConfigurations{
+				Nodes: []*schema.NVDCVEFeedJSON10DefNode{
 					{
 						Operator: "OR",
-						CPEMatch: []nvd.CPEMatch{
+						CPEMatch: []*schema.NVDCVEFeedJSON10DefCPEMatch{
 							{
 								Vulnerable:            true,
-								CPE23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
+								Cpe23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
 								VersionStartIncluding: "1.11.3",
 								VersionEndIncluding:   "1.11.7",
 							},
@@ -440,10 +440,10 @@ func TestCountCVEsAffectsCluster(t *testing.T) {
 
 	var countAffectedClusters, countFixableCVEs int
 	for _, cve := range cves {
-		if isClusterAffectedByK8sCVE(context.Background(), cluster, &cve) {
+		if isClusterAffectedByK8sCVE(cluster, cve) {
 			countAffectedClusters++
 		}
-		if isK8sCVEFixable(&cve) {
+		if isK8sCVEFixable(cve) {
 			countFixableCVEs++
 		}
 	}
@@ -462,33 +462,33 @@ func TestNonK8sCPEMatch(t *testing.T) {
 		},
 	}
 
-	cves := []nvd.CVEEntry{
+	cves := []*schema.NVDCVEFeedJSON10DefCVEItem{
 		{
-			CVE: nvd.CVE{
-				Metadata: nvd.CVEMetadata{
-					CVEID: "CVE-2019-1",
+			CVE: &schema.CVEJSON40{
+				CVEDataMeta: &schema.CVEJSON40CVEDataMeta{
+					ID: "CVE-2019-1",
 				},
 			},
-			Configurations: nvd.Configuration{
-				Nodes: []nvd.Node{
+			Configurations: &schema.NVDCVEFeedJSON10DefConfigurations{
+				Nodes: []*schema.NVDCVEFeedJSON10DefNode{
 					{
 						Operator: "OR",
-						CPEMatch: []nvd.CPEMatch{
+						CPEMatch: []*schema.NVDCVEFeedJSON10DefCPEMatch{
 							{
 								Vulnerable:            true,
-								CPE23Uri:              "cpe:2.3:a:vendorfoo:projectbar:*:*:*:*:*:*:*:*",
+								Cpe23Uri:              "cpe:2.3:a:vendorfoo:projectbar:*:*:*:*:*:*:*:*",
 								VersionStartIncluding: "1.10.1",
 								VersionEndExcluding:   "1.10.9",
 							},
 							{
 								Vulnerable:            true,
-								CPE23Uri:              "cpe:2.3:a:vendorfoo:projectbar:*:*:*:*:*:*:*:*",
+								Cpe23Uri:              "cpe:2.3:a:vendorfoo:projectbar:*:*:*:*:*:*:*:*",
 								VersionStartIncluding: "1.11.1",
 								VersionEndExcluding:   "1.11.9",
 							},
 							{
 								Vulnerable: true,
-								CPE23Uri:   "cpe:2.3:a:vendorfoo:projectbar:1.13.1:*:*:*:*:*:*:*",
+								Cpe23Uri:   "cpe:2.3:a:vendorfoo:projectbar:1.13.1:*:*:*:*:*:*:*",
 							},
 						},
 					},
@@ -496,46 +496,46 @@ func TestNonK8sCPEMatch(t *testing.T) {
 			},
 		},
 		{
-			CVE: nvd.CVE{
-				Metadata: nvd.CVEMetadata{
-					CVEID: "CVE-2019-2",
+			CVE: &schema.CVEJSON40{
+				CVEDataMeta: &schema.CVEJSON40CVEDataMeta{
+					ID: "CVE-2019-2",
 				},
 			},
-			Configurations: nvd.Configuration{
-				Nodes: []nvd.Node{
+			Configurations: &schema.NVDCVEFeedJSON10DefConfigurations{
+				Nodes: []*schema.NVDCVEFeedJSON10DefNode{
 					{
 						Operator: "OR",
-						CPEMatch: []nvd.CPEMatch{
+						CPEMatch: []*schema.NVDCVEFeedJSON10DefCPEMatch{
 							{
 								Vulnerable:            true,
-								CPE23Uri:              "cpe:2.3:a:vendorfoo:projectbar:*:*:*:*:*:*:*:*",
+								Cpe23Uri:              "cpe:2.3:a:vendorfoo:projectbar:*:*:*:*:*:*:*:*",
 								VersionStartIncluding: "1.10.1",
 								VersionEndExcluding:   "1.10.9",
 							},
 							{
 								Vulnerable:            true,
-								CPE23Uri:              "cpe:2.3:a:vendorfoo:projectbar:*:*:*:*:*:*:*:*",
+								Cpe23Uri:              "cpe:2.3:a:vendorfoo:projectbar:*:*:*:*:*:*:*:*",
 								VersionStartIncluding: "1.11.1",
 								VersionEndExcluding:   "1.11.9",
 							},
 							{
 								Vulnerable: true,
-								CPE23Uri:   "cpe:2.3:a:vendorfoo:projectbar:1.13.1:*:*:*:*:*:*:*",
+								Cpe23Uri:   "cpe:2.3:a:vendorfoo:projectbar:1.13.1:*:*:*:*:*:*:*",
 							},
 						},
 					},
 					{
 						Operator: "OR",
-						CPEMatch: []nvd.CPEMatch{
+						CPEMatch: []*schema.NVDCVEFeedJSON10DefCPEMatch{
 							{
 								Vulnerable:            true,
-								CPE23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
+								Cpe23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
 								VersionStartIncluding: "1.10.1",
 								VersionEndExcluding:   "1.10.9",
 							},
 							{
 								Vulnerable: true,
-								CPE23Uri:   "cpe:2.3:a:kubernetes:kubernetes:1.13.1:*:*:*:*:*:*:*",
+								Cpe23Uri:   "cpe:2.3:a:kubernetes:kubernetes:1.13.1:*:*:*:*:*:*:*",
 							},
 						},
 					},
@@ -544,28 +544,28 @@ func TestNonK8sCPEMatch(t *testing.T) {
 		},
 	}
 
-	ret := isClusterAffectedByK8sCVE(context.Background(), cluster, &cves[0])
+	ret := isClusterAffectedByK8sCVE(cluster, cves[0])
 	assert.Equal(t, false, ret)
-	ret = isClusterAffectedByK8sCVE(context.Background(), cluster, &cves[1])
+	ret = isClusterAffectedByK8sCVE(cluster, cves[1])
 	assert.Equal(t, true, ret)
 }
 
 func TestFixableCVEs(t *testing.T) {
-	cves := []nvd.CVEEntry{
+	cves := []*schema.NVDCVEFeedJSON10DefCVEItem{
 		{
-			CVE: nvd.CVE{
-				Metadata: nvd.CVEMetadata{
-					CVEID: "CVE-2019-1",
+			CVE: &schema.CVEJSON40{
+				CVEDataMeta: &schema.CVEJSON40CVEDataMeta{
+					ID: "CVE-2019-1",
 				},
 			},
-			Configurations: nvd.Configuration{
-				Nodes: []nvd.Node{
+			Configurations: &schema.NVDCVEFeedJSON10DefConfigurations{
+				Nodes: []*schema.NVDCVEFeedJSON10DefNode{
 					{
 						Operator: "OR",
-						CPEMatch: []nvd.CPEMatch{
+						CPEMatch: []*schema.NVDCVEFeedJSON10DefCPEMatch{
 							{
 								Vulnerable:            true,
-								CPE23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
+								Cpe23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
 								VersionStartIncluding: "1.10.1",
 								VersionEndExcluding:   "1.10.9",
 							},
@@ -575,19 +575,19 @@ func TestFixableCVEs(t *testing.T) {
 			},
 		},
 		{
-			CVE: nvd.CVE{
-				Metadata: nvd.CVEMetadata{
-					CVEID: "CVE-2",
+			CVE: &schema.CVEJSON40{
+				CVEDataMeta: &schema.CVEJSON40CVEDataMeta{
+					ID: "CVE-2",
 				},
 			},
-			Configurations: nvd.Configuration{
-				Nodes: []nvd.Node{
+			Configurations: &schema.NVDCVEFeedJSON10DefConfigurations{
+				Nodes: []*schema.NVDCVEFeedJSON10DefNode{
 					{
 						Operator: "OR",
-						CPEMatch: []nvd.CPEMatch{
+						CPEMatch: []*schema.NVDCVEFeedJSON10DefCPEMatch{
 							{
 								Vulnerable: true,
-								CPE23Uri:   "cpe:2.3:a:kubernetes:kubernetes:1.10.6:*:*:*:*:*:*:*",
+								Cpe23Uri:   "cpe:2.3:a:kubernetes:kubernetes:1.10.6:*:*:*:*:*:*:*",
 							},
 						},
 					},
@@ -595,19 +595,19 @@ func TestFixableCVEs(t *testing.T) {
 			},
 		},
 		{
-			CVE: nvd.CVE{
-				Metadata: nvd.CVEMetadata{
-					CVEID: "CVE-3",
+			CVE: &schema.CVEJSON40{
+				CVEDataMeta: &schema.CVEJSON40CVEDataMeta{
+					ID: "CVE-3",
 				},
 			},
-			Configurations: nvd.Configuration{
-				Nodes: []nvd.Node{
+			Configurations: &schema.NVDCVEFeedJSON10DefConfigurations{
+				Nodes: []*schema.NVDCVEFeedJSON10DefNode{
 					{
 						Operator: "OR",
-						CPEMatch: []nvd.CPEMatch{
+						CPEMatch: []*schema.NVDCVEFeedJSON10DefCPEMatch{
 							{
 								Vulnerable:            true,
-								CPE23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
+								Cpe23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
 								VersionStartIncluding: "1.10.3",
 								VersionEndIncluding:   "1.10.7",
 							},
@@ -617,11 +617,11 @@ func TestFixableCVEs(t *testing.T) {
 			},
 		},
 	}
-	actual := isK8sCVEFixable(&cves[0])
+	actual := isK8sCVEFixable(cves[0])
 	assert.Equal(t, actual, true)
-	actual = isK8sCVEFixable(&cves[1])
+	actual = isK8sCVEFixable(cves[1])
 	assert.Equal(t, actual, false)
-	actual = isK8sCVEFixable(&cves[2])
+	actual = isK8sCVEFixable(cves[2])
 	assert.Equal(t, actual, false)
 }
 
@@ -684,31 +684,31 @@ func TestK8sCVEEnvImpact(t *testing.T) {
 		ClusterDataStore: clusterDataStore,
 	}
 
-	cves := []nvd.CVEEntry{
+	cves := []*schema.NVDCVEFeedJSON10DefCVEItem{
 		{
-			CVE: nvd.CVE{
-				Metadata: nvd.CVEMetadata{
-					CVEID: "CVE-2019-1",
+			CVE: &schema.CVEJSON40{
+				CVEDataMeta: &schema.CVEJSON40CVEDataMeta{
+					ID: "CVE-2019-1",
 				},
 			},
-			Configurations: nvd.Configuration{
-				Nodes: []nvd.Node{
+			Configurations: &schema.NVDCVEFeedJSON10DefConfigurations{
+				Nodes: []*schema.NVDCVEFeedJSON10DefNode{
 					{
 						Operator: "OR",
-						CPEMatch: []nvd.CPEMatch{
+						CPEMatch: []*schema.NVDCVEFeedJSON10DefCPEMatch{
 							{
 								Vulnerable: true,
-								CPE23Uri:   "cpe:2.3:a:kubernetes:kubernetes:1.15.4:*:*:*:*:*:*:*",
+								Cpe23Uri:   "cpe:2.3:a:kubernetes:kubernetes:1.15.4:*:*:*:*:*:*:*",
 							},
 							{
 								Vulnerable:            true,
-								CPE23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
+								Cpe23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
 								VersionStartIncluding: "1.16.1",
 								VersionEndIncluding:   "1.16.9",
 							},
 							{
 								Vulnerable:            true,
-								CPE23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
+								Cpe23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
 								VersionStartIncluding: "1.17.1",
 								VersionEndExcluding:   "1.17.7",
 							},
@@ -718,19 +718,19 @@ func TestK8sCVEEnvImpact(t *testing.T) {
 			},
 		},
 		{
-			CVE: nvd.CVE{
-				Metadata: nvd.CVEMetadata{
-					CVEID: "CVE-2019-2",
+			CVE: &schema.CVEJSON40{
+				CVEDataMeta: &schema.CVEJSON40CVEDataMeta{
+					ID: "CVE-2019-2",
 				},
 			},
-			Configurations: nvd.Configuration{
-				Nodes: []nvd.Node{
+			Configurations: &schema.NVDCVEFeedJSON10DefConfigurations{
+				Nodes: []*schema.NVDCVEFeedJSON10DefNode{
 					{
 						Operator: "OR",
-						CPEMatch: []nvd.CPEMatch{
+						CPEMatch: []*schema.NVDCVEFeedJSON10DefCPEMatch{
 							{
 								Vulnerable:            true,
-								CPE23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
+								Cpe23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
 								VersionStartIncluding: "1.14.1",
 								VersionEndExcluding:   "1.14.9",
 							},
@@ -740,40 +740,40 @@ func TestK8sCVEEnvImpact(t *testing.T) {
 			},
 		},
 		{
-			CVE: nvd.CVE{
-				Metadata: nvd.CVEMetadata{
-					CVEID: "CVE-2019-3",
+			CVE: &schema.CVEJSON40{
+				CVEDataMeta: &schema.CVEJSON40CVEDataMeta{
+					ID: "CVE-2019-3",
 				},
 			},
 
-			Configurations: nvd.Configuration{
-				Nodes: []nvd.Node{
+			Configurations: &schema.NVDCVEFeedJSON10DefConfigurations{
+				Nodes: []*schema.NVDCVEFeedJSON10DefNode{
 					{
 						Operator: "OR",
-						CPEMatch: []nvd.CPEMatch{
+						CPEMatch: []*schema.NVDCVEFeedJSON10DefCPEMatch{
 							{
 								Vulnerable:            true,
-								CPE23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
+								Cpe23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
 								VersionStartIncluding: "1.10.1",
 								VersionEndIncluding:   "1.10.9",
 							},
 							{
 								Vulnerable:            true,
-								CPE23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
+								Cpe23Uri:              "cpe:2.3:a:kubernetes:kubernetes:*:*:*:*:*:*:*:*",
 								VersionStartIncluding: "1.11.1",
 								VersionEndExcluding:   "1.11.7",
 							},
 							{
 								Vulnerable: true,
-								CPE23Uri:   "cpe:2.3:a:kubernetes:kubernetes:1.14.5:*:*:*:*:*:*:*",
+								Cpe23Uri:   "cpe:2.3:a:kubernetes:kubernetes:1.14.5:*:*:*:*:*:*:*",
 							},
 							{
 								Vulnerable: true,
-								CPE23Uri:   "cpe:2.3:a:kubernetes:kubernetes:1.15.4:alpha1:*:*:*:*:*:*",
+								Cpe23Uri:   "cpe:2.3:a:kubernetes:kubernetes:1.15.4:alpha1:*:*:*:*:*:*",
 							},
 							{
 								Vulnerable: true,
-								CPE23Uri:   "cpe:2.3:a:kubernetes:kubernetes:1.15.4:beta1:*:*:*:*:*:*",
+								Cpe23Uri:   "cpe:2.3:a:kubernetes:kubernetes:1.15.4:beta1:*:*:*:*:*:*",
 							},
 						},
 					},
@@ -783,7 +783,7 @@ func TestK8sCVEEnvImpact(t *testing.T) {
 	}
 
 	for i, cve := range cves {
-		actual, err := resolver.getAffectedClusterPercentage(context.Background(), &cve, converter.K8s)
+		actual, err := resolver.getAffectedClusterPercentage(context.Background(), cve, converter.K8s)
 		assert.Nil(t, err)
 		assert.Equal(t, actual, expected[i])
 	}
@@ -873,28 +873,28 @@ func TestIstioCVEImpactsCluster(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, ok, true)
 
-	istioCVEs := []*nvd.CVEEntry{
+	istioCVEs := []*schema.NVDCVEFeedJSON10DefCVEItem{
 		{
-			CVE: nvd.CVE{
-				Metadata: nvd.CVEMetadata{
-					CVEID: "CVE-2019-1",
+			CVE: &schema.CVEJSON40{
+				CVEDataMeta: &schema.CVEJSON40CVEDataMeta{
+					ID: "CVE-2019-1",
 				},
 			},
-			Configurations: nvd.Configuration{
-				Nodes: []nvd.Node{
+			Configurations: &schema.NVDCVEFeedJSON10DefConfigurations{
+				Nodes: []*schema.NVDCVEFeedJSON10DefNode{
 					{
 						Operator: "OR",
-						CPEMatch: []nvd.CPEMatch{
+						CPEMatch: []*schema.NVDCVEFeedJSON10DefCPEMatch{
 							{
 								Vulnerable:            true,
-								CPE23Uri:              "cpe:2.3:a:istio:istio:*:*:*:*:*:*:*:*",
+								Cpe23Uri:              "cpe:2.3:a:istio:istio:*:*:*:*:*:*:*:*",
 								VersionStartIncluding: "",
 								VersionEndIncluding:   "",
 								VersionEndExcluding:   "1.1.13",
 							},
 							{
 								Vulnerable:            true,
-								CPE23Uri:              "cpe:2.3:a:istio:istio:*:*:*:*:*:*:*:*",
+								Cpe23Uri:              "cpe:2.3:a:istio:istio:*:*:*:*:*:*:*:*",
 								VersionStartIncluding: "1.2.0",
 								VersionEndIncluding:   "",
 								VersionEndExcluding:   "1.2.8",
@@ -905,19 +905,19 @@ func TestIstioCVEImpactsCluster(t *testing.T) {
 			},
 		},
 		{
-			CVE: nvd.CVE{
-				Metadata: nvd.CVEMetadata{
-					CVEID: "CVE-2019-2",
+			CVE: &schema.CVEJSON40{
+				CVEDataMeta: &schema.CVEJSON40CVEDataMeta{
+					ID: "CVE-2019-2",
 				},
 			},
-			Configurations: nvd.Configuration{
-				Nodes: []nvd.Node{
+			Configurations: &schema.NVDCVEFeedJSON10DefConfigurations{
+				Nodes: []*schema.NVDCVEFeedJSON10DefNode{
 					{
 						Operator: "OR",
-						CPEMatch: []nvd.CPEMatch{
+						CPEMatch: []*schema.NVDCVEFeedJSON10DefCPEMatch{
 							{
 								Vulnerable:            true,
-								CPE23Uri:              "cpe:2.3:a:istio:istio:*:*:*:*:*:*:*:*",
+								Cpe23Uri:              "cpe:2.3:a:istio:istio:*:*:*:*:*:*:*:*",
 								VersionStartIncluding: "1.4.1",
 								VersionEndIncluding:   "",
 								VersionEndExcluding:   "1.4.9",
@@ -928,19 +928,19 @@ func TestIstioCVEImpactsCluster(t *testing.T) {
 			},
 		},
 		{
-			CVE: nvd.CVE{
-				Metadata: nvd.CVEMetadata{
-					CVEID: "CVE-2019-3",
+			CVE: &schema.CVEJSON40{
+				CVEDataMeta: &schema.CVEJSON40CVEDataMeta{
+					ID: "CVE-2019-3",
 				},
 			},
-			Configurations: nvd.Configuration{
-				Nodes: []nvd.Node{
+			Configurations: &schema.NVDCVEFeedJSON10DefConfigurations{
+				Nodes: []*schema.NVDCVEFeedJSON10DefNode{
 					{
 						Operator: "OR",
-						CPEMatch: []nvd.CPEMatch{
+						CPEMatch: []*schema.NVDCVEFeedJSON10DefCPEMatch{
 							{
 								Vulnerable:            true,
-								CPE23Uri:              "cpe:2.3:a:istio:istio:1.4.4:*:*:*:*:*:*:*",
+								Cpe23Uri:              "cpe:2.3:a:istio:istio:1.4.4:*:*:*:*:*:*:*",
 								VersionStartIncluding: "",
 								VersionEndIncluding:   "",
 								VersionEndExcluding:   "",
@@ -951,19 +951,19 @@ func TestIstioCVEImpactsCluster(t *testing.T) {
 			},
 		},
 		{
-			CVE: nvd.CVE{
-				Metadata: nvd.CVEMetadata{
-					CVEID: "CVE-2019-4",
+			CVE: &schema.CVEJSON40{
+				CVEDataMeta: &schema.CVEJSON40CVEDataMeta{
+					ID: "CVE-2019-4",
 				},
 			},
-			Configurations: nvd.Configuration{
-				Nodes: []nvd.Node{
+			Configurations: &schema.NVDCVEFeedJSON10DefConfigurations{
+				Nodes: []*schema.NVDCVEFeedJSON10DefNode{
 					{
 						Operator: "OR",
-						CPEMatch: []nvd.CPEMatch{
+						CPEMatch: []*schema.NVDCVEFeedJSON10DefCPEMatch{
 							{
 								Vulnerable:            true,
-								CPE23Uri:              "cpe:2.3:a:istio:istio:*:*:*:*:*:*:*:*",
+								Cpe23Uri:              "cpe:2.3:a:istio:istio:*:*:*:*:*:*:*:*",
 								VersionStartIncluding: "1.3.1",
 								VersionEndIncluding:   "",
 								VersionEndExcluding:   "1.3.9",

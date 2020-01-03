@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/facebookincubator/nvdtools/cvefeed/nvd/schema"
 	"github.com/pkg/errors"
 	"github.com/stackrox/k8s-istio-cve-pusher/nvd"
 	"github.com/stackrox/rox/central/cve/converter"
@@ -37,9 +38,9 @@ const (
 type K8sIstioCveManager interface {
 	Fetch()
 	Update(zipPath string)
-	GetK8sCves() []*nvd.CVEEntry
-	GetIstioCves() []*nvd.CVEEntry
-	GetK8sAndIstioCves() []*nvd.CVEEntry
+	GetK8sCves() []*schema.NVDCVEFeedJSON10DefCVEItem
+	GetIstioCves() []*schema.NVDCVEFeedJSON10DefCVEItem
+	GetK8sAndIstioCves() []*schema.NVDCVEFeedJSON10DefCVEItem
 	GetK8sEmbeddedVulnerabilities() []*storage.EmbeddedVulnerability
 	GetIstioEmbeddedVulnerabilities() []*storage.EmbeddedVulnerability
 }
@@ -53,12 +54,12 @@ type k8sIstioCveManager struct {
 }
 
 type k8sCveManager struct {
-	k8sCVEs                    []*nvd.CVEEntry
+	k8sCVEs                    []*schema.NVDCVEFeedJSON10DefCVEItem
 	k8sEmbeddedVulnerabilities []*storage.EmbeddedVulnerability
 }
 
 type istioCveManager struct {
-	istioCVEs                    []*nvd.CVEEntry
+	istioCVEs                    []*schema.NVDCVEFeedJSON10DefCVEItem
 	istioEmbeddedVulnerabilities []*storage.EmbeddedVulnerability
 }
 
@@ -139,24 +140,24 @@ func (m *k8sIstioCveManager) Update(zipPath string) {
 }
 
 // GetK8sCves returns current k8s CVEs loaded in memory
-func (m *k8sIstioCveManager) GetK8sCves() []*nvd.CVEEntry {
+func (m *k8sIstioCveManager) GetK8sCves() []*schema.NVDCVEFeedJSON10DefCVEItem {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	return m.k8sCveMgr.k8sCVEs
 }
 
 // GetIstioCves returns current istio CVEs loaded in memory
-func (m *k8sIstioCveManager) GetIstioCves() []*nvd.CVEEntry {
+func (m *k8sIstioCveManager) GetIstioCves() []*schema.NVDCVEFeedJSON10DefCVEItem {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	return m.istioCveMgr.istioCVEs
 }
 
 // GetK8sAndIstioCves returns current istio CVEs loaded in memory
-func (m *k8sIstioCveManager) GetK8sAndIstioCves() []*nvd.CVEEntry {
+func (m *k8sIstioCveManager) GetK8sAndIstioCves() []*schema.NVDCVEFeedJSON10DefCVEItem {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	ret := make([]*nvd.CVEEntry, 0, len(m.k8sCveMgr.k8sCVEs)+len(m.istioCveMgr.istioCVEs))
+	ret := make([]*schema.NVDCVEFeedJSON10DefCVEItem, 0, len(m.k8sCveMgr.k8sCVEs)+len(m.istioCveMgr.istioCVEs))
 	ret = append(ret, m.k8sCveMgr.k8sCVEs...)
 	ret = append(ret, m.istioCveMgr.istioCVEs...)
 	return ret
@@ -194,7 +195,7 @@ func (m *k8sIstioCveManager) reconcileAllCVEsInOfflineMode(zipPath string) {
 	}
 }
 
-func (m *k8sIstioCveManager) updateCves(newCVEs []*nvd.CVEEntry, ct converter.CveType) error {
+func (m *k8sIstioCveManager) updateCves(newCVEs []*schema.NVDCVEFeedJSON10DefCVEItem, ct converter.CveType) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	newEmbeddedVulns, err := converter.NvdCVEsToEmbeddedVulnerabilities(newCVEs, ct)

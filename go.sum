@@ -90,8 +90,8 @@ github.com/cloudflare/cfssl v0.0.0-20190510060611-9c027c93ba9e h1:ZtyhUG4s94BMUC
 github.com/cloudflare/cfssl v0.0.0-20190510060611-9c027c93ba9e/go.mod h1:yMWuSON2oQp+43nFtAV/uvKQIFpSPerB57DCt9t8sSA=
 github.com/connorgorman/protobuf v1.2.2-0.20190220010025-a81e5c3a5053 h1:IkqcuoV1nrPeytQdliO6iQ820W9iMFiV+ynoCqdc128=
 github.com/connorgorman/protobuf v1.2.2-0.20190220010025-a81e5c3a5053/go.mod h1:hp+jE20tsWTFYpLwKvXlhS1hjn+gTNwPg2I6zVXpSg4=
-github.com/containerd/continuity v0.0.0-20191214063359-1097c8bae83b h1:pik3LX++5O3UiNWv45wfP/WT81l7ukBJzd3uUiifbSU=
-github.com/containerd/continuity v0.0.0-20191214063359-1097c8bae83b/go.mod h1:Dq467ZllaHgAtVp4p1xUQWBrFXR9s/wyoTpG8zOJGkY=
+github.com/containerd/continuity v0.0.0-20200101070350-669de920ecb0 h1:U5vKNUY+HrRMDSRuz6UUoz1aExMVjqxX8R2beEL2Ze4=
+github.com/containerd/continuity v0.0.0-20200101070350-669de920ecb0/go.mod h1:Dq467ZllaHgAtVp4p1xUQWBrFXR9s/wyoTpG8zOJGkY=
 github.com/containers/image v3.0.2+incompatible h1:B1lqAE8MUPCrsBLE86J0gnXleeRq8zJnQryhiiGQNyE=
 github.com/containers/image v3.0.2+incompatible/go.mod h1:8Vtij257IWSanUQKe1tAeNOm2sRVkSqQTVQ1IlwI3+M=
 github.com/coreos/bbolt v1.3.3/go.mod h1:iRUV2dpdMOn7Bo10OQBFzIJO9kkE559Wcmn+qkEiiKk=
@@ -444,6 +444,8 @@ github.com/opencontainers/selinux v1.2.2 h1:Kx9J6eDG5/24A6DtUquGSpJQ+m2MUTahn4Ft
 github.com/opencontainers/selinux v1.2.2/go.mod h1:+BLncwf63G4dgOzykXAxcmnFlUaOlkDdmw/CqsW6pjs=
 github.com/openshift/api v3.9.0+incompatible h1:fJ/KsefYuZAjmrr3+5U9yZIZbTOpVkDDLDLFresAeYs=
 github.com/openshift/api v3.9.0+incompatible/go.mod h1:dh9o4Fs58gpFXGSYfnVxGR9PnV53I8TW84pQaJDdGiY=
+github.com/openshift/api v3.9.1-0.20191201231411-9f834e337466+incompatible h1:QuymwFhW85sgklix1dTn58zOYqBXWHVlZOFQVIVsMi0=
+github.com/openshift/api v3.9.1-0.20191201231411-9f834e337466+incompatible/go.mod h1:dh9o4Fs58gpFXGSYfnVxGR9PnV53I8TW84pQaJDdGiY=
 github.com/openshift/client-go v0.0.0-20190923092832-6afefc9bb372 h1:iOFI/ua5QKKEHTy8ohWdY1kgWpEmik8nw5ZCESx0Crg=
 github.com/openshift/client-go v0.0.0-20190923092832-6afefc9bb372/go.mod h1:6rzn+JTr7+WYS2E1TExP4gByoABxMznR6y2SnUIkmxk=
 github.com/opentracing/opentracing-go v1.0.2/go.mod h1:UkNAQd3GIcIGf0SeVgPpRdFStlNbqXla1AfSYxPUl2o=

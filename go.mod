@@ -15,7 +15,7 @@ require (
 	github.com/blevesearch/bleve v0.8.0
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/cloudflare/cfssl v0.0.0-20190510060611-9c027c93ba9e
-	github.com/containerd/continuity v0.0.0-20191214063359-1097c8bae83b // indirect
+	github.com/containerd/continuity v0.0.0-20200101070350-669de920ecb0 // indirect
 	github.com/containers/image v3.0.2+incompatible
 	github.com/coreos/go-oidc v2.1.0+incompatible
 	github.com/coreos/go-systemd/v22 v22.0.0
@@ -27,6 +27,7 @@ require (
 	github.com/docker/go-connections v0.4.0
 	github.com/docker/go-units v0.4.0
 	github.com/etcd-io/bbolt v1.3.3
+	github.com/facebookincubator/nvdtools v0.1.4-0.20191024132624-1cb041402875
 	github.com/fullsailor/pkcs7 v0.0.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/gobuffalo/packd v0.3.0
@@ -53,7 +54,7 @@ require (
 	github.com/mitchellh/hashstructure v1.0.0
 	github.com/nilslice/protolock v0.0.0
 	github.com/opencontainers/go-digest v1.0.0-rc1
-	github.com/openshift/api v3.9.0+incompatible
+	github.com/openshift/api v3.9.1-0.20191201231411-9f834e337466+incompatible
 	github.com/openshift/client-go v3.9.0+incompatible
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v0.9.2
