@@ -666,6 +666,7 @@ func registerGeneratedTypes(builder generator.SchemaBuilder) {
 		"notifiers: [String!]!",
 		"rationale: String!",
 		"remediation: String!",
+		"sORTName: String!",
 		"scope: [Scope]!",
 		"severity: Severity!",
 		"whitelists: [Whitelist]!",
@@ -6026,6 +6027,11 @@ func (resolver *policyResolver) Rationale(ctx context.Context) string {
 
 func (resolver *policyResolver) Remediation(ctx context.Context) string {
 	value := resolver.data.GetRemediation()
+	return value
+}
+
+func (resolver *policyResolver) SORTName(ctx context.Context) string {
+	value := resolver.data.GetSORTName()
 	return value
 }
 

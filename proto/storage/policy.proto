@@ -28,6 +28,9 @@ message Policy {
     repeated EnforcementAction enforcement_actions = 13 [(gogoproto.moretags) = "search:\"Enforcement\""];
     repeated string notifiers                      = 14;
     google.protobuf.Timestamp last_updated         = 15;
+
+    // Following are helper fields used for sorting policies by name which is a multi-word field
+    string SORT_name                               = 16 [(gogoproto.moretags) = "search:\"SORT_Policy,hidden,analyzer=keyword\""];
 }
 
 message ListPolicy {

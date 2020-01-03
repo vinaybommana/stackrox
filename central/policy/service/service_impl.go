@@ -150,7 +150,7 @@ func (s *serviceImpl) ListPolicies(ctx context.Context, request *v1.RawQuery) (*
 		}
 		resp.Policies = convertPoliciesToListPolicies(policies)
 	}
-	sort.SliceStable(resp.Policies, func(i, j int) bool { return resp.Policies[i].GetName() < resp.Policies[j].GetName() })
+
 	return resp, nil
 }
 

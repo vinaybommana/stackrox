@@ -69,6 +69,10 @@ func addDefaults(store Store) {
 			continue
 		}
 		count++
+
+		// fill multi-word sort helper field
+		p.SORTName = p.Name
+
 		if _, err := store.AddPolicy(p); err != nil {
 			panic(err)
 		}
