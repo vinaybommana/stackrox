@@ -15,7 +15,7 @@ export const entityGridContainerBaseClassName =
     'mx-4 grid-dense grid-auto-fit grid grid-gap-6 mb-4 xxxl:grid-gap-8';
 
 // to separate out column number related classes from the rest of the grid classes for easy column customization (see policyOverview component)
-export const entityGridContainerClassName = `${entityGridContainerBaseClassName} grid-columns-1 lg:grid-columns-2 xl:grid-columns-3`;
+export const entityGridContainerClassName = `${entityGridContainerBaseClassName} grid-columns-1 lg:grid-columns-2 xxl:grid-columns-3`;
 
 const useCaseDefaultSorts = {
     [useCases.VULN_MANAGEMENT]: vulnMgmtDefaultSorts
