@@ -66,7 +66,7 @@ export function getDeploymentTableColumns(workflowState) {
                         vulnCounter={vulnCounter}
                         url={url}
                         fixableUrl={fixableUrl}
-                        hideLink={pdf}
+                        hideLink={pdf || inFindingsSection}
                     />
                 );
             },
