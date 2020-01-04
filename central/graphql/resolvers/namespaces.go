@@ -184,6 +184,10 @@ func (resolver *namespaceResolver) Subjects(ctx context.Context, args paginatedQ
 	if err != nil {
 		return nil, err
 	}
+
+	pagination := baseQuery.GetPagination()
+	baseQuery.Pagination = nil
+
 	subjects, err := resolver.getSubjects(ctx, baseQuery)
 	if err != nil {
 		return nil, err
@@ -191,7 +195,11 @@ func (resolver *namespaceResolver) Subjects(ctx context.Context, args paginatedQ
 	for _, subject := range subjects {
 		resolvers = append(resolvers, &subjectResolver{resolver.root, subject})
 	}
-	return resolvers, nil
+
+	paginatedResolvers, err := paginationWrapper{
+		pv: pagination,
+	}.paginate(resolvers, nil)
+	return paginatedResolvers.([]*subjectResolver), err
 }
 
 // ServiceAccountCount returns the count of ServiceAccounts which have any permission on this cluster namespace

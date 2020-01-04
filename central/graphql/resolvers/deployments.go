@@ -29,8 +29,8 @@ func init() {
 		schema.AddExtraResolver("Deployment", `namespaceObject: Namespace`),
 		schema.AddExtraResolver("Deployment", `serviceAccountObject: ServiceAccount`),
 		schema.AddExtraResolver("Deployment", `groupedProcesses: [ProcessNameGroup!]!`),
-		schema.AddExtraResolver("Deployment", `deployAlerts: [Alert!]!`),
-		schema.AddExtraResolver("Deployment", `deployAlertCount: Int!`),
+		schema.AddExtraResolver("Deployment", `deployAlerts(query: String, pagination: Pagination): [Alert!]!`),
+		schema.AddExtraResolver("Deployment", `deployAlertCount(query: String): Int!`),
 		schema.AddExtraResolver("Deployment", "latestViolation(query: String): Time"),
 		schema.AddExtraResolver("Deployment", "policies(query: String, pagination: Pagination): [Policy!]!"),
 		schema.AddExtraResolver("Deployment", "policyCount(query: String): Int!"),
@@ -40,14 +40,14 @@ func init() {
 		schema.AddExtraResolver("Deployment", "complianceResults(query: String): [ControlResult!]!"),
 		schema.AddExtraResolver("Deployment", "serviceAccountID: String!"),
 		schema.AddExtraResolver("Deployment", `images(query: String, pagination: Pagination): [Image!]!`),
-		schema.AddExtraResolver("Deployment", `imageCount: Int!`),
+		schema.AddExtraResolver("Deployment", `imageCount(query: String): Int!`),
 		schema.AddExtraResolver("Deployment", `components(query: String, pagination: Pagination): [EmbeddedImageScanComponent!]!`),
 		schema.AddExtraResolver("Deployment", `componentCount(query: String): Int!`),
 		schema.AddExtraResolver("Deployment", `vulns(query: String, pagination: Pagination): [EmbeddedVulnerability!]!`),
 		schema.AddExtraResolver("Deployment", `vulnCount(query: String): Int!`),
 		schema.AddExtraResolver("Deployment", `vulnCounter: VulnerabilityCounter!`),
 		schema.AddExtraResolver("Deployment", "secrets(query: String, pagination: Pagination): [Secret!]!"),
-		schema.AddExtraResolver("Deployment", "secretCount: Int!"),
+		schema.AddExtraResolver("Deployment", "secretCount(query: String): Int!"),
 		schema.AddExtraResolver("Deployment", "policyStatus(query: String) : String!"),
 	)
 }
@@ -145,25 +145,50 @@ func (resolver *deploymentResolver) GroupedProcesses(ctx context.Context) ([]*pr
 	return resolver.root.wrapProcessNameGroups(service.IndicatorsToGroupedResponses(indicators), err)
 }
 
-func (resolver *deploymentResolver) DeployAlerts(ctx context.Context) ([]*alertResolver, error) {
+func (resolver *deploymentResolver) DeployAlerts(ctx context.Context, args paginatedQuery) ([]*alertResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Deployments, "DeployAlerts")
 
 	if err := readAlerts(ctx); err != nil {
 		return nil, err
 	}
-	query := search.NewQueryBuilder().AddStrings(search.DeploymentID, resolver.data.GetId()).ProtoQuery()
+
+	q, err := args.AsV1QueryOrEmpty()
+	if err != nil {
+		return nil, err
+	}
+
+	pagination := q.GetPagination()
+	q.Pagination = nil
+
+	nested, err := search.AddAsConjunction(q, resolver.getQuery())
+	if err != nil {
+		return nil, err
+	}
+
+	nested.Pagination = pagination
+
 	return resolver.root.wrapAlerts(
-		resolver.root.ViolationsDataStore.SearchRawAlerts(ctx, query))
+		resolver.root.ViolationsDataStore.SearchRawAlerts(ctx, nested))
 }
 
-func (resolver *deploymentResolver) DeployAlertCount(ctx context.Context) (int32, error) {
+func (resolver *deploymentResolver) DeployAlertCount(ctx context.Context, args rawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Deployments, "DeployAlertsCount")
 
 	if err := readAlerts(ctx); err != nil {
 		return 0, err // could return nil, nil to prevent errors from propagating.
 	}
-	query := search.NewQueryBuilder().AddStrings(search.DeploymentID, resolver.data.GetId()).ProtoQuery()
-	results, err := resolver.root.ViolationsDataStore.Search(ctx, query)
+
+	q, err := args.AsV1QueryOrEmpty()
+	if err != nil {
+		return 0, err
+	}
+
+	q, err = search.AddAsConjunction(resolver.getQuery(), q)
+	if err != nil {
+		return 0, err
+	}
+
+	results, err := resolver.root.ViolationsDataStore.Search(ctx, q)
 	if err != nil {
 		return 0, err
 	}
@@ -307,22 +332,31 @@ func (resolver *deploymentResolver) Secrets(ctx context.Context, args paginatedQ
 	if err != nil {
 		return nil, err
 	}
+
+	pagination := q.GetPagination()
+	q.Pagination = nil
+
 	secrets, err := resolver.getDeploymentSecrets(ctx, q)
 	if err != nil {
 		return nil, err
 	}
 
 	resolvers, err := paginationWrapper{
-		pv: q.GetPagination(),
+		pv: pagination,
 	}.paginate(secrets, nil)
 	return resolvers.([]*secretResolver), err
 }
 
 // SecretCount returns the total number of secrets for this deployment
-func (resolver *deploymentResolver) SecretCount(ctx context.Context) (int32, error) {
+func (resolver *deploymentResolver) SecretCount(ctx context.Context, args rawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Deployments, "SecretCount")
 
-	secrets, err := resolver.getDeploymentSecrets(ctx, search.EmptyQuery())
+	q, err := args.AsV1QueryOrEmpty()
+	if err != nil {
+		return 0, err
+	}
+
+	secrets, err := resolver.getDeploymentSecrets(ctx, q)
 	if err != nil {
 		return 0, err
 	}
@@ -423,20 +457,34 @@ func (resolver *deploymentResolver) Images(ctx context.Context, args paginatedQu
 	if err != nil {
 		return nil, err
 	}
+
+	pagination := q.Pagination
+	q.Pagination = nil
+
 	imageLoader, err := loaders.GetImageLoader(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return resolver.root.wrapImages(imageLoader.FromQuery(ctx, search.NewConjunctionQuery(resolver.getImageQuery(ctx), q)))
+
+	q, err = search.AddAsConjunction(resolver.getImageQuery(ctx), q)
+	if err != nil {
+		return nil, err
+	}
+
+	q.Pagination = pagination
+
+	return resolver.root.wrapImages(imageLoader.FromQuery(ctx, q))
 }
 
-func (resolver *deploymentResolver) ImageCount(ctx context.Context) (int32, error) {
+func (resolver *deploymentResolver) ImageCount(ctx context.Context, args rawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Deployments, "ImageCount")
 	if err := readImages(ctx); err != nil {
 		return 0, err
 	}
-	imageShas := resolver.getImageShas(ctx)
-	return int32(len(imageShas)), nil
+
+	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getImageRawQuery(ctx))
+
+	return resolver.root.ImageCount(ctx, rawQuery{Query: &query})
 }
 
 func (resolver *deploymentResolver) Components(ctx context.Context, args paginatedQuery) ([]*EmbeddedImageScanComponentResolver, error) {
@@ -448,17 +496,25 @@ func (resolver *deploymentResolver) Components(ctx context.Context, args paginat
 		return nil, nil
 	}
 
-	query, err := args.AsV1QueryOrEmpty()
+	q, err := args.AsV1QueryOrEmpty()
 	if err != nil {
 		return nil, err
 	}
 
-	nested, err := search.AddAsConjunction(resolver.getImageQuery(ctx), query)
+	pagination := q.Pagination
+	q.Pagination = nil
+
+	q, err = search.AddAsConjunction(resolver.getImageQuery(ctx), q)
 	if err != nil {
 		return nil, err
 	}
 
-	return components(ctx, resolver.root, nested)
+	// TODO: Once pagination is implemented on Components DS, remove the wrapper
+	resolvers, err := paginationWrapper{
+		pv: pagination,
+	}.paginate(components(ctx, resolver.root, q))
+
+	return resolvers.([]*EmbeddedImageScanComponentResolver), err
 }
 
 func (resolver *deploymentResolver) ComponentCount(ctx context.Context, args rawQuery) (int32, error) {
@@ -493,17 +549,24 @@ func (resolver *deploymentResolver) Vulns(ctx context.Context, args paginatedQue
 		return nil, nil
 	}
 
-	query, err := args.AsV1QueryOrEmpty()
+	q, err := args.AsV1QueryOrEmpty()
 	if err != nil {
 		return nil, err
 	}
 
-	nested, err := search.AddAsConjunction(resolver.getImageQuery(ctx), query)
+	pagination := q.GetPagination()
+	q.Pagination = nil
+
+	q, err = search.AddAsConjunction(resolver.getImageQuery(ctx), q)
 	if err != nil {
 		return nil, err
 	}
 
-	return vulnerabilities(ctx, resolver.root, nested)
+	// TODO: Once pagination is implemented on CVE DS, remove the wrapper
+	resolvers, err := paginationWrapper{
+		pv: pagination,
+	}.paginate(vulnerabilities(ctx, resolver.root, q))
+	return resolvers.([]*EmbeddedVulnerabilityResolver), err
 }
 
 func (resolver *deploymentResolver) VulnCount(ctx context.Context, args rawQuery) (int32, error) {
@@ -618,6 +681,15 @@ func (resolver *deploymentResolver) getImageQuery(ctx context.Context) *v1.Query
 		return search.EmptyQuery()
 	}
 	return search.NewQueryBuilder().AddDocIDs(imageShas...).ProtoQuery()
+}
+
+func (resolver *deploymentResolver) getImageRawQuery(ctx context.Context) string {
+	imageShas := resolver.getImageShas(ctx)
+	if len(imageShas) == 0 {
+		return ""
+	}
+
+	return search.NewQueryBuilder().AddExactMatches(search.ImageSHA, imageShas...).Query()
 }
 
 func (resolver *deploymentResolver) getConjunctionQuery(q *v1.Query) (*v1.Query, error) {
