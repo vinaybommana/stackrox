@@ -105,9 +105,9 @@ export function getDeploymentTableColumns(workflowState) {
             Header: `Policy Status`,
             headerClassName: `w-1/10 ${defaultHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
-            Cell: ({ original }) => {
+            Cell: ({ original, pdf }) => {
                 const { policyStatus } = original;
-                const policyLabel = <StatusChip status={policyStatus} />;
+                const policyLabel = <StatusChip status={policyStatus} asString={pdf} />;
 
                 return policyLabel;
             },

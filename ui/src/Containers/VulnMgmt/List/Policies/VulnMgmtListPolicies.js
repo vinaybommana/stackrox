@@ -92,9 +92,9 @@ export function getPolicyTableColumns(workflowState) {
             headerClassName: `w-1/10 text-center ${defaultHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
             // eslint-disable-next-line
-            Cell: ({ original }) => (
+            Cell: ({ original, pdf }) => (
                 <div className="flex justify-center w-full">
-                    <StatusChip status={original.policyStatus} />
+                    <StatusChip status={original.policyStatus} asString={pdf} />
                 </div>
             ),
             id: 'policyStatus',

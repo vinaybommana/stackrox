@@ -115,10 +115,10 @@ export function getImageTableColumns(workflowState) {
             Header: 'Image Status',
             headerClassName: `w-1/10 ${defaultHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
-            Cell: ({ original }) => {
+            Cell: ({ original, pdf }) => {
                 const { deploymentCount } = original;
                 const imageStatus = deploymentCount === 0 ? 'inactive' : 'active';
-                return <StatusChip status={imageStatus} />;
+                return <StatusChip status={imageStatus} asString={pdf} />;
             },
             accessor: 'deploymentCount'
             // sortField: TBD,
