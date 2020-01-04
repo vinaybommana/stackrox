@@ -10,9 +10,9 @@ const leftSideClasses = 'text-sm text-primary-800 font-600 truncate';
 const NumberedList = ({ data, linkLeftOnly }) => {
     // eslint-disable-next-line no-unused-vars
     const list = data.map(({ text, subText, url, component, tooltip }, i) => {
-        const className = `flex items-center py-2 px-2 ${
-            i !== 0 ? 'border-t border-base-300' : ''
-        } ${url ? 'hover:bg-base-200' : ''}`;
+        const className = `flex items-center ${i !== 0 ? 'border-t border-base-300' : ''} ${
+            url ? 'hover:bg-base-200' : ''
+        }`;
         let leftSide = (
             <>
                 {i + 1}.&nbsp;{text}&nbsp;
@@ -49,32 +49,28 @@ const NumberedList = ({ data, linkLeftOnly }) => {
                 </Link>
             );
         }
+        const contentWrapper = <div className="p-2 w-full flex justify-between">{content}</div>;
         return (
-            <>
+            <li key={text} className={className}>
                 {tooltip && (
-                    <li key={text} className={className}>
-                        <Tooltip
-                            placement="top"
-                            overlay={
-                                <TooltipOverlay
-                                    title={tooltip.title}
-                                    body={tooltip.body}
-                                    footer={tooltip.footer}
-                                />
-                            }
-                            mouseLeaveDelay={0}
-                            overlayClassName="opacity-100 max-w-1/3"
-                        >
-                            {content}
-                        </Tooltip>
-                    </li>
+                    <Tooltip
+                        placement="top"
+                        overlay={
+                            <TooltipOverlay
+                                title={tooltip.title}
+                                body={tooltip.body}
+                                subtitle={tooltip.subtitle}
+                                footer={tooltip.footer}
+                            />
+                        }
+                        mouseLeaveDelay={0}
+                        overlayClassName="opacity-100 max-w-1/3 p-0"
+                    >
+                        {contentWrapper}
+                    </Tooltip>
                 )}
-                {!tooltip && (
-                    <li key={text} className={className}>
-                        {content}
-                    </li>
-                )}
-            </>
+                {!tooltip && contentWrapper}
+            </li>
         );
     });
     return <ul className="list-reset leading-loose">{list}</ul>;

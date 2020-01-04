@@ -558,6 +558,10 @@ h6 {
     text-align: inherit !important;
 }
 
+.p-0 .rc-tooltip-inner {
+    padding: 0 !important;
+}
+
 .rc-tooltip-arrow {
     border-top-color: rgb(234, 245, 255) !important;
 }

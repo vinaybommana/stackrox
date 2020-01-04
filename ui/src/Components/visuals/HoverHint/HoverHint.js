@@ -11,7 +11,7 @@ const HoverHint = ({ top, left, title, body, subtitle, footer }) => (
         body={body}
         subtitle={subtitle}
         footer={footer}
-        className="visible absolute border border-tertiary-400"
+        className="visible absolute"
     />
 );
 

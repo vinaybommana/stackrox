@@ -22,20 +22,25 @@ const PercentageStackedPill = ({ data, tooltip }) => {
         return <div className={className} key={i} style={{ width: `${value}%` }} />;
     });
     const { title: tooltipTitle, body: tooltipBody } = tooltip || {};
-    return (
+    const content = (
+        <div
+            className="flex rounded-full w-full min-w-10 max-w-24 h-3 border border-base-300 bg-base-200"
+            style={{ boxShadow: 'inset 0 0px 8px 0 hsla(0, 0%, 0%, .10) !important' }}
+        >
+            {pills}
+        </div>
+    );
+    return tooltip ? (
         <Tooltip
             placement="top"
             overlay={<TooltipOverlay title={tooltipTitle} body={tooltipBody} />}
             mouseLeaveDelay={0}
             overlayClassName="opacity-100"
         >
-            <div
-                className="flex rounded-full w-full min-w-10 max-w-24 h-3 border border-base-300 bg-base-200"
-                style={{ boxShadow: 'inset 0 0px 8px 0 hsla(0, 0%, 0%, .10) !important' }}
-            >
-                {pills}
-            </div>
+            {content}
         </Tooltip>
+    ) : (
+        content
     );
 };
 

@@ -48,7 +48,7 @@ const processData = (data, workflowState, limit) => {
             lastScanned
         }) => {
             const url = workflowState.pushRelatedEntity(entityTypes.CVE, id).toUrl();
-            const tooltipHeader = lastScanned ? format(lastScanned, dateTimeFormat) : 'N/A';
+            const tooltipTitle = lastScanned ? format(lastScanned, dateTimeFormat) : 'N/A';
             const tooltipBody = (
                 <ul className="flex-1 list-reset border-base-300 overflow-hidden">
                     <li className="py-1 flex flex-col" key="description">
@@ -70,7 +70,7 @@ const processData = (data, workflowState, limit) => {
                 }`,
                 url,
                 hint: {
-                    title: tooltipHeader,
+                    title: tooltipTitle,
                     body: tooltipBody,
                     footer: tooltipFooter
                 }

@@ -5,7 +5,7 @@ const TooltipOverlay = ({ top, left, className, title, subtitle, body, footer })
     if (!title || !body) return null;
     return (
         <div
-            className={`graph-hint text-xs text-base-600 z-10 bg-tertiary-200 rounded min-w-32 ${className}`}
+            className={`graph-hint text-xs text-base-600 z-10 bg-tertiary-200 rounded min-w-32 border border-tertiary-400 ${className}`}
             style={{ top, left }}
         >
             <div className="flex flex-col border-b border-primary-400 mb-1 py-1 px-2 leading-loose">
