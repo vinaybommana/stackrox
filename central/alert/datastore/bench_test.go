@@ -16,7 +16,7 @@ import (
 
 func BenchmarkDBs(b *testing.B) {
 	b.Run("badger", func(b *testing.B) {
-		db, _, err := badgerhelper.NewTemp("alert_bench_test", false)
+		db, _, err := badgerhelper.NewTemp("alert_bench_test")
 		require.NoError(b, err)
 		benchmarkLoad(b, badgerStore.New(db))
 	})

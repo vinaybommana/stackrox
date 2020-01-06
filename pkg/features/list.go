@@ -9,8 +9,8 @@ var (
 	// NB: When removing this feature flag, remove references in ui/src/utils/featureFlags.js
 	VulnMgmtUI = registerFeature("Enable Vulnerability Management UI", "ROX_VULN_MGMT_UI", false)
 
-	// ManagedDB enabled the newly StackRox managed DB transaction sequencing.
-	ManagedDB = registerFeature("Use managed sequencing for the embedded Badger DB", "ROX_MANAGED_DB", false)
+	// Dackbox enables the id graph layer on top of badger.
+	Dackbox = registerFeature("Use DackBox layer for the embedded Badger DB", "ROX_DACKBOX", false)
 
 	// Telemetry enables the telemetry features
 	Telemetry = registerFeature("Enable support for telemetry", "ROX_TELEMETRY", false)

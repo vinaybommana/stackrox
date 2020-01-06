@@ -8,15 +8,11 @@ import (
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/badgerhelper"
 	"github.com/stackrox/rox/pkg/dackbox"
-	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/testutils"
 	"github.com/stretchr/testify/suite"
 )
 
 func TestEdgeStore(t *testing.T) {
-	if !features.ManagedDB.Enabled() {
-		t.Skip()
-	}
 	suite.Run(t, new(EdgeStoreTestSuite))
 }
 
@@ -32,7 +28,7 @@ type EdgeStoreTestSuite struct {
 
 func (suite *EdgeStoreTestSuite) SetupSuite() {
 	var err error
-	suite.db, suite.dir, err = badgerhelper.NewTemp("reference", true)
+	suite.db, suite.dir, err = badgerhelper.NewTemp("reference")
 	if err != nil {
 		suite.FailNowf("failed to create DB: %+v", err.Error())
 	}

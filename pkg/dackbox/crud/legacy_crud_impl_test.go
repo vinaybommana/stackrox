@@ -65,7 +65,7 @@ type CRUDTestSuite struct {
 
 func (s *CRUDTestSuite) SetupTest() {
 	var err error
-	s.db, s.dir, err = badgerhelper.NewTemp("generic", true)
+	s.db, s.dir, err = badgerhelper.NewTemp("generic")
 	if err != nil {
 		s.FailNowf("failed to create DB: %+v", err.Error())
 	}

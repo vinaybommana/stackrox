@@ -17,7 +17,6 @@ import (
 	"github.com/stackrox/rox/central/role/resources"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/badgerhelper"
-	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/fixtures"
 	"github.com/stackrox/rox/pkg/sac"
 	search2 "github.com/stackrox/rox/pkg/search"
@@ -38,7 +37,7 @@ func BenchmarkSearchAllDeployments(b *testing.B) {
 
 	blevePath := filepath.Join(tempPath, "scorch.bleve")
 
-	db, dir, err := badgerhelper.NewTemp("benchmark_search_all", features.ManagedDB.Enabled())
+	db, dir, err := badgerhelper.NewTemp("benchmark_search_all")
 	require.NoError(b, err)
 	defer utils.IgnoreError(db.Close)
 	defer func() { _ = os.RemoveAll(dir) }()

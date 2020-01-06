@@ -37,7 +37,7 @@ func (rc *DackBox) NewTransaction() *Transaction {
 	defer rc.lock.Unlock()
 
 	ts := rc.history.Hold()
-	txn := rc.db.NewTransactionAt(ts, true)
+	txn := rc.db.NewTransaction(true)
 	modified := graph.NewModifiedGraph(graph.NewRemoteGraph(graph.NewGraph(), rc.readerAt(ts)))
 	return &Transaction{
 		ts:           ts,
@@ -55,7 +55,7 @@ func (rc *DackBox) NewReadOnlyTransaction() *Transaction {
 	defer rc.lock.Unlock()
 
 	ts := rc.history.Hold()
-	txn := rc.db.NewTransactionAt(ts, false)
+	txn := rc.db.NewTransaction(false)
 	modified := graph.NewModifiedGraph(graph.NewRemoteGraph(graph.NewGraph(), rc.readerAt(ts)))
 	return &Transaction{
 		ts:           ts,
@@ -86,13 +86,13 @@ func (rc *DackBox) AtomicKVUpdate(provide func() (key, value []byte)) error {
 	rc.lock.Lock()
 	defer rc.lock.Unlock()
 
-	ts := rc.history.StepForward()
-	txn := rc.db.NewTransactionAt(ts-1, true)
+	_ = rc.history.StepForward()
+	txn := rc.db.NewTransaction(true)
 	defer txn.Discard()
 	if err := txn.Set(provide()); err != nil {
 		return err
 	}
-	return txn.CommitAt(ts, nil)
+	return txn.Commit()
 }
 
 func (rc *DackBox) readerAt(at uint64) graph.RemoteReadable {
@@ -118,9 +118,9 @@ func (rc *DackBox) commit(openedAt uint64, txn *badger.Txn, modification graph.M
 	rc.lock.Lock()
 	defer rc.lock.Unlock()
 
-	ts := rc.history.StepForward()
+	_ = rc.history.StepForward()
 	if txn != nil {
-		if err := txn.CommitAt(ts, nil); err != nil {
+		if err := txn.Commit(); err != nil {
 			return err
 		}
 	}
@@ -142,7 +142,7 @@ var onLoadForEachOptions = badgerhelper.ForEachOptions{
 
 func loadIntoMem(db *badger.DB, graphPrefix []byte) (*graph.Graph, error) {
 	initial := graph.NewGraph()
-	err := badgerhelper.BucketForEach(db.NewTransactionAt(0, false), graphPrefix, onLoadForEachOptions, func(k, v []byte) error {
+	err := badgerhelper.BucketForEach(db.NewTransaction(false), graphPrefix, onLoadForEachOptions, func(k, v []byte) error {
 		sk, err := sortedkeys.Unmarshal(v)
 		if err != nil {
 			return err

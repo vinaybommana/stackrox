@@ -26,7 +26,7 @@ func GetGlobalDackBox() *dackbox.DackBox {
 
 func initializeDackBox() {
 	dackBoxInit.Do(func() {
-		if features.ManagedDB.Enabled() {
+		if features.Dackbox.Enabled() {
 			globaldb.RegisterBucket(Bucket, "Graph Keys")
 			var err error
 			duckBox, err = dackbox.NewDackBox(globaldb.GetGlobalBadgerDB(), Bucket)
