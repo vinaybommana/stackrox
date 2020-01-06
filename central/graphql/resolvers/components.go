@@ -79,7 +79,7 @@ func (resolver *Resolver) Component(ctx context.Context, args struct{ *graphql.I
 }
 
 // Components returns the image scan components that match the input query.
-func (resolver *Resolver) Components(ctx context.Context, q paginatedQuery) ([]*EmbeddedImageScanComponentResolver, error) {
+func (resolver *Resolver) Components(ctx context.Context, q PaginatedQuery) ([]*EmbeddedImageScanComponentResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "ImageComponents")
 	if err := readImages(ctx); err != nil {
 		return nil, err
@@ -98,7 +98,7 @@ func (resolver *Resolver) Components(ctx context.Context, q paginatedQuery) ([]*
 }
 
 // ComponentCount returns count of all clusters across infrastructure
-func (resolver *Resolver) ComponentCount(ctx context.Context, args rawQuery) (int32, error) {
+func (resolver *Resolver) ComponentCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "ComponentCount")
 	if err := readImages(ctx); err != nil {
 		return 0, err
@@ -130,7 +130,7 @@ func components(ctx context.Context, root *Resolver, query *v1.Query) ([]*Embedd
 	return mapImagesToComponentResolvers(root, images, query)
 }
 
-func (resolver *imageScanResolver) Components(ctx context.Context, args rawQuery) ([]*EmbeddedImageScanComponentResolver, error) {
+func (resolver *imageScanResolver) Components(ctx context.Context, args RawQuery) ([]*EmbeddedImageScanComponentResolver, error) {
 	query, err := args.AsV1QueryOrEmpty()
 	if err != nil {
 		return nil, err
@@ -143,7 +143,7 @@ func (resolver *imageScanResolver) Components(ctx context.Context, args rawQuery
 	}, query)
 }
 
-func (resolver *imageScanResolver) ComponentCount(ctx context.Context, args rawQuery) (int32, error) {
+func (resolver *imageScanResolver) ComponentCount(ctx context.Context, args RawQuery) (int32, error) {
 	query, err := args.AsV1QueryOrEmpty()
 	if err != nil {
 		return 0, err
@@ -228,7 +228,7 @@ func (eicr *EmbeddedImageScanComponentResolver) TopVuln(ctx context.Context) (*E
 }
 
 // Vulns resolves the vulnerabilities contained in the image component.
-func (eicr *EmbeddedImageScanComponentResolver) Vulns(ctx context.Context, args rawQuery) ([]*EmbeddedVulnerabilityResolver, error) {
+func (eicr *EmbeddedImageScanComponentResolver) Vulns(ctx context.Context, args RawQuery) ([]*EmbeddedVulnerabilityResolver, error) {
 	query, err := args.AsV1QueryOrEmpty()
 	if err != nil {
 		return nil, err
@@ -256,7 +256,7 @@ func (eicr *EmbeddedImageScanComponentResolver) Vulns(ctx context.Context, args 
 }
 
 // VulnCount resolves the number of vulnerabilities contained in the image component.
-func (eicr *EmbeddedImageScanComponentResolver) VulnCount(ctx context.Context, args rawQuery) (int32, error) {
+func (eicr *EmbeddedImageScanComponentResolver) VulnCount(ctx context.Context, args RawQuery) (int32, error) {
 	vulns, err := eicr.Vulns(ctx, args)
 	if err != nil {
 		return 0, err
@@ -270,7 +270,7 @@ func (eicr *EmbeddedImageScanComponentResolver) VulnCounter(ctx context.Context)
 }
 
 // Images are the images that contain the Component.
-func (eicr *EmbeddedImageScanComponentResolver) Images(ctx context.Context, args rawQuery) ([]*imageResolver, error) {
+func (eicr *EmbeddedImageScanComponentResolver) Images(ctx context.Context, args RawQuery) ([]*imageResolver, error) {
 	// Convert to query, but link the fields for the search.
 	query, err := args.AsV1QueryOrEmpty()
 	if err != nil {
@@ -284,7 +284,7 @@ func (eicr *EmbeddedImageScanComponentResolver) Images(ctx context.Context, args
 }
 
 // ImageCount is the number of images that contain the Component.
-func (eicr *EmbeddedImageScanComponentResolver) ImageCount(ctx context.Context, args rawQuery) (int32, error) {
+func (eicr *EmbeddedImageScanComponentResolver) ImageCount(ctx context.Context, args RawQuery) (int32, error) {
 	imageLoader, err := loaders.GetImageLoader(ctx)
 	if err != nil {
 		return 0, err
@@ -301,7 +301,7 @@ func (eicr *EmbeddedImageScanComponentResolver) ImageCount(ctx context.Context, 
 }
 
 // Deployments are the deployments that contain the Component.
-func (eicr *EmbeddedImageScanComponentResolver) Deployments(ctx context.Context, args rawQuery) ([]*deploymentResolver, error) {
+func (eicr *EmbeddedImageScanComponentResolver) Deployments(ctx context.Context, args RawQuery) ([]*deploymentResolver, error) {
 	if err := readDeployments(ctx); err != nil {
 		return nil, err
 	}
@@ -313,7 +313,7 @@ func (eicr *EmbeddedImageScanComponentResolver) Deployments(ctx context.Context,
 }
 
 // DeploymentCount is the number of deployments that contain the Component.
-func (eicr *EmbeddedImageScanComponentResolver) DeploymentCount(ctx context.Context, args rawQuery) (int32, error) {
+func (eicr *EmbeddedImageScanComponentResolver) DeploymentCount(ctx context.Context, args RawQuery) (int32, error) {
 	if err := readDeployments(ctx); err != nil {
 		return 0, err
 	}

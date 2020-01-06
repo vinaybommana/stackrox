@@ -83,7 +83,7 @@ func (resolver *Resolver) Vulnerability(ctx context.Context, args struct{ *graph
 }
 
 // Vulnerabilities resolves a set of vulnerabilities based on a query.
-func (resolver *Resolver) Vulnerabilities(ctx context.Context, q paginatedQuery) ([]*EmbeddedVulnerabilityResolver, error) {
+func (resolver *Resolver) Vulnerabilities(ctx context.Context, q PaginatedQuery) ([]*EmbeddedVulnerabilityResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "Vulnerabilities")
 	if err := readImages(ctx); err != nil {
 		return nil, err
@@ -102,7 +102,7 @@ func (resolver *Resolver) Vulnerabilities(ctx context.Context, q paginatedQuery)
 }
 
 // VulnerabilityCount returns count of all clusters across infrastructure
-func (resolver *Resolver) VulnerabilityCount(ctx context.Context, args rawQuery) (int32, error) {
+func (resolver *Resolver) VulnerabilityCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "VulnerabilityCount")
 	if err := readImages(ctx); err != nil {
 		return 0, err
@@ -138,7 +138,7 @@ func (resolver *Resolver) K8sVulnerability(ctx context.Context, args struct{ *gr
 }
 
 // K8sVulnerabilities resolves a set of k8s vulnerabilities based on a query.
-func (resolver *Resolver) K8sVulnerabilities(ctx context.Context, q rawQuery) ([]*EmbeddedVulnerabilityResolver, error) {
+func (resolver *Resolver) K8sVulnerabilities(ctx context.Context, q RawQuery) ([]*EmbeddedVulnerabilityResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "K8sVulnerabilities")
 	if err := readImages(ctx); err != nil {
 		return nil, err
@@ -172,7 +172,7 @@ func (resolver *Resolver) IstioVulnerability(ctx context.Context, args struct{ *
 }
 
 // IstioVulnerabilities resolves a set of istio vulnerabilities based on a query.
-func (resolver *Resolver) IstioVulnerabilities(ctx context.Context, q rawQuery) ([]*EmbeddedVulnerabilityResolver, error) {
+func (resolver *Resolver) IstioVulnerabilities(ctx context.Context, q RawQuery) ([]*EmbeddedVulnerabilityResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "IstioVulnerabilities")
 	if err := readImages(ctx); err != nil {
 		return nil, err
@@ -368,7 +368,7 @@ func (evr *EmbeddedVulnerabilityResolver) LastScanned(ctx context.Context) (*gra
 }
 
 // Components are the components that contain the CVE/Vulnerability.
-func (evr *EmbeddedVulnerabilityResolver) Components(ctx context.Context, args rawQuery) ([]*EmbeddedImageScanComponentResolver, error) {
+func (evr *EmbeddedVulnerabilityResolver) Components(ctx context.Context, args RawQuery) ([]*EmbeddedImageScanComponentResolver, error) {
 	query, err := args.AsV1QueryOrEmpty()
 	if err != nil {
 		return nil, err
@@ -381,7 +381,7 @@ func (evr *EmbeddedVulnerabilityResolver) Components(ctx context.Context, args r
 }
 
 // ComponentCount is the number of components that contain the CVE/Vulnerability.
-func (evr *EmbeddedVulnerabilityResolver) ComponentCount(ctx context.Context, args rawQuery) (int32, error) {
+func (evr *EmbeddedVulnerabilityResolver) ComponentCount(ctx context.Context, args RawQuery) (int32, error) {
 	components, err := evr.Components(ctx, args)
 	if err != nil {
 		return 0, err
@@ -390,7 +390,7 @@ func (evr *EmbeddedVulnerabilityResolver) ComponentCount(ctx context.Context, ar
 }
 
 // Images are the images that contain the CVE/Vulnerability.
-func (evr *EmbeddedVulnerabilityResolver) Images(ctx context.Context, args rawQuery) ([]*imageResolver, error) {
+func (evr *EmbeddedVulnerabilityResolver) Images(ctx context.Context, args RawQuery) ([]*imageResolver, error) {
 	// Convert to query, but link the fields for the search.
 	query, err := args.AsV1QueryOrEmpty()
 	if err != nil {
@@ -404,7 +404,7 @@ func (evr *EmbeddedVulnerabilityResolver) Images(ctx context.Context, args rawQu
 }
 
 // ImageCount is the number of images that contain the CVE/Vulnerability.
-func (evr *EmbeddedVulnerabilityResolver) ImageCount(ctx context.Context, args rawQuery) (int32, error) {
+func (evr *EmbeddedVulnerabilityResolver) ImageCount(ctx context.Context, args RawQuery) (int32, error) {
 	imageLoader, err := loaders.GetImageLoader(ctx)
 	if err != nil {
 		return 0, err
@@ -421,7 +421,7 @@ func (evr *EmbeddedVulnerabilityResolver) ImageCount(ctx context.Context, args r
 }
 
 // Deployments are the deployments that contain the CVE/Vulnerability.
-func (evr *EmbeddedVulnerabilityResolver) Deployments(ctx context.Context, args rawQuery) ([]*deploymentResolver, error) {
+func (evr *EmbeddedVulnerabilityResolver) Deployments(ctx context.Context, args RawQuery) ([]*deploymentResolver, error) {
 	if err := readDeployments(ctx); err != nil {
 		return nil, err
 	}
@@ -433,7 +433,7 @@ func (evr *EmbeddedVulnerabilityResolver) Deployments(ctx context.Context, args 
 }
 
 // DeploymentCount is the number of deployments that contain the CVE/Vulnerability.
-func (evr *EmbeddedVulnerabilityResolver) DeploymentCount(ctx context.Context, args rawQuery) (int32, error) {
+func (evr *EmbeddedVulnerabilityResolver) DeploymentCount(ctx context.Context, args RawQuery) (int32, error) {
 	if err := readDeployments(ctx); err != nil {
 		return 0, err
 	}

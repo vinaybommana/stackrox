@@ -31,7 +31,7 @@ func init() {
 }
 
 // Policies returns GraphQL resolvers for all policies
-func (resolver *Resolver) Policies(ctx context.Context, args paginatedQuery) ([]*policyResolver, error) {
+func (resolver *Resolver) Policies(ctx context.Context, args PaginatedQuery) ([]*policyResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "Policies")
 	if err := readPolicies(ctx); err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func (resolver *Resolver) Policy(ctx context.Context, args struct{ *graphql.ID }
 }
 
 // PolicyCount returns count of all policies across infrastructure
-func (resolver *Resolver) PolicyCount(ctx context.Context, args rawQuery) (int32, error) {
+func (resolver *Resolver) PolicyCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "PolicyCount")
 	if err := readPolicies(ctx); err != nil {
 		return 0, err
@@ -71,7 +71,7 @@ func (resolver *Resolver) PolicyCount(ctx context.Context, args rawQuery) (int32
 }
 
 // Alerts returns GraphQL resolvers for all alerts for this policy
-func (resolver *policyResolver) Alerts(ctx context.Context, args paginatedQuery) ([]*alertResolver, error) {
+func (resolver *policyResolver) Alerts(ctx context.Context, args PaginatedQuery) ([]*alertResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Policies, "Alerts")
 	if err := readAlerts(ctx); err != nil {
 		return nil, err
@@ -79,16 +79,16 @@ func (resolver *policyResolver) Alerts(ctx context.Context, args paginatedQuery)
 
 	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getRawPolicyQuery())
 
-	return resolver.root.Violations(ctx, paginatedQuery{Query: &query, Pagination: args.Pagination})
+	return resolver.root.Violations(ctx, PaginatedQuery{Query: &query, Pagination: args.Pagination})
 }
 
-func (resolver *policyResolver) AlertCount(ctx context.Context, args rawQuery) (int32, error) {
+func (resolver *policyResolver) AlertCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Policies, "AlertCount")
 	if err := readAlerts(ctx); err != nil {
 		return 0, err // could return nil, nil to prevent errors from propagating.
 	}
 
-	resolvers, err := resolver.Alerts(ctx, paginatedQuery{Query: args.Query})
+	resolvers, err := resolver.Alerts(ctx, PaginatedQuery{Query: args.Query})
 	if err != nil {
 		return 0, err
 	}
@@ -97,7 +97,7 @@ func (resolver *policyResolver) AlertCount(ctx context.Context, args rawQuery) (
 }
 
 // Deployments returns GraphQL resolvers for all deployments that this policy applies to
-func (resolver *policyResolver) Deployments(ctx context.Context, args paginatedQuery) ([]*deploymentResolver, error) {
+func (resolver *policyResolver) Deployments(ctx context.Context, args PaginatedQuery) ([]*deploymentResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Policies, "Deployments")
 	if err := readDeployments(ctx); err != nil {
 		return nil, err
@@ -125,14 +125,14 @@ func (resolver *policyResolver) Deployments(ctx context.Context, args paginatedQ
 }
 
 // DeploymentCount returns the count of all deployments that this policy applies to
-func (resolver *policyResolver) DeploymentCount(ctx context.Context, args rawQuery) (int32, error) {
+func (resolver *policyResolver) DeploymentCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Policies, "DeploymentCount")
 
 	if err := readDeployments(ctx); err != nil {
 		return 0, err
 	}
 
-	resolvers, err := resolver.root.Deployments(ctx, paginatedQuery{Query: args.Query})
+	resolvers, err := resolver.root.Deployments(ctx, PaginatedQuery{Query: args.Query})
 	if err != nil {
 		return 0, err
 	}

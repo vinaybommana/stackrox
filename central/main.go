@@ -26,6 +26,7 @@ import (
 	complianceService "github.com/stackrox/rox/central/compliance/service"
 	configService "github.com/stackrox/rox/central/config/service"
 	"github.com/stackrox/rox/central/cve/fetcher"
+	"github.com/stackrox/rox/central/cve/handler"
 	debugService "github.com/stackrox/rox/central/debug/service"
 	deploymentService "github.com/stackrox/rox/central/deployment/service"
 	detectionService "github.com/stackrox/rox/central/detection/service"
@@ -537,6 +538,12 @@ func (defaultFactory) CustomRoutes() (customRoutes []routes.CustomRoute) {
 			Route:         "/api/compliance/export/csv",
 			Authorizer:    user.With(permissions.View(resources.Compliance)),
 			ServerHandler: complianceHandlers.CSVHandler(),
+			Compression:   true,
+		},
+		{
+			Route:         "/api/vm/export/csv",
+			Authorizer:    user.With(permissions.View(resources.Image), permissions.View(resources.Deployment)),
+			ServerHandler: handler.CSVHandler(),
 			Compression:   true,
 		},
 		{

@@ -47,13 +47,15 @@ func (s *sortOption) AsV1SortOption() *v1.SortOption {
 	}
 }
 
-type pagination struct {
+// Pagination struct contains limit, offset and sort options
+type Pagination struct {
 	Offset     *int32
 	Limit      *int32
 	SortOption *sortOption
 }
 
-func (r *pagination) AsV1Pagination() *v1.Pagination {
+// AsV1Pagination returns a proto Pagination struct
+func (r *Pagination) AsV1Pagination() *v1.Pagination {
 	if r == nil {
 		return nil
 	}
@@ -74,12 +76,14 @@ func (r *pagination) AsV1Pagination() *v1.Pagination {
 	}
 }
 
-type paginatedQuery struct {
+// PaginatedQuery represents a query with pagination info
+type PaginatedQuery struct {
 	Query      *string
-	Pagination *pagination
+	Pagination *Pagination
 }
 
-func (r *paginatedQuery) AsV1QueryOrEmpty() (*v1.Query, error) {
+// AsV1QueryOrEmpty returns a proto query or empty proto query if pagination query is empty
+func (r *PaginatedQuery) AsV1QueryOrEmpty() (*v1.Query, error) {
 	var q *v1.Query
 	if r == nil || r.Query == nil {
 		q := search.EmptyQuery()
@@ -94,25 +98,29 @@ func (r *paginatedQuery) AsV1QueryOrEmpty() (*v1.Query, error) {
 	return q, nil
 }
 
-func (r *paginatedQuery) String() string {
+// String returns a String representation of PaginatedQuery
+func (r *PaginatedQuery) String() string {
 	if r == nil || r.Query == nil {
 		return ""
 	}
 	return *r.Query
 }
 
-type rawQuery struct {
+// RawQuery represents a raw query
+type RawQuery struct {
 	Query *string
 }
 
-func (r rawQuery) AsV1QueryOrEmpty() (*v1.Query, error) {
+// AsV1QueryOrEmpty returns a proto query or empty proto query if raw query is empty
+func (r RawQuery) AsV1QueryOrEmpty() (*v1.Query, error) {
 	if r.Query == nil {
 		return search.EmptyQuery(), nil
 	}
 	return search.ParseQuery(*r.Query, search.MatchAllIfEmpty())
 }
 
-func (r rawQuery) String() string {
+// String returns a String representation of RawQuery
+func (r RawQuery) String() string {
 	if r.Query == nil {
 		return ""
 	}

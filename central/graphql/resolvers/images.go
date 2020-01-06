@@ -32,7 +32,7 @@ func init() {
 }
 
 // Images returns GraphQL resolvers for all images
-func (resolver *Resolver) Images(ctx context.Context, args paginatedQuery) ([]*imageResolver, error) {
+func (resolver *Resolver) Images(ctx context.Context, args PaginatedQuery) ([]*imageResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "Images")
 	if err := readImages(ctx); err != nil {
 		return nil, err
@@ -50,7 +50,7 @@ func (resolver *Resolver) Images(ctx context.Context, args paginatedQuery) ([]*i
 }
 
 // ImageCount returns count of all images across deployments
-func (resolver *Resolver) ImageCount(ctx context.Context, args rawQuery) (int32, error) {
+func (resolver *Resolver) ImageCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "ImageCount")
 	if err := readImages(ctx); err != nil {
 		return 0, err
@@ -83,7 +83,7 @@ func (resolver *Resolver) Image(ctx context.Context, args struct{ Sha graphql.ID
 }
 
 // Deployments returns the deployments which use this image for the identified image, if it exists
-func (resolver *imageResolver) Deployments(ctx context.Context, args paginatedQuery) ([]*deploymentResolver, error) {
+func (resolver *imageResolver) Deployments(ctx context.Context, args PaginatedQuery) ([]*deploymentResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Images, "Deployments")
 	if err := readDeployments(ctx); err != nil {
 		return nil, err
@@ -109,12 +109,12 @@ func (resolver *imageResolver) Deployments(ctx context.Context, args paginatedQu
 }
 
 // Deployments returns the deployments which use this image for the identified image, if it exists
-func (resolver *imageResolver) DeploymentCount(ctx context.Context, args rawQuery) (int32, error) {
+func (resolver *imageResolver) DeploymentCount(ctx context.Context, args RawQuery) (int32, error) {
 	if err := readDeployments(ctx); err != nil {
 		return 0, err
 	}
 
-	resolvers, err := resolver.Deployments(ctx, paginatedQuery{Query: args.Query})
+	resolvers, err := resolver.Deployments(ctx, PaginatedQuery{Query: args.Query})
 	if err != nil {
 		return 0, err
 	}
@@ -123,7 +123,7 @@ func (resolver *imageResolver) DeploymentCount(ctx context.Context, args rawQuer
 }
 
 // TopVuln returns the first vulnerability with the top CVSS score.
-func (resolver *imageResolver) TopVuln(ctx context.Context, args rawQuery) (*EmbeddedVulnerabilityResolver, error) {
+func (resolver *imageResolver) TopVuln(ctx context.Context, args RawQuery) (*EmbeddedVulnerabilityResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Images, "TopVulnerability")
 	if err := resolver.ensureImage(ctx); err != nil {
 		return nil, err
@@ -151,7 +151,7 @@ func (resolver *imageResolver) TopVuln(ctx context.Context, args rawQuery) (*Emb
 }
 
 // Vulns returns all of the vulnerabilities in the image.
-func (resolver *imageResolver) Vulns(ctx context.Context, args paginatedQuery) ([]*EmbeddedVulnerabilityResolver, error) {
+func (resolver *imageResolver) Vulns(ctx context.Context, args PaginatedQuery) ([]*EmbeddedVulnerabilityResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Images, "Vulnerabilities")
 	if err := resolver.ensureImage(ctx); err != nil {
 		return nil, err
@@ -172,7 +172,7 @@ func (resolver *imageResolver) Vulns(ctx context.Context, args paginatedQuery) (
 }
 
 // VulnCount returns the number of vulnerabilities the image has.
-func (resolver *imageResolver) VulnCount(ctx context.Context, args rawQuery) (int32, error) {
+func (resolver *imageResolver) VulnCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Images, "VulnerabilityCount")
 	if err := resolver.ensureImage(ctx); err != nil {
 		return 0, err
@@ -197,7 +197,7 @@ func (resolver *imageResolver) VulnCounter(ctx context.Context) (*VulnerabilityC
 }
 
 // Vulns returns all of the vulnerabilities in the image.
-func (resolver *imageResolver) Components(ctx context.Context, args paginatedQuery) ([]*EmbeddedImageScanComponentResolver, error) {
+func (resolver *imageResolver) Components(ctx context.Context, args PaginatedQuery) ([]*EmbeddedImageScanComponentResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Images, "ImageComponents")
 
 	q, err := args.AsV1QueryOrEmpty()
@@ -215,7 +215,7 @@ func (resolver *imageResolver) Components(ctx context.Context, args paginatedQue
 	return resolvers.([]*EmbeddedImageScanComponentResolver), err
 }
 
-func (resolver *imageResolver) ComponentCount(ctx context.Context, args rawQuery) (int32, error) {
+func (resolver *imageResolver) ComponentCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "ComponentCount")
 	if err := readImages(ctx); err != nil {
 		return 0, err

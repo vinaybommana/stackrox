@@ -62,7 +62,7 @@ func (resolver *Resolver) Deployment(ctx context.Context, args struct{ *graphql.
 }
 
 // Deployments returns GraphQL resolvers all deployments
-func (resolver *Resolver) Deployments(ctx context.Context, args paginatedQuery) ([]*deploymentResolver, error) {
+func (resolver *Resolver) Deployments(ctx context.Context, args PaginatedQuery) ([]*deploymentResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "Deployments")
 	if err := readDeployments(ctx); err != nil {
 		return nil, err
@@ -76,7 +76,7 @@ func (resolver *Resolver) Deployments(ctx context.Context, args paginatedQuery) 
 }
 
 // DeploymentCount returns count all deployments across infrastructure
-func (resolver *Resolver) DeploymentCount(ctx context.Context, args rawQuery) (int32, error) {
+func (resolver *Resolver) DeploymentCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "DeploymentCount")
 	if err := readDeployments(ctx); err != nil {
 		return 0, err
@@ -145,7 +145,7 @@ func (resolver *deploymentResolver) GroupedProcesses(ctx context.Context) ([]*pr
 	return resolver.root.wrapProcessNameGroups(service.IndicatorsToGroupedResponses(indicators), err)
 }
 
-func (resolver *deploymentResolver) DeployAlerts(ctx context.Context, args paginatedQuery) ([]*alertResolver, error) {
+func (resolver *deploymentResolver) DeployAlerts(ctx context.Context, args PaginatedQuery) ([]*alertResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Deployments, "DeployAlerts")
 
 	if err := readAlerts(ctx); err != nil {
@@ -171,7 +171,7 @@ func (resolver *deploymentResolver) DeployAlerts(ctx context.Context, args pagin
 		resolver.root.ViolationsDataStore.SearchRawAlerts(ctx, nested))
 }
 
-func (resolver *deploymentResolver) DeployAlertCount(ctx context.Context, args rawQuery) (int32, error) {
+func (resolver *deploymentResolver) DeployAlertCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Deployments, "DeployAlertsCount")
 
 	if err := readAlerts(ctx); err != nil {
@@ -195,7 +195,7 @@ func (resolver *deploymentResolver) DeployAlertCount(ctx context.Context, args r
 	return int32(len(results)), nil
 }
 
-func (resolver *deploymentResolver) Policies(ctx context.Context, args paginatedQuery) ([]*policyResolver, error) {
+func (resolver *deploymentResolver) Policies(ctx context.Context, args PaginatedQuery) ([]*policyResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Deployments, "Policies")
 
 	if err := readPolicies(ctx); err != nil {
@@ -217,7 +217,7 @@ func (resolver *deploymentResolver) Policies(ctx context.Context, args paginated
 	return resolvers.([]*policyResolver), err
 }
 
-func (resolver *deploymentResolver) PolicyCount(ctx context.Context, args rawQuery) (int32, error) {
+func (resolver *deploymentResolver) PolicyCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Deployments, "PolicyCount")
 
 	q, err := args.AsV1QueryOrEmpty()
@@ -249,7 +249,7 @@ func (resolver *deploymentResolver) getApplicablePolicies(ctx context.Context, q
 }
 
 // FailingPolicies returns policy resolvers for policies failing on this deployment
-func (resolver *deploymentResolver) FailingPolicies(ctx context.Context, args paginatedQuery) ([]*policyResolver, error) {
+func (resolver *deploymentResolver) FailingPolicies(ctx context.Context, args PaginatedQuery) ([]*policyResolver, error) {
 	if err := readPolicies(ctx); err != nil {
 		return nil, err
 	}
@@ -288,7 +288,7 @@ func (resolver *deploymentResolver) FailingPolicies(ctx context.Context, args pa
 }
 
 // FailingPolicyCount returns count of policies failing on this deployment
-func (resolver *deploymentResolver) FailingPolicyCount(ctx context.Context, args rawQuery) (int32, error) {
+func (resolver *deploymentResolver) FailingPolicyCount(ctx context.Context, args RawQuery) (int32, error) {
 	if err := readPolicies(ctx); err != nil {
 		return 0, err
 	}
@@ -325,7 +325,7 @@ func (resolver *deploymentResolver) FailingPolicyCounter(ctx context.Context) (*
 }
 
 // Secrets returns the total number of secrets for this deployment
-func (resolver *deploymentResolver) Secrets(ctx context.Context, args paginatedQuery) ([]*secretResolver, error) {
+func (resolver *deploymentResolver) Secrets(ctx context.Context, args PaginatedQuery) ([]*secretResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Deployments, "Secrets")
 
 	q, err := args.AsV1QueryOrEmpty()
@@ -348,7 +348,7 @@ func (resolver *deploymentResolver) Secrets(ctx context.Context, args paginatedQ
 }
 
 // SecretCount returns the total number of secrets for this deployment
-func (resolver *deploymentResolver) SecretCount(ctx context.Context, args rawQuery) (int32, error) {
+func (resolver *deploymentResolver) SecretCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Deployments, "SecretCount")
 
 	q, err := args.AsV1QueryOrEmpty()
@@ -401,7 +401,7 @@ func (resolver *Resolver) getDeployment(ctx context.Context, id string) *storage
 	return deployment
 }
 
-func (resolver *deploymentResolver) ComplianceResults(ctx context.Context, args rawQuery) ([]*controlResultResolver, error) {
+func (resolver *deploymentResolver) ComplianceResults(ctx context.Context, args RawQuery) ([]*controlResultResolver, error) {
 	if err := readCompliance(ctx); err != nil {
 		return nil, err
 	}
@@ -444,7 +444,7 @@ func (resolver *deploymentResolver) ServiceAccountID(ctx context.Context) (strin
 	return results[0].ID, nil
 }
 
-func (resolver *deploymentResolver) Images(ctx context.Context, args paginatedQuery) ([]*imageResolver, error) {
+func (resolver *deploymentResolver) Images(ctx context.Context, args PaginatedQuery) ([]*imageResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Deployments, "Images")
 	if err := readImages(ctx); err != nil {
 		return nil, err
@@ -476,7 +476,7 @@ func (resolver *deploymentResolver) Images(ctx context.Context, args paginatedQu
 	return resolver.root.wrapImages(imageLoader.FromQuery(ctx, q))
 }
 
-func (resolver *deploymentResolver) ImageCount(ctx context.Context, args rawQuery) (int32, error) {
+func (resolver *deploymentResolver) ImageCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Deployments, "ImageCount")
 	if err := readImages(ctx); err != nil {
 		return 0, err
@@ -484,10 +484,10 @@ func (resolver *deploymentResolver) ImageCount(ctx context.Context, args rawQuer
 
 	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getImageRawQuery(ctx))
 
-	return resolver.root.ImageCount(ctx, rawQuery{Query: &query})
+	return resolver.root.ImageCount(ctx, RawQuery{Query: &query})
 }
 
-func (resolver *deploymentResolver) Components(ctx context.Context, args paginatedQuery) ([]*EmbeddedImageScanComponentResolver, error) {
+func (resolver *deploymentResolver) Components(ctx context.Context, args PaginatedQuery) ([]*EmbeddedImageScanComponentResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "Components")
 	if err := readImages(ctx); err != nil {
 		return nil, err
@@ -517,7 +517,7 @@ func (resolver *deploymentResolver) Components(ctx context.Context, args paginat
 	return resolvers.([]*EmbeddedImageScanComponentResolver), err
 }
 
-func (resolver *deploymentResolver) ComponentCount(ctx context.Context, args rawQuery) (int32, error) {
+func (resolver *deploymentResolver) ComponentCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "ComponentCount")
 	if err := readImages(ctx); err != nil {
 		return 0, err
@@ -540,7 +540,7 @@ func (resolver *deploymentResolver) ComponentCount(ctx context.Context, args raw
 	return int32(len(comps)), nil
 }
 
-func (resolver *deploymentResolver) Vulns(ctx context.Context, args paginatedQuery) ([]*EmbeddedVulnerabilityResolver, error) {
+func (resolver *deploymentResolver) Vulns(ctx context.Context, args PaginatedQuery) ([]*EmbeddedVulnerabilityResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "Vulns")
 	if err := readImages(ctx); err != nil {
 		return nil, err
@@ -569,7 +569,7 @@ func (resolver *deploymentResolver) Vulns(ctx context.Context, args paginatedQue
 	return resolvers.([]*EmbeddedVulnerabilityResolver), err
 }
 
-func (resolver *deploymentResolver) VulnCount(ctx context.Context, args rawQuery) (int32, error) {
+func (resolver *deploymentResolver) VulnCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "VulnCount")
 	if err := readImages(ctx); err != nil {
 		return 0, err
@@ -610,7 +610,7 @@ func (resolver *deploymentResolver) VulnCounter(ctx context.Context) (*Vulnerabi
 	return mapImagesToVulnerabilityCounter(images), nil
 }
 
-func (resolver *deploymentResolver) PolicyStatus(ctx context.Context, args rawQuery) (string, error) {
+func (resolver *deploymentResolver) PolicyStatus(ctx context.Context, args RawQuery) (string, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Deployments, "PolicyStatus")
 
 	q, err := args.AsV1QueryOrEmpty()
@@ -705,7 +705,7 @@ func (resolver *deploymentResolver) getFailingAlertsQuery(q *v1.Query) (*v1.Quer
 	return search.NewConjunctionQuery(q, search.NewQueryBuilder().AddExactMatches(search.ViolationState, storage.ViolationState_ACTIVE.String()).ProtoQuery()), nil
 }
 
-func (resolver *deploymentResolver) LatestViolation(ctx context.Context, args rawQuery) (*graphql.Time, error) {
+func (resolver *deploymentResolver) LatestViolation(ctx context.Context, args RawQuery) (*graphql.Time, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Deployments, "Latest Violation")
 
 	q, err := args.AsV1QueryOrEmpty()
