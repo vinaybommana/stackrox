@@ -13633,11 +13633,6 @@ shallowequal@^0.2.2:
   dependencies:
     lodash.keys "^3.1.2"
 
-shave@^2.5.3:
-  version "2.5.4"
-  resolved "https://registry.yarnpkg.com/shave/-/shave-2.5.4.tgz#056cbc7f565c84c10ff4c1038aeffbd42b3a1d37"
-  integrity sha512-KqiI6QbiOijw8hejfIFEcbqWPszekHdz1kJZHbBjNFwHOZONktRqCS/+A8R7rl94VYrDQcKrPMItUMLvaBlYQw==
-
 shebang-command@^1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/shebang-command/-/shebang-command-1.2.0.tgz#44aac65b695b03398968c39f363fee5deafdf1ea"

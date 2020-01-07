@@ -74,7 +74,6 @@
         "redux-form": "^7.4.2",
         "redux-saga": "^0.16.0",
         "reselect": "^4.0.0",
-        "shave": "^2.5.3",
         "slick-carousel": "^1.8.1",
         "store": "^2.0.12",
         "styled-components": "^4.4.0",
