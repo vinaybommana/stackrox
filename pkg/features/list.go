@@ -17,5 +17,5 @@ var (
 
 	// IQTAnalystNotesUI enables the IQT Analyst Notes UI.
 	// NB: When removing this feature flag, remove references in ui/src/utils/featureFlags.js
-	IQTAnalystNotesUI = registerFeature("Enable IQT Analyst Notes UI", "ROX_IQT_ANALYST_NOTES_UI", true)
+	IQTAnalystNotesUI = registerFeature("Enable IQT Analyst Notes UI", "ROX_IQT_ANALYST_NOTES_UI", false)
 )
