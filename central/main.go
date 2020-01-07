@@ -90,6 +90,7 @@ import (
 	siStore "github.com/stackrox/rox/central/serviceidentities/datastore"
 	siService "github.com/stackrox/rox/central/serviceidentities/service"
 	summaryService "github.com/stackrox/rox/central/summary/service"
+	telemetryService "github.com/stackrox/rox/central/telemetry/service"
 	"github.com/stackrox/rox/central/tlsconfig"
 	"github.com/stackrox/rox/central/ui"
 	userService "github.com/stackrox/rox/central/user/service"
@@ -310,6 +311,10 @@ func (f defaultFactory) ServicesToRegister(registry authproviders.Registry) []pk
 		sensorService.New(connection.ManagerSingleton(), all.Singleton(), clusterDataStore.Singleton()),
 		licenseService.New(false, licenseSingletons.ManagerSingleton()),
 		backupRestoreService.Singleton(),
+	}
+
+	if features.Telemetry.Enabled() {
+		servicesToRegister = append(servicesToRegister, telemetryService.Singleton())
 	}
 
 	autoTriggerUpgrades := sensorUpgradeConfigStore.Singleton().AutoTriggerSetting()

@@ -144,6 +144,10 @@ func OutputZip(config renderer.Config) error {
 	}
 	if config.K8sConfig != nil {
 		config.Environment[env.OfflineModeEnv.EnvVar()] = strconv.FormatBool(config.K8sConfig.OfflineMode)
+
+		if features.Telemetry.Enabled() {
+			config.Environment[env.InitialTelemetryEnabledEnv.EnvVar()] = strconv.FormatBool(config.K8sConfig.TelemetryEnabled)
+		}
 	}
 
 	config.SecretsByteMap["htpasswd"] = htpasswd
