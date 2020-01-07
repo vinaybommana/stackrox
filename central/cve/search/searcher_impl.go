@@ -67,7 +67,7 @@ func convertMany(cves []*storage.CVE, results []search.Result) []*v1.SearchResul
 
 func convertOne(cve *storage.CVE, result *search.Result) *v1.SearchResult {
 	return &v1.SearchResult{
-		Category:       v1.SearchCategory_SECRETS,
+		Category:       v1.SearchCategory_VULNERABILITIES,
 		Id:             cve.GetId(),
 		Name:           cve.GetId(),
 		FieldToMatches: search.GetProtoMatchesMap(result.Matches),

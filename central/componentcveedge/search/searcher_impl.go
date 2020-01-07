@@ -11,7 +11,6 @@ import (
 	"github.com/stackrox/rox/pkg/search/blevesearch"
 )
 
-// searcherImpl provides an intermediary implementation layer focentral/serviceaccount/search/searcher_impl.gor AlertStorage.
 type searcherImpl struct {
 	storage  store.Store
 	indexer  index.Indexer
@@ -66,7 +65,7 @@ func convertMany(cves []*storage.ComponentCVEEdge, results []search.Result) []*v
 
 func convertOne(cve *storage.ComponentCVEEdge, result *search.Result) *v1.SearchResult {
 	return &v1.SearchResult{
-		Category:       v1.SearchCategory_SECRETS,
+		Category:       v1.SearchCategory_COMPONENT_VULN_EDGE,
 		Id:             cve.GetId(),
 		Name:           cve.GetId(),
 		FieldToMatches: search.GetProtoMatchesMap(result.Matches),
