@@ -95,6 +95,9 @@ message ContainerInstance {
 
     // The start time of the container
     google.protobuf.Timestamp started  = 4;
+
+    // Image ID
+    string image_digest                = 5 [(gogoproto.moretags) = "search:\"Container Image Digest,hidden\""];
 }
 
 message ContainerInstanceID {

@@ -19,6 +19,7 @@ import (
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/metrics"
 	"github.com/stackrox/rox/pkg/search"
+	"github.com/stackrox/rox/pkg/set"
 )
 
 var (
@@ -134,10 +135,36 @@ func compareMap(m1, m2 map[string]string) bool {
 	return true
 }
 
+func hasNewImageReferences(oldDeployment, newDeployment *storage.Deployment) bool {
+	oldImages := set.NewStringSet()
+	for _, c := range oldDeployment.GetContainers() {
+		for _, i := range c.GetInstances() {
+			if i.GetImageDigest() != "" {
+				oldImages.Add(i.GetImageDigest())
+			}
+		}
+	}
+	newImages := set.NewStringSet()
+	for _, c := range newDeployment.GetContainers() {
+		for _, i := range c.GetInstances() {
+			if i.GetImageDigest() != "" {
+				newImages.Add(i.GetImageDigest())
+			}
+		}
+	}
+	return !newImages.Equal(oldImages)
+}
+
 func (s *pipelineImpl) rewriteInstancesAndPersist(ctx context.Context, oldDeployment *storage.Deployment, newDeployment *storage.Deployment) error {
 	// Using the index of Container is save as this is ensured by the hash
 	for i, c := range newDeployment.GetContainers() {
 		oldDeployment.Containers[i].Instances = c.Instances
+	}
+
+	// Check if the images seen are different, if so, then upsert into store and index
+	// otherwise, just upsert
+	if hasNewImageReferences(oldDeployment, newDeployment) {
+		return s.deployments.UpsertDeployment(ctx, oldDeployment)
 	}
 	return s.deployments.UpsertDeploymentIntoStoreOnly(ctx, oldDeployment)
 }

@@ -219,7 +219,9 @@ func (g *garbageCollectorImpl) collectImages(config *storage.PrivateConfig) {
 
 	imagesToPrune := make([]string, 0, len(imageResults))
 	for _, result := range imageResults {
-		q := search.NewQueryBuilder().AddExactMatches(search.ImageSHA, result.ID).ProtoQuery()
+		q1 := search.NewQueryBuilder().AddExactMatches(search.ImageSHA, result.ID).ProtoQuery()
+		q2 := search.NewQueryBuilder().AddExactMatches(search.ContainerImageDigest, result.ID).ProtoQuery()
+		q := search.NewDisjunctionQuery(q1, q2)
 		results, err := g.deployments.Search(pruningCtx, q)
 		if err != nil {
 			log.Error(err)

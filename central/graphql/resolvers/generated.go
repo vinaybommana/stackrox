@@ -348,6 +348,7 @@ func registerGeneratedTypes(builder generator.SchemaBuilder) {
 	utils.Must(builder.AddType("ContainerInstance", []string{
 		"containerIps: [String!]!",
 		"containingPodId: String!",
+		"imageDigest: String!",
 		"instanceId: ContainerInstanceID",
 		"started: Time",
 	}))
@@ -3586,6 +3587,11 @@ func (resolver *containerInstanceResolver) ContainerIps(ctx context.Context) []s
 
 func (resolver *containerInstanceResolver) ContainingPodId(ctx context.Context) string {
 	value := resolver.data.GetContainingPodId()
+	return value
+}
+
+func (resolver *containerInstanceResolver) ImageDigest(ctx context.Context) string {
+	value := resolver.data.GetImageDigest()
 	return value
 }
 

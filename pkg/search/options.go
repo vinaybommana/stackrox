@@ -61,6 +61,7 @@ var (
 	CPUCoresLimit          = newFieldLabel("CPU Cores Limit")
 	CPUCoresRequest        = newFieldLabel("CPU Cores Request")
 	ContainerID            = newFieldLabel("Container ID")
+	ContainerImageDigest   = newFieldLabel("Container Image Digest")
 	DeploymentID           = newFieldLabel("Deployment ID")
 	DeploymentName         = newFieldLabel("Deployment")
 	DeploymentType         = newFieldLabel("Deployment Type")

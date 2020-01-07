@@ -88,8 +88,16 @@ func newImageInstance(id string, daysOld int) *storage.Image {
 func newDeployment(imageIDs ...string) *storage.Deployment {
 	var containers []*storage.Container
 	for _, id := range imageIDs {
+		digest := types.NewDigest(id).Digest()
 		containers = append(containers, &storage.Container{
-			Image: &storage.ContainerImage{Id: types.NewDigest(id).Digest()},
+			Image: &storage.ContainerImage{
+				Id: digest,
+			},
+			Instances: []*storage.ContainerInstance{
+				{
+					ImageDigest: id,
+				},
+			},
 		})
 	}
 	return &storage.Deployment{
@@ -212,6 +220,29 @@ func TestImagePruning(t *testing.T) {
 			},
 			deployment:  newDeployment("id2"),
 			expectedIDs: []string{"id2"},
+		},
+		{
+			name: "two old - 1 deployment with old, but has reference to old",
+			images: []*storage.Image{
+				newImageInstance("id1", configDatastore.DefaultImageRetention+1),
+				newImageInstance("id2", configDatastore.DefaultImageRetention+1),
+			},
+			deployment: &storage.Deployment{
+				Id: "d1",
+				Containers: []*storage.Container{
+					{
+						Image: &storage.ContainerImage{
+							Id: "id1",
+						},
+						Instances: []*storage.ContainerInstance{
+							{
+								ImageDigest: "id2",
+							},
+						},
+					},
+				},
+			},
+			expectedIDs: []string{},
 		},
 	}
 
