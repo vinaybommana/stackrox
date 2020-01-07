@@ -102,6 +102,13 @@ func (suite *MigrationTestSuite) TestUpdatePolicyTexts() {
 			Rationale:   "Package managers make it easier for attackers to use compromised containers, since they can easily add software.",
 			Remediation: "Run `apt-get remove -y --allow-remove-essential apt` in the image build for production containers.",
 		},
+		// Red Hat Package Manager in Image
+		{
+			Id:          "f95ff08d-130a-465a-a27e-32ed1fb05555",
+			Description: "Alert on deployments with compoenents of the Red Hat/Fedora/CentOS package management system.",
+			Rationale:   "Package managers make it easier for attackers to use compromised containers, since they can easily add software.",
+			Remediation: "Run `rpm -e $(rpm -qa *rpm*) $(rpm -qa *dnf*) $(rpm -qa *libsolv*) $(rpm -qa *hawkey*) $(rpm -qa yum*)` in the image build for production containers.",
+		},
 	}
 
 	expectedPolicies := []*storage.Policy{
@@ -154,6 +161,13 @@ func (suite *MigrationTestSuite) TestUpdatePolicyTexts() {
 			Description: "Alert when Debian/Ubuntu package manager programs are executed at runtime",
 			Rationale:   "Use of package managers at runtime indicates that new software may be being introduced into containers while they are running.",
 			Remediation: "Run `apt-get remove -y --allow-remove-essential apt` in the image build for production containers. Change applications to no longer use package managers at runtime, if applicable.",
+		},
+		// Red Hat Package Manager in Image
+		{
+			Id:          "f95ff08d-130a-465a-a27e-32ed1fb05555",
+			Description: "Alert on deployments with components of the Red Hat/Fedora/CentOS package management system.",
+			Rationale:   "Package managers make it easier for attackers to use compromised containers, since they can easily add software.",
+			Remediation: "Run `rpm -e $(rpm -qa *rpm*) $(rpm -qa *dnf*) $(rpm -qa *libsolv*) $(rpm -qa *hawkey*) $(rpm -qa yum*)` in the image build for production containers.",
 		},
 	}
 

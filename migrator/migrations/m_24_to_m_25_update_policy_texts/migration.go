@@ -70,6 +70,13 @@ var (
 		remediation: "Run `apt-get remove -y --allow-remove-essential apt` in the image build for production containers. Change applications to no longer use package managers at runtime, if applicable.",
 	}
 
+	redHatPackageManagerinImagePolicy = policyMeta{
+		id:          "f95ff08d-130a-465a-a27e-32ed1fb05555",
+		description: "Alert on deployments with components of the Red Hat/Fedora/CentOS package management system.",
+		rationale:   "Package managers make it easier for attackers to use compromised containers, since they can easily add software.",
+		remediation: "Run `rpm -e $(rpm -qa *rpm*) $(rpm -qa *dnf*) $(rpm -qa *libsolv*) $(rpm -qa *hawkey*) $(rpm -qa yum*)` in the image build for production containers.",
+	}
+
 	policyMap = map[string]*policyMeta{
 		"93f4b2dd-ef5a-419e-8371-38aed480fb36": &cvssGreaterThan6Policy,
 		"f09f8da1-6111-4ca0-8f49-294a76c65115": &cvssGreaterThan7Policy,
@@ -78,6 +85,7 @@ var (
 		"d63564bd-c184-40bc-9f30-39711e010b82": &alpineLinuxPolicy,
 		"ddb7af9c-5ec1-45e1-a0cf-c36e3ef2b2ce": &redHatPolicy,
 		"d7a275e1-1bba-47e7-92a1-42340c759883": &ubuntuPolicy,
+		"f95ff08d-130a-465a-a27e-32ed1fb05555": &redHatPackageManagerinImagePolicy,
 	}
 )
 
@@ -96,7 +104,7 @@ func updatePolicyTexts(db *bolt.DB) error {
 		for key, val := range policyMap {
 			v := b.Get([]byte(key))
 			if v == nil {
-				return errors.Errorf("Could not find a policy with id %v because it does not exist.", key)
+				continue
 			}
 			var policyValue storage.Policy
 			if err := proto.Unmarshal(v, &policyValue); err != nil {
