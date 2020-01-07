@@ -146,19 +146,6 @@ func TestDockerRuntimeChecks(t *testing.T) {
 			status: framework.PassStatus,
 		},
 		{
-			name: "CIS_Docker_v1_2_0:5_24",
-			container: types.ContainerJSON{
-				ContainerJSONBase: &types.ContainerJSONBase{
-					HostConfig: &types.HostConfig{
-						Resources: types.Resources{
-							CgroupParent: "random",
-						},
-					},
-				},
-			},
-			status: framework.FailStatus,
-		},
-		{
 			name: "CIS_Docker_v1_2_0:5_11",
 			container: types.ContainerJSON{
 				ContainerJSONBase: &types.ContainerJSONBase{

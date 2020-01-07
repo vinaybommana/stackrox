@@ -139,11 +139,12 @@ func capabilities(ctx framework.ComplianceContext, container types.ContainerJSON
 }
 
 func cgroup(ctx framework.ComplianceContext, container types.ContainerJSON) {
-	if container.HostConfig.CgroupParent != "docker" && container.HostConfig.CgroupParent != "" {
-		framework.Failf(ctx, "Container %q has the cgroup parent set to %s", container.Name, container.HostConfig.CgroupParent)
-	} else {
+	if container.HostConfig.CgroupParent == "docker" ||
+		container.HostConfig.CgroupParent == "" || strings.Contains(container.HostConfig.CgroupParent, "kube") {
 		framework.Passf(ctx, "Container %q has the cgroup parent set to %q", container.Name, container.HostConfig.CgroupParent)
+		return
 	}
+	framework.Notef(ctx, "Container %q has the cgroup parent set to %q", container.Name, container.HostConfig.CgroupParent)
 }
 
 func cpuShares(ctx framework.ComplianceContext, container types.ContainerJSON) {
