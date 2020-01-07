@@ -202,18 +202,21 @@ function getFragmentInfo(entityType, listType, appContext) {
 function getPagination(sort, page, pageSize = defaultPageSize) {
     const sortObj = Array.isArray(sort) ? sort[0] : sort; // Back end can't support multiple sort right now, so just taking first sort
 
-    if (!sortObj || !sortObj.id) return null;
+    if (!sortObj) return null;
     const offset = page * pageSize;
     const limit = pageSize;
-    const { id: field, desc: reversed } = sortObj;
-    return {
+    const paginationObj = {
         offset,
-        limit,
-        sortOption: {
-            field,
-            reversed
-        }
+        limit
     };
+
+    if (!sortObj.id) return paginationObj;
+
+    paginationObj.sortOption = {
+        field: sortObj.id,
+        reversed: sortObj.desc
+    };
+    return paginationObj;
 }
 
 export default {
