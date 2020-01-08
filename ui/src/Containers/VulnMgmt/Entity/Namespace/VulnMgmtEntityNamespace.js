@@ -5,6 +5,7 @@ import useCases from 'constants/useCaseTypes';
 import { workflowEntityPropTypes, workflowEntityDefaultProps } from 'constants/entityPageProps';
 import queryService from 'modules/queryService';
 import entityTypes from 'constants/entityTypes';
+import { defaultCountKeyMap } from 'constants/workflowPages.constants';
 import WorkflowEntityPage from 'Containers/Workflow/WorkflowEntityPage';
 import { VULN_CVE_LIST_FRAGMENT } from 'Containers/VulnMgmt/VulnMgmt.fragments';
 import VulnMgmtNamespaceOverview from './VulnMgmtNamespaceOverview';
@@ -14,7 +15,7 @@ import {
     tryUpdateQueryWithVulMgmtPolicyClause
 } from '../VulnMgmtPolicyQueryUtil';
 
-const VulnMgmtNamespace = ({ entityId, entityListType, search, entityContext, sort, page }) => {
+const VulnMgmtNamespace = ({ entityId, entityListType, search, sort, page, entityContext }) => {
     const overviewQuery = gql`
         query getNamespace($id: ID!, $policyQuery: String) {
             result: namespace(id: $id) {
@@ -57,14 +58,15 @@ const VulnMgmtNamespace = ({ entityId, entityListType, search, entityContext, so
 
     function getListQuery(listFieldName, fragmentName, fragment) {
         return gql`
-        query getNamespace${entityListType}($id: ID!, $query: String${getPolicyQueryVar(
+        query getNamespace${entityListType}($id: ID!, $pagination: Pagination, $query: String${getPolicyQueryVar(
             entityListType
         )}) {
             result: namespace(id: $id) {
                 metadata {
                     id
                 }
-                ${listFieldName}(query: $query) { ...${fragmentName} }
+                ${defaultCountKeyMap[entityListType]}(query: $query)
+                ${listFieldName}(query: $query, pagination: $pagination) { ...${fragmentName} }
             }
         }
         ${fragment}

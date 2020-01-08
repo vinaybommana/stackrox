@@ -5,9 +5,11 @@ import { useQuery } from 'react-apollo';
 
 import PageNotFound from 'Components/PageNotFound';
 import Loader from 'Components/Loader';
+import Message from 'Components/Message';
 import { useTheme } from 'Containers/ThemeProvider';
 import queryService from 'modules/queryService';
 
+import { LIST_PAGE_SIZE, defaultCountKeyMap } from 'constants/workflowPages.constants';
 import useCases from 'constants/useCaseTypes';
 import vulnMgmtDefaultSorts from '../VulnMgmt/VulnMgmt.defaultSorts';
 
@@ -45,7 +47,11 @@ const WorkflowEntityPage = ({
     if (entityListType) {
         // sorting stuff
         const appliedSort = sort || useCaseDefaultSorts[useCase][entityListType];
-        enhancedQueryOptions.variables.pagination = queryService.getPagination(appliedSort, page);
+        enhancedQueryOptions.variables.pagination = queryService.getPagination(
+            appliedSort,
+            page,
+            LIST_PAGE_SIZE
+        );
 
         const { listFieldName, fragmentName, fragment } = queryService.getFragmentInfo(
             entityType,
@@ -68,15 +74,19 @@ const WorkflowEntityPage = ({
         );
     }
 
-    const { loading, data } = useQuery(query, enhancedQueryOptions);
+    const { loading, data, error } = useQuery(query, enhancedQueryOptions);
     if (loading) return <Loader transparent />;
+    if (error)
+        return <Message type="error" message={error.message || 'An unknown error has occurred.'} />;
     if (!data || !data.result) return <PageNotFound resourceType={entityType} />;
     const { result } = data;
 
     const listData = entityListType ? result[fieldName] : null;
+    const listCountKey = defaultCountKeyMap[entityListType];
     return entityListType ? (
         <ListComponent
             entityListType={entityListType}
+            totalResults={result[listCountKey]}
             data={listData}
             search={search}
             sort={sort}

@@ -17,10 +17,11 @@ import removeEntityContextColumns from 'utils/tableUtils';
 import { imageSortFields } from 'constants/sortFields';
 
 export const defaultImageSort = [
-    {
-        id: imageSortFields.PRIORITY,
-        desc: false
-    },
+    // @TODO: uncomment the following primary sort object once it is valid in the back-end pagination
+    // {
+    //     id: imageSortFields.PRIORITY,
+    //     desc: false
+    // },
     {
         id: imageSortFields.NAME,
         desc: false
@@ -84,8 +85,8 @@ export function getImageTableColumns(workflowState) {
                 const { cvss, scoreVersion } = topVuln;
                 return <TopCvssLabel cvss={cvss} version={scoreVersion} />;
             },
-            accessor: 'topVuln.cvss'
-            // sortField: TBD
+            accessor: 'topVuln.cvss',
+            sortField: imageSortFields.CVSS
         },
         {
             Header: `Created`,
@@ -120,8 +121,8 @@ export function getImageTableColumns(workflowState) {
                 const imageStatus = deploymentCount === 0 ? 'inactive' : 'active';
                 return <StatusChip status={imageStatus} asString={pdf} />;
             },
-            accessor: 'deploymentCount'
-            // sortField: TBD,
+            accessor: 'deploymentCount',
+            sortField: imageSortFields.IMAGE_STATUS
         },
         {
             Header: `Deployments`,
@@ -136,8 +137,8 @@ export function getImageTableColumns(workflowState) {
                     selectedRowId={original.id}
                 />
             ),
-            accessor: 'deploymentCount'
-            // sortField: imageSortFields.STATUS,
+            accessor: 'deploymentCount',
+            sortField: imageSortFields.DEPLOYMENTS
         },
         {
             Header: `Components`,
@@ -164,14 +165,14 @@ export function getImageTableColumns(workflowState) {
             Header: `Risk Priority`,
             headerClassName: `w-1/10 ${defaultHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
-            accessor: 'priority'
-            // sortField: TBD
+            accessor: 'priority',
+            sortField: imageSortFields.PRIORITY
         }
     ];
     return removeEntityContextColumns(tableColumns, workflowState);
 }
 
-const VulnMgmtImages = ({ selectedRowId, search, sort, page, data }) => {
+const VulnMgmtImages = ({ selectedRowId, search, sort, page, data, totalResults }) => {
     const query = gql`
         query getImages($query: String, $pagination: Pagination) {
             results: images(query: $query, pagination: $pagination) {
@@ -193,6 +194,7 @@ const VulnMgmtImages = ({ selectedRowId, search, sort, page, data }) => {
     return (
         <WorkflowListPage
             data={data}
+            totalResults={totalResults}
             query={query}
             queryOptions={queryOptions}
             entityListType={entityTypes.IMAGE}

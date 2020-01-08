@@ -4,6 +4,7 @@ import gql from 'graphql-tag';
 import { workflowEntityPropTypes, workflowEntityDefaultProps } from 'constants/entityPageProps';
 import useCases from 'constants/useCaseTypes';
 import entityTypes from 'constants/entityTypes';
+import { defaultCountKeyMap } from 'constants/workflowPages.constants';
 import { DEPLOYMENT_LIST_FRAGMENT } from 'Containers/VulnMgmt/VulnMgmt.fragments';
 import WorkflowEntityPage from 'Containers/Workflow/WorkflowEntityPage';
 import queryService from 'modules/queryService';
@@ -155,10 +156,11 @@ const VulmMgmtEntityPolicy = ({ entityId, entityListType, search, entityContext,
 
     function getListQuery(listFieldName, fragmentName, fragment) {
         return gql`
-        query getPolicy${entityListType}($id: ID!, $query: String, $policyQuery: String) {
+        query getPolicy${entityListType}($id: ID!, $pagination: Pagination, $query: String, $policyQuery: String) {
             result: policy(id: $id) {
                 id
-                ${listFieldName}(query: $query) { ...${fragmentName} }
+                ${defaultCountKeyMap[entityListType]}(query: $query)
+                ${listFieldName}(query: $query, pagination: $pagination) { ...${fragmentName} }
             }
         }
         ${fragment}

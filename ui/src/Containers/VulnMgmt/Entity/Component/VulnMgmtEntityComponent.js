@@ -3,6 +3,7 @@ import gql from 'graphql-tag';
 import WorkflowEntityPage from 'Containers/Workflow/WorkflowEntityPage';
 import queryService from 'modules/queryService';
 import entityTypes from 'constants/entityTypes';
+import { defaultCountKeyMap } from 'constants/workflowPages.constants';
 import useCases from 'constants/useCaseTypes';
 import { VULN_CVE_LIST_FRAGMENT } from 'Containers/VulnMgmt/VulnMgmt.fragments';
 import EntityList from '../../List/VulnMgmtList';
@@ -37,12 +38,13 @@ const VulnMgmtComponent = ({ entityId, entityListType, search, entityContext, so
 
     function getListQuery(listFieldName, fragmentName, fragment) {
         return gql`
-        query getComponentSubEntity${entityListType}($id: ID!, $query: String${getPolicyQueryVar(
+        query getComponentSubEntity${entityListType}($id: ID!, $pagination: Pagination, $query: String${getPolicyQueryVar(
             entityListType
         )}) {
             result: component(id: $id) {
                 id
-                ${listFieldName}(query: $query) { ...${fragmentName} }
+                ${defaultCountKeyMap[entityListType]}(query: $query)
+                ${listFieldName}(query: $query, pagination: $pagination) { ...${fragmentName} }
             }
         }
         ${fragment}

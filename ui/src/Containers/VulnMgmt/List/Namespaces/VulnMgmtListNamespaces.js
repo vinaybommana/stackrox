@@ -175,7 +175,7 @@ export function getNamespaceTableColumns(workflowState) {
     return removeEntityContextColumns(tableColumns, workflowState);
 }
 
-const VulnMgmtNamespaces = ({ selectedRowId, search, sort, page, data }) => {
+const VulnMgmtNamespaces = ({ selectedRowId, search, sort, page, data, totalResults }) => {
     const query = gql`
         query getNamespaces($query: String, $policyQuery: String, $pagination: Pagination) {
             results: namespaces(query: $query, pagination: $pagination) {
@@ -199,6 +199,7 @@ const VulnMgmtNamespaces = ({ selectedRowId, search, sort, page, data }) => {
     return (
         <WorkflowListPage
             data={data}
+            totalResults={totalResults}
             query={query}
             queryOptions={queryOptions}
             entityListType={entityTypes.NAMESPACE}

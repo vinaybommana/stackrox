@@ -42,7 +42,7 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
     `;
 
     // @TODO: uncomment once Clusters pagination is fixed on the back end
-    // const tableSort = sort || defaultClusterSort;
+    const tableSort = sort || defaultClusterSort;
     const queryOptions = {
         variables: {
             policyQuery: queryService.objectToWhereClause({
@@ -51,8 +51,8 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
             query: queryService.objectToWhereClause(search),
             // @TODO: delete the following line
             //        and uncomment the line after that, once Clusters pagination is fixed on the back end
-            pagination: queryService.getPagination({}, page, LIST_PAGE_SIZE)
-            // pagination: queryService.getPagination(tableSort, page, LIST_PAGE_SIZE)
+            // pagination: queryService.getPagination({}, page, LIST_PAGE_SIZE)
+            pagination: queryService.getPagination(tableSort, page, LIST_PAGE_SIZE)
         }
     };
 
@@ -96,14 +96,14 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
                     );
                 },
                 accessor: 'vulnCounter.all.total',
-                sortField: clusterSortFields.CLUSTER
+                sortField: clusterSortFields.CVES
             },
             {
                 Header: `K8S Version`,
                 headerClassName: `w-1/10 ${defaultHeaderClassName}`,
                 className: `w-1/10 ${defaultColumnClassName}`,
-                accessor: 'status.orchestratorMetadata.version'
-                // sortField: clusterSortFields.K8SVERSION
+                accessor: 'status.orchestratorMetadata.version',
+                sortField: clusterSortFields.K8SVERSION
             },
             // TODO: enable this column after data is available from the API
             // {
@@ -127,8 +127,8 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
                         selectedRowId={original.id}
                     />
                 ),
-                accessor: 'namespaceCount'
-                // sortField: clusterSortFields.NAMESPACE
+                accessor: 'namespaceCount',
+                sortField: clusterSortFields.NAMESPACE
             },
             {
                 Header: `Deployments`,
@@ -145,8 +145,8 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
                     />
                 ),
                 id: 'deploymentCount',
-                accessor: 'deploymentCount'
-                // sortField: clusterSortFields.DEPLOYMENTS
+                accessor: 'deploymentCount',
+                sortField: clusterSortFields.DEPLOYMENTS
             },
             {
                 Header: `Policies`,
@@ -163,8 +163,8 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
                     />
                 ),
                 id: 'policyCount',
-                accessor: 'policyCount'
-                // sortField: clusterSortFields.POLICIES
+                accessor: 'policyCount',
+                sortField: clusterSortFields.POLICIES
             },
             {
                 Header: `Policy Status`,
@@ -180,8 +180,8 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
                     return policyLabel;
                 },
                 id: 'policyStatus',
-                accessor: 'policyStatus.status'
-                // sortField: clusterSortFields.POLICY_STATUS
+                accessor: 'policyStatus.status',
+                sortField: clusterSortFields.POLICY_STATUS
             },
             {
                 Header: `Latest Violation`,
@@ -191,15 +191,15 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
                     const { latestViolation } = original;
                     return <DateTimeField date={latestViolation} asString={pdf} />;
                 },
-                accessor: 'latestViolation'
-                // sortField: clusterSortFields.LATEST_VIOLATION
+                accessor: 'latestViolation',
+                sortField: clusterSortFields.LATEST_VIOLATION
             },
             {
                 Header: `Risk Priority`,
                 headerClassName: `w-1/10 ${defaultHeaderClassName}`,
                 className: `w-1/10 ${defaultColumnClassName}`,
-                accessor: 'priority'
-                // sortField: clusterSortFields.PRIORITY
+                accessor: 'priority',
+                sortField: clusterSortFields.PRIORITY
             }
         ];
         return removeEntityContextColumns(tableColumns, workflowState);

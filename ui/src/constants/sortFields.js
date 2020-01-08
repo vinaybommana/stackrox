@@ -6,7 +6,7 @@ export const imageSortFields = {
     COMPONENT: 'Component',
     COMPONENT_COUNT: 'Component Count',
     COMPONENT_VERSION: 'Component Version',
-    DEPLOYMENT: 'Deployment',
+    DEPLOYMENTS: 'Deployments',
     DOCKERFILE_INSTRUCTION_KEYWORD: 'Dockerfile Instruction Keyword',
     DOCKERFILE_INSTRUCTION_VALUE: 'Dockerfile Instruction Value',
     FIXABLE_CVE_COUNT: 'Fixable CVE Count',
@@ -15,6 +15,7 @@ export const imageSortFields = {
     COMMAND: 'Image Command',
     CREATED_TIME: 'Image Created Time',
     ENTRYPOINT: 'Image Entrypoint',
+    IMAGE_STATUS: 'Image Status',
     REGISTRY: 'Image Registry',
     REMOTE: 'Image Remote',
     SCAN_TIME: 'Image Scan Time',
@@ -37,7 +38,7 @@ export const imageSortFields = {
 export const componentSortFields = {
     COMPONENT: 'Component',
     CVE_COUNT: 'CVE Count',
-    TOP_CVSS: 'Top CVSS',
+    TOP_CVSS: 'CVSS',
     IMAGES: 'Images',
     DEPLOYMENTS: 'Deployments',
     PRIORITY: 'Priority'
@@ -54,13 +55,13 @@ export const componentSortFields = {
 export const cveSortFields = {
     CVE: 'CVE',
     CVSS_SCORE: 'CVSS Score',
-    FIXABLE: 'Fixable',
+    FIXABLE: 'Fixed By:r/.*',
     ENV_IMPACT: 'Env. Impact',
     IMPACT_SCORE: 'Impact Score',
     DEPLOYMENTS: 'Deployments',
     IMAGES: 'Images',
     COMPONENTS: 'Components',
-    SCANNED: 'Scanned',
+    SCANNED: 'Last Scanned',
     PUBLISHED: 'Published'
 };
 
@@ -72,7 +73,7 @@ export const cveSortFields = {
  *   CVEs, K8sVersion, Namespaces, Deployments, Policies, Policy Status, Latest Violation, Risk Priority
  */
 export const clusterSortFields = {
-    CVES: 'CVES',
+    CVES: 'CVE Count',
     CLUSTER: 'Cluster',
     DEPLOYMENTS: 'Deployments',
     K8SVERSION: 'K8S Version',
@@ -91,7 +92,7 @@ export const clusterSortFields = {
  *   CVEs, Deployments, Images, Policies, Policy Status, Latest Violation, Priority
  */
 export const namespaceSortFields = {
-    CVES: 'CVES',
+    CVES: 'CVE Count',
     CLUSTER: 'Cluster',
     DEPLOYMENTS: 'Deployments',
     IMAGES: 'Images',
@@ -129,6 +130,7 @@ export const deploymentSortFields = {
     CPU_CORES_REQUEST: 'CPU Cores Request',
     CVE: 'CVE',
     CVE_COUNT: 'CVE Count',
+    LATEST_VIOLATION: 'Latest Violation',
     CVSS: 'CVSS',
     CLUSTER: 'Cluster',
     COMPONENT: 'Component',
@@ -151,6 +153,7 @@ export const deploymentSortFields = {
     FIXABLE_CVE_COUNT: 'Fixable CVE Count',
     FIXED_BY: 'Fixed By',
     IMAGE: 'Image',
+    IMAGES: 'Images',
     IMAGE_COMMAND: 'Image Command',
     IMAGE_CREATED_TIME: 'Image Created Time',
     IMAGE_ENTRYPOINT: 'Image Entrypoint',
@@ -168,6 +171,8 @@ export const deploymentSortFields = {
     NAMESPACE: 'Namespace',
     NAMESPACE_ID: 'Namespace ID',
     POD_LABEL: 'Pod Label',
+    POLICIES: 'Policies',
+    POLICY_STATUS: 'Policy Status',
     PORT: 'Port',
     PORT_PROTOCOL: 'Port Protocol',
     PRIORITY: 'Priority',

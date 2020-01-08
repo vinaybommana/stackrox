@@ -5,6 +5,7 @@ import useCases from 'constants/useCaseTypes';
 import { workflowEntityPropTypes, workflowEntityDefaultProps } from 'constants/entityPageProps';
 import queryService from 'modules/queryService';
 import entityTypes from 'constants/entityTypes';
+import { defaultCountKeyMap } from 'constants/workflowPages.constants';
 import WorkflowEntityPage from 'Containers/Workflow/WorkflowEntityPage';
 import { VULN_CVE_LIST_FRAGMENT } from 'Containers/VulnMgmt/VulnMgmt.fragments';
 import VulnMgmtDeploymentOverview from './VulnMgmtDeploymentOverview';
@@ -93,12 +94,13 @@ const VulmMgmtDeployment = ({ entityId, entityListType, search, entityContext, s
 
     function getListQuery(listFieldName, fragmentName, fragment) {
         return gql`
-        query getDeployment${entityListType}($id: ID!, $query: String${getPolicyQueryVar(
+        query getDeployment${entityListType}($id: ID!, $pagination: Pagination, $query: String${getPolicyQueryVar(
             entityListType
         )}) {
             result: deployment(id: $id) {
                 id
-                ${listFieldName}(query: $query) { ...${fragmentName} }
+                ${defaultCountKeyMap[entityListType]}(query: $query)
+                ${listFieldName}(query: $query, pagination: $pagination) { ...${fragmentName} }
             }
         }
         ${fragment}

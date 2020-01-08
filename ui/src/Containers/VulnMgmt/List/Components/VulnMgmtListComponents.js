@@ -88,8 +88,8 @@ export function getComponentTableColumns(workflowState) {
                 const { cvss, scoreVersion } = topVuln;
                 return <TopCvssLabel cvss={cvss} version={scoreVersion} />;
             },
-            accessor: 'topVuln.cvss'
-            // sortField: componentSortFields.TOP_CVSS
+            accessor: 'topVuln.cvss',
+            sortField: componentSortFields.TOP_CVSS
         },
         {
             Header: `Images`,
@@ -104,8 +104,8 @@ export function getComponentTableColumns(workflowState) {
                     textOnly={pdf}
                     selectedRowId={original.id}
                 />
-            )
-            // sortField: componentSortFields.IMAGES
+            ),
+            sortField: componentSortFields.IMAGES
         },
         {
             Header: `Deployments`,
@@ -120,22 +120,22 @@ export function getComponentTableColumns(workflowState) {
                     textOnly={pdf}
                     selectedRowId={original.id}
                 />
-            )
-            // sortField: componentSortFields.DEPLOYMENTS
+            ),
+            sortField: componentSortFields.DEPLOYMENTS
         },
         {
             Header: `Risk Priority`,
             headerClassName: `w-1/10 ${defaultHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
-            accessor: 'priority'
-            // sortField: componentSortFields.PRIORITY
+            accessor: 'priority',
+            sortField: componentSortFields.PRIORITY
         }
     ];
 
     return removeEntityContextColumns(tableColumns, workflowState);
 }
 
-const VulnMgmtComponents = ({ selectedRowId, search, sort, page, data }) => {
+const VulnMgmtComponents = ({ selectedRowId, search, sort, page, data, totalResults }) => {
     const query = gql`
         query getComponents($query: String, $pagination: Pagination) {
             results: components(query: $query, pagination: $pagination) {
@@ -156,6 +156,7 @@ const VulnMgmtComponents = ({ selectedRowId, search, sort, page, data }) => {
     return (
         <WorkflowListPage
             data={data}
+            totalResults={totalResults}
             query={query}
             queryOptions={queryOptions}
             idAttribute="id"

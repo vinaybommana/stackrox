@@ -175,7 +175,7 @@ export function getDeploymentTableColumns(workflowState) {
     return removeEntityContextColumns(tableColumns, workflowState);
 }
 
-const VulnMgmtDeployments = ({ selectedRowId, search, sort, page, data }) => {
+const VulnMgmtDeployments = ({ selectedRowId, search, sort, page, data, totalResults }) => {
     const query = gql`
         query getDeployments($query: String, $policyQuery: String, $pagination: Pagination) {
             results: deployments(query: $query, pagination: $pagination) {
@@ -199,6 +199,7 @@ const VulnMgmtDeployments = ({ selectedRowId, search, sort, page, data }) => {
     return (
         <WorkflowListPage
             data={data}
+            totalResults={totalResults}
             query={query}
             queryOptions={queryOptions}
             idAttribute="id"

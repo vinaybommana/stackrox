@@ -5,7 +5,11 @@ import pluralize from 'pluralize';
 import { Power, Bell, BellOff, Trash2 } from 'react-feather';
 import { connect } from 'react-redux';
 
-import { defaultHeaderClassName, defaultColumnClassName } from 'Components/Table';
+import {
+    defaultHeaderClassName,
+    nonSortableHeaderClassName,
+    defaultColumnClassName
+} from 'Components/Table';
 import DateTimeField from 'Components/DateTimeField';
 import Dialog from 'Components/Dialog';
 import IconWithState from 'Components/IconWithState';
@@ -81,11 +85,11 @@ export function getPolicyTableColumns(workflowState) {
         },
         {
             Header: `Description`,
-            headerClassName: `w-1/6 ${defaultHeaderClassName}`,
+            headerClassName: `w-1/6 ${nonSortableHeaderClassName}`,
             className: `w-1/6 ${defaultColumnClassName}`,
             accessor: 'description',
             id: 'description',
-            sortField: policySortFields.DESCRIPTION
+            sortable: false
         },
         {
             Header: `Policy Status`,
@@ -120,8 +124,8 @@ export function getPolicyTableColumns(workflowState) {
                 const { latestViolation } = original;
                 return <DateTimeField date={latestViolation} asString={pdf} />;
             },
-            accessor: 'latestViolation' // ,
-            // sortField: policySortFields.LATEST_VIOLATION
+            accessor: 'latestViolation', // ,
+            sortField: policySortFields.LATEST_VIOLATION
         },
         {
             Header: `Severity`,
@@ -130,7 +134,7 @@ export function getPolicyTableColumns(workflowState) {
             Cell: ({ original }) => <SeverityLabel severity={original.severity} />,
             accessor: 'severity',
             id: 'severity',
-            sortField: policySortFields.DESCRIPTION
+            sortField: policySortFields.SEVERITY
         },
         {
             Header: `Deployments`,
@@ -186,7 +190,16 @@ export function getPolicyTableColumns(workflowState) {
     return removeEntityContextColumns(tableColumns, workflowState);
 }
 
-const VulnMgmtPolicies = ({ selectedRowId, search, sort, page, data, addToast, removeToast }) => {
+const VulnMgmtPolicies = ({
+    selectedRowId,
+    search,
+    sort,
+    page,
+    data,
+    totalResults,
+    addToast,
+    removeToast
+}) => {
     const [selectedPolicyIds, setSelectedPolicyIds] = useState([]);
     const [bulkActionPolicyIds, setBulkActionPolicyIds] = useState([]);
 
@@ -285,6 +298,7 @@ const VulnMgmtPolicies = ({ selectedRowId, search, sort, page, data, addToast, r
         <>
             <WorkflowListPage
                 data={data}
+                totalResults={totalResults}
                 query={POLICIES_QUERY}
                 queryOptions={queryOptions}
                 idAttribute="id"

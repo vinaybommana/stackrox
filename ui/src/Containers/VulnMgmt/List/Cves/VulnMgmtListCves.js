@@ -20,27 +20,27 @@ import { actions as notificationActions } from 'reducers/notifications';
 import { updateCveSuppressedState } from 'services/VulnerabilitiesService';
 import removeEntityContextColumns from 'utils/tableUtils';
 import { truncate } from 'utils/textUtils';
-// import { cveSortFields } from 'constants/sortFields';
+import { cveSortFields } from 'constants/sortFields';
 
 import { VULN_CVE_LIST_FRAGMENT } from 'Containers/VulnMgmt/VulnMgmt.fragments';
 
 import CveBulkActionDialogue from './CveBulkActionDialogue';
 
 export const defaultCveSort = [
-    {
-        id: 'Fixed By',
-        desc: true
-    }
+    // {
+    //     id: 'Fixed By',
+    //     desc: true
+    // }
     // @TODO, remove the temp sort above
     //        uncomment the sort fields below for CVEs, after they are available for backend pagination/sorting
     // {
     //     id: cveSortFields.CVSS_SCORE,
     //     desc: true
-    // },
-    // {
-    //     id: cveSortFields.CVE,
-    //     desc: false
     // }
+    {
+        id: cveSortFields.CVE,
+        desc: false
+    }
 ];
 
 export function getCveTableColumns(workflowState) {
@@ -61,8 +61,8 @@ export function getCveTableColumns(workflowState) {
             Header: `CVE`,
             headerClassName: `w-1/10 ${defaultHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
-            accessor: 'cve'
-            // sortField: cveSortFields.cveSortFields.CVE
+            accessor: 'cve',
+            sortField: cveSortFields.CVE
         },
         {
             Header: `Fixable`,
@@ -78,8 +78,8 @@ export function getCveTableColumns(workflowState) {
                 return <div className="mx-auto">{fixableFlag}</div>;
             },
             accessor: 'isFixable',
-            id: 'isFixable'
-            // sortField: cveSortFields.CVSS_SCORE
+            id: 'isFixable',
+            sortField: cveSortFields.FIXABLE
         },
         {
             Header: `CVSS Score`,
@@ -91,8 +91,8 @@ export function getCveTableColumns(workflowState) {
                 return <TopCvssLabel cvss={cvss} version={scoreVersion} />;
             },
             accessor: 'cvss',
-            id: 'cvss'
-            // sortField: cveSortFields.FIXABLE
+            id: 'cvss',
+            sortField: cveSortFields.CVSS_SCORE
         },
         {
             Header: `Env. Impact`,
@@ -105,8 +105,8 @@ export function getCveTableColumns(workflowState) {
                     ? `${(envImpact * 100).toFixed(0)}% affected`
                     : '-';
             },
-            accessor: 'envImpact'
-            // sortField: cveSortFields.ENV_IMPACT
+            accessor: 'envImpact',
+            sortField: cveSortFields.ENV_IMPACT
         },
         {
             Header: `Impact Score`,
@@ -117,8 +117,8 @@ export function getCveTableColumns(workflowState) {
                 // eslint-disable-next-line eqeqeq
                 return impactScore == Number(impactScore) ? impactScore.toFixed(1) : '-';
             },
-            accessor: 'impactScore'
-            // sortField: cveSortFields.IMPACT_SCORE
+            accessor: 'impactScore',
+            sortField: cveSortFields.IMPACT_SCORE
         },
         {
             Header: `Deployments`,
@@ -135,8 +135,8 @@ export function getCveTableColumns(workflowState) {
                 />
             ),
             accessor: 'deploymentCount',
-            id: 'deploymentCount'
-            // sortField: cveSortFields.DEPLOYMENTS
+            id: 'deploymentCount',
+            sortField: cveSortFields.DEPLOYMENTS
         },
         {
             Header: `Images`,
@@ -153,8 +153,8 @@ export function getCveTableColumns(workflowState) {
                 />
             ),
             accessor: 'imageCount',
-            id: 'imageCount'
-            // sortField: cveSortFields.IMAGES
+            id: 'imageCount',
+            sortField: cveSortFields.IMAGES
         },
         {
             Header: `Components`,
@@ -171,8 +171,8 @@ export function getCveTableColumns(workflowState) {
                 />
             ),
             accessor: 'componentCount',
-            id: 'componentCount'
-            // sortField: cveSortFields.COMPONENTS
+            id: 'componentCount',
+            sortField: cveSortFields.COMPONENTS
         },
         {
             Header: `Scanned`,
@@ -182,8 +182,8 @@ export function getCveTableColumns(workflowState) {
                 <DateTimeField date={original.lastScanned} asString={pdf} />
             ),
             accessor: 'lastScanned',
-            id: 'lastScanned'
-            // sortField: cveSortFields.SCANNED
+            id: 'lastScanned',
+            sortField: cveSortFields.SCANNED
         },
         {
             Header: `Published`,
@@ -193,8 +193,8 @@ export function getCveTableColumns(workflowState) {
                 <DateTimeField date={original.publishedOn} asString={pdf} />
             ),
             accessor: 'publishedOn',
-            id: 'published'
-            // sortField: cveSortFields.PUBLISHED
+            id: 'published',
+            sortField: cveSortFields.PUBLISHED
         }
     ];
 
@@ -213,7 +213,16 @@ export function renderCveDescription(row) {
     );
 }
 
-const VulnMgmtCves = ({ selectedRowId, search, sort, page, data, addToast, removeToast }) => {
+const VulnMgmtCves = ({
+    selectedRowId,
+    search,
+    sort,
+    page,
+    data,
+    totalResults,
+    addToast,
+    removeToast
+}) => {
     const [selectedCveIds, setSelectedCveIds] = useState([]);
     const [bulkActionCveIds, setBulkActionCveIds] = useState([]);
 
@@ -341,6 +350,7 @@ const VulnMgmtCves = ({ selectedRowId, search, sort, page, data, addToast, remov
         <>
             <WorkflowListPage
                 data={data}
+                totalResults={totalResults}
                 query={CVES_QUERY}
                 queryOptions={queryOptions}
                 idAttribute="cve"

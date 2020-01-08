@@ -4,6 +4,7 @@ import gql from 'graphql-tag';
 import useCases from 'constants/useCaseTypes';
 import { entityComponentPropTypes, entityComponentDefaultProps } from 'constants/entityPageProps';
 import entityTypes from 'constants/entityTypes';
+import { defaultCountKeyMap } from 'constants/workflowPages.constants';
 import queryService from 'modules/queryService';
 import { VULN_CVE_LIST_FRAGMENT } from 'Containers/VulnMgmt/VulnMgmt.fragments';
 import WorkflowEntityPage from 'Containers/Workflow/WorkflowEntityPage';
@@ -14,7 +15,7 @@ import {
 import VulnMgmtClusterOverview from './VulnMgmtClusterOverview';
 import EntityList from '../../List/VulnMgmtList';
 
-const VulmMgmtDeployment = ({ entityId, entityListType, search, sort, page, entityContext }) => {
+const VulmMgmtEntityCluster = ({ entityId, entityListType, search, sort, page, entityContext }) => {
     const overviewQuery = gql`
         query getCluster($id: ID!, $policyQuery: String) {
             result: cluster(id: $id) {
@@ -67,6 +68,7 @@ const VulmMgmtDeployment = ({ entityId, entityListType, search, sort, page, enti
         )}) {
             result: cluster(id: $id) {
                 id
+                ${defaultCountKeyMap[entityListType]}(query: $query)
                 ${parsedListFieldName}(query: $query, pagination: $pagination) { ...${fragmentName} }
             }
         }
@@ -77,10 +79,24 @@ const VulmMgmtDeployment = ({ entityId, entityListType, search, sort, page, enti
     const queryOptions = {
         variables: {
             id: entityId,
-            query: tryUpdateQueryWithVulMgmtPolicyClause(entityListType, search),
-            policyQuery: queryService.objectToWhereClause({ Category: 'Vulnerability Management' })
+            query: tryUpdateQueryWithVulMgmtPolicyClause(entityListType, search)
         }
     };
+
+    // @TODO: improve the handling of query vs. policyQuery in the UI Workflow
+    //   more info: because Vuln Mgmt requires Policy sub-queries to be filtered by "Category": "Vulnerability Management"
+    //   we added a separate query var for just policies, where needed
+    //   but it doesn't play well with the initial implementation of backend pagination,
+    //   hence, this hack below to limit to only the overview and entities where it is needed
+    if (
+        !entityListType ||
+        entityListType === entityTypes.DEPLOYMENT ||
+        entityListType === entityTypes.NAMESPACE
+    ) {
+        queryOptions.variables.policyQuery = queryService.objectToWhereClause({
+            Category: 'Vulnerability Management'
+        });
+    }
 
     return (
         <WorkflowEntityPage
@@ -101,7 +117,7 @@ const VulmMgmtDeployment = ({ entityId, entityListType, search, sort, page, enti
     );
 };
 
-VulmMgmtDeployment.propTypes = entityComponentPropTypes;
-VulmMgmtDeployment.defaultProps = entityComponentDefaultProps;
+VulmMgmtEntityCluster.propTypes = entityComponentPropTypes;
+VulmMgmtEntityCluster.defaultProps = entityComponentDefaultProps;
 
-export default VulmMgmtDeployment;
+export default VulmMgmtEntityCluster;
