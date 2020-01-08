@@ -68,16 +68,15 @@ func (rc *DackBox) NewReadOnlyTransaction() *Transaction {
 }
 
 // NewGraphView returns a read only view of the ID->[]ID graph.
-func (rc *DackBox) NewGraphView() DiscardableRGraph {
+func (rc *DackBox) NewGraphView() graph.DiscardableRGraph {
 	rc.lock.Lock()
 	defer rc.lock.Unlock()
 
 	ts := rc.history.Hold()
-	return &discardableGraphImpl{
-		ts:          ts,
-		RemoteGraph: graph.NewRemoteGraph(graph.NewGraph(), rc.readerAt(ts)),
-		discard:     rc.discard,
-	}
+	return graph.NewDiscardableGraph(
+		graph.NewRemoteGraph(graph.NewGraph(), rc.readerAt(ts)),
+		func() { rc.discard(ts, nil) },
+	)
 }
 
 // AtomicKVUpdate updates a key:value pair in badger atomically. It calls the input function inside the global lock,

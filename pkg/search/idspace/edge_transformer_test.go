@@ -12,12 +12,12 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-func TestIdTransformation(t *testing.T) {
+func TestEdgeIdTransformation(t *testing.T) {
 	t.Parallel()
-	suite.Run(t, new(idTransformationTestSuite))
+	suite.Run(t, new(idEdgeTransformationTestSuite))
 }
 
-type idTransformationTestSuite struct {
+type idEdgeTransformationTestSuite struct {
 	suite.Suite
 
 	mockSearcher *mocks.MockSearcher
@@ -25,27 +25,27 @@ type idTransformationTestSuite struct {
 	mockCtrl *gomock.Controller
 }
 
-func (s *idTransformationTestSuite) SetupTest() {
+func (s *idEdgeTransformationTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockSearcher = mocks.NewMockSearcher(s.mockCtrl)
 }
 
-func (s *idTransformationTestSuite) TearDownTest() {
+func (s *idEdgeTransformationTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *idTransformationTestSuite) TestHandlesNoIdTransformation() {
+func (s *idEdgeTransformationTestSuite) TestHandlesNoIdTransformation() {
 	s.mockSearcher.EXPECT().Search(gomock.Any(), gomock.Any()).Return(fakeResults, nil)
 
-	results, err := TransformIDs(s.mockSearcher, EdgeIDToParentID).Search(context.Background(), &v1.Query{})
+	results, err := TransformIDs(s.mockSearcher, NewEdgeToParentTransformer()).Search(context.Background(), &v1.Query{})
 	s.NoError(err, "expected no error, should return nil without access")
 	s.Equal(fakeResultParents, results)
 }
 
-func (s *idTransformationTestSuite) TestHandlesNoOffset() {
+func (s *idEdgeTransformationTestSuite) TestHandlesNoOffset() {
 	s.mockSearcher.EXPECT().Search(gomock.Any(), gomock.Any()).Return(fakeResults, nil)
 
-	results, err := TransformIDs(s.mockSearcher, EdgeIDToChildID).Search(context.Background(), &v1.Query{})
+	results, err := TransformIDs(s.mockSearcher, NewEdgeToChildTransformer()).Search(context.Background(), &v1.Query{})
 	s.NoError(err, "expected no error, should return nil without access")
 	s.Equal(fakeResultChildren, results)
 }

@@ -6,6 +6,7 @@ import (
 )
 
 // RGraph is a read-only view of a Graph.
+//go:generate mockgen-wrapper
 type RGraph interface {
 	HasRefsFrom(from []byte) bool
 	HasRefsTo(to []byte) bool
@@ -18,6 +19,7 @@ type RGraph interface {
 }
 
 // RWGraph is a read-write view of a Graph.
+//go:generate mockgen-wrapper
 type RWGraph interface {
 	RGraph
 
