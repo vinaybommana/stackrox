@@ -500,10 +500,16 @@ func registerGeneratedTypes(builder generator.SchemaBuilder) {
 		"scanTime: Time",
 	}))
 	utils.Must(builder.AddType("Jira", []string{
+		"defaultFieldsJson: String!",
 		"issueType: String!",
 		"password: String!",
+		"priorityMappings: [Jira_PriorityMapping]!",
 		"url: String!",
 		"username: String!",
+	}))
+	utils.Must(builder.AddType("Jira_PriorityMapping", []string{
+		"priorityName: String!",
+		"severity: Severity!",
 	}))
 	utils.Must(builder.AddType("K8SRole", []string{
 		"annotations: [Label!]!",
@@ -4824,6 +4830,11 @@ func (resolver *Resolver) wrapJiras(values []*storage.Jira, err error) ([]*jiraR
 	return output, nil
 }
 
+func (resolver *jiraResolver) DefaultFieldsJson(ctx context.Context) string {
+	value := resolver.data.GetDefaultFieldsJson()
+	return value
+}
+
 func (resolver *jiraResolver) IssueType(ctx context.Context) string {
 	value := resolver.data.GetIssueType()
 	return value
@@ -4834,6 +4845,11 @@ func (resolver *jiraResolver) Password(ctx context.Context) string {
 	return value
 }
 
+func (resolver *jiraResolver) PriorityMappings(ctx context.Context) ([]*jira_PriorityMappingResolver, error) {
+	value := resolver.data.GetPriorityMappings()
+	return resolver.root.wrapJira_PriorityMappings(value, nil)
+}
+
 func (resolver *jiraResolver) Url(ctx context.Context) string {
 	value := resolver.data.GetUrl()
 	return value
@@ -4842,6 +4858,39 @@ func (resolver *jiraResolver) Url(ctx context.Context) string {
 func (resolver *jiraResolver) Username(ctx context.Context) string {
 	value := resolver.data.GetUsername()
 	return value
+}
+
+type jira_PriorityMappingResolver struct {
+	root *Resolver
+	data *storage.Jira_PriorityMapping
+}
+
+func (resolver *Resolver) wrapJira_PriorityMapping(value *storage.Jira_PriorityMapping, ok bool, err error) (*jira_PriorityMappingResolver, error) {
+	if !ok || err != nil || value == nil {
+		return nil, err
+	}
+	return &jira_PriorityMappingResolver{resolver, value}, nil
+}
+
+func (resolver *Resolver) wrapJira_PriorityMappings(values []*storage.Jira_PriorityMapping, err error) ([]*jira_PriorityMappingResolver, error) {
+	if err != nil || len(values) == 0 {
+		return nil, err
+	}
+	output := make([]*jira_PriorityMappingResolver, len(values))
+	for i, v := range values {
+		output[i] = &jira_PriorityMappingResolver{resolver, v}
+	}
+	return output, nil
+}
+
+func (resolver *jira_PriorityMappingResolver) PriorityName(ctx context.Context) string {
+	value := resolver.data.GetPriorityName()
+	return value
+}
+
+func (resolver *jira_PriorityMappingResolver) Severity(ctx context.Context) string {
+	value := resolver.data.GetSeverity()
+	return value.String()
 }
 
 type k8SRoleResolver struct {

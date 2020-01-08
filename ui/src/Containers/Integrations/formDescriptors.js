@@ -1,6 +1,7 @@
 import React from 'react';
 
 import renderKeyValues from './GenericNotifier/GenericNotifier';
+import renderPriorityMapping from './Jira/Jira';
 
 const skipTestIntegration = {
     label: 'Create integration without testing',
@@ -212,14 +213,14 @@ const formDescriptors = {
                 placeholder: 'user@example.com'
             },
             {
-                label: 'Password',
+                label: 'Password or API Token',
                 jsonpath: 'jira.password',
                 type: 'password',
                 placeholder: ''
             },
             {
                 label: 'Issue Type',
-                jsonpath: 'jira.issue_type',
+                jsonpath: 'jira.issueType',
                 type: 'text',
                 placeholder: 'Task, Sub-task, Story, Bug, or Epic'
             },
@@ -239,6 +240,17 @@ const formDescriptors = {
                 label: 'Label/Annotation Key for Project',
                 jsonpath: 'labelKey',
                 type: 'text'
+            },
+            {
+                label: 'Priority Mapping',
+                jsonpath: 'jira.priorityMappings',
+                type: 'list',
+                listRender: renderPriorityMapping
+            },
+            {
+                label: 'Default Fields JSON (necessary if required fields)',
+                jsonpath: 'jira.defaultFieldsJson',
+                type: 'textarea'
             }
         ],
         email: [
