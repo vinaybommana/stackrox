@@ -48,6 +48,7 @@
         "react-dom": "^16.12.0",
         "react-dropzone": "^6.1.1",
         "react-feather": "^1.1.6",
+        "react-hook-form": "^4.4.4",
         "react-modal": "^3.6.1",
         "react-numeric-input": "^2.2.3",
         "react-onclickoutside": "^6.8.0",
