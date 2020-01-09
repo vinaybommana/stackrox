@@ -15,6 +15,8 @@ import { useCaseEntityMap } from 'modules/entityRelationships';
 import entityLabels from 'messages/entity';
 import useCaseLabels from 'messages/useCase';
 import useEntityName from 'hooks/useEntityName';
+import { exportCvesAsCsv } from 'services/VulnerabilitiesService';
+
 import WorkflowSidePanel from './WorkflowSidePanel';
 import { EntityComponentMap } from './UseCaseComponentMaps';
 
@@ -41,6 +43,10 @@ const WorkflowEntityPageLayout = ({ location }) => {
     const sidePanelSearch = workflowState.search[searchParams.sidePanel];
     const sidePanelSort = workflowState.sort[sortParams.sidePanel];
     const sidePanelPaging = workflowState.paging[pagingParams.sidePanel];
+
+    function customCsvExportHandler(fileName) {
+        return exportCvesAsCsv(fileName, workflowState);
+    }
 
     const [fadeIn, setFadeIn] = useState(false);
     useEffect(() => setFadeIn(false), []);
@@ -80,6 +86,7 @@ const WorkflowEntityPageLayout = ({ location }) => {
                                 page={useCase}
                                 disabled={!!sidePanelEntityId}
                                 pdfId="capture-widgets"
+                                customCsvExportHandler={customCsvExportHandler}
                             />
                         </div>
                         <EntitiesMenu
