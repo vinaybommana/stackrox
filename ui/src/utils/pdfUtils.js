@@ -38,7 +38,7 @@ export function enhanceWordBreak({ doc, cell, column }) {
     }
 
     // split cell string by space or "-"
-    const words = text.split(/\s+|(?<=-)/);
+    const words = text.split(/\s+|(-)/);
 
     // calculate longest word width
     const maxWordUnitWidth = words
