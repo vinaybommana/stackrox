@@ -15,6 +15,7 @@ import queryService from 'modules/queryService';
 import dateTimeFormat from 'constants/dateTimeFormat';
 import entityTypes from 'constants/entityTypes';
 import { parseCVESearch } from 'utils/vulnerabilityUtils';
+// import { cveSortFields } from 'constants/sortFields';
 
 const MOST_COMMON_VULNERABILITIES = gql`
     query mostCommonVulnerabilities($query: String) {
@@ -109,11 +110,12 @@ const MostCommonVulnerabilities = ({ entityContext, search, limit }) => {
 
     const viewAllURL = workflowState
         .pushList(entityTypes.CVE)
-        .setSort([
-            { id: 'deploymentCount', desc: true },
-            { id: 'cvss', desc: true },
-            { id: 'envImpact', desc: true }
-        ])
+        // @TODO to uncomment once these sorts are supported by backend on CVE list
+        // .setSort([
+        //     { id: cveSortFields.DEPLOYMENT_COUNT, desc: true },
+        //     { id: cveSortFields.CVSS_SCORE, desc: true },
+        //     { id: cveSortFields.ENV_IMPACT, desc: true }
+        // ])
         .toUrl();
 
     return (

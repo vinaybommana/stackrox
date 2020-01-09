@@ -16,6 +16,8 @@ import NoComponentVulnMessage from 'Components/NoComponentVulnMessage';
 import queryService from 'modules/queryService';
 import dateTimeFormat from 'constants/dateTimeFormat';
 import entityTypes from 'constants/entityTypes';
+// @TODO to uncomment once priority is sortable for both image and components
+// import { entitySortFieldsMap } from 'constants/sortFields';
 
 const TOP_RISKIEST_IMAGES = gql`
     query topRiskiestImages($query: String, $pagination: Pagination) {
@@ -247,7 +249,8 @@ const TopRiskiestImagesAndComponents = ({ entityContext, limit }) => {
 
                 const viewAllURL = workflowState
                     .pushList(selectedEntity)
-                    .setSort([{ id: 'priority', desc: false }])
+                    // @TODO to uncomment once priority is sortable for both image and components
+                    // .setSort([{ id: entitySortFieldsMap[selectedEntity].PRIORITY, desc: false }])
                     .toUrl();
 
                 headerComponents = <ViewAllButton url={viewAllURL} />;

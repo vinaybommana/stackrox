@@ -1,19 +1,19 @@
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
-import entityTypes from 'constants/entityTypes';
 import { useQuery } from 'react-apollo';
 import gql from 'graphql-tag';
-import queryService from 'modules/queryService';
 import sortBy from 'lodash/sortBy';
 
+import entityTypes from 'constants/entityTypes';
+import queryService from 'modules/queryService';
 import workflowStateContext from 'Containers/workflowStateContext';
-
 import ViewAllButton from 'Components/ViewAllButton';
 import Loader from 'Components/Loader';
 import Widget from 'Components/Widget';
 import NumberedList from 'Components/NumberedList';
 import { getVulnerabilityChips, parseCVESearch } from 'utils/vulnerabilityUtils';
 import NoResultsMessage from 'Components/NoResultsMessage';
+// import { cveSortFields } from 'constants/sortFields';
 
 export const RECENTLY_DETECTED_VULNERABILITIES = gql`
     query recentlyDetectedVulnerabilities($query: String) {
@@ -77,11 +77,12 @@ const RecentlyDetectedVulnerabilities = ({ entityContext, search, limit }) => {
 
     const viewAllURL = workflowState
         .pushList(entityTypes.CVE)
-        .setSort([
-            { id: 'lastScanned', desc: true },
-            { id: 'cvss', desc: true },
-            { id: 'envImpact', desc: true }
-        ])
+        // @TODO uncomment once these sort fields are supported on backend
+        // .setSort([
+        //     { id: cveSortFields.LAST_SCANNED, desc: true },
+        //     { id: cveSortFields.CVSS_SCORE, desc: true },
+        //     { id: cveSortFields.ENV_IMPACT, desc: true }
+        // ])
         .toUrl();
 
     return (

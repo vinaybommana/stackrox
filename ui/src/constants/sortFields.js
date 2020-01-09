@@ -1,3 +1,5 @@
+import entityTypes from 'constants/entityTypes';
+
 export const imageSortFields = {
     CVE: 'CVE',
     CVE_COUNT: 'CVE Count',
@@ -6,7 +8,8 @@ export const imageSortFields = {
     COMPONENT: 'Component',
     COMPONENT_COUNT: 'Component Count',
     COMPONENT_VERSION: 'Component Version',
-    DEPLOYMENTS: 'Deployments',
+    DEPLOYMENT: 'Deployment',
+    DEPLOYMENT_COUNT: 'Deployment Count',
     DOCKERFILE_INSTRUCTION_KEYWORD: 'Dockerfile Instruction Keyword',
     DOCKERFILE_INSTRUCTION_VALUE: 'Dockerfile Instruction Value',
     FIXABLE_CVE_COUNT: 'Fixable CVE Count',
@@ -16,6 +19,7 @@ export const imageSortFields = {
     CREATED_TIME: 'Image Created Time',
     ENTRYPOINT: 'Image Entrypoint',
     IMAGE_STATUS: 'Image Status',
+    PRIORITY: 'Priority',
     REGISTRY: 'Image Registry',
     REMOTE: 'Image Remote',
     SCAN_TIME: 'Image Scan Time',
@@ -39,8 +43,8 @@ export const componentSortFields = {
     COMPONENT: 'Component',
     CVE_COUNT: 'CVE Count',
     TOP_CVSS: 'CVSS',
-    IMAGES: 'Images',
-    DEPLOYMENTS: 'Deployments',
+    IMAGE_COUNT: 'Image Count',
+    DEPLOYMENT_COUNT: 'Deployment Count',
     PRIORITY: 'Priority'
 };
 
@@ -58,9 +62,9 @@ export const cveSortFields = {
     FIXABLE: 'Fixed By:r/.*',
     ENV_IMPACT: 'Env. Impact',
     IMPACT_SCORE: 'Impact Score',
-    DEPLOYMENTS: 'Deployments',
-    IMAGES: 'Images',
-    COMPONENTS: 'Components',
+    DEPLOYMENT_COUNT: 'Deployment Count',
+    IMAGE_COUNT: 'Image Count',
+    COMPONENT_COUNT: 'Component Count',
     SCANNED: 'Last Scanned',
     PUBLISHED: 'Published'
 };
@@ -75,11 +79,12 @@ export const cveSortFields = {
 export const clusterSortFields = {
     CVES: 'CVE Count',
     CLUSTER: 'Cluster',
-    DEPLOYMENTS: 'Deployments',
+    DEPLOYMENT_COUNT: 'Deployment Count',
     K8SVERSION: 'K8S Version',
     LATEST_VIOLATION: 'Latest Violation',
+    NAME: 'Cluster',
     NAMESPACE: 'Namespace',
-    POLICIES: 'Policies',
+    POLICY_COUNT: 'Policy Count',
     POLICY_STATUS: 'Policy Status',
     PRIORITY: 'Priority'
 };
@@ -94,11 +99,12 @@ export const clusterSortFields = {
 export const namespaceSortFields = {
     CVES: 'CVE Count',
     CLUSTER: 'Cluster',
-    DEPLOYMENTS: 'Deployments',
+    DEPLOYMENT_COUNT: 'Deployment Count',
     IMAGES: 'Images',
     LATEST_VIOLATION: 'Latest Violation',
     NAMESPACE: 'Namespace',
-    POLICIES: 'Policies',
+    NAME: 'Namespace',
+    POLICY_COUNT: 'Policy Count',
     POLICY_STATUS: 'Policy Status',
     PRIORITY: 'Priority'
 };
@@ -111,7 +117,7 @@ export const namespaceSortFields = {
  */
 export const policySortFields = {
     CATEGORY: 'Category',
-    DEPLOYMENTS: 'Deployments',
+    DEPLOYMENT_COUNT: 'Deployment Count',
     DESCRIPTION: 'Description',
     DISABLED: 'Disabled',
     ENFORCEMENT: 'Enforcement',
@@ -168,6 +174,7 @@ export const deploymentSortFields = {
     MAX_EXPOSURE_LEVEL: 'Max Exposure Level',
     MEMORY_LIMIT: 'Memory Limit (MB)',
     MEMORY_REQUEST: 'Memory Request (MB)',
+    NAME: 'Deployment',
     NAMESPACE: 'Namespace',
     NAMESPACE_ID: 'Namespace ID',
     POD_LABEL: 'Pod Label',
@@ -176,7 +183,7 @@ export const deploymentSortFields = {
     PORT: 'Port',
     PORT_PROTOCOL: 'Port Protocol',
     PRIORITY: 'Priority',
-    PRIVILAGED: 'Privileged',
+    PRIVILEGED: 'Privileged',
     PROCESS_ANCESTOR: 'Process Ancestor',
     PROCESS_ARGUMENTS: 'Process Arguments',
     PROCESS_NAME: 'Process Name',
@@ -193,4 +200,14 @@ export const deploymentSortFields = {
     VOLUME_READONLY: 'Volume ReadOnly',
     VOLUME_SOURCE: 'Volume Source',
     VOLUME_TYPE: 'Volume Type'
+};
+
+export const entitySortFieldsMap = {
+    [entityTypes.CLUSTER]: clusterSortFields,
+    [entityTypes.NAMESPACE]: namespaceSortFields,
+    [entityTypes.DEPLOYMENT]: deploymentSortFields,
+    [entityTypes.IMAGE]: imageSortFields,
+    [entityTypes.COMPONENT]: componentSortFields,
+    [entityTypes.CVE]: cveSortFields,
+    [entityTypes.POLICY]: policySortFields
 };

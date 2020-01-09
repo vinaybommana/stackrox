@@ -23,11 +23,8 @@ import {
     severityTextColorMap,
     severityColorLegend
 } from 'constants/severityColors';
-import {
-    getSeverityByCvss,
-    getPriorityFieldByEntity,
-    getNameFieldByEntity
-} from 'utils/vulnerabilityUtils';
+import { getSeverityByCvss } from 'utils/vulnerabilityUtils';
+import { entitySortFieldsMap } from 'constants/sortFields';
 
 const TopRiskyEntitiesByVulnerabilities = ({
     entityContext,
@@ -51,12 +48,13 @@ const TopRiskyEntitiesByVulnerabilities = ({
     const viewAllUrl = workflowState
         .pushList(selectedEntityType)
         .setSort([
+            // @TODO to uncomment when Priority sort is available across images/deployments/namespaces/clusters
+            // {
+            //     id: entitySortFieldsMap[selectedEntityType].PRIORITY,
+            //     desc: false
+            // },
             {
-                id: getPriorityFieldByEntity(selectedEntityType),
-                desc: false
-            },
-            {
-                id: getNameFieldByEntity(selectedEntityType),
+                id: entitySortFieldsMap[selectedEntityType].NAME,
                 desc: false
             }
         ])
