@@ -2,6 +2,8 @@
 All notable changes to this project that require documentation updates will be documented in this file.
 
 ## [NEXT RELEASE]
+
+## [37.0]
 ### Changed
 - The "NIST 800-190" standard has been renamed to "NIST SP 800-190", for correctness.
 The ID continues to be the same, so no API calls will need to be updated.
