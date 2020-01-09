@@ -179,7 +179,7 @@ export function getPolicyTableColumns(workflowState) {
             // eslint-disable-next-line
             Cell: ({ original }) => {
                 const { enforcementActions } = original;
-                return enforcementActions || enforcementActions.length ? 'Yes' : 'No';
+                return enforcementActions && enforcementActions.length ? 'Yes' : 'No';
             },
             accessor: 'enforcementActions',
             id: 'enforcementActions',

@@ -154,10 +154,7 @@ const VulnMgmtPolicyOverview = ({ data, entityContext }) => {
         },
         {
             key: 'Enforcement',
-            value:
-                enforcementActions || (enforcementActions && enforcementActions.length)
-                    ? 'Yes'
-                    : 'No'
+            value: enforcementActions && enforcementActions.length ? 'Yes' : 'No'
         },
         {
             key: 'Lifecycle',
