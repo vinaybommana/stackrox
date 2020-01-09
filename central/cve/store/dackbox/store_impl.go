@@ -8,7 +8,6 @@ import (
 	"github.com/stackrox/rox/central/cve/store"
 	"github.com/stackrox/rox/central/metrics"
 	"github.com/stackrox/rox/generated/storage"
-	"github.com/stackrox/rox/pkg/badgerhelper"
 	"github.com/stackrox/rox/pkg/dackbox"
 	"github.com/stackrox/rox/pkg/dackbox/crud"
 	ops "github.com/stackrox/rox/pkg/metrics"
@@ -44,7 +43,7 @@ func (b *storeImpl) Exists(id string) (bool, error) {
 	dackTxn := b.dacky.NewReadOnlyTransaction()
 	defer dackTxn.Discard()
 
-	exists, err := b.reader.ExistsIn(badgerhelper.GetBucketKey(vulnDackBox.Bucket, []byte(id)), dackTxn)
+	exists, err := b.reader.ExistsIn(vulnDackBox.GetKey(id), dackTxn)
 	if err != nil {
 		return false, err
 	}
@@ -90,7 +89,7 @@ func (b *storeImpl) Get(id string) (cve *storage.CVE, exists bool, err error) {
 	dackTxn := b.dacky.NewReadOnlyTransaction()
 	defer dackTxn.Discard()
 
-	msg, err := b.reader.ReadIn(badgerhelper.GetBucketKey(vulnDackBox.Bucket, []byte(id)), dackTxn)
+	msg, err := b.reader.ReadIn(vulnDackBox.GetKey(id), dackTxn)
 	if err != nil {
 		return nil, false, err
 	}
@@ -107,7 +106,7 @@ func (b *storeImpl) GetBatch(ids []string) ([]*storage.CVE, []int, error) {
 	msgs := make([]proto.Message, 0, len(ids)/2)
 	missing := make([]int, 0, len(ids)/2)
 	for idx, id := range ids {
-		msg, err := b.reader.ReadIn(badgerhelper.GetBucketKey(vulnDackBox.Bucket, []byte(id)), dackTxn)
+		msg, err := b.reader.ReadIn(vulnDackBox.GetKey(id), dackTxn)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -126,25 +125,7 @@ func (b *storeImpl) GetBatch(ids []string) ([]*storage.CVE, []int, error) {
 	return ret, missing, nil
 }
 
-// UpdateImage updates a image to bolt.
-func (b *storeImpl) Upsert(cve *storage.CVE) error {
-	defer metrics.SetBadgerOperationDurationTime(time.Now(), ops.Upsert, "CVE")
-
-	dackTxn := b.dacky.NewTransaction()
-	defer dackTxn.Discard()
-
-	err := b.upserter.UpsertIn(nil, cve, dackTxn)
-	if err != nil {
-		return err
-	}
-
-	if err := dackTxn.Commit(); err != nil {
-		return err
-	}
-	return b.counter.IncTxnCount()
-}
-
-func (b *storeImpl) UpsertBatch(cves []*storage.CVE) error {
+func (b *storeImpl) Upsert(cves ...*storage.CVE) error {
 	defer metrics.SetBadgerOperationDurationTime(time.Now(), ops.Upsert, "CVE")
 
 	for batch := 0; batch < len(cves); batch += batchSize {
@@ -165,24 +146,7 @@ func (b *storeImpl) UpsertBatch(cves []*storage.CVE) error {
 	return b.counter.IncTxnCount()
 }
 
-func (b *storeImpl) Delete(id string) error {
-	defer metrics.SetBadgerOperationDurationTime(time.Now(), ops.Remove, "CVE")
-
-	dackTxn := b.dacky.NewTransaction()
-	defer dackTxn.Discard()
-
-	err := b.deleter.DeleteIn(badgerhelper.GetBucketKey(vulnDackBox.Bucket, []byte(id)), dackTxn)
-	if err != nil {
-		return err
-	}
-
-	if err := dackTxn.Commit(); err != nil {
-		return err
-	}
-	return b.counter.IncTxnCount()
-}
-
-func (b *storeImpl) DeleteBatch(ids []string) error {
+func (b *storeImpl) Delete(ids ...string) error {
 	defer metrics.SetBadgerOperationDurationTime(time.Now(), ops.RemoveMany, "CVE")
 
 	for batch := 0; batch < len(ids); batch += batchSize {
@@ -190,7 +154,7 @@ func (b *storeImpl) DeleteBatch(ids []string) error {
 		defer dackTxn.Discard()
 
 		for idx := batch; idx < len(ids) && idx < batch+batchSize; idx++ {
-			err := b.deleter.DeleteIn(badgerhelper.GetBucketKey(vulnDackBox.Bucket, []byte(ids[idx])), dackTxn)
+			err := b.deleter.DeleteIn(vulnDackBox.GetKey(ids[idx]), dackTxn)
 			if err != nil {
 				return err
 			}
@@ -200,5 +164,13 @@ func (b *storeImpl) DeleteBatch(ids []string) error {
 			return err
 		}
 	}
+	return b.counter.IncTxnCount()
+}
+
+func (b *storeImpl) GetTxnCount() (txNum uint64, err error) {
+	return b.counter.GetTxnCount(), nil
+}
+
+func (b *storeImpl) IncTxnCount() error {
 	return b.counter.IncTxnCount()
 }

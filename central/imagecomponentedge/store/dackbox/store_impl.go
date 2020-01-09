@@ -4,11 +4,10 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
-	dackbox2 "github.com/stackrox/rox/central/imagecomponentedge/dackbox"
+	edgeDackBox "github.com/stackrox/rox/central/imagecomponentedge/dackbox"
 	"github.com/stackrox/rox/central/imagecomponentedge/store"
 	"github.com/stackrox/rox/central/metrics"
 	"github.com/stackrox/rox/generated/storage"
-	"github.com/stackrox/rox/pkg/badgerhelper"
 	"github.com/stackrox/rox/pkg/dackbox"
 	"github.com/stackrox/rox/pkg/dackbox/crud"
 	ops "github.com/stackrox/rox/pkg/metrics"
@@ -27,16 +26,16 @@ type storeImpl struct {
 
 // New returns a new Store instance.
 func New(dacky *dackbox.DackBox) (store.Store, error) {
-	counter, err := crud.NewTxnCounter(dacky, dackbox2.Bucket)
+	counter, err := crud.NewTxnCounter(dacky, edgeDackBox.Bucket)
 	if err != nil {
 		return nil, err
 	}
 	return &storeImpl{
 		counter:  counter,
 		dacky:    dacky,
-		reader:   dackbox2.Reader,
-		upserter: dackbox2.Upserter,
-		deleter:  dackbox2.Deleter,
+		reader:   edgeDackBox.Reader,
+		upserter: edgeDackBox.Upserter,
+		deleter:  edgeDackBox.Deleter,
 	}, nil
 }
 
@@ -44,7 +43,7 @@ func (b *storeImpl) Exists(id string) (bool, error) {
 	dackTxn := b.dacky.NewReadOnlyTransaction()
 	defer dackTxn.Discard()
 
-	exists, err := b.reader.ExistsIn(badgerhelper.GetBucketKey(dackbox2.Bucket, []byte(id)), dackTxn)
+	exists, err := b.reader.ExistsIn(edgeDackBox.GetKey(id), dackTxn)
 	if err != nil {
 		return false, err
 	}
@@ -58,7 +57,7 @@ func (b *storeImpl) Count() (int, error) {
 	dackTxn := b.dacky.NewReadOnlyTransaction()
 	defer dackTxn.Discard()
 
-	count, err := b.reader.CountIn(dackbox2.Bucket, dackTxn)
+	count, err := b.reader.CountIn(edgeDackBox.Bucket, dackTxn)
 	if err != nil {
 		return 0, err
 	}
@@ -72,7 +71,7 @@ func (b *storeImpl) GetAll() ([]*storage.ImageComponentEdge, error) {
 	dackTxn := b.dacky.NewReadOnlyTransaction()
 	defer dackTxn.Discard()
 
-	msgs, err := b.reader.ReadAllIn(dackbox2.Bucket, dackTxn)
+	msgs, err := b.reader.ReadAllIn(edgeDackBox.Bucket, dackTxn)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +89,7 @@ func (b *storeImpl) Get(id string) (cve *storage.ImageComponentEdge, exists bool
 	dackTxn := b.dacky.NewReadOnlyTransaction()
 	defer dackTxn.Discard()
 
-	msg, err := b.reader.ReadIn(badgerhelper.GetBucketKey(dackbox2.Bucket, []byte(id)), dackTxn)
+	msg, err := b.reader.ReadIn(edgeDackBox.GetKey(id), dackTxn)
 	if err != nil {
 		return nil, false, err
 	}
@@ -107,7 +106,7 @@ func (b *storeImpl) GetBatch(ids []string) ([]*storage.ImageComponentEdge, []int
 	msgs := make([]proto.Message, 0, len(ids)/2)
 	missing := make([]int, 0, len(ids)/2)
 	for idx, id := range ids {
-		msg, err := b.reader.ReadIn(badgerhelper.GetBucketKey(dackbox2.Bucket, []byte(id)), dackTxn)
+		msg, err := b.reader.ReadIn(edgeDackBox.GetKey(id), dackTxn)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -126,25 +125,7 @@ func (b *storeImpl) GetBatch(ids []string) ([]*storage.ImageComponentEdge, []int
 	return ret, missing, nil
 }
 
-// UpdateImage updates a image to bolt.
-func (b *storeImpl) Upsert(cve *storage.ImageComponentEdge) error {
-	defer metrics.SetBadgerOperationDurationTime(time.Now(), ops.Upsert, "ImageComponentEdge")
-
-	dackTxn := b.dacky.NewTransaction()
-	defer dackTxn.Discard()
-
-	err := b.upserter.UpsertIn(nil, cve, dackTxn)
-	if err != nil {
-		return err
-	}
-
-	if err := dackTxn.Commit(); err != nil {
-		return err
-	}
-	return b.counter.IncTxnCount()
-}
-
-func (b *storeImpl) UpsertBatch(cves []*storage.ImageComponentEdge) error {
+func (b *storeImpl) Upsert(cves ...*storage.ImageComponentEdge) error {
 	defer metrics.SetBadgerOperationDurationTime(time.Now(), ops.Upsert, "ImageComponentEdge")
 
 	for batch := 0; batch < len(cves); batch += batchSize {
@@ -165,24 +146,7 @@ func (b *storeImpl) UpsertBatch(cves []*storage.ImageComponentEdge) error {
 	return b.counter.IncTxnCount()
 }
 
-func (b *storeImpl) Delete(id string) error {
-	defer metrics.SetBadgerOperationDurationTime(time.Now(), ops.Remove, "ImageComponentEdge")
-
-	dackTxn := b.dacky.NewTransaction()
-	defer dackTxn.Discard()
-
-	err := b.deleter.DeleteIn(badgerhelper.GetBucketKey(dackbox2.Bucket, []byte(id)), dackTxn)
-	if err != nil {
-		return err
-	}
-
-	if err := dackTxn.Commit(); err != nil {
-		return err
-	}
-	return b.counter.IncTxnCount()
-}
-
-func (b *storeImpl) DeleteBatch(ids []string) error {
+func (b *storeImpl) Delete(ids ...string) error {
 	defer metrics.SetBadgerOperationDurationTime(time.Now(), ops.RemoveMany, "ImageComponentEdge")
 
 	for batch := 0; batch < len(ids); batch += batchSize {
@@ -190,7 +154,7 @@ func (b *storeImpl) DeleteBatch(ids []string) error {
 		defer dackTxn.Discard()
 
 		for idx := batch; idx < len(ids) && idx < batch+batchSize; idx++ {
-			err := b.deleter.DeleteIn(badgerhelper.GetBucketKey(dackbox2.Bucket, []byte(ids[idx])), dackTxn)
+			err := b.deleter.DeleteIn(edgeDackBox.GetKey(ids[idx]), dackTxn)
 			if err != nil {
 				return err
 			}
@@ -200,5 +164,13 @@ func (b *storeImpl) DeleteBatch(ids []string) error {
 			return err
 		}
 	}
+	return b.counter.IncTxnCount()
+}
+
+func (b *storeImpl) GetTxnCount() (txNum uint64, err error) {
+	return b.counter.GetTxnCount(), nil
+}
+
+func (b *storeImpl) IncTxnCount() error {
 	return b.counter.IncTxnCount()
 }

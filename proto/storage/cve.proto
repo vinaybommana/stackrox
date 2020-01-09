@@ -36,6 +36,8 @@ message CVE {
     ScoreVersion              score_version = 9;
     CVSSV2                    cvss_v2       = 10;
     CVSSV3                    cvss_v3       = 11;
+
+    bool                      supressed     = 12 [(gogoproto.moretags) = "search:\"CVE Supressed,store\""];
 }
 
 message CVSSV2 {

@@ -14,9 +14,6 @@ type Store interface {
 
 	Exists(id string) (bool, error)
 
-	Upsert(cve *storage.ImageComponentEdge) error
-	UpsertBatch(cves []*storage.ImageComponentEdge) error
-
-	Delete(id string) error
-	DeleteBatch(ids []string) error
+	Upsert(cve ...*storage.ImageComponentEdge) error
+	Delete(ids ...string) error
 }

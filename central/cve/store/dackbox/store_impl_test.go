@@ -75,9 +75,7 @@ func (suite *ImageStoreTestSuite) TestImages() {
 		d.Cvss += 1.0
 	}
 
-	for _, d := range cves {
-		suite.NoError(suite.store.Upsert(d))
-	}
+	suite.NoError(suite.store.Upsert(cves...))
 
 	for _, d := range cves {
 		got, exists, err := suite.store.Get(d.GetId())

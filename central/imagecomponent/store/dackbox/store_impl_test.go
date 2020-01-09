@@ -75,9 +75,7 @@ func (suite *ImageStoreTestSuite) TestImages() {
 		d.Name += "1"
 	}
 
-	for _, d := range components {
-		suite.NoError(suite.store.Upsert(d))
-	}
+	suite.NoError(suite.store.Upsert(components...))
 
 	for _, d := range components {
 		got, exists, err := suite.store.Get(d.GetId())

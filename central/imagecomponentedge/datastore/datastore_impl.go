@@ -10,7 +10,6 @@ import (
 	"github.com/stackrox/rox/central/role/resources"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
-	"github.com/stackrox/rox/pkg/errorhelpers"
 	"github.com/stackrox/rox/pkg/sac"
 	searchPkg "github.com/stackrox/rox/pkg/search"
 )
@@ -90,9 +89,9 @@ func (ds *datastoreImpl) GetBatch(ctx context.Context, ids []string) ([]*storage
 	return edges, nil
 }
 
-func (ds *datastoreImpl) Upsert(ctx context.Context, edge *storage.ImageComponentEdge) error {
-	if edge.GetId() == "" {
-		return errors.New("cannot upsert an image/component edge without an id")
+func (ds *datastoreImpl) Upsert(ctx context.Context, edges ...*storage.ImageComponentEdge) error {
+	if len(edges) == 0 {
+		return nil
 	}
 	if ok, err := imagesSAC.WriteAllowed(ctx); err != nil {
 		return err
@@ -100,10 +99,10 @@ func (ds *datastoreImpl) Upsert(ctx context.Context, edge *storage.ImageComponen
 		return errors.New("permission denied")
 	}
 
-	if err := ds.indexer.AddImageComponentEdge(edge); err != nil {
+	if err := ds.storage.Upsert(edges...); err != nil {
 		return err
 	}
-	return ds.storage.Upsert(edge)
+	return ds.indexer.AddImageComponentEdges(edges)
 }
 
 func (ds *datastoreImpl) Delete(ctx context.Context, ids ...string) error {
@@ -113,15 +112,8 @@ func (ds *datastoreImpl) Delete(ctx context.Context, ids ...string) error {
 		return errors.New("permission denied")
 	}
 
-	errorList := errorhelpers.NewErrorList("deleting image/component edges")
-	for _, id := range ids {
-		if err := ds.storage.Delete(id); err != nil {
-			errorList.AddError(err)
-			continue
-		}
-		if err := ds.indexer.DeleteImageComponentEdge(id); err != nil {
-			errorList.AddError(err)
-		}
+	if err := ds.storage.Delete(ids...); err != nil {
+		return err
 	}
-	return errorList.ToError()
+	return ds.indexer.DeleteImageComponentEdges(ids)
 }

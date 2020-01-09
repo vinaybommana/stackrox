@@ -23,9 +23,7 @@ type DataStore interface {
 	Count(ctx context.Context) (int, error)
 	GetBatch(ctx context.Context, id []string) ([]*storage.ImageComponent, error)
 
-	// Upserting and Deleting for only occur for ImageComponents not linked to an image component.
-	// ImageComponents linked to an image component will be written by the image store.
-	Upsert(ctx context.Context, imagecomponent *storage.ImageComponent) error
+	Upsert(ctx context.Context, imagecomponents ...*storage.ImageComponent) error
 	Delete(ctx context.Context, ids ...string) error
 }
 

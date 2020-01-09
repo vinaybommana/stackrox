@@ -31,6 +31,7 @@ var (
 	CVE                          = newFieldLabel("CVE")
 	CVECount                     = newFieldLabel("CVE Count")
 	CVEType                      = newFieldLabel("CVE Type")
+	CVESupressed                 = newFieldLabel("CVE Supressed")
 	CVSS                         = newFieldLabel("CVSS")
 	Component                    = newFieldLabel("Component")
 	ComponentID                  = newFieldLabel("Component ID")

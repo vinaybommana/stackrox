@@ -47,7 +47,7 @@ func (suite *EdgeStoreTestSuite) TearDownSuite() {
 }
 
 func (suite *EdgeStoreTestSuite) TestImages() {
-	cves := []*storage.ImageComponentEdge{
+	edges := []*storage.ImageComponentEdge{
 		{
 			Id: "CVE-2019-02-14",
 			HasLayerIndex: &storage.ImageComponentEdge_LayerIndex{
@@ -63,11 +63,11 @@ func (suite *EdgeStoreTestSuite) TestImages() {
 	}
 
 	// Test Add
-	for _, d := range cves {
+	for _, d := range edges {
 		suite.NoError(suite.store.Upsert(d))
 	}
 
-	for _, d := range cves {
+	for _, d := range edges {
 		got, exists, err := suite.store.Get(d.GetId())
 		suite.NoError(err)
 		suite.True(exists)
@@ -75,17 +75,15 @@ func (suite *EdgeStoreTestSuite) TestImages() {
 	}
 
 	// Test Update
-	for _, d := range cves {
+	for _, d := range edges {
 		d.HasLayerIndex = &storage.ImageComponentEdge_LayerIndex{
 			LayerIndex: 1,
 		}
 	}
 
-	for _, d := range cves {
-		suite.NoError(suite.store.Upsert(d))
-	}
+	suite.NoError(suite.store.Upsert(edges...))
 
-	for _, d := range cves {
+	for _, d := range edges {
 		got, exists, err := suite.store.Get(d.GetId())
 		suite.NoError(err)
 		suite.True(exists)
@@ -95,5 +93,5 @@ func (suite *EdgeStoreTestSuite) TestImages() {
 	// Test Count
 	count, err := suite.store.Count()
 	suite.NoError(err)
-	suite.Equal(len(cves), count)
+	suite.Equal(len(edges), count)
 }

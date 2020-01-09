@@ -23,7 +23,7 @@ type DataStore interface {
 	Count(ctx context.Context) (int, error)
 	GetBatch(ctx context.Context, id []string) ([]*storage.ImageComponentEdge, error)
 
-	Upsert(ctx context.Context, cve *storage.ImageComponentEdge) error
+	Upsert(ctx context.Context, cve ...*storage.ImageComponentEdge) error
 	Delete(ctx context.Context, ids ...string) error
 }
 

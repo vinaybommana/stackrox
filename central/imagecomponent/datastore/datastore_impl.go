@@ -10,7 +10,6 @@ import (
 	"github.com/stackrox/rox/central/role/resources"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
-	"github.com/stackrox/rox/pkg/errorhelpers"
 	"github.com/stackrox/rox/pkg/sac"
 	searchPkg "github.com/stackrox/rox/pkg/search"
 )
@@ -92,9 +91,9 @@ func (ds *datastoreImpl) GetBatch(ctx context.Context, ids []string) ([]*storage
 }
 
 // UpsertImage dedupes the image with the underlying storage and adds the image to the index.
-func (ds *datastoreImpl) Upsert(ctx context.Context, imagecomponent *storage.ImageComponent) error {
-	if imagecomponent.GetId() == "" {
-		return errors.New("cannot upsert a component without an id")
+func (ds *datastoreImpl) Upsert(ctx context.Context, imagecomponents ...*storage.ImageComponent) error {
+	if len(imagecomponents) == 0 {
+		return nil
 	}
 	if ok, err := imagesSAC.WriteAllowed(ctx); err != nil {
 		return err
@@ -102,10 +101,10 @@ func (ds *datastoreImpl) Upsert(ctx context.Context, imagecomponent *storage.Ima
 		return errors.New("permission denied")
 	}
 
-	if err := ds.indexer.AddImageComponent(imagecomponent); err != nil {
+	if err := ds.storage.Upsert(imagecomponents...); err != nil {
 		return err
 	}
-	return ds.storage.Upsert(imagecomponent)
+	return ds.indexer.AddImageComponents(imagecomponents)
 }
 
 func (ds *datastoreImpl) Delete(ctx context.Context, ids ...string) error {
@@ -115,15 +114,8 @@ func (ds *datastoreImpl) Delete(ctx context.Context, ids ...string) error {
 		return errors.New("permission denied")
 	}
 
-	errorList := errorhelpers.NewErrorList("deleting components")
-	for _, id := range ids {
-		if err := ds.storage.Delete(id); err != nil {
-			errorList.AddError(err)
-			continue
-		}
-		if err := ds.indexer.DeleteImageComponent(id); err != nil {
-			errorList.AddError(err)
-		}
+	if err := ds.storage.Delete(ids...); err != nil {
+		return err
 	}
-	return errorList.ToError()
+	return ds.indexer.DeleteImageComponents(ids)
 }

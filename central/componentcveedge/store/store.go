@@ -14,9 +14,9 @@ type Store interface {
 
 	Exists(id string) (bool, error)
 
-	Upsert(cve *storage.ComponentCVEEdge) error
-	UpsertBatch(cves []*storage.ComponentCVEEdge) error
+	Upsert(cve ...*storage.ComponentCVEEdge) error
+	Delete(id ...string) error
 
-	Delete(id string) error
-	DeleteBatch(ids []string) error
+	GetTxnCount() (txNum uint64, err error)
+	IncTxnCount() error
 }

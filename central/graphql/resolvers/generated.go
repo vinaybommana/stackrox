@@ -83,6 +83,7 @@ func registerGeneratedTypes(builder generator.SchemaBuilder) {
 		"references: [CVE_Reference]!",
 		"scoreVersion: CVE_ScoreVersion!",
 		"summary: String!",
+		"supressed: Boolean!",
 		"type: CVE_CVEType!",
 	}))
 	generator.RegisterProtoEnum(builder, reflect.TypeOf(storage.CVE_CVEType(0)))
@@ -1527,6 +1528,11 @@ func (resolver *cVEResolver) ScoreVersion(ctx context.Context) string {
 
 func (resolver *cVEResolver) Summary(ctx context.Context) string {
 	value := resolver.data.GetSummary()
+	return value
+}
+
+func (resolver *cVEResolver) Supressed(ctx context.Context) bool {
+	value := resolver.data.GetSupressed()
 	return value
 }
 
