@@ -297,3 +297,19 @@ func (suite *ProcessWhitelistDataStoreTestSuite) TestRemoveByDeployment() {
 	suite.doGet(key2, false, nil)
 	suite.doGet(key3, true, nil)
 }
+
+func (suite *ProcessWhitelistDataStoreTestSuite) TestIDToKeyConversion() {
+	key := &storage.ProcessWhitelistKey{
+		DeploymentId:  "blah",
+		ContainerName: "container",
+		ClusterId:     "cluster1",
+		Namespace:     "namespace",
+	}
+
+	id, err := keyToID(key)
+	suite.NoError(err)
+	resKey, err := IDToKey(id)
+	suite.NoError(err)
+	suite.NotNil(resKey)
+	suite.Equal(*key, *resKey)
+}

@@ -261,7 +261,7 @@ func TestImagePruning(t *testing.T) {
 			// So to test need to update them separately
 			alerts, config, images, deployments := generateImageDataStructures(ctx, t)
 
-			gc := newGarbageCollector(alerts, images, nil, deployments, nil, nil, config).(*garbageCollectorImpl)
+			gc := newGarbageCollector(alerts, images, nil, deployments, nil, nil, nil, config).(*garbageCollectorImpl)
 
 			// Add images and deployments into the datastores
 			if c.deployment != nil {
@@ -373,7 +373,7 @@ func TestAlertPruning(t *testing.T) {
 			// So to test need to update them separately
 			alerts, config, images, deployments := generateAlertDataStructures(ctx, t)
 
-			gc := newGarbageCollector(alerts, images, nil, deployments, nil, nil, config).(*garbageCollectorImpl)
+			gc := newGarbageCollector(alerts, images, nil, deployments, nil, nil, nil, config).(*garbageCollectorImpl)
 
 			// Add alerts into the datastores
 			for _, alert := range c.alerts {

@@ -37,6 +37,10 @@ func (ds *datastoreImpl) SearchRawProcessWhitelists(ctx context.Context, q *v1.Q
 	return ds.searcher.SearchRawProcessWhitelists(ctx, q)
 }
 
+func (ds *datastoreImpl) Search(ctx context.Context, q *v1.Query) ([]pkgSearch.Result, error) {
+	return ds.searcher.Search(ctx, q)
+}
+
 func (ds *datastoreImpl) GetProcessWhitelist(ctx context.Context, key *storage.ProcessWhitelistKey) (*storage.ProcessWhitelist, error) {
 	if ok, err := processWhitelistSAC.ScopeChecker(ctx, storage.Access_READ_ACCESS).ForNamespaceScopedObject(key).Allowed(ctx); err != nil || !ok {
 		return nil, err

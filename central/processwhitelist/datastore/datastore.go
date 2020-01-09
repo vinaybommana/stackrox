@@ -11,12 +11,14 @@ import (
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/concurrency"
+	pkgSearch "github.com/stackrox/rox/pkg/search"
 )
 
 // DataStore wraps storage, indexer, and searcher for ProcessWhitelists.
 //go:generate mockgen-wrapper
 type DataStore interface {
 	SearchRawProcessWhitelists(ctx context.Context, q *v1.Query) ([]*storage.ProcessWhitelist, error)
+	Search(ctx context.Context, q *v1.Query) ([]pkgSearch.Result, error)
 
 	GetProcessWhitelist(ctx context.Context, key *storage.ProcessWhitelistKey) (*storage.ProcessWhitelist, error)
 	AddProcessWhitelist(ctx context.Context, whitelist *storage.ProcessWhitelist) (string, error)

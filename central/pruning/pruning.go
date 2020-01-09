@@ -13,6 +13,7 @@ import (
 	imageDatastore "github.com/stackrox/rox/central/image/datastore"
 	networkFlowDatastore "github.com/stackrox/rox/central/networkflow/datastore"
 	processDatastore "github.com/stackrox/rox/central/processindicator/datastore"
+	processWhitelistDatastore "github.com/stackrox/rox/central/processwhitelist/datastore"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/concurrency"
@@ -25,13 +26,13 @@ import (
 )
 
 const (
-	pruneInterval = 1 * time.Hour
-	orphanWindow  = 30 * time.Minute
+	pruneInterval       = 1 * time.Hour
+	orphanWindow        = 30 * time.Minute
+	whitelistBatchLimit = 10000
 )
 
 var (
-	log = logging.LoggerForModule()
-
+	log        = logging.LoggerForModule()
 	pruningCtx = sac.WithAllAccess(context.Background())
 )
 
@@ -42,28 +43,30 @@ type GarbageCollector interface {
 }
 
 func newGarbageCollector(alerts alertDatastore.DataStore, images imageDatastore.DataStore, clusters clusterDatastore.DataStore, deployments deploymentDatastore.DataStore,
-	processes processDatastore.DataStore, networkflows networkFlowDatastore.ClusterDataStore, config configDatastore.DataStore) GarbageCollector {
+	processes processDatastore.DataStore, processwhitelist processWhitelistDatastore.DataStore, networkflows networkFlowDatastore.ClusterDataStore, config configDatastore.DataStore) GarbageCollector {
 	return &garbageCollectorImpl{
-		alerts:       alerts,
-		clusters:     clusters,
-		images:       images,
-		deployments:  deployments,
-		processes:    processes,
-		networkflows: networkflows,
-		config:       config,
-		stopSig:      concurrency.NewSignal(),
-		stoppedSig:   concurrency.NewSignal(),
+		alerts:           alerts,
+		clusters:         clusters,
+		images:           images,
+		deployments:      deployments,
+		processes:        processes,
+		processwhitelist: processwhitelist,
+		networkflows:     networkflows,
+		config:           config,
+		stopSig:          concurrency.NewSignal(),
+		stoppedSig:       concurrency.NewSignal(),
 	}
 }
 
 type garbageCollectorImpl struct {
-	alerts       alertDatastore.DataStore
-	clusters     clusterDatastore.DataStore
-	images       imageDatastore.DataStore
-	deployments  deploymentDatastore.DataStore
-	processes    processDatastore.DataStore
-	networkflows networkFlowDatastore.ClusterDataStore
-	config       configDatastore.DataStore
+	alerts           alertDatastore.DataStore
+	clusters         clusterDatastore.DataStore
+	images           imageDatastore.DataStore
+	deployments      deploymentDatastore.DataStore
+	processes        processDatastore.DataStore
+	processwhitelist processWhitelistDatastore.DataStore
+	networkflows     networkFlowDatastore.ClusterDataStore
+	config           configDatastore.DataStore
 
 	stopSig    concurrency.Signal
 	stoppedSig concurrency.Signal
@@ -115,6 +118,7 @@ func (g *garbageCollectorImpl) removeOrphanedResources() {
 	}
 	deploymentSet := set.NewFrozenStringSet(deploymentIDs...)
 	g.removeOrphanedProcesses(deploymentSet)
+	g.removeOrphanedProcessWhitelists(deploymentSet)
 	g.markOrphanedAlertsAsResolved(deploymentSet)
 	g.removeOrphanedNetworkFlows(deploymentSet)
 }
@@ -140,6 +144,64 @@ func (g *garbageCollectorImpl) removeOrphanedProcesses(deployments set.FrozenStr
 	if err := g.processes.RemoveProcessIndicators(pruningCtx, processesToPrune); err != nil {
 		log.Error(errors.Wrap(err, "error removing process indicators"))
 	}
+}
+
+func (g *garbageCollectorImpl) removeOrphanedProcessWhitelists(deployments set.FrozenStringSet) {
+	var whitelistBatchOffset, prunedProcessWhitelists int32
+	for {
+		allQuery := &v1.Query{
+			Pagination: &v1.QueryPagination{
+				Offset: whitelistBatchOffset,
+				Limit:  whitelistBatchLimit,
+			},
+		}
+
+		res, err := g.processwhitelist.Search(pruningCtx, allQuery)
+		if err != nil {
+			log.Error(errors.Wrap(err, "error searching process whitelists"))
+			return
+		}
+
+		whitelistBatchOffset += whitelistBatchLimit
+		var whitelistKeysToPrune []*storage.ProcessWhitelistKey
+		for _, whitelist := range res {
+			whitelistKey, err := processWhitelistDatastore.IDToKey(whitelist.ID)
+			if err != nil {
+				log.Error(errors.Wrapf(err, "Invalid id %s", whitelist.ID))
+				continue
+			}
+
+			if !deployments.Contains(whitelistKey.GetDeploymentId()) {
+				whitelistKeysToPrune = append(whitelistKeysToPrune, whitelistKey)
+			}
+		}
+
+		now := types.TimestampNow()
+		for _, whitelistKey := range whitelistKeysToPrune {
+			whitelist, err := g.processwhitelist.GetProcessWhitelist(pruningCtx, whitelistKey)
+			if err != nil {
+				log.Error(errors.Wrapf(err, "unable to fetch whitelist for key %v", whitelistKey))
+				continue
+			}
+
+			if protoutils.Sub(now, whitelist.Created) < orphanWindow {
+				continue
+			}
+
+			if err = g.processwhitelist.RemoveProcessWhitelist(pruningCtx, whitelistKey); err != nil {
+				log.Error(errors.Wrapf(err, "unable to remove process whitelist: %v", whitelistKey))
+				continue
+			}
+
+			prunedProcessWhitelists++
+		}
+
+		if len(res) < whitelistBatchLimit {
+			break
+		}
+	}
+
+	log.Infof("[Process whitelist pruning] Removed %d process whitelists", prunedProcessWhitelists)
 }
 
 func (g *garbageCollectorImpl) markOrphanedAlertsAsResolved(deployments set.FrozenStringSet) {
