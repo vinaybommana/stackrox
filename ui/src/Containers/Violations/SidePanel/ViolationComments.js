@@ -46,7 +46,9 @@ const ViolationComments = () => {
         setComments(newComments);
     }
 
-    function onDelete() {}
+    function onDelete(comment) {
+        setComments(comments.filter(datum => datum.id !== comment.id));
+    }
 
     return <CommentThread comments={comments} onSave={onSave} onDelete={onDelete} />;
 };

@@ -7,6 +7,7 @@ import { Edit, Trash2, XCircle } from 'react-feather';
 import dateTimeFormat from 'constants/dateTimeFormat';
 
 import TextArea from 'Components/forms/TextArea';
+import CustomDialogue from 'Components/CustomDialogue';
 
 const ActionButtons = ({ isEditing, canModify, onToggleEdit, onDelete }) => {
     if (isEditing) {
@@ -60,6 +61,7 @@ const InputForm = ({ value, onSubmit }) => {
 
 const Comment = ({ comment, onDelete, onSave, defaultEdit }) => {
     const [isEditing, setEdit] = useState(defaultEdit);
+    const [isDialogueOpen, setIsDialogueOpen] = useState(false);
     const { email, createdTime, updatedTime, message, canModify } = comment;
 
     const isCommentUpdated = updatedTime && createdTime !== updatedTime;
@@ -74,7 +76,16 @@ const Comment = ({ comment, onDelete, onSave, defaultEdit }) => {
     }
 
     function onDeleteHandler() {
+        setIsDialogueOpen(true);
+    }
+
+    function cancelDeletion() {
+        setIsDialogueOpen(false);
+    }
+
+    function confirmDeletion() {
         onDelete(comment);
+        setIsDialogueOpen(false);
     }
 
     return (
@@ -100,6 +111,14 @@ const Comment = ({ comment, onDelete, onSave, defaultEdit }) => {
             <div className="mt-2 text-primary-800 leading-normal">
                 {isEditing ? <InputForm value={message} onSubmit={onSubmit} /> : message}
             </div>
+            {isDialogueOpen && (
+                <CustomDialogue
+                    title="Delete Comment?"
+                    onConfirm={confirmDeletion}
+                    confirmText="Yes"
+                    onCancel={cancelDeletion}
+                />
+            )}
         </div>
     );
 };
