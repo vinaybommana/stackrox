@@ -7,7 +7,7 @@ import CollapsibleCard from 'Components/CollapsibleCard';
 import Button from 'Components/Button';
 import Comment from './Comment';
 
-const CommentThread = ({ comments, onSave, onDelete, defaultLimit }) => {
+const CommentThread = ({ type, comments, onSave, onDelete, defaultLimit, defaultOpen }) => {
     const [limit, setLimit] = useState(defaultLimit);
 
     const sortedComments = sortBy(comments, ['createdTime', 'email']);
@@ -19,7 +19,10 @@ const CommentThread = ({ comments, onSave, onDelete, defaultLimit }) => {
     }
 
     return (
-        <CollapsibleCard title={`${length} Violation ${pluralize('Comment', length)}`}>
+        <CollapsibleCard
+            title={`${length} ${type} ${pluralize('Comment', length)}`}
+            open={defaultOpen}
+        >
             <div className="p-3">
                 {sortedComments.slice(0, limit).map((comment, i) => (
                     <div key={comment.id} className={i === 0 ? 'mt-0' : 'mt-3'}>
@@ -41,6 +44,7 @@ const CommentThread = ({ comments, onSave, onDelete, defaultLimit }) => {
 };
 
 CommentThread.propTypes = {
+    type: PropTypes.string.isRequired,
     comments: PropTypes.arrayOf(
         PropTypes.shape({
             id: PropTypes.string,
@@ -53,12 +57,14 @@ CommentThread.propTypes = {
     ),
     onSave: PropTypes.func.isRequired,
     onDelete: PropTypes.func.isRequired,
-    defaultLimit: PropTypes.number
+    defaultLimit: PropTypes.number,
+    defaultOpen: PropTypes.bool
 };
 
 CommentThread.defaultProps = {
     comments: [],
-    defaultLimit: 3
+    defaultLimit: 3,
+    defaultOpen: false
 };
 
 export default CommentThread;

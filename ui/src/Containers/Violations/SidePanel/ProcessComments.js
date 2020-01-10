@@ -37,7 +37,7 @@ const defaultComments = [
     }
 ];
 
-const ViolationComments = () => {
+const ProcessComments = () => {
     const [comments, setComments] = useState(defaultComments);
 
     function onSave(comment, message) {
@@ -50,15 +50,7 @@ const ViolationComments = () => {
         setComments(comments.filter(datum => datum.id !== comment.id));
     }
 
-    return (
-        <CommentThread
-            type="Violation"
-            comments={comments}
-            onSave={onSave}
-            onDelete={onDelete}
-            defaultOpen
-        />
-    );
+    return <CommentThread type="Process" comments={comments} onSave={onSave} onDelete={onDelete} />;
 };
 
-export default React.memo(ViolationComments);
+export default ProcessComments;
