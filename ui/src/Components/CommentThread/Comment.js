@@ -11,13 +11,13 @@ import CustomDialogue from 'Components/CustomDialogue';
 
 const regexURL = /(https?: \/\/[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/[a-zA-Z0-9]+\.[^\s]{2,}|[a-zA-Z0-9]+\.[^\s]{2,})/g;
 
-const ActionButtons = ({ isEditing, canModify, onToggleEdit, onDelete }) => {
+const ActionButtons = ({ isEditing, canModify, onEdit, onDelete, onClose }) => {
     if (isEditing) {
         return (
             <div>
                 <XCircle
                     className="h-4 w-4 ml-2 text-success-800 cursor-pointer hover:text-success-500"
-                    onClick={onToggleEdit}
+                    onClick={onClose}
                 />
             </div>
         );
@@ -26,7 +26,7 @@ const ActionButtons = ({ isEditing, canModify, onToggleEdit, onDelete }) => {
         <div className={`${!canModify && 'invisible'}`}>
             <Edit
                 className="h-4 w-4 mx-2 text-primary-800 cursor-pointer hover:text-primary-500"
-                onClick={onToggleEdit}
+                onClick={onEdit}
             />
             <Trash2
                 className="h-4 w-4 text-primary-800 cursor-pointer hover:text-primary-500"
@@ -83,19 +83,25 @@ const InputForm = ({ value, onSubmit }) => {
     );
 };
 
-const Comment = ({ comment, onDelete, onSave, defaultEdit }) => {
+const Comment = ({ comment, onDelete, onSave, onClose, defaultEdit }) => {
     const [isEditing, setEdit] = useState(defaultEdit);
     const [isDialogueOpen, setIsDialogueOpen] = useState(false);
-    const { email, createdTime, updatedTime, message, canModify } = comment;
+
+    const { user, createdTime, updatedTime, message, canModify } = comment;
 
     const isCommentUpdated = updatedTime && createdTime !== updatedTime;
 
-    function onToggleEdit() {
-        setEdit(!isEditing);
+    function onEdit() {
+        setEdit(true);
+    }
+
+    function onCloseHandler() {
+        setEdit(false);
+        onClose();
     }
 
     function onSubmit(data) {
-        onToggleEdit();
+        onCloseHandler();
         onSave(comment, data.message);
     }
 
@@ -121,16 +127,18 @@ const Comment = ({ comment, onDelete, onSave, defaultEdit }) => {
             } border rounded-lg p-2`}
         >
             <div className="flex flex-1">
-                <div className="text-primary-800 flex flex-1">{email}</div>
+                <div className="text-primary-800 flex flex-1">{user}</div>
                 <ActionButtons
                     isEditing={isEditing}
                     canModify={canModify}
-                    onToggleEdit={onToggleEdit}
+                    onEdit={onEdit}
                     onDelete={onDeleteHandler}
+                    onClose={onCloseHandler}
                 />
             </div>
             <div className="text-base-500 text-xs mt-1">
-                {format(createdTime, dateTimeFormat)} {isCommentUpdated && '(edited)'}
+                {createdTime && format(createdTime, dateTimeFormat)}{' '}
+                {isCommentUpdated && '(edited)'}
             </div>
             <div className="mt-2 text-primary-800 leading-normal">
                 {isEditing ? (
@@ -155,18 +163,20 @@ Comment.propTypes = {
     comment: PropTypes.shape({
         id: PropTypes.string,
         message: PropTypes.string,
-        email: PropTypes.string,
+        user: PropTypes.string,
         createdTime: PropTypes.string,
         updatedTime: PropTypes.string,
         canModify: PropTypes.bool
     }).isRequired,
     onDelete: PropTypes.func.isRequired,
     onSave: PropTypes.func.isRequired,
+    onClose: PropTypes.func,
     defaultEdit: PropTypes.bool
 };
 
 Comment.defaultProps = {
-    defaultEdit: false
+    defaultEdit: false,
+    onClose: () => {}
 };
 
 export default Comment;

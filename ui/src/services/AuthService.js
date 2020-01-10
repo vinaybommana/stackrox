@@ -111,6 +111,26 @@ export const getAccessToken = () => store.get(accessTokenKey) || null;
 export const storeAccessToken = token => store.set(accessTokenKey, token);
 export const clearAccessToken = () => store.remove(accessTokenKey);
 export const isTokenPresent = () => !!getAccessToken();
+export const parseAccessToken = token => {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+        atob(base64)
+            .split('')
+            .map(function(c) {
+                return `%${`00${c.charCodeAt(0).toString(16)}`.slice(-2)}`;
+            })
+            .join('')
+    );
+    return JSON.parse(jsonPayload);
+};
+export const getUserName = () => {
+    const tokenInfo = parseAccessToken(getAccessToken());
+    // in cypress tests we don't have an external_user field, but we do have a name field
+    const { name, external_user: externalUser } = tokenInfo;
+    if (name) return name;
+    return externalUser.full_name || 'Admin';
+};
 
 export const storeRequestedLocation = location => store.set(requestedLocationKey, location);
 export const getAndClearRequestedLocation = () => {

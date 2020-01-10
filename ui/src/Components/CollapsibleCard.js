@@ -11,16 +11,18 @@ class CollapsibleCard extends Component {
         titleClassName: PropTypes.string,
         renderWhenOpened: PropTypes.func,
         renderWhenClosed: PropTypes.func,
-        cardClassName: PropTypes.string
+        cardClassName: PropTypes.string,
+        headerComponents: PropTypes.element
     };
 
     static defaultProps = {
         open: true,
         titleClassName:
-            'border-b border-base-300 leading-normal cursor-pointer flex justify-between items-center hover:bg-primary-100 hover:border-primary-300',
+            'border-b border-base-300 leading-normal cursor-pointer flex justify-end items-center hover:bg-primary-100 hover:border-primary-300',
         renderWhenOpened: null,
         renderWhenClosed: null,
-        cardClassName: 'border border-base-400'
+        cardClassName: 'border border-base-400',
+        headerComponents: null
     };
 
     renderTriggerElement = cardState => {
@@ -28,11 +30,12 @@ class CollapsibleCard extends Component {
             opened: <Icon.ChevronUp className="h-4 w-4" />,
             closed: <Icon.ChevronDown className="h-4 w-4" />
         };
-        const { title, titleClassName } = this.props;
+        const { title, titleClassName, headerComponents } = this.props;
         return (
             <div className={titleClassName}>
-                <h1 className="p-3 pb-2 text-base-600 font-700 text-lg">{title}</h1>
-                <div className="flex pr-3">{icons[cardState]}</div>
+                <h1 className="flex flex-1 p-3 pb-2 text-base-600 font-700 text-lg">{title}</h1>
+                {headerComponents && <div>{headerComponents}</div>}
+                <div className="flex px-3">{icons[cardState]}</div>
             </div>
         );
     };
