@@ -53,4 +53,4 @@ const ViolationComments = () => {
     return <CommentThread comments={comments} onSave={onSave} onDelete={onDelete} />;
 };
 
-export default ViolationComments;
+export default React.memo(ViolationComments);

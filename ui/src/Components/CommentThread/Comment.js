@@ -9,6 +9,8 @@ import dateTimeFormat from 'constants/dateTimeFormat';
 import TextArea from 'Components/forms/TextArea';
 import CustomDialogue from 'Components/CustomDialogue';
 
+const regexURL = /(https?: \/\/[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/[a-zA-Z0-9]+\.[^\s]{2,}|[a-zA-Z0-9]+\.[^\s]{2,})/g;
+
 const ActionButtons = ({ isEditing, canModify, onToggleEdit, onDelete }) => {
     if (isEditing) {
         return (
@@ -32,6 +34,28 @@ const ActionButtons = ({ isEditing, canModify, onToggleEdit, onDelete }) => {
             />
         </div>
     );
+};
+
+const Message = ({ message }) => {
+    // split the message by URLs
+    return message.split(regexURL).map(str => {
+        // create links for each URL string
+        if (str.match(regexURL)) {
+            return (
+                // https://mathiasbynens.github.io/rel-noopener/ explains why we add the rel="noopener noreferrer" attribute
+                <a
+                    href={str}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    key={str}
+                    className="text-primary-700"
+                >
+                    {str}
+                </a>
+            );
+        }
+        return str;
+    });
 };
 
 const InputForm = ({ value, onSubmit }) => {
@@ -109,7 +133,11 @@ const Comment = ({ comment, onDelete, onSave, defaultEdit }) => {
                 {format(createdTime, dateTimeFormat)} {isCommentUpdated && '(edited)'}
             </div>
             <div className="mt-2 text-primary-800 leading-normal">
-                {isEditing ? <InputForm value={message} onSubmit={onSubmit} /> : message}
+                {isEditing ? (
+                    <InputForm value={message} onSubmit={onSubmit} />
+                ) : (
+                    <Message message={message} />
+                )}
             </div>
             {isDialogueOpen && (
                 <CustomDialogue
