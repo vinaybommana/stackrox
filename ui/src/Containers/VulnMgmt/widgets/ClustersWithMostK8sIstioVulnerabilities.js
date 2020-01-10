@@ -82,7 +82,7 @@ const processData = (data, workflowState, limit) => {
             const clusterUrl = workflowState.resetPage(entityTypes.CLUSTER, id).toUrl();
             const indicationTooltipText = isGKECluster
                 ? 'These CVEs might have been patched by GKE. Please check the GKE release notes or security bulletin to find out more.'
-                : 'These CVEs were not patched in the current Kubernetes version of this cluster';
+                : 'These CVEs were not patched in the current Kubernetes version of this cluster.';
 
             const indicatorIcon = isGKECluster ? (
                 <HelpCircle className="w-4 h-4 text-warning-700 ml-2" />
@@ -100,6 +100,7 @@ const processData = (data, workflowState, limit) => {
                             fixableUrl={k8sFixableUrl}
                             fixable={k8sFixableCount}
                             orientation="vertical"
+                            showZero
                         />
                         <Tooltip placement="top" overlay={<div>{indicationTooltipText}</div>}>
                             {indicatorIcon}

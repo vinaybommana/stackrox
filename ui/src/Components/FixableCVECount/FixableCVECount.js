@@ -56,7 +56,7 @@ const FixableCVECount = ({ cves, fixable, url, fixableUrl, orientation, hideLink
                 <CountElement
                     count={cves}
                     url={url}
-                    hideLink={showZero || hideLink}
+                    hideLink={(showZero && !cves) || hideLink}
                     individualClasses={individualClasses}
                 />
             )}
@@ -67,7 +67,7 @@ const FixableCVECount = ({ cves, fixable, url, fixableUrl, orientation, hideLink
                         count={fixable}
                         url={fixableUrl}
                         fixable
-                        hideLink={showZero || hideLink}
+                        hideLink={(showZero && !cves) || hideLink}
                     />
                 </>
             )}
