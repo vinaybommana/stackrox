@@ -69,7 +69,7 @@ const VulnDashboardPage = ({ history }) => {
 
     const headerComponents = (
         <>
-            <div className="flex">
+            <div className="flex h-full">
                 <PoliciesCountTile />
                 <CvesCountTile />
                 <div className="flex w-32">

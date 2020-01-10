@@ -58,7 +58,7 @@ export function getPolicyTableColumns(workflowState) {
         },
         {
             Header: 'statuses',
-            headerClassName: 'w-12 invisible',
+            headerClassName: 'w-16 invisible',
             className: `w-16 ${defaultColumnClassName}`,
             Cell: ({ original }) => {
                 const { disabled, notifiers } = original;

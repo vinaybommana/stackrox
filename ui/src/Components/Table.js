@@ -101,7 +101,7 @@ class Table extends Component {
                 getTheadProps={this.getTheadProps}
                 defaultPageSize={pageSize}
                 defaultSorted={defaultSorted}
-                className={`flex flex-1 overflow - auto border - 0 w - full h - full ${
+                className={`flex flex-1 overflow-auto border-0 w-full h-full ${
                     rest.expanded ? 'expanded' : ''
                 } `}
                 resizable={false}
