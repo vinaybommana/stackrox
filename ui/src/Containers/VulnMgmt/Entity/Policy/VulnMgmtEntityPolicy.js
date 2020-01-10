@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import gql from 'graphql-tag';
 
 import { workflowEntityPropTypes, workflowEntityDefaultProps } from 'constants/entityPageProps';
@@ -11,7 +12,15 @@ import queryService from 'modules/queryService';
 import VulnMgmtPolicyOverview from './VulnMgmtPolicyOverview';
 import VulnMgmtList from '../../List/VulnMgmtList';
 
-const VulmMgmtEntityPolicy = ({ entityId, entityListType, search, entityContext, sort, page }) => {
+const VulmMgmtEntityPolicy = ({
+    entityId,
+    entityListType,
+    search,
+    entityContext,
+    sort,
+    page,
+    setRefreshTrigger
+}) => {
     const overviewQuery = gql`
         query getPolicy($id: ID!, $policyQuery: String) {
             result: policy(id: $id) {
@@ -192,11 +201,15 @@ const VulmMgmtEntityPolicy = ({ entityId, entityListType, search, entityContext,
             page={page}
             queryOptions={queryOptions}
             entityContext={entityContext}
+            setRefreshTrigger={setRefreshTrigger}
         />
     );
 };
 
-VulmMgmtEntityPolicy.propTypes = workflowEntityPropTypes;
+VulmMgmtEntityPolicy.propTypes = {
+    ...workflowEntityPropTypes,
+    setRefreshTrigger: PropTypes.func
+};
 VulmMgmtEntityPolicy.defaultProps = workflowEntityDefaultProps;
 
 export default VulmMgmtEntityPolicy;

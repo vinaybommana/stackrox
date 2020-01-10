@@ -36,7 +36,8 @@ const WorkflowEntityPage = ({
     entityContext,
     search,
     sort,
-    page
+    page,
+    setRefreshTrigger
 }) => {
     const { isDarkMode } = useTheme();
     const enhancedQueryOptions =
@@ -100,7 +101,11 @@ const WorkflowEntityPage = ({
             }`}
         >
             <div className="w-full min-h-full" id="capture-widgets">
-                <OverviewComponent data={result} entityContext={entityContext} />
+                <OverviewComponent
+                    data={result}
+                    entityContext={entityContext}
+                    setRefreshTrigger={setRefreshTrigger}
+                />
             </div>
         </div>
     );
@@ -119,7 +124,8 @@ WorkflowEntityPage.propTypes = {
     entityContext: PropTypes.shape({}),
     search: PropTypes.shape({}),
     sort: PropTypes.arrayOf(PropTypes.string),
-    page: PropTypes.number
+    page: PropTypes.number,
+    setRefreshTrigger: PropTypes.func
 };
 
 WorkflowEntityPage.defaultProps = {
@@ -128,7 +134,8 @@ WorkflowEntityPage.defaultProps = {
     entityContext: {},
     search: null,
     sort: null,
-    page: 1
+    page: 1,
+    setRefreshTrigger: null
 };
 
 export default WorkflowEntityPage;

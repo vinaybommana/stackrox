@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import pluralize from 'pluralize';
 import startCase from 'lodash/startCase';
 
@@ -28,6 +28,9 @@ const WorkflowListPageLayout = ({ location }) => {
         sort,
         paging
     );
+
+    // set up cache-busting system that either the list or sidepanel can use to trigger list refresh
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     function customCsvExportHandler(fileName) {
         return exportCvesAsCsv(fileName, workflowState);
@@ -92,6 +95,8 @@ const WorkflowListPageLayout = ({ location }) => {
                         search={pageSearch}
                         sort={pageSort}
                         page={pagePaging}
+                        refreshTrigger={refreshTrigger}
+                        setRefreshTrigger={setRefreshTrigger}
                     />
                     <WorkflowSidePanel isOpen={!!sidePanelEntityId}>
                         {sidePanelEntityId ? (
@@ -103,6 +108,7 @@ const WorkflowListPageLayout = ({ location }) => {
                                 sort={sidePanelSort}
                                 page={sidePanelPaging}
                                 entityContext={entityContext}
+                                setRefreshTrigger={setRefreshTrigger}
                             />
                         ) : (
                             <span />

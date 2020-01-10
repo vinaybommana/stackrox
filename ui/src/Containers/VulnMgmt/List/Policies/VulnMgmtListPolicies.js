@@ -1,5 +1,6 @@
 /* eslint-disable react/jsx-no-bind */
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import gql from 'graphql-tag';
 import pluralize from 'pluralize';
 import { Power, Bell, BellOff, Trash2 } from 'react-feather';
@@ -198,13 +199,12 @@ const VulnMgmtPolicies = ({
     data,
     totalResults,
     addToast,
-    removeToast
+    removeToast,
+    refreshTrigger,
+    setRefreshTrigger
 }) => {
     const [selectedPolicyIds, setSelectedPolicyIds] = useState([]);
     const [bulkActionPolicyIds, setBulkActionPolicyIds] = useState([]);
-
-    // seed refresh trigger var with simple number
-    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     const POLICIES_QUERY = gql`
         query getPolicies($policyQuery: String, $pagination: Pagination) {
@@ -329,10 +329,16 @@ const VulnMgmtPolicies = ({
     );
 };
 
-VulnMgmtPolicies.propTypes = workflowListPropTypes;
+VulnMgmtPolicies.propTypes = {
+    ...workflowListPropTypes,
+    refreshTrigger: PropTypes.number,
+    setRefreshTrigger: PropTypes.func
+};
 VulnMgmtPolicies.defaultProps = {
     ...workflowListDefaultProps,
-    sort: null
+    sort: null,
+    refreshTrigger: 0,
+    setRefreshTrigger: null
 };
 
 const mapDispatchToProps = {

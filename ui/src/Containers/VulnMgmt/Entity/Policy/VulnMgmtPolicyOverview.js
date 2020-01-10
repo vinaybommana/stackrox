@@ -46,7 +46,7 @@ const emptyPolicy = {
 };
 
 const noop = () => {};
-const VulnMgmtPolicyOverview = ({ data, entityContext }) => {
+const VulnMgmtPolicyOverview = ({ data, entityContext, setRefreshTrigger }) => {
     const workflowState = useContext(workflowStateContext);
 
     // guard against incomplete GraphQL-cached data
@@ -76,6 +76,9 @@ const VulnMgmtPolicyOverview = ({ data, entityContext }) => {
     function togglePolicy() {
         updatePolicyDisabledState(id, !currentDisabledState).then(() => {
             setCurrentDisabledState(!currentDisabledState);
+            if (typeof setRefreshTrigger === 'function') {
+                setRefreshTrigger(Math.random());
+            }
         });
     }
     const policyActionButtons = (

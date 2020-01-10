@@ -1,5 +1,6 @@
 /* eslint-disable react/jsx-no-bind */
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import gql from 'graphql-tag';
 import * as Icon from 'react-feather';
 import { connect } from 'react-redux';
@@ -221,13 +222,12 @@ const VulnMgmtCves = ({
     data,
     totalResults,
     addToast,
-    removeToast
+    removeToast,
+    refreshTrigger,
+    setRefreshTrigger
 }) => {
     const [selectedCveIds, setSelectedCveIds] = useState([]);
     const [bulkActionCveIds, setBulkActionCveIds] = useState([]);
-
-    // seed refresh trigger var with simple number
-    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     const CVES_QUERY = gql`
         query getCves($query: String, $pagination: Pagination) {
@@ -377,10 +377,16 @@ const VulnMgmtCves = ({
     );
 };
 
-VulnMgmtCves.propTypes = workflowListPropTypes;
+VulnMgmtCves.propTypes = {
+    ...workflowListPropTypes,
+    refreshTrigger: PropTypes.number,
+    setRefreshTrigger: PropTypes.func
+};
 VulnMgmtCves.defaultProps = {
     ...workflowListDefaultProps,
-    sort: null
+    sort: null,
+    refreshTrigger: 0,
+    setRefreshTrigger: null
 };
 
 const mapDispatchToProps = {
