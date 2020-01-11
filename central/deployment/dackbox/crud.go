@@ -10,6 +10,7 @@ import (
 var (
 	// Bucket is the prefix for stored deployments.
 	Bucket = []byte("deployments")
+
 	// ListBucket is the prefix for stored list deployments.
 	ListBucket = []byte("deployments_list")
 
@@ -18,15 +19,9 @@ var (
 		crud.WithAllocFunction(alloc),
 	)
 
-	// Upserter writes storage.Deployments and its ListDeployment counterpart to the store.
+	// Upserter writes storage.Deployments.
 	Upserter = crud.NewUpserter(
 		crud.WithKeyFunction(crud.PrefixKey(Bucket, keyFunc)),
-		crud.WithPartialUpserter(ListPartialUpserter),
-	)
-
-	// Deleter deletes deployments from the store.
-	Deleter = crud.NewDeleter(
-		crud.GCAllChildren(),
 	)
 
 	// ListReader reads ListDeployments from the DB.
@@ -34,15 +29,13 @@ var (
 		crud.WithAllocFunction(listAlloc),
 	)
 
-	// ListPartialUpserter upserts deploymentss images as part of a parent object transaction (the parent in this case is a deployment)
-	ListPartialUpserter = crud.NewPartialUpserter(
-		crud.WithSplitFunc(deploymentConverter),
-		crud.WithUpserter(
-			crud.NewUpserter(
-				crud.WithKeyFunction(crud.PrefixKey(ListBucket, keyFunc)),
-			),
-		),
+	// ListUpserter writes storage.ListDeployments.
+	ListUpserter = crud.NewUpserter(
+		crud.WithKeyFunction(crud.PrefixKey(ListBucket, keyFunc)),
 	)
+
+	// Deleter deletes deployments from the store.
+	Deleter = crud.NewDeleter()
 )
 
 func init() {
@@ -60,21 +53,4 @@ func alloc() proto.Message {
 
 func listAlloc() proto.Message {
 	return &storage.ListDeployment{}
-}
-
-func deploymentConverter(msg proto.Message) (proto.Message, []proto.Message) {
-	return msg, []proto.Message{convertDeploymentToDeploymentList(msg.(*storage.Deployment))}
-}
-
-func convertDeploymentToDeploymentList(d *storage.Deployment) *storage.ListDeployment {
-	return &storage.ListDeployment{
-		Id:        d.GetId(),
-		Hash:      d.GetHash(),
-		Name:      d.GetName(),
-		Cluster:   d.GetClusterName(),
-		ClusterId: d.GetClusterId(),
-		Namespace: d.GetNamespace(),
-		Created:   d.GetCreated(),
-		Priority:  d.GetPriority(),
-	}
 }
