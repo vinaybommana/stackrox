@@ -631,6 +631,11 @@ func (resolver *clusterResolver) K8sVulnCount(ctx context.Context, args RawQuery
 		return 0, err
 	}
 
+	q, err = search.AddAsConjunction(resolver.getClusterQuery(), q)
+	if err != nil {
+		return 0, err
+	}
+
 	vulns, err := k8sIstioVulns(ctx, resolver, q, converter.K8s)
 	if err != nil {
 		return 0, err

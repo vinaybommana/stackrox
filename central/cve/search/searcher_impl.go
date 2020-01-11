@@ -41,7 +41,7 @@ func (ds *searcherImpl) SearchRawCVEs(ctx context.Context, q *v1.Query) ([]*stor
 }
 
 func (ds *searcherImpl) getSearchResults(ctx context.Context, q *v1.Query) ([]search.Result, error) {
-	return ds.searcher.Search(ctx, q)
+	return ds.indexer.Search(q)
 }
 
 func (ds *searcherImpl) resultsToCVEs(results []search.Result) ([]*storage.CVE, []int, error) {

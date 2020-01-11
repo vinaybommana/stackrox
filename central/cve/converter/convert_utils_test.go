@@ -15,7 +15,7 @@ const (
 	lastModifiedDateTime = "2006-05-02T15:04Z"
 )
 
-func TestNvdCVEsToEmbeddedVulnerabilities(t *testing.T) {
+func TestNvdCVEsToProtoCVEs(t *testing.T) {
 
 	cves := []*schema.NVDCVEFeedJSON10DefCVEItem{
 		{
@@ -150,13 +150,13 @@ func TestNvdCVEsToEmbeddedVulnerabilities(t *testing.T) {
 		},
 	}
 
-	expectedVuls := []storage.EmbeddedVulnerability{
+	expectedVuls := []storage.CVE{
 		{
-			Cve:          "cve-2019-1",
+			Id:           "cve-2019-1",
 			Cvss:         float32(cves[0].Impact.BaseMetricV3.CVSSV3.BaseScore),
 			Summary:      "Description1",
 			Link:         "https://nvd.nist.gov/vuln/detail/cve-2019-1",
-			ScoreVersion: storage.EmbeddedVulnerability_V3,
+			ScoreVersion: storage.CVE_V3,
 			CvssV2: &storage.CVSSV2{
 				Vector:              "AV:N/AC:L/Au:N/C:C/I:C/A:C",
 				AttackVector:        storage.CVSSV2_ATTACK_NETWORK,
@@ -185,14 +185,14 @@ func TestNvdCVEsToEmbeddedVulnerabilities(t *testing.T) {
 				Score:               float32(cves[0].Impact.BaseMetricV3.CVSSV3.BaseScore),
 				Severity:            storage.CVSSV3_CRITICAL,
 			},
-			VulnerabilityType: storage.EmbeddedVulnerability_K8S_VULNERABILITY,
+			Type: storage.CVE_K8S_CVE,
 		},
 		{
-			Cve:          "cve-2019-2",
+			Id:           "cve-2019-2",
 			Cvss:         float32(cves[1].Impact.BaseMetricV3.CVSSV3.BaseScore),
 			Summary:      "Description3",
 			Link:         "https://nvd.nist.gov/vuln/detail/cve-2019-2",
-			ScoreVersion: storage.EmbeddedVulnerability_V3,
+			ScoreVersion: storage.CVE_V3,
 			CvssV2: &storage.CVSSV2{
 				Vector:              "AV:N/AC:L/Au:S/C:N/I:P/A:N",
 				AttackVector:        storage.CVSSV2_ATTACK_NETWORK,
@@ -221,7 +221,7 @@ func TestNvdCVEsToEmbeddedVulnerabilities(t *testing.T) {
 				Score:               float32(cves[1].Impact.BaseMetricV3.CVSSV3.BaseScore),
 				Severity:            storage.CVSSV3_HIGH,
 			},
-			VulnerabilityType: storage.EmbeddedVulnerability_K8S_VULNERABILITY,
+			Type: storage.CVE_K8S_CVE,
 		},
 	}
 
@@ -236,7 +236,7 @@ func TestNvdCVEsToEmbeddedVulnerabilities(t *testing.T) {
 		assert.Nil(t, err)
 		expectedVul.LastModified = protoconv.ConvertTimeToTimestamp(ts)
 
-		actualVul, err := NvdCveToEmbeddedVulnerability(cves[i], K8s)
+		actualVul, err := NvdCveToProtoCVE(cves[i], K8s)
 		assert.Nil(t, err)
 		assert.Equal(t, actualVul, expectedVul)
 	}

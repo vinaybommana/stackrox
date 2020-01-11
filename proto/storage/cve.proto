@@ -12,11 +12,13 @@ message CVE {
     enum ScoreVersion {
         V2 = 0; // No unset for automatic backwards compatibility
         V3 = 1;
+        UNKNOWN = 2;
     }
     enum CVEType {
         UNKNOWN_CVE = 0;
         IMAGE_CVE   = 1;
         K8S_CVE     = 2;
+        ISTIO_CVE   = 3;
     }
 
     message Reference {
@@ -36,8 +38,10 @@ message CVE {
     ScoreVersion              score_version = 9;
     CVSSV2                    cvss_v2       = 10;
     CVSSV3                    cvss_v3       = 11;
-
     bool                      supressed     = 12 [(gogoproto.moretags) = "search:\"CVE Supressed,store\""];
+    oneof set_fixed_by { // Applies to only k8s and istio CVEs
+        string fixed_by                     = 13 [(gogoproto.moretags) = "search:\"Fixed By,store\""];
+    }
 }
 
 message CVSSV2 {

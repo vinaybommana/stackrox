@@ -2,6 +2,7 @@ package dackbox
 
 import (
 	"github.com/gogo/protobuf/proto"
+	"github.com/stackrox/rox/central/cve/converter"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/dackbox/edges"
 )
@@ -73,22 +74,7 @@ func generateEmbeddedCVE(cp cveParts) *storage.EmbeddedVulnerability {
 	if cp.cve == nil || cp.edge == nil {
 		return nil
 	}
-	ret := &storage.EmbeddedVulnerability{
-		Cve:               cp.cve.Id,
-		Link:              cp.cve.GetLink(),
-		Summary:           cp.cve.GetSummary(),
-		PublishedOn:       cp.cve.GetPublishedOn(),
-		LastModified:      cp.cve.GetLastModified(),
-		CvssV2:            cp.cve.GetCvssV2(),
-		CvssV3:            cp.cve.GetCvssV3(),
-		Cvss:              cp.cve.GetCvss(),
-		VulnerabilityType: storage.EmbeddedVulnerability_IMAGE_VULNERABILITY,
-	}
-	if ret.CvssV3 != nil {
-		ret.ScoreVersion = storage.EmbeddedVulnerability_V3
-	} else if ret.CvssV2 != nil {
-		ret.ScoreVersion = storage.EmbeddedVulnerability_V2
-	}
+	ret := converter.ProtoCVEToEmbeddedCVE(cp.cve)
 	if cp.edge.IsFixable {
 		ret.SetFixedBy = &storage.EmbeddedVulnerability_FixedBy{
 			FixedBy: cp.edge.GetFixedBy(),

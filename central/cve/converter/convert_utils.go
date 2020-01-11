@@ -1,11 +1,11 @@
 package converter
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
 	"github.com/facebookincubator/nvdtools/cvefeed/nvd/schema"
+	"github.com/pkg/errors"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/cvss/cvssv2"
 	"github.com/stackrox/rox/pkg/cvss/cvssv3"
@@ -26,66 +26,68 @@ const (
 	Istio
 )
 
-// NvdCveToEmbeddedVulnerability converts a nvd.CVEEntry object to an EmbeddedVulnerability which is used elsewhere.
-func NvdCveToEmbeddedVulnerability(cve *schema.NVDCVEFeedJSON10DefCVEItem, ct CveType) (*storage.EmbeddedVulnerability, error) {
-	ev := &storage.EmbeddedVulnerability{
-		Cve: cve.CVE.CVEDataMeta.ID,
+// NvdCveToProtoCVE converts a nvd.CVEEntry object to an proto CVE
+func NvdCveToProtoCVE(nvdCVE *schema.NVDCVEFeedJSON10DefCVEItem, ct CveType) (*storage.CVE, error) {
+	protoCVE := &storage.CVE{
+		Id: nvdCVE.CVE.CVEDataMeta.ID,
 	}
 
 	if ct == K8s {
-		ev.VulnerabilityType = storage.EmbeddedVulnerability_K8S_VULNERABILITY
+		protoCVE.Type = storage.CVE_K8S_CVE
 	} else if ct == Istio {
-		ev.VulnerabilityType = storage.EmbeddedVulnerability_ISTIO_VULNERABILITY
+		protoCVE.Type = storage.CVE_ISTIO_CVE
 	} else {
-		return nil, fmt.Errorf("unknown CVE type: %d", ct)
+		return nil, errors.Errorf("unknown CVE type: %d", ct)
 	}
 
-	cvssv2, err := nvdCvssv2ToProtoCvssv2(cve.Impact.BaseMetricV2)
+	cvssv2, err := nvdCvssv2ToProtoCvssv2(nvdCVE.Impact.BaseMetricV2)
 	if err != nil {
 		return nil, err
 	}
-	ev.CvssV2 = cvssv2
+	protoCVE.CvssV2 = cvssv2
 
-	cvssv3, err := nvdCvssv3ToProtoCvssv3(cve.Impact.BaseMetricV3)
+	cvssv3, err := nvdCvssv3ToProtoCvssv3(nvdCVE.Impact.BaseMetricV3)
 	if err != nil {
 		return nil, err
 	}
-	ev.CvssV3 = cvssv3
+	protoCVE.CvssV3 = cvssv3
 
-	if cve.PublishedDate != "" {
-		if ts, err := time.Parse(timeFormat, cve.PublishedDate); err == nil {
-			ev.PublishedOn = protoconv.ConvertTimeToTimestamp(ts)
+	if nvdCVE.PublishedDate != "" {
+		if ts, err := time.Parse(timeFormat, nvdCVE.PublishedDate); err == nil {
+			protoCVE.PublishedOn = protoconv.ConvertTimeToTimestamp(ts)
 		}
 	}
 
-	if cve.LastModifiedDate != "" {
-		if ts, err := time.Parse(timeFormat, cve.LastModifiedDate); err == nil {
-			ev.LastModified = protoconv.ConvertTimeToTimestamp(ts)
+	if nvdCVE.LastModifiedDate != "" {
+		if ts, err := time.Parse(timeFormat, nvdCVE.LastModifiedDate); err == nil {
+			protoCVE.LastModified = protoconv.ConvertTimeToTimestamp(ts)
 		}
 	}
 
-	if len(cve.CVE.Description.DescriptionData) > 0 {
-		ev.Summary = cve.CVE.Description.DescriptionData[0].Value
+	if len(nvdCVE.CVE.Description.DescriptionData) > 0 {
+		protoCVE.Summary = nvdCVE.CVE.Description.DescriptionData[0].Value
 	}
 
-	ev.Link = scans.GetVulnLink(ev.Cve)
+	protoCVE.Link = scans.GetVulnLink(protoCVE.Id)
 
-	if cve.Impact.BaseMetricV3.CVSSV3.BaseScore != 0.0 {
-		ev.Cvss = float32(cve.Impact.BaseMetricV3.CVSSV3.BaseScore)
-		ev.ScoreVersion = storage.EmbeddedVulnerability_V3
+	if nvdCVE.Impact.BaseMetricV3.CVSSV3.BaseScore != 0.0 {
+		protoCVE.Cvss = float32(nvdCVE.Impact.BaseMetricV3.CVSSV3.BaseScore)
+		protoCVE.ScoreVersion = storage.CVE_V3
+	} else if nvdCVE.Impact.BaseMetricV2.CVSSV2.BaseScore != 0.0 {
+		protoCVE.Cvss = float32(nvdCVE.Impact.BaseMetricV2.CVSSV2.BaseScore)
+		protoCVE.ScoreVersion = storage.CVE_V2
 	} else {
-		ev.Cvss = float32(cve.Impact.BaseMetricV2.CVSSV2.BaseScore)
-		ev.ScoreVersion = storage.EmbeddedVulnerability_V2
+		protoCVE.ScoreVersion = storage.CVE_UNKNOWN
 	}
 
-	fixVersions := getFixedVersions(cve.Configurations)
+	fixVersions := getFixedVersions(nvdCVE.Configurations)
 	if len(fixVersions) > 0 {
-		ev.SetFixedBy = &storage.EmbeddedVulnerability_FixedBy{
+		protoCVE.SetFixedBy = &storage.CVE_FixedBy{
 			FixedBy: strings.Join(fixVersions, ","),
 		}
 	}
 
-	return ev, nil
+	return protoCVE, nil
 }
 
 func getFixedVersions(configurations *schema.NVDCVEFeedJSON10DefConfigurations) []string {
@@ -146,15 +148,63 @@ func nvdCvssv3ToProtoCvssv3(baseMetricV3 *schema.NVDCVEFeedJSON10DefImpactBaseMe
 	return cvssV3, nil
 }
 
-// NvdCVEsToEmbeddedVulnerabilities converts  NVD cves to EmbeddedVulnerabilities
-func NvdCVEsToEmbeddedVulnerabilities(cves []*schema.NVDCVEFeedJSON10DefCVEItem, ct CveType) ([]*storage.EmbeddedVulnerability, error) {
-	evs := make([]*storage.EmbeddedVulnerability, 0, len(cves))
+// NvdCVEsToProtoCVEs converts  NVD CVEs to Proto CVEs
+func NvdCVEsToProtoCVEs(cves []*schema.NVDCVEFeedJSON10DefCVEItem, ct CveType) ([]*storage.CVE, error) {
+	protoCVEs := make([]*storage.CVE, 0, len(cves))
 	for _, cve := range cves {
-		ev, err := NvdCveToEmbeddedVulnerability(cve, ct)
+		ev, err := NvdCveToProtoCVE(cve, ct)
 		if err != nil {
 			return nil, err
 		}
-		evs = append(evs, ev)
+		protoCVEs = append(protoCVEs, ev)
 	}
-	return evs, nil
+	return protoCVEs, nil
+}
+
+// ProtoCVEsToEmbeddedCVEs coverts Proto CVEs to Embedded Vulns
+func ProtoCVEsToEmbeddedCVEs(protoCVEs []*storage.CVE) ([]*storage.EmbeddedVulnerability, error) {
+	embeddedVulns := make([]*storage.EmbeddedVulnerability, 0, len(protoCVEs))
+	for _, protoCVE := range protoCVEs {
+		em := ProtoCVEToEmbeddedCVE(protoCVE)
+		em.SetFixedBy = &storage.EmbeddedVulnerability_FixedBy{
+			FixedBy: protoCVE.GetFixedBy(),
+		}
+		embeddedVulns = append(embeddedVulns, em)
+	}
+	return embeddedVulns, nil
+}
+
+// ProtoCVEToEmbeddedCVE coverts a Proto CVEs to Embedded Vuln
+// It converts all the fields except except Fixed By which gets set depending on the CVE
+func ProtoCVEToEmbeddedCVE(protoCVE *storage.CVE) *storage.EmbeddedVulnerability {
+	embeddedCVE := &storage.EmbeddedVulnerability{
+		Cve:          protoCVE.GetId(),
+		Cvss:         protoCVE.GetCvss(),
+		Summary:      protoCVE.GetSummary(),
+		Link:         protoCVE.GetLink(),
+		CvssV2:       protoCVE.GetCvssV2(),
+		CvssV3:       protoCVE.GetCvssV3(),
+		PublishedOn:  protoCVE.GetPublishedOn(),
+		LastModified: protoCVE.GetLastModified(),
+	}
+	if protoCVE.CvssV3 != nil {
+		embeddedCVE.ScoreVersion = storage.EmbeddedVulnerability_V3
+	} else {
+		embeddedCVE.ScoreVersion = storage.EmbeddedVulnerability_V2
+	}
+	embeddedCVE.VulnerabilityType = protoToEmbeddedVulnType(protoCVE.Type)
+	return embeddedCVE
+}
+
+func protoToEmbeddedVulnType(protoCVEType storage.CVE_CVEType) storage.EmbeddedVulnerability_VulnerabilityType {
+	switch protoCVEType {
+	case storage.CVE_IMAGE_CVE:
+		return storage.EmbeddedVulnerability_IMAGE_VULNERABILITY
+	case storage.CVE_K8S_CVE:
+		return storage.EmbeddedVulnerability_K8S_VULNERABILITY
+	case storage.CVE_ISTIO_CVE:
+		return storage.EmbeddedVulnerability_ISTIO_VULNERABILITY
+	default:
+		return storage.EmbeddedVulnerability_UNKNOWN_VULNERABILITY
+	}
 }

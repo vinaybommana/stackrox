@@ -11,8 +11,11 @@ import (
 	alertMapping "github.com/stackrox/rox/central/alert/mappings"
 	clusterMapping "github.com/stackrox/rox/central/cluster/index/mappings"
 	"github.com/stackrox/rox/central/compliance/standards/index"
+	componentVulnEdgeMapping "github.com/stackrox/rox/central/componentcveedge/mappings"
+	cveMapping "github.com/stackrox/rox/central/cve/mappings"
 	deploymentMapping "github.com/stackrox/rox/central/deployment/mappings"
 	imageMapping "github.com/stackrox/rox/central/image/mappings"
+	imageComponentMapping "github.com/stackrox/rox/central/imagecomponent/mappings"
 	namespaceMapping "github.com/stackrox/rox/central/namespace/index/mappings"
 	nodeMapping "github.com/stackrox/rox/central/node/index/mappings"
 	policyMapping "github.com/stackrox/rox/central/policy/index/mappings"
@@ -85,25 +88,27 @@ func GetEntityOptionsMap() map[v1.SearchCategory]search.OptionsMap {
 	// search document maps are also built off this map
 
 	entityOptionsMap := map[v1.SearchCategory]search.OptionsMap{
-		v1.SearchCategory_ALERTS:              alertMapping.OptionsMap,
-		v1.SearchCategory_DEPLOYMENTS:         deploymentMapping.OptionsMap,
-		v1.SearchCategory_IMAGES:              imageMapping.OptionsMap,
-		v1.SearchCategory_POLICIES:            policyMapping.OptionsMap,
-		v1.SearchCategory_SECRETS:             secretOptions.OptionsMap,
-		v1.SearchCategory_PROCESS_INDICATORS:  processIndicatorMapping.OptionsMap,
-		v1.SearchCategory_COMPLIANCE_STANDARD: index.StandardOptions,
-		v1.SearchCategory_COMPLIANCE_CONTROL:  index.ControlOptions,
-		v1.SearchCategory_CLUSTERS:            clusterMapping.OptionsMap,
-		v1.SearchCategory_NAMESPACES:          namespaceMapping.OptionsMap,
-		v1.SearchCategory_NODES:               nodeMapping.OptionsMap,
-		v1.SearchCategory_PROCESS_WHITELISTS:  processWhitelistMapping.OptionsMap,
-		v1.SearchCategory_RISKS:               riskMappings.OptionsMap,
-		v1.SearchCategory_ROLES:               roleOptions.OptionsMap,
-		v1.SearchCategory_ROLEBINDINGS:        roleBindingOptions.OptionsMap,
-		v1.SearchCategory_SERVICE_ACCOUNTS:    serviceAccountOptions.OptionsMap,
-		v1.SearchCategory_SUBJECTS:            subjectMapping.OptionsMap,
+		v1.SearchCategory_ALERTS:               alertMapping.OptionsMap,
+		v1.SearchCategory_DEPLOYMENTS:          deploymentMapping.OptionsMap,
+		v1.SearchCategory_IMAGES:               imageMapping.OptionsMap,
+		v1.SearchCategory_POLICIES:             policyMapping.OptionsMap,
+		v1.SearchCategory_SECRETS:              secretOptions.OptionsMap,
+		v1.SearchCategory_PROCESS_INDICATORS:   processIndicatorMapping.OptionsMap,
+		v1.SearchCategory_COMPLIANCE_STANDARD:  index.StandardOptions,
+		v1.SearchCategory_COMPLIANCE_CONTROL:   index.ControlOptions,
+		v1.SearchCategory_CLUSTERS:             clusterMapping.OptionsMap,
+		v1.SearchCategory_NAMESPACES:           namespaceMapping.OptionsMap,
+		v1.SearchCategory_NODES:                nodeMapping.OptionsMap,
+		v1.SearchCategory_PROCESS_WHITELISTS:   processWhitelistMapping.OptionsMap,
+		v1.SearchCategory_RISKS:                riskMappings.OptionsMap,
+		v1.SearchCategory_ROLES:                roleOptions.OptionsMap,
+		v1.SearchCategory_ROLEBINDINGS:         roleBindingOptions.OptionsMap,
+		v1.SearchCategory_SERVICE_ACCOUNTS:     serviceAccountOptions.OptionsMap,
+		v1.SearchCategory_SUBJECTS:             subjectMapping.OptionsMap,
+		v1.SearchCategory_VULNERABILITIES:      cveMapping.OptionsMap,
+		v1.SearchCategory_COMPONENT_VULN_EDGE:  componentVulnEdgeMapping.OptionsMap,
+		v1.SearchCategory_IMAGE_COMPONENT_EDGE: imageComponentMapping.OptionsMap,
 	}
 
 	return entityOptionsMap
-
 }

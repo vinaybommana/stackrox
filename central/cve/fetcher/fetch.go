@@ -2,6 +2,7 @@ package fetcher
 
 import (
 	"archive/zip"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -14,8 +15,14 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stackrox/k8s-istio-cve-pusher/nvd"
 	"github.com/stackrox/rox/central/cve/converter"
+	"github.com/stackrox/rox/central/cve/datastore"
+	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/env"
+	"github.com/stackrox/rox/pkg/features"
+	"github.com/stackrox/rox/pkg/sac"
+	pkgSearch "github.com/stackrox/rox/pkg/search"
+	"github.com/stackrox/rox/pkg/set"
 	"github.com/stackrox/rox/pkg/sync"
 	"github.com/stackrox/rox/pkg/utils"
 )
@@ -38,11 +45,11 @@ const (
 type K8sIstioCveManager interface {
 	Fetch()
 	Update(zipPath string)
-	GetK8sCves() []*schema.NVDCVEFeedJSON10DefCVEItem
-	GetIstioCves() []*schema.NVDCVEFeedJSON10DefCVEItem
-	GetK8sAndIstioCves() []*schema.NVDCVEFeedJSON10DefCVEItem
-	GetK8sEmbeddedVulnerabilities() []*storage.EmbeddedVulnerability
-	GetIstioEmbeddedVulnerabilities() []*storage.EmbeddedVulnerability
+	GetK8sCVEs() []*schema.NVDCVEFeedJSON10DefCVEItem
+	GetIstioCVEs() []*schema.NVDCVEFeedJSON10DefCVEItem
+	GetK8sAndIstioCVEs() []*schema.NVDCVEFeedJSON10DefCVEItem
+	GetK8sProtoCVEs(ctx context.Context, query *v1.Query) ([]*storage.CVE, error)
+	GetIstioProtoCVEs(ctx context.Context, query *v1.Query) ([]*storage.CVE, error)
 }
 
 // k8sIstioCveManager manages the state of k8s and istio CVEs
@@ -51,22 +58,26 @@ type k8sIstioCveManager struct {
 	istioCveMgr istioCveManager
 	mutex       sync.Mutex
 	mgrMode     mode
+	ds          datastore.DataStore
 }
 
 type k8sCveManager struct {
-	k8sCVEs                    []*schema.NVDCVEFeedJSON10DefCVEItem
-	k8sEmbeddedVulnerabilities []*storage.EmbeddedVulnerability
+	k8sNVDCVEs   []*schema.NVDCVEFeedJSON10DefCVEItem
+	k8sProtoCVEs []*storage.CVE
 }
 
 type istioCveManager struct {
-	istioCVEs                    []*schema.NVDCVEFeedJSON10DefCVEItem
-	istioEmbeddedVulnerabilities []*storage.EmbeddedVulnerability
+	istioNVDCVEs   []*schema.NVDCVEFeedJSON10DefCVEItem
+	istioProtoCVEs []*storage.CVE
 }
 
 // SingletonManager returns a singleton instance of k8sCveManager
 func SingletonManager() K8sIstioCveManager {
 	once.Do(func() {
 		m := &k8sIstioCveManager{}
+		if features.Dackbox.Enabled() {
+			m.ds = datastore.Singleton()
+		}
 		utils.Must(m.initialize())
 		manager = m
 	})
@@ -101,7 +112,7 @@ func (m *k8sIstioCveManager) initialize() error {
 	if err := m.updateCves(newK8sCVEs, converter.K8s); err != nil {
 		return err
 	}
-	log.Infof("successfully loaded %d k8s CVEs", len(m.GetK8sCves()))
+	log.Infof("successfully loaded %d k8s CVEs", len(newK8sCVEs))
 
 	//Load the istio CVEs in mem
 	newIstioCVEs, err := getLocalCVEs(persistentIstioCVEsFilePath)
@@ -111,7 +122,7 @@ func (m *k8sIstioCveManager) initialize() error {
 	if err := m.updateCves(newIstioCVEs, converter.Istio); err != nil {
 		return err
 	}
-	log.Infof("successfully loaded %d istio CVEs", len(m.GetIstioCves()))
+	log.Infof("successfully loaded %d istio CVEs", len(newIstioCVEs))
 
 	return nil
 }
@@ -140,41 +151,73 @@ func (m *k8sIstioCveManager) Update(zipPath string) {
 }
 
 // GetK8sCves returns current k8s CVEs loaded in memory
-func (m *k8sIstioCveManager) GetK8sCves() []*schema.NVDCVEFeedJSON10DefCVEItem {
+func (m *k8sIstioCveManager) GetK8sCVEs() []*schema.NVDCVEFeedJSON10DefCVEItem {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	return m.k8sCveMgr.k8sCVEs
+	return m.k8sCveMgr.k8sNVDCVEs
 }
 
 // GetIstioCves returns current istio CVEs loaded in memory
-func (m *k8sIstioCveManager) GetIstioCves() []*schema.NVDCVEFeedJSON10DefCVEItem {
+func (m *k8sIstioCveManager) GetIstioCVEs() []*schema.NVDCVEFeedJSON10DefCVEItem {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	return m.istioCveMgr.istioCVEs
+	return m.istioCveMgr.istioNVDCVEs
 }
 
 // GetK8sAndIstioCves returns current istio CVEs loaded in memory
-func (m *k8sIstioCveManager) GetK8sAndIstioCves() []*schema.NVDCVEFeedJSON10DefCVEItem {
+func (m *k8sIstioCveManager) GetK8sAndIstioCVEs() []*schema.NVDCVEFeedJSON10DefCVEItem {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	ret := make([]*schema.NVDCVEFeedJSON10DefCVEItem, 0, len(m.k8sCveMgr.k8sCVEs)+len(m.istioCveMgr.istioCVEs))
-	ret = append(ret, m.k8sCveMgr.k8sCVEs...)
-	ret = append(ret, m.istioCveMgr.istioCVEs...)
+	ret := make([]*schema.NVDCVEFeedJSON10DefCVEItem, 0, len(m.k8sCveMgr.k8sNVDCVEs)+len(m.istioCveMgr.istioNVDCVEs))
+	ret = append(ret, m.k8sCveMgr.k8sNVDCVEs...)
+	ret = append(ret, m.istioCveMgr.istioNVDCVEs...)
 	return ret
 }
 
-// GetK8sEmbeddedVulnerabilities returns the current k8s Embedded Vulns loaded in memory
-func (m *k8sIstioCveManager) GetK8sEmbeddedVulnerabilities() []*storage.EmbeddedVulnerability {
+// GetK8sProtoCVEs returns the current k8s Embedded Vulns loaded in memory
+func (m *k8sIstioCveManager) GetK8sProtoCVEs(ctx context.Context, q *v1.Query) ([]*storage.CVE, error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	return m.k8sCveMgr.k8sEmbeddedVulnerabilities
+	if !features.Dackbox.Enabled() {
+		return m.k8sCveMgr.k8sProtoCVEs, nil
+	}
+	cveTypeQuery := pkgSearch.NewQueryBuilder().AddStrings(pkgSearch.CVEType, storage.CVE_K8S_CVE.String()).ProtoQuery()
+	if q.GetPagination() != nil {
+		pagination := q.GetPagination()
+		q.Pagination = nil
+		q = pkgSearch.NewConjunctionQuery(q, cveTypeQuery)
+		q.Pagination = pagination
+	} else {
+		q = pkgSearch.NewConjunctionQuery(q, cveTypeQuery)
+	}
+	k8sCVEs, err := m.ds.SearchRawCVEs(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+	return k8sCVEs, nil
 }
 
-// GetIstioEmbeddedVulnerabilities returns the current istio Embedded Vulns loaded in memory
-func (m *k8sIstioCveManager) GetIstioEmbeddedVulnerabilities() []*storage.EmbeddedVulnerability {
+// GetIstioProtoCVEs returns the current istio Embedded Vulns loaded in memory
+func (m *k8sIstioCveManager) GetIstioProtoCVEs(ctx context.Context, q *v1.Query) ([]*storage.CVE, error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	return m.istioCveMgr.istioEmbeddedVulnerabilities
+	if !features.Dackbox.Enabled() {
+		return m.istioCveMgr.istioProtoCVEs, nil
+	}
+	cveTypeQuery := pkgSearch.NewQueryBuilder().AddStrings(pkgSearch.CVEType, storage.CVE_ISTIO_CVE.String()).ProtoQuery()
+	if q.GetPagination() != nil {
+		pagination := q.GetPagination()
+		q.Pagination = nil
+		q = pkgSearch.NewConjunctionQuery(q, cveTypeQuery)
+		q.Pagination = pagination
+	} else {
+		q = pkgSearch.NewConjunctionQuery(q, cveTypeQuery)
+	}
+	istioCVEs, err := m.ds.SearchRawCVEs(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+	return istioCVEs, nil
 }
 
 func (m *k8sIstioCveManager) reconcileAllCVEsInOnlineMode() {
@@ -198,20 +241,70 @@ func (m *k8sIstioCveManager) reconcileAllCVEsInOfflineMode(zipPath string) {
 func (m *k8sIstioCveManager) updateCves(newCVEs []*schema.NVDCVEFeedJSON10DefCVEItem, ct converter.CveType) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	newEmbeddedVulns, err := converter.NvdCVEsToEmbeddedVulnerabilities(newCVEs, ct)
+	newProtoVulns, err := converter.NvdCVEsToProtoCVEs(newCVEs, ct)
 	if err != nil {
 		return err
 	}
+
+	if features.Dackbox.Enabled() {
+		err := m.reconcileCVEsInDB(newProtoVulns, ct)
+		if err != nil {
+			return err
+		}
+	}
+
 	if ct == converter.K8s {
-		m.k8sCveMgr.k8sCVEs = newCVEs
-		m.k8sCveMgr.k8sEmbeddedVulnerabilities = newEmbeddedVulns
+		m.k8sCveMgr.k8sNVDCVEs = newCVEs
+		if !features.Dackbox.Enabled() {
+			m.k8sCveMgr.k8sProtoCVEs = newProtoVulns
+		}
 	} else if ct == converter.Istio {
-		m.istioCveMgr.istioCVEs = newCVEs
-		m.istioCveMgr.istioEmbeddedVulnerabilities = newEmbeddedVulns
+		m.istioCveMgr.istioNVDCVEs = newCVEs
+		if !features.Dackbox.Enabled() {
+			m.istioCveMgr.istioProtoCVEs = newProtoVulns
+		}
 	} else {
-		return fmt.Errorf("unknown CVE type: %d", ct)
+		return errors.Errorf("unknown CVE type: %d", ct)
 	}
 	return nil
+}
+
+func (m *k8sIstioCveManager) reconcileCVEsInDB(cves []*storage.CVE, ct converter.CveType) error {
+	persistedVulsSet, err := m.getPersistedCVEs(ct)
+	if err != nil {
+		return err
+	}
+	var newVulnsSet set.StringSet
+	for _, cve := range cves {
+		newVulnsSet.Add(cve.Id)
+		err := m.ds.Upsert(getCVEAccessContext(), cve)
+		if err != nil {
+			return err
+		}
+	}
+	err = m.ds.Delete(getCVEAccessContext(), persistedVulsSet.Difference(newVulnsSet).AsSlice()...)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *k8sIstioCveManager) getPersistedCVEs(ct converter.CveType) (set.StringSet, error) {
+	var existingVulns set.StringSet
+	var q *v1.Query
+	if ct == converter.K8s {
+		q = pkgSearch.NewQueryBuilder().AddStrings(pkgSearch.CVEType, storage.CVE_K8S_CVE.String()).ProtoQuery()
+	} else if ct == converter.Istio {
+		q = pkgSearch.NewQueryBuilder().AddStrings(pkgSearch.CVEType, storage.CVE_ISTIO_CVE.String()).ProtoQuery()
+	}
+	cves, err := m.ds.SearchRawCVEs(getCVEAccessContext(), q)
+	if err != nil {
+		return nil, err
+	}
+	for _, cve := range cves {
+		existingVulns.Add(cve.Id)
+	}
+	return existingVulns, nil
 }
 
 // reconcileOnlineModeCVEs fetches new CVEs from definitions.stackrox.io and reconciles them
@@ -412,4 +505,9 @@ func unzip(src, dest string) error {
 	}
 
 	return nil
+}
+
+// TODO: Implement CVE SAC filter
+func getCVEAccessContext() context.Context {
+	return sac.WithAllAccess(context.Background())
 }
