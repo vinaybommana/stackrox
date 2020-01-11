@@ -15,6 +15,9 @@ var (
 	// Telemetry enables the telemetry features
 	Telemetry = registerFeature("Enable support for telemetry", "ROX_TELEMETRY", false)
 
+	// DiagnosticBundle enables support for obtaining extended diagnostic information.
+	DiagnosticBundle = registerFeature("Enable support for diagnostic bundle download", "ROX_DIAGNOSTIC_BUNDLE", false)
+
 	// IQTAnalystNotesUI enables the IQT Analyst Notes UI.
 	// NB: When removing this feature flag, remove references in ui/src/utils/featureFlags.js
 	IQTAnalystNotesUI = registerFeature("Enable IQT Analyst Notes UI", "ROX_IQT_ANALYST_NOTES_UI", false)

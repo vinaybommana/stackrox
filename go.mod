@@ -92,6 +92,7 @@ require (
 	k8s.io/client-go v7.0.0+incompatible
 	k8s.io/helm v2.14.0+incompatible
 	k8s.io/kubectl v0.0.0-20191114113550-6123e1c827f7
+	sigs.k8s.io/yaml v1.1.0
 )
 
 replace (

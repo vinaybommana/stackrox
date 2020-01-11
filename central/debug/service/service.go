@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"runtime/pprof"
 	"strconv"
 	"strings"
@@ -15,11 +16,13 @@ import (
 
 	"github.com/gogo/protobuf/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/expfmt"
 	"github.com/stackrox/rox/central/role/resources"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/pkg/auth/permissions"
+	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/errorhelpers"
 	"github.com/stackrox/rox/pkg/features"
 	grpcPkg "github.com/stackrox/rox/pkg/grpc"
@@ -27,15 +30,23 @@ import (
 	"github.com/stackrox/rox/pkg/grpc/authz/perrpc"
 	"github.com/stackrox/rox/pkg/grpc/authz/user"
 	"github.com/stackrox/rox/pkg/grpc/routes"
+	"github.com/stackrox/rox/pkg/k8sintrospect"
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/version"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"k8s.io/client-go/rest"
 )
+
+type logsMode int
 
 const (
 	cpuProfileDuration = 30 * time.Second
+
+	noLogs logsMode = iota
+	localLogs
+	fullK8sIntrospectionData
 )
 
 var (
@@ -243,6 +254,45 @@ func getVersion(zipWriter *zip.Writer) error {
 	return err
 }
 
+func getK8sDiagnostics(ctx context.Context, zipWriter *zip.Writer) error {
+	filesC := make(chan k8sintrospect.File)
+
+	restConfig, err := rest.InClusterConfig()
+	if err != nil {
+		return errors.Wrap(err, "could not query kubernetes for diagnostics")
+	}
+
+	errSig := concurrency.NewErrorSignal()
+	go errSig.SignalWhen(ctx, ctx)
+
+	doneSig := concurrency.NewSignal()
+	go func() {
+		defer doneSig.Signal()
+		for file := range filesC {
+			log.Infof("Received file %s", file.Path)
+			fullPath := path.Join("k8sdiag", file.Path)
+			fileWriter, err := zipWriter.Create(fullPath)
+			if err != nil {
+				errSig.SignalWithError(err)
+				return
+			}
+			if _, err := fileWriter.Write(file.Contents); err != nil {
+				errSig.SignalWithError(err)
+				return
+			}
+		}
+	}()
+
+	if err := k8sintrospect.Collect(ctx, k8sintrospect.DefaultConfig, restConfig, filesC); err != nil {
+		return err
+	}
+
+	// wait unconditionally - the Goroutine *must* terminate, otherwise we risk a panic if we write to w after returning
+	doneSig.Wait()
+
+	return nil
+}
+
 // DebugHandler is an HTTP handler that outputs debugging information
 func (s *serviceImpl) CustomRoutes() []routes.CustomRoute {
 	customRoutes := []routes.CustomRoute{
@@ -253,7 +303,7 @@ func (s *serviceImpl) CustomRoutes() []routes.CustomRoute {
 		},
 	}
 
-	if features.Telemetry.Enabled() {
+	if features.DiagnosticBundle.Enabled() {
 		customRoutes = append(customRoutes,
 			routes.CustomRoute{
 				Route:         "/api/extensions/diagnostics",
@@ -266,7 +316,7 @@ func (s *serviceImpl) CustomRoutes() []routes.CustomRoute {
 	return customRoutes
 }
 
-func writeZippedDebugDump(ctx context.Context, w http.ResponseWriter, filename string, withLogs, withCPUProfile bool) {
+func writeZippedDebugDump(ctx context.Context, w http.ResponseWriter, filename string, logs logsMode, withCPUProfile bool) {
 	w.Header().Set("Content-Type", "application/zip")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
 
@@ -307,7 +357,13 @@ func writeZippedDebugDump(ctx context.Context, w http.ResponseWriter, filename s
 		}
 	}
 
-	if withLogs {
+	if logs == fullK8sIntrospectionData {
+		if err := getK8sDiagnostics(ctx, zipWriter); err != nil {
+			log.Error(err)
+			logs = localLogs // fallback to local logs
+		}
+	}
+	if logs == localLogs {
 		if err := getLogs(zipWriter); err != nil {
 			log.Error(err)
 		}
@@ -319,7 +375,7 @@ func writeZippedDebugDump(ctx context.Context, w http.ResponseWriter, filename s
 }
 
 func (s *serviceImpl) getDebugDump(w http.ResponseWriter, r *http.Request) {
-	withLogs := true
+	logs := localLogs
 	for _, p := range r.URL.Query()["logs"] {
 		v, err := strconv.ParseBool(p)
 		if err != nil {
@@ -327,16 +383,20 @@ func (s *serviceImpl) getDebugDump(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, "invalid log value: %q\n", p)
 			return
 		}
-		withLogs = v
+		if v {
+			logs = localLogs
+		} else {
+			logs = noLogs
+		}
 	}
 
 	filename := time.Now().Format("stackrox_debug_2006_01_02_15_04_05.zip")
 
-	writeZippedDebugDump(r.Context(), w, filename, withLogs, true)
+	writeZippedDebugDump(r.Context(), w, filename, logs, true)
 }
 
 func (s *serviceImpl) getDiagnosticDump(w http.ResponseWriter, r *http.Request) {
 	filename := time.Now().Format("stackrox_diagnostic_2006_01_02_15_04_05.zip")
 
-	writeZippedDebugDump(r.Context(), w, filename, true, false)
+	writeZippedDebugDump(r.Context(), w, filename, fullK8sIntrospectionData, false)
 }

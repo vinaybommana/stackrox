@@ -3,6 +3,7 @@ package plan
 import (
 	"reflect"
 
+	"github.com/stackrox/rox/pkg/k8sutil"
 	"github.com/stackrox/rox/sensor/upgrader/common"
 	"github.com/stackrox/rox/sensor/upgrader/k8sobjects"
 	"github.com/stackrox/rox/sensor/upgrader/upgradectx"
@@ -14,7 +15,7 @@ type planner struct {
 	rollback bool
 }
 
-func (p *planner) objectsAreEqual(a, b k8sobjects.Object) bool {
+func (p *planner) objectsAreEqual(a, b k8sutil.Object) bool {
 	var ua, ub unstructured.Unstructured
 	if err := p.ctx.Scheme().Convert(a, &ua, nil); err != nil {
 		return false
@@ -29,7 +30,7 @@ func (p *planner) objectsAreEqual(a, b k8sobjects.Object) bool {
 	return reflect.DeepEqual(ua.Object, ub.Object)
 }
 
-func (p *planner) GenerateExecutionPlan(desired []k8sobjects.Object) (*ExecutionPlan, error) {
+func (p *planner) GenerateExecutionPlan(desired []k8sutil.Object) (*ExecutionPlan, error) {
 	currObjs, err := p.ctx.ListCurrentObjects()
 	if err != nil {
 		return nil, err
