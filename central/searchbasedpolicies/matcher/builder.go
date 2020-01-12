@@ -9,6 +9,12 @@ import (
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/policyutils"
 	"github.com/stackrox/rox/pkg/search"
+	"github.com/stackrox/rox/pkg/search/predicate"
+)
+
+var (
+	imageFactory      = predicate.NewFactory("image", (*storage.Image)(nil))
+	deploymentFactory = predicate.NewFactory("deployment", (*storage.Deployment)(nil))
 )
 
 // Builder builds matchers.
@@ -50,8 +56,22 @@ func (mb *builderImpl) ForPolicy(policy *storage.Policy) (searchbasedpolicies.Ma
 	if scopeQuery := policyutils.ScopeToQuery(policy.GetScope()); scopeQuery != nil {
 		q = search.NewConjunctionQuery(scopeQuery, q)
 	}
+
+	// Generate the deployment and image predicate
+	imgPredicate, err := imageFactory.GeneratePredicate(q)
+	if err != nil {
+		return nil, err
+	}
+	deploymentPredicate, err := deploymentFactory.GeneratePredicate(q)
+	if err != nil {
+		return nil, err
+	}
+
 	return &matcherImpl{
-		q:                q,
+		q:                   q,
+		imagePredicate:      imgPredicate,
+		deploymentPredicate: deploymentPredicate,
+
 		violationPrinter: v,
 		policyName:       policy.GetName(),
 	}, nil

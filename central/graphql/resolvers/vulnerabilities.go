@@ -25,7 +25,7 @@ import (
 )
 
 var (
-	vulnPredicateFactory = predicate.NewFactory(&storage.EmbeddedVulnerability{})
+	vulnPredicateFactory = predicate.NewFactory("vulnerability", &storage.EmbeddedVulnerability{})
 )
 
 func init() {
@@ -352,8 +352,7 @@ func k8sIstioVulnerabilities(ctx context.Context, root *Resolver, query *v1.Quer
 			}
 
 			embedded := converter.ProtoCVEToEmbeddedCVE(cve)
-
-			if !features.Dackbox.Enabled() && !vulnPred(embedded) {
+			if !features.Dackbox.Enabled() && !vulnPred.Matches(embedded) {
 				continue
 			}
 
@@ -719,11 +718,11 @@ func mapImagesToVulnerabilityResolvers(root *Resolver, images []*storage.Image, 
 	cveToResolver := make(map[string]*EmbeddedVulnerabilityResolver)
 	for _, image := range images {
 		for _, component := range image.GetScan().GetComponents() {
-			if !componentPred(component) {
+			if _, matches := componentPred(component); !matches {
 				continue
 			}
 			for _, vuln := range component.GetVulns() {
-				if !vulnPred(vuln) {
+				if !vulnPred.Matches(vuln) {
 					continue
 				}
 				if _, exists := cveToResolver[vuln.GetCve()]; !exists {

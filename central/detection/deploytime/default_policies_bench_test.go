@@ -1,0 +1,45 @@
+package deploytime
+
+import (
+	"testing"
+
+	"github.com/stackrox/rox/central/deployment/mappings"
+	"github.com/stackrox/rox/central/detection"
+	"github.com/stackrox/rox/central/searchbasedpolicies/builders"
+	"github.com/stackrox/rox/central/searchbasedpolicies/matcher"
+	imagePolicies "github.com/stackrox/rox/image/policies"
+	"github.com/stackrox/rox/pkg/defaults"
+	"github.com/stackrox/rox/pkg/fixtures"
+	pkgPolicies "github.com/stackrox/rox/pkg/policies"
+	"github.com/stretchr/testify/require"
+)
+
+func BenchmarkDefaultPolicies(b *testing.B) {
+	builder := matcher.NewBuilder(
+		matcher.NewRegistry(
+			nil,
+			builders.K8sRBACQueryBuilder{},
+		),
+		mappings.OptionsMap,
+	)
+	policySet = detection.NewPolicySet(nil, detection.NewPolicyCompiler(builder))
+
+	defaults.PoliciesPath = imagePolicies.Directory()
+	policies, err := defaults.Policies()
+	require.NoError(b, err)
+
+	for _, policy := range policies {
+		if pkgPolicies.AppliesAtDeployTime(policy) {
+			require.NoError(b, policySet.UpsertPolicy(policy))
+		}
+	}
+
+	detection := NewDetector(policySet, nil)
+
+	dep := fixtures.GetDeployment()
+	images := fixtures.DeploymentImages()
+	for i := 0; i < b.N; i++ {
+		_, err := detection.Detect(DetectionContext{}, dep, images)
+		require.NoError(b, err)
+	}
+}

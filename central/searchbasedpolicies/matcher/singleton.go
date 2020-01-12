@@ -7,6 +7,7 @@ import (
 	processDataStore "github.com/stackrox/rox/central/processindicator/datastore"
 	roleDataStore "github.com/stackrox/rox/central/rbac/k8srole/datastore"
 	bindingDataStore "github.com/stackrox/rox/central/rbac/k8srolebinding/datastore"
+	"github.com/stackrox/rox/central/searchbasedpolicies/builders"
 	serviceAccountDataStore "github.com/stackrox/rox/central/serviceaccount/datastore"
 	"github.com/stackrox/rox/pkg/sync"
 )
@@ -22,10 +23,12 @@ var (
 func intialize() {
 	registry = NewRegistry(
 		processDataStore.Singleton(),
-		roleDataStore.Singleton(),
-		bindingDataStore.Singleton(),
-		serviceAccountDataStore.Singleton(),
-		clusterDataStore.Singleton(),
+		builders.K8sRBACQueryBuilder{
+			Clusters:        clusterDataStore.Singleton(),
+			K8sRoles:        roleDataStore.Singleton(),
+			K8sBindings:     bindingDataStore.Singleton(),
+			ServiceAccounts: serviceAccountDataStore.Singleton(),
+		},
 	)
 	deploymentBuilder = NewBuilder(registry, deploymentMappings.OptionsMap)
 	imageBuilder = NewBuilder(registry, imageMappings.OptionsMap)

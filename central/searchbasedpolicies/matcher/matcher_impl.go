@@ -6,11 +6,17 @@ import (
 
 	"github.com/stackrox/rox/central/searchbasedpolicies"
 	v1 "github.com/stackrox/rox/generated/api/v1"
+	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/search"
+	"github.com/stackrox/rox/pkg/search/predicate"
 )
 
 type matcherImpl struct {
-	q                *v1.Query
+	q *v1.Query
+
+	deploymentPredicate predicate.Predicate
+	imagePredicate      predicate.Predicate
+
 	policyName       string
 	violationPrinter searchbasedpolicies.ViolationPrinter
 }
@@ -19,46 +25,40 @@ func (m *matcherImpl) MatchMany(ctx context.Context, searcher search.Searcher, i
 	return m.violationsMapFromQuery(ctx, searcher, search.ConjunctionQuery(search.NewQueryBuilder().AddDocIDs(ids...).ProtoQuery(), m.q))
 }
 
-func (m *matcherImpl) errorPrefixForMatchOne(id string) string {
-	return fmt.Sprintf("matching policy %s against %s", m.policyName, id)
+func (m *matcherImpl) errorPrefixForMatchOne() string {
+	return fmt.Sprintf("matching policy %s", m.policyName)
 }
 
-func (m *matcherImpl) MatchOne(ctx context.Context, searcher search.Searcher, id string, opts *searchbasedpolicies.MatcherOpts) (violations searchbasedpolicies.Violations, err error) {
-	q := search.ConjunctionQuery(search.NewQueryBuilder().AddDocIDs(id).ProtoQuery(), m.q)
-
-	searchOpts := &v1.SearchOptions{
-		CategoryToIds: make(map[int32]*v1.SearchOptions_IDSlice),
+// MatchOne returns detection against the deployment and images using predicate matching
+// The deployment parameter can be nil in the case of image detection
+func (m *matcherImpl) MatchOne(ctx context.Context, deployment *storage.Deployment, images ...*storage.Image) (violations searchbasedpolicies.Violations, err error) {
+	var results []*search.Result
+	if deployment != nil {
+		result, matches := m.deploymentPredicate(deployment)
+		if !matches {
+			return
+		}
+		results = append(results, result)
 	}
 
-	if opts != nil {
-		for k, v := range opts.IDFilters {
-			searchOpts.CategoryToIds[int32(k)] = &v1.SearchOptions_IDSlice{
-				Ids: v,
+	if len(images) > 0 {
+		var foundMatch bool
+		for _, img := range images {
+			result, matches := m.imagePredicate(img)
+			if matches {
+				foundMatch = true
+				results = append(results, result)
 			}
 		}
-	}
-	q.Options = searchOpts
-
-	results, err := searcher.Search(ctx, q)
-	if err != nil {
-		return
-	}
-	if len(results) == 0 {
-		return
-	}
-	if len(results) > 1 {
-		err = fmt.Errorf("%s: got more than one result: %+v", m.errorPrefixForMatchOne(id), results)
-		return
-	}
-	result := results[0]
-	if result.ID != id {
-		err = fmt.Errorf("%s: id of result %+v did not match passed id", m.errorPrefixForMatchOne(id), result)
-		return
+		if !foundMatch {
+			return
+		}
 	}
 
-	violations = m.violationPrinter(ctx, result)
+	finalResult := predicate.MergeResults(results...)
+	violations = m.violationPrinter(ctx, *finalResult)
 	if violationsEmpty(violations) {
-		err = fmt.Errorf("%s: result matched query but couldn't find any violation messages: %+v", m.errorPrefixForMatchOne(id), result)
+		err = fmt.Errorf("%s: result matched query but couldn't find any violation messages: %+v", m.errorPrefixForMatchOne(), finalResult)
 		return
 	}
 	return violations, nil

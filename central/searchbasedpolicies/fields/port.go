@@ -2,6 +2,7 @@ package fields
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/stackrox/rox/central/searchbasedpolicies/builders"
 	"github.com/stackrox/rox/generated/storage"
@@ -27,7 +28,7 @@ var (
 				FieldLabel:     search.PortProtocol,
 				FieldHumanName: "Protocol",
 				RetrieveFieldValue: func(fields *storage.PolicyFields) string {
-					return fields.GetPortPolicy().GetProtocol()
+					return strings.ToUpper(fields.GetPortPolicy().GetProtocol())
 				},
 			},
 		},

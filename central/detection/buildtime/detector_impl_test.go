@@ -8,6 +8,7 @@ import (
 	"github.com/stackrox/rox/central/detection"
 	"github.com/stackrox/rox/central/image/mappings"
 	"github.com/stackrox/rox/central/policy/datastore/mocks"
+	"github.com/stackrox/rox/central/searchbasedpolicies/builders"
 	"github.com/stackrox/rox/central/searchbasedpolicies/matcher"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/image/policies"
@@ -32,11 +33,7 @@ func TestDetector(t *testing.T) {
 	compilerWithoutProcessIndicators := detection.NewPolicyCompiler(
 		matcher.NewBuilder(
 			matcher.NewRegistry(
-				nil,
-				nil,
-				nil,
-				nil,
-				nil),
+				nil, builders.K8sRBACQueryBuilder{}),
 			mappings.OptionsMap,
 		),
 	)

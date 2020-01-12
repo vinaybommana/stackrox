@@ -72,7 +72,7 @@ forloop:
 			queryModifiers = append(queryModifiers, negation)
 			negationOrAtLeastOneFound = true
 		case strings.HasPrefix(trimmedValue, pkgSearch.RegexPrefix) && len(trimmedValue) > len(pkgSearch.RegexPrefix):
-			trimmedValue = trimmedValue[len(pkgSearch.RegexPrefix):]
+			trimmedValue = strings.ToLower(trimmedValue[len(pkgSearch.RegexPrefix):])
 			queryModifiers = append(queryModifiers, regex)
 			break forloop // Once we see that it's a regex, we don't check for special-characters in the rest of the string.
 		case strings.HasPrefix(trimmedValue, pkgSearch.EqualityPrefixSuffix) && strings.HasSuffix(trimmedValue, pkgSearch.EqualityPrefixSuffix) && len(trimmedValue) > 2*len(pkgSearch.EqualityPrefixSuffix):

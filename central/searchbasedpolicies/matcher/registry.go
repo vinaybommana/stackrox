@@ -1,14 +1,10 @@
 package matcher
 
 import (
-	clusterDataStore "github.com/stackrox/rox/central/cluster/datastore"
 	processDataStore "github.com/stackrox/rox/central/processindicator/datastore"
-	roleDataStore "github.com/stackrox/rox/central/rbac/k8srole/datastore"
-	bindingDataStore "github.com/stackrox/rox/central/rbac/k8srolebinding/datastore"
 	"github.com/stackrox/rox/central/searchbasedpolicies"
 	"github.com/stackrox/rox/central/searchbasedpolicies/builders"
 	"github.com/stackrox/rox/central/searchbasedpolicies/fields"
-	serviceAccountDataStore "github.com/stackrox/rox/central/serviceaccount/datastore"
 	"github.com/stackrox/rox/pkg/logging"
 )
 
@@ -20,10 +16,7 @@ type Registry []searchbasedpolicies.PolicyQueryBuilder
 
 // NewRegistry returns a new registry of the builders with the given underlying datastore for fetching process indicators.
 func NewRegistry(processIndicators processDataStore.DataStore,
-	k8sRoles roleDataStore.DataStore,
-	k8sBindings bindingDataStore.DataStore,
-	serviceAccounts serviceAccountDataStore.DataStore,
-	clusters clusterDataStore.DataStore) Registry {
+	k8sRBACBuilder builders.K8sRBACQueryBuilder) Registry {
 	reg := []searchbasedpolicies.PolicyQueryBuilder{
 		fields.ImageNameQueryBuilder,
 		fields.ImageAgeQueryBuilder,
@@ -50,12 +43,7 @@ func NewRegistry(processIndicators processDataStore.DataStore,
 		builders.PortExposureQueryBuilder{},
 		builders.ProcessWhitelistingBuilder{},
 		builders.HostMountQueryBuilder{},
-		builders.K8sRBACQueryBuilder{
-			Clusters:        clusters,
-			K8sRoles:        k8sRoles,
-			K8sBindings:     k8sBindings,
-			ServiceAccounts: serviceAccounts,
-		},
+		k8sRBACBuilder,
 	}
 	return reg
 }

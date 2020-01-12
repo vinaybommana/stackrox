@@ -1,20 +1,61 @@
 package predicate
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/gogo/protobuf/types"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/fixtures"
+	"github.com/stackrox/rox/pkg/protoconv"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestSearchPredicate(t *testing.T) {
-	imageFactory := NewFactory(&storage.Image{})
+func TestTimePredicate(t *testing.T) {
+	imageFactory := NewFactory("image", &storage.Image{})
 
-	baseTime, err := time.Parse(time.RFC3339, "2006-01-02T15:04:05Z")
+	cases := []struct {
+		imageQueryString string
+		imageScanDate    time.Time
+		expectedMatch    bool
+	}{
+		{
+			imageQueryString: ">30d",
+			imageScanDate:    time.Now().Add(-31 * 24 * time.Hour),
+			expectedMatch:    true,
+		},
+		{
+			imageQueryString: "<30d",
+			imageScanDate:    time.Now().Add(-31 * 24 * time.Hour),
+			expectedMatch:    false,
+		},
+		{
+			imageQueryString: "<30d",
+			imageScanDate:    time.Now().Add(-10 * 24 * time.Hour),
+			expectedMatch:    true,
+		},
+	}
+	for _, c := range cases {
+		t.Run(fmt.Sprintf("%s-%s", c.imageQueryString, c.imageScanDate.String()), func(t *testing.T) {
+			img := fixtures.GetImage()
+			img.Scan = &storage.ImageScan{
+				ScanTime: protoconv.ConvertTimeToTimestamp(c.imageScanDate),
+			}
+			predicate, err := imageFactory.GeneratePredicate(search.NewQueryBuilder().AddStringsHighlighted(search.ImageScanTime, c.imageQueryString).ProtoQuery())
+			require.NoError(t, err)
+			assert.Equal(t, c.expectedMatch, predicate.Matches(img))
+		})
+	}
+}
+
+func TestSearchPredicate(t *testing.T) {
+	imageFactory := NewFactory("image", &storage.Image{})
+
+	baseTime, err := time.Parse(time.RFC3339, "2011-01-02T15:04:05Z")
 	assert.NoError(t, err)
 
 	// Pass the predicate
@@ -87,7 +128,7 @@ func TestSearchPredicate(t *testing.T) {
 			query: search.NewQueryBuilder().
 				AddStrings(search.ImageSHA, "sha").
 				AddStrings(search.CVECount, "<4").
-				AddStrings(search.LastUpdatedTime, ">2006-01-02T15:04:05Z").
+				AddStrings(search.LastUpdatedTime, ">03/04/2010 PST").
 				AddStrings(search.FixedBy, "1.1").
 				ProtoQuery(),
 			expectation: true,
@@ -136,15 +177,16 @@ func TestSearchPredicate(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			pred, err := imageFactory.GeneratePredicate(c.query)
-			assert.NotNil(t, pred)
-			assert.NoError(t, err)
-			assert.Equal(t, c.expectation, pred(passingImage))
+			require.NoError(t, err)
+			require.NotNil(t, pred)
+
+			assert.Equal(t, c.expectation, pred.Matches(passingImage))
 		})
 	}
 }
 
 func TestSearchPredicateWithEnums(t *testing.T) {
-	policyFactory := NewFactory(&storage.Policy{})
+	policyFactory := NewFactory("policy", &storage.Policy{})
 
 	// Pass the predicate
 	testPolicy := &storage.Policy{
@@ -203,7 +245,7 @@ func TestSearchPredicateWithEnums(t *testing.T) {
 			pred, err := policyFactory.GeneratePredicate(c.query)
 			assert.NotNil(t, pred)
 			assert.NoError(t, err)
-			assert.Equal(t, c.expectation, pred(testPolicy))
+			assert.Equal(t, c.expectation, pred.Matches(testPolicy))
 		})
 	}
 }

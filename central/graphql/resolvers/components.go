@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	componentPredicateFactory = predicate.NewFactory(&storage.EmbeddedImageScanComponent{})
+	componentPredicateFactory = predicate.NewFactory("component", &storage.EmbeddedImageScanComponent{})
 )
 
 func init() {
@@ -243,7 +243,7 @@ func (eicr *EmbeddedImageScanComponentResolver) Vulns(ctx context.Context, args 
 	// Use the images to map CVEs to the images and components.
 	vulns := make([]*EmbeddedVulnerabilityResolver, 0, len(eicr.data.GetVulns()))
 	for _, vuln := range eicr.data.GetVulns() {
-		if !vulnPred(vuln) {
+		if !vulnPred.Matches(vuln) {
 			continue
 		}
 		vulns = append(vulns, &EmbeddedVulnerabilityResolver{
@@ -423,7 +423,7 @@ func mapImagesToComponentResolvers(root *Resolver, images []*storage.Image, quer
 	idToComponent := make(map[componentID]*EmbeddedImageScanComponentResolver)
 	for _, image := range images {
 		for _, component := range image.GetScan().GetComponents() {
-			if !componentPred(component) {
+			if !componentPred.Matches(component) {
 				continue
 			}
 			thisComponentID := componentID{Name: component.GetName(), Version: component.GetVersion()}

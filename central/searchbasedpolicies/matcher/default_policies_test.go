@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -21,6 +22,7 @@ import (
 	processIndicatorBadgerStore "github.com/stackrox/rox/central/processindicator/store/badger"
 	"github.com/stackrox/rox/central/role/resources"
 	"github.com/stackrox/rox/central/searchbasedpolicies"
+	"github.com/stackrox/rox/central/searchbasedpolicies/builders"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/image/policies"
 	"github.com/stackrox/rox/pkg/badgerhelper"
@@ -64,9 +66,17 @@ type DefaultPoliciesTestSuite struct {
 	matcherBuilder     Builder
 
 	defaultPolicies map[string]*storage.Policy
+
+	deployments         map[string]*storage.Deployment
+	images              map[string]*storage.Image
+	deploymentsToImages map[string][]*storage.Image
 }
 
 func (suite *DefaultPoliciesTestSuite) SetupSuite() {
+	suite.deployments = make(map[string]*storage.Deployment)
+	suite.images = make(map[string]*storage.Image)
+	suite.deploymentsToImages = make(map[string][]*storage.Image)
+
 	suite.testCtx = sac.WithGlobalAccessScopeChecker(context.Background(),
 		sac.AllowFixedScopes(
 			sac.AccessModeScopeKeys(storage.Access_READ_ACCESS, storage.Access_READ_WRITE_ACCESS),
@@ -103,10 +113,7 @@ func (suite *DefaultPoliciesTestSuite) SetupTest() {
 	suite.matcherBuilder = NewBuilder(
 		NewRegistry(
 			suite.processDataStore,
-			nil,
-			nil,
-			nil,
-			nil,
+			builders.K8sRBACQueryBuilder{},
 		),
 		deploymentMappings.OptionsMap,
 	)
@@ -143,6 +150,12 @@ func (suite *DefaultPoliciesTestSuite) MustGetPolicy(name string) *storage.Polic
 func (suite *DefaultPoliciesTestSuite) mustIndexDepAndImages(deployment *storage.Deployment, images ...*storage.Image) {
 	suite.NoError(suite.deploymentIndexer.AddDeployment(deployment))
 	suite.NoError(suite.imageIndexer.AddImages(images))
+
+	suite.deployments[deployment.GetId()] = deployment
+	for _, i := range images {
+		suite.images[i.GetId()] = i
+		suite.deploymentsToImages[deployment.GetId()] = append(suite.deploymentsToImages[deployment.GetId()], i)
+	}
 }
 
 func imageWithComponents(components []*storage.EmbeddedImageScanComponent) *storage.Image {
@@ -384,8 +397,8 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 	containerPort22Dep := &storage.Deployment{
 		Id: "CONTAINERPORT22DEP",
 		Ports: []*storage.PortConfig{
-			{Protocol: "tcp", ContainerPort: 22},
-			{Protocol: "udp", ContainerPort: 4125},
+			{Protocol: "TCP", ContainerPort: 22},
+			{Protocol: "UDP", ContainerPort: 4125},
 		},
 	}
 	suite.mustIndexDepAndImages(containerPort22Dep)
@@ -1009,6 +1022,9 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 	}
 
 	for _, c := range deploymentTestCases {
+		if !strings.Contains(c.policyName, "Secure Shell") {
+			continue
+		}
 		p := suite.MustGetPolicy(c.policyName)
 		suite.T().Run(fmt.Sprintf("%s (on deployments)", c.policyName), func(t *testing.T) {
 			m, err := suite.matcherBuilder.ForPolicy(p)
@@ -1034,11 +1050,20 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			validateDeploymentMatches(matchesFromExactlyMatchMany, allDeployments, c, t)
 
 			for id, violations := range c.expectedViolations {
-				// Test match one
-				gotFromMatchOne, err := m.MatchOne(suite.matchCtx, suite.deploymentSearcher, id, nil)
-				require.NoError(t, err)
-				assert.ElementsMatch(t, violations.AlertViolations, gotFromMatchOne.AlertViolations, "Expected violations from match one %+v don't match what we got %+v", violations, gotFromMatchOne)
-				assert.Equal(t, violations.ProcessViolation, gotFromMatchOne.ProcessViolation)
+				// Test match one only if we aren't testing processes
+				if violations.ProcessViolation == nil {
+					gotFromMatchOne, err := m.MatchOne(suite.matchCtx, suite.deployments[id], suite.deploymentsToImages[id]...)
+					require.NoError(t, err)
+					// Make checks case insensitive due to differences in regex
+					for _, a := range violations.AlertViolations {
+						a.Message = strings.ToLower(a.Message)
+					}
+					for _, a := range gotFromMatchOne.AlertViolations {
+						a.Message = strings.ToLower(a.Message)
+					}
+					assert.ElementsMatch(t, violations.AlertViolations, gotFromMatchOne.AlertViolations, "Expected violations from match one %+v don't match what we got %+v", violations, gotFromMatchOne)
+					assert.Equal(t, violations.ProcessViolation, gotFromMatchOne.ProcessViolation)
+				}
 			}
 		})
 	}
@@ -1302,7 +1327,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 
 			for id, violations := range c.expectedViolations {
 				// Test match one
-				gotFromMatchOne, err := m.MatchOne(suite.testCtx, suite.imageSearcher, id, nil)
+				gotFromMatchOne, err := m.MatchOne(suite.testCtx, nil, suite.images[id])
 				require.NoError(t, err)
 				assert.ElementsMatch(t, violations.AlertViolations, gotFromMatchOne.AlertViolations, "Expected violations from match one %+v don't match what we got %+v", violations, gotFromMatchOne)
 			}
@@ -1370,6 +1395,13 @@ func validateDeploymentMatches(matches map[string]searchbasedpolicies.Violations
 		got, ok := matches[id]
 		if !assert.True(t, ok, "Id '%s' didn't match, but should have. Got: %+v", id, matches) {
 			continue
+		}
+		// Make checks case insensitive due to differences in regex
+		for _, a := range violations.AlertViolations {
+			a.Message = strings.ToLower(a.Message)
+		}
+		for _, a := range got.AlertViolations {
+			a.Message = strings.ToLower(a.Message)
 		}
 		assert.ElementsMatch(t, violations.AlertViolations, got.AlertViolations, "Expected violations %+v don't match what we got %+v", violations, got)
 		assert.Equal(t, violations.ProcessViolation, got.ProcessViolation)
