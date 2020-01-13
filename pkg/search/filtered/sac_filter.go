@@ -25,10 +25,10 @@ func NewSACFilter(opts ...SACFilterOption) (Filter, error) {
 	return compile(fb)
 }
 
-// WithScopeChecker uses the input scope checker to check the readability of each item returned in search results.
-func WithScopeChecker(sc sac.ScopeChecker) SACFilterOption {
+// WithResourceHelper uses the input ForResourceHelper to do SAC checks on ourput results.
+func WithResourceHelper(resourceHelper sac.ForResourceHelper) SACFilterOption {
 	return func(filter *filterBuilder) {
-		filter.scopeChecker = sc
+		filter.resourceHelper = &resourceHelper
 	}
 }
 
@@ -55,15 +55,15 @@ func WithNamespacePath(steps ...[]byte) SACFilterOption {
 }
 
 type filterBuilder struct {
-	scopeChecker  sac.ScopeChecker
-	graphProvider GraphProvider
-	namespacePath [][]byte
-	clusterPath   [][]byte
+	resourceHelper *sac.ForResourceHelper
+	graphProvider  GraphProvider
+	namespacePath  [][]byte
+	clusterPath    [][]byte
 }
 
 func compile(builder *filterBuilder) (Filter, error) {
-	if builder.scopeChecker.Core() == nil {
-		return nil, errors.New("cannot create a SAC filter without a ScopeChecker")
+	if builder.resourceHelper == nil {
+		return nil, errors.New("cannot create a SAC filter without a resource type")
 	}
 	if builder.graphProvider == nil && builder.clusterPath != nil {
 		return nil, errors.New("cannot create a cluster or namespace scoped SAC filter without a graph provider")
@@ -76,17 +76,17 @@ func compile(builder *filterBuilder) (Filter, error) {
 	}
 	if builder.clusterPath == nil && builder.namespacePath == nil {
 		return &globalFilterImpl{
-			scopeChecker: builder.scopeChecker,
+			resourceHelper: *builder.resourceHelper,
 		}, nil
 	} else if builder.namespacePath == nil {
 		return &clusterFilterImpl{
-			scopeChecker:  builder.scopeChecker,
-			graphProvider: builder.graphProvider,
-			clusterPath:   builder.clusterPath,
+			resourceHelper: *builder.resourceHelper,
+			graphProvider:  builder.graphProvider,
+			clusterPath:    builder.clusterPath,
 		}, nil
 	}
 	return &namespaceFilterImpl{
-		scopeChecker:   builder.scopeChecker,
+		resourceHelper: *builder.resourceHelper,
 		graphProvider:  builder.graphProvider,
 		clusterPath:    builder.clusterPath,
 		namespaceIndex: len(builder.namespacePath) - 1,

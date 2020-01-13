@@ -3,6 +3,7 @@ package filtered
 import (
 	"context"
 
+	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/badgerhelper"
 	"github.com/stackrox/rox/pkg/dackbox/graph"
 	"github.com/stackrox/rox/pkg/errorhelpers"
@@ -11,13 +12,20 @@ import (
 )
 
 type namespaceFilterImpl struct {
-	scopeChecker   sac.ScopeChecker
+	resourceHelper sac.ForResourceHelper
 	graphProvider  GraphProvider
 	namespaceIndex int
 	clusterPath    [][]byte
 }
 
 func (f *namespaceFilterImpl) Apply(ctx context.Context, from ...string) ([]string, error) {
+	if ok, err := f.resourceHelper.ReadAllowed(ctx); err != nil {
+		return nil, err
+	} else if ok {
+		return from, nil
+	}
+
+	scopeChecker := f.resourceHelper.ScopeChecker(ctx, storage.Access_READ_ACCESS)
 	idGraph := f.graphProvider.NewGraphView()
 	defer idGraph.Discard()
 
@@ -27,7 +35,7 @@ func (f *namespaceFilterImpl) Apply(ctx context.Context, from ...string) ([]stri
 	for _, id := range from {
 		prefixedID := badgerhelper.GetBucketKey(f.clusterPath[0], []byte(id))
 		namespacesToClusters := f.collectNamespaceScopes(ctx, idGraph, f.clusterPath[1:], prefixedID)
-		ok, err := f.scopeChecker.AnyAllowed(ctx, convertToNamespaceScopes(namespacesToClusters))
+		ok, err := scopeChecker.AnyAllowed(ctx, convertToNamespaceScopes(namespacesToClusters))
 		if err != nil {
 			errorList.AddError(err)
 			continue

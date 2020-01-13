@@ -7,11 +7,11 @@ import (
 )
 
 type globalFilterImpl struct {
-	scopeChecker sac.ScopeChecker
+	resourceHelper sac.ForResourceHelper
 }
 
 func (f *globalFilterImpl) Apply(ctx context.Context, from ...string) ([]string, error) {
-	if ok, err := f.scopeChecker.Allowed(ctx); err != nil || !ok {
+	if ok, err := f.resourceHelper.ReadAllowed(ctx); err != nil || !ok {
 		return nil, err
 	}
 	return from, nil
