@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { fetchProcesses } from 'services/ProcessesService';
+
 import ProcessSpecificationWhitelists from './SpecificationWhitelists';
 import DiscoveryCards from './DiscoveryCards';
 

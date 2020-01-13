@@ -2,8 +2,12 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import orderBy from 'lodash/orderBy';
 
+import { knownBackendFlags } from 'utils/featureFlags';
+
+import FeatureEnabled from 'Containers/FeatureEnabled';
 import ProcessDiscoveryCard from './DiscoveryCard';
 import Binaries from './Binaries';
+import ProcessComments from './ProcessComments';
 
 function DiscoveryCards({ deploymentId, processGroup, processEpoch, setProcessEpoch }) {
     const sortedProcessGroups = orderBy(
@@ -19,6 +23,11 @@ function DiscoveryCards({ deploymentId, processGroup, processEpoch, setProcessEp
                 processEpoch={processEpoch}
                 setProcessEpoch={setProcessEpoch}
             >
+                <div className="p-2">
+                    <FeatureEnabled featureFlag={knownBackendFlags.ROX_IQT_ANALYST_NOTES_UI}>
+                        <ProcessComments />
+                    </FeatureEnabled>
+                </div>
                 <Binaries processes={pg.groups} />
             </ProcessDiscoveryCard>
         </div>
