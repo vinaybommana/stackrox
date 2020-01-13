@@ -59,7 +59,7 @@ func (suite *ImageStoreTestSuite) TestImages() {
 
 	// Test Add
 	for _, d := range images {
-		suite.NoError(suite.store.UpsertImage(d))
+		suite.NoError(suite.store.Upsert(d, nil))
 	}
 
 	for _, d := range images {
@@ -80,7 +80,7 @@ func (suite *ImageStoreTestSuite) TestImages() {
 	}
 
 	for _, d := range images {
-		suite.NoError(suite.store.UpsertImage(d))
+		suite.NoError(suite.store.Upsert(d, nil))
 	}
 
 	for _, d := range images {

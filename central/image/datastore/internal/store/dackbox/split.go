@@ -7,8 +7,9 @@ import (
 	"github.com/stackrox/rox/pkg/dackbox/edges"
 )
 
-func split(image *storage.Image) imageParts {
-	parts := imageParts{
+// Split splits the input image into a set of parts.
+func Split(image *storage.Image) ImageParts {
+	parts := ImageParts{
 		image: proto.Clone(image).(*storage.Image),
 	}
 
@@ -22,14 +23,14 @@ func split(image *storage.Image) imageParts {
 	return parts
 }
 
-func splitListImage(parts imageParts) *storage.ListImage {
+func splitListImage(parts ImageParts) *storage.ListImage {
 	return convertImageToListImage(parts.image)
 }
 
-func splitComponents(parts imageParts) []componentParts {
-	ret := make([]componentParts, 0, len(parts.image.GetScan().GetComponents()))
+func splitComponents(parts ImageParts) []ComponentParts {
+	ret := make([]ComponentParts, 0, len(parts.image.GetScan().GetComponents()))
 	for _, component := range parts.image.GetScan().GetComponents() {
-		cp := componentParts{}
+		cp := ComponentParts{}
 		cp.component = generateImageComponent(component)
 		cp.edge = generateImageComponentEdge(parts.image, cp.component, component)
 		cp.children = splitCVEs(cp, component)
@@ -38,10 +39,10 @@ func splitComponents(parts imageParts) []componentParts {
 	return ret
 }
 
-func splitCVEs(component componentParts, embedded *storage.EmbeddedImageScanComponent) []cveParts {
-	ret := make([]cveParts, 0, len(embedded.GetVulns()))
+func splitCVEs(component ComponentParts, embedded *storage.EmbeddedImageScanComponent) []CVEParts {
+	ret := make([]CVEParts, 0, len(embedded.GetVulns()))
 	for _, cve := range embedded.GetVulns() {
-		cp := cveParts{}
+		cp := CVEParts{}
 		cp.cve = generateCVE(cve)
 		cp.edge = generateComponentCVEEdge(component.component, cp.cve, cve)
 		ret = append(ret, cp)

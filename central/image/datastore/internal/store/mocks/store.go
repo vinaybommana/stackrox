@@ -125,32 +125,32 @@ func (mr *MockStoreMockRecorder) Exists(id interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exists", reflect.TypeOf((*MockStore)(nil).Exists), id)
 }
 
-// UpsertImage mocks base method
-func (m *MockStore) UpsertImage(image *storage.Image) error {
+// Upsert mocks base method
+func (m *MockStore) Upsert(image *storage.Image, listImage *storage.ListImage) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpsertImage", image)
+	ret := m.ctrl.Call(m, "Upsert", image, listImage)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// UpsertImage indicates an expected call of UpsertImage
-func (mr *MockStoreMockRecorder) UpsertImage(image interface{}) *gomock.Call {
+// Upsert indicates an expected call of Upsert
+func (mr *MockStoreMockRecorder) Upsert(image, listImage interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertImage", reflect.TypeOf((*MockStore)(nil).UpsertImage), image)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Upsert", reflect.TypeOf((*MockStore)(nil).Upsert), image, listImage)
 }
 
-// DeleteImage mocks base method
-func (m *MockStore) DeleteImage(id string) error {
+// Delete mocks base method
+func (m *MockStore) Delete(id string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteImage", id)
+	ret := m.ctrl.Call(m, "Delete", id)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteImage indicates an expected call of DeleteImage
-func (mr *MockStoreMockRecorder) DeleteImage(id interface{}) *gomock.Call {
+// Delete indicates an expected call of Delete
+func (mr *MockStoreMockRecorder) Delete(id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteImage", reflect.TypeOf((*MockStore)(nil).DeleteImage), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockStore)(nil).Delete), id)
 }
 
 // GetTxnCount mocks base method

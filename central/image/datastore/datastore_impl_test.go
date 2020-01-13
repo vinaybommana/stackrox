@@ -71,7 +71,7 @@ func (suite *ImageDataStoreTestSuite) TestNewImageAddedWithoutMetadata() {
 
 	suite.mockStore.EXPECT().GetImage("sha1").Return((*storage.Image)(nil), false, nil)
 
-	suite.mockStore.EXPECT().UpsertImage(image).Return(nil)
+	suite.mockStore.EXPECT().Upsert(image, nil).Return(nil)
 	suite.mockIndexer.EXPECT().AddImage(image).Return(nil)
 
 	err := suite.datastore.UpsertImage(suite.hasWriteCtx, image)
@@ -91,7 +91,7 @@ func (suite *ImageDataStoreTestSuite) TestNewImageAddedWithMetadata() {
 	}
 
 	suite.mockStore.EXPECT().GetImage("sha1").Return((*storage.Image)(nil), false, nil)
-	suite.mockStore.EXPECT().UpsertImage(upsertedImage).Return(nil)
+	suite.mockStore.EXPECT().Upsert(upsertedImage, nil).Return(nil)
 	suite.mockIndexer.EXPECT().AddImage(upsertedImage).Return(nil)
 
 	err := suite.datastore.UpsertImage(suite.hasWriteCtx, newImage)
@@ -150,7 +150,7 @@ func (suite *ImageDataStoreTestSuite) TestNewImageAddedWithScanStats() {
 	}
 
 	suite.mockStore.EXPECT().GetImage("sha1").Return((*storage.Image)(nil), false, nil)
-	suite.mockStore.EXPECT().UpsertImage(upsertedImage).Return(nil)
+	suite.mockStore.EXPECT().Upsert(upsertedImage, nil).Return(nil)
 	suite.mockIndexer.EXPECT().AddImage(upsertedImage).Return(nil)
 
 	err := suite.datastore.UpsertImage(suite.hasWriteCtx, newImage)

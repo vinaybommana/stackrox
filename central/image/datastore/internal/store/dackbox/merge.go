@@ -7,13 +7,14 @@ import (
 	"github.com/stackrox/rox/pkg/dackbox/edges"
 )
 
-func merge(parts imageParts) *storage.Image {
+// Merge merges the images parts into an image.
+func Merge(parts ImageParts) *storage.Image {
 	ret := proto.Clone(parts.image).(*storage.Image)
 	mergeComponents(parts, ret)
 	return ret
 }
 
-func mergeComponents(parts imageParts, image *storage.Image) {
+func mergeComponents(parts ImageParts, image *storage.Image) {
 	// If the image has a nil scan, there is nothing to fill in.
 	if image.Scan == nil {
 		return
@@ -37,7 +38,7 @@ func mergeComponents(parts imageParts, image *storage.Image) {
 	}
 }
 
-func generateEmbeddedComponent(cp componentParts) *storage.EmbeddedImageScanComponent {
+func generateEmbeddedComponent(cp ComponentParts) *storage.EmbeddedImageScanComponent {
 	if cp.component == nil || cp.edge == nil {
 		return nil
 	}
@@ -70,7 +71,7 @@ func convertEmbeddedLicense(input *storage.ImageComponent_License) *storage.Lice
 	}
 }
 
-func generateEmbeddedCVE(cp cveParts) *storage.EmbeddedVulnerability {
+func generateEmbeddedCVE(cp CVEParts) *storage.EmbeddedVulnerability {
 	if cp.cve == nil || cp.edge == nil {
 		return nil
 	}

@@ -57,36 +57,6 @@ func newDatastoreImpl(storage store.Store, indexer index.Indexer, searcher searc
 	return ds, nil
 }
 
-func (ds *datastoreImpl) initializeRankers() error {
-	ds.imageRanker = ranking.ImageRanker()
-	ds.imageComponentRanker = ranking.ImageComponentRanker()
-
-	riskElevatedCtx := sac.WithGlobalAccessScopeChecker(context.Background(),
-		sac.AllowFixedScopes(
-			sac.AccessModeScopeKeys(storage.Access_READ_ACCESS),
-			sac.ResourceScopeKeys(resources.Risk),
-		))
-
-	imageRisks, err := ds.risks.SearchRawRisks(riskElevatedCtx, searchPkg.NewQueryBuilder().AddStrings(
-		searchPkg.RiskSubjectType, storage.RiskSubjectType_IMAGE.String()).ProtoQuery())
-	if err != nil {
-		return err
-	}
-	for _, risk := range imageRisks {
-		ds.imageRanker.Add(risk.GetSubject().GetId(), risk.GetScore())
-	}
-
-	imageComponentRisks, err := ds.risks.SearchRawRisks(riskElevatedCtx, searchPkg.NewQueryBuilder().AddStrings(
-		searchPkg.RiskSubjectType, storage.RiskSubjectType_IMAGE_COMPONENT.String()).ProtoQuery())
-	if err != nil {
-		return err
-	}
-	for _, risk := range imageComponentRisks {
-		ds.imageComponentRanker.Add(risk.GetSubject().GetId(), risk.GetScore())
-	}
-	return nil
-}
-
 func (ds *datastoreImpl) Search(ctx context.Context, q *v1.Query) ([]searchPkg.Result, error) {
 	return ds.searcher.Search(ctx, q)
 }
@@ -229,7 +199,7 @@ func (ds *datastoreImpl) UpsertImage(ctx context.Context, image *storage.Image) 
 
 	enricher.FillScanStats(image)
 
-	if err = ds.storage.UpsertImage(image); err != nil {
+	if err = ds.storage.Upsert(image, nil); err != nil {
 		return err
 	}
 
@@ -251,7 +221,7 @@ func (ds *datastoreImpl) DeleteImages(ctx context.Context, ids ...string) error 
 		))
 
 	for _, id := range ids {
-		if err := ds.storage.DeleteImage(id); err != nil {
+		if err := ds.storage.Delete(id); err != nil {
 			errorList.AddError(err)
 			continue
 		}
@@ -326,6 +296,36 @@ func (ds *datastoreImpl) buildIndex() error {
 	}
 
 	log.Info("[STARTUP] Successfully indexed images")
+	return nil
+}
+
+func (ds *datastoreImpl) initializeRankers() error {
+	ds.imageRanker = ranking.ImageRanker()
+	ds.imageComponentRanker = ranking.ImageComponentRanker()
+
+	riskElevatedCtx := sac.WithGlobalAccessScopeChecker(context.Background(),
+		sac.AllowFixedScopes(
+			sac.AccessModeScopeKeys(storage.Access_READ_ACCESS),
+			sac.ResourceScopeKeys(resources.Risk),
+		))
+
+	imageRisks, err := ds.risks.SearchRawRisks(riskElevatedCtx, searchPkg.NewQueryBuilder().AddStrings(
+		searchPkg.RiskSubjectType, storage.RiskSubjectType_IMAGE.String()).ProtoQuery())
+	if err != nil {
+		return err
+	}
+	for _, risk := range imageRisks {
+		ds.imageRanker.Add(risk.GetSubject().GetId(), risk.GetScore())
+	}
+
+	imageComponentRisks, err := ds.risks.SearchRawRisks(riskElevatedCtx, searchPkg.NewQueryBuilder().AddStrings(
+		searchPkg.RiskSubjectType, storage.RiskSubjectType_IMAGE_COMPONENT.String()).ProtoQuery())
+	if err != nil {
+		return err
+	}
+	for _, risk := range imageComponentRisks {
+		ds.imageComponentRanker.Add(risk.GetSubject().GetId(), risk.GetScore())
+	}
 	return nil
 }
 

@@ -77,7 +77,7 @@ func TestSplitAndMergeImage(t *testing.T) {
 		},
 	}
 
-	splitExpected := imageParts{
+	splitExpected := ImageParts{
 		image: &storage.Image{
 			Id: "sha",
 			Name: &storage.ImageName{
@@ -107,7 +107,7 @@ func TestSplitAndMergeImage(t *testing.T) {
 			},
 		},
 
-		children: []componentParts{
+		children: []ComponentParts{
 			{
 				component: &storage.ImageComponent{
 					Id:      imagecomponent.ComponentID{Name: "comp1", Version: "ver1"}.ToString(),
@@ -120,7 +120,7 @@ func TestSplitAndMergeImage(t *testing.T) {
 						LayerIndex: 1,
 					},
 				},
-				children: []cveParts{},
+				children: []CVEParts{},
 			},
 			{
 				component: &storage.ImageComponent{
@@ -134,7 +134,7 @@ func TestSplitAndMergeImage(t *testing.T) {
 						LayerIndex: 3,
 					},
 				},
-				children: []cveParts{
+				children: []CVEParts{
 					{
 						cve: &storage.CVE{
 							Id:   "cve1",
@@ -171,7 +171,7 @@ func TestSplitAndMergeImage(t *testing.T) {
 						LayerIndex: 2,
 					},
 				},
-				children: []cveParts{
+				children: []CVEParts{
 					{
 						cve: &storage.CVE{
 							Id:   "cve1",
@@ -199,9 +199,9 @@ func TestSplitAndMergeImage(t *testing.T) {
 		},
 	}
 
-	splitActual := split(image)
+	splitActual := Split(image)
 	assert.Equal(t, splitExpected, splitActual)
 
-	imageActual := merge(splitActual)
+	imageActual := Merge(splitActual)
 	assert.Equal(t, image, imageActual)
 }

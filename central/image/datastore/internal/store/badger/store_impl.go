@@ -146,7 +146,7 @@ func (b *storeImpl) GetImagesBatch(digests []string) ([]*storage.Image, error) {
 }
 
 // UpdateImage updates a image to bolt.
-func (b *storeImpl) UpsertImage(image *storage.Image) error {
+func (b *storeImpl) Upsert(image *storage.Image, _ *storage.ListImage) error {
 	defer metrics.SetBadgerOperationDurationTime(time.Now(), ops.Upsert, "Image")
 
 	if !b.noUpdateTimestamps {
@@ -156,7 +156,7 @@ func (b *storeImpl) UpsertImage(image *storage.Image) error {
 }
 
 // DeleteImage deletes an image a all it's data (but maintains the orch digest to registry digest mapping).
-func (b *storeImpl) DeleteImage(id string) error {
+func (b *storeImpl) Delete(id string) error {
 	defer metrics.SetBadgerOperationDurationTime(time.Now(), ops.Remove, "Image")
 
 	digest := types.NewDigest(id).Digest()

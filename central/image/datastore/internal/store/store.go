@@ -16,8 +16,8 @@ type Store interface {
 
 	Exists(id string) (bool, error)
 
-	UpsertImage(image *storage.Image) error
-	DeleteImage(id string) error
+	Upsert(image *storage.Image, listImage *storage.ListImage) error
+	Delete(id string) error
 
 	GetTxnCount() (txNum uint64, err error)
 	IncTxnCount() error

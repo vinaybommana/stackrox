@@ -24,20 +24,18 @@ var (
 		crud.WithKeyFunction(crud.PrefixKey(Bucket, keyFunc)),
 	)
 
-	// Deleter deletes images and cleans up all referenced children.
-	Deleter = crud.NewDeleter(
-		crud.GCAllChildren(),
-	)
-
-	// ListReader reads list images from the db/
+	// ListReader reads list images from the db.
 	ListReader = crud.NewReader(
 		crud.WithAllocFunction(listAlloc),
 	)
 
-	// ListPartialUpserter upserts list images as part of a parent object transaction (the parent in this case is an image)
-	ListPartialUpserter = crud.NewUpserter(
+	// ListUpserter upserts list images.
+	ListUpserter = crud.NewUpserter(
 		crud.WithKeyFunction(crud.PrefixKey(ListBucket, keyFunc)),
 	)
+
+	// Deleter deletes images and list images by id.
+	Deleter = crud.NewDeleter()
 )
 
 // GetKey returns the prefixed key for the given id.
