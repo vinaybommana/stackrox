@@ -2,6 +2,7 @@ package datastore
 
 import (
 	"context"
+	"time"
 
 	"github.com/pkg/errors"
 	deploymentSearch "github.com/stackrox/rox/central/deployment/datastore/internal/search"
@@ -9,6 +10,7 @@ import (
 	deploymentStore "github.com/stackrox/rox/central/deployment/store"
 	"github.com/stackrox/rox/central/globaldb"
 	imageDS "github.com/stackrox/rox/central/image/datastore"
+	"github.com/stackrox/rox/central/metrics"
 	nfDS "github.com/stackrox/rox/central/networkflow/datastore"
 	piDS "github.com/stackrox/rox/central/processindicator/datastore"
 	pwDS "github.com/stackrox/rox/central/processwhitelist/datastore"
@@ -109,6 +111,8 @@ func (ds *datastoreImpl) ListDeployment(ctx context.Context, id string) (*storag
 }
 
 func (ds *datastoreImpl) SearchListDeployments(ctx context.Context, q *v1.Query) ([]*storage.ListDeployment, error) {
+	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Deployment", "SearchListDeployments")
+
 	listDeployments, err := ds.deploymentSearcher.SearchListDeployments(ctx, q)
 	if err != nil {
 		return nil, err
@@ -119,11 +123,15 @@ func (ds *datastoreImpl) SearchListDeployments(ctx context.Context, q *v1.Query)
 
 // SearchDeployments
 func (ds *datastoreImpl) SearchDeployments(ctx context.Context, q *v1.Query) ([]*v1.SearchResult, error) {
+	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Deployment", "SearchDeployments")
+
 	return ds.deploymentSearcher.SearchDeployments(ctx, q)
 }
 
 // SearchRawDeployments
 func (ds *datastoreImpl) SearchRawDeployments(ctx context.Context, q *v1.Query) ([]*storage.Deployment, error) {
+	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Deployment", "SearchRawDeployments")
+
 	deployments, err := ds.deploymentSearcher.SearchRawDeployments(ctx, q)
 	if err != nil {
 		return nil, err
@@ -181,11 +189,15 @@ func (ds *datastoreImpl) CountDeployments(ctx context.Context) (int, error) {
 
 // UpsertDeployment inserts a deployment into deploymentStore and into the deploymentIndexer
 func (ds *datastoreImpl) UpsertDeployment(ctx context.Context, deployment *storage.Deployment) error {
+	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Deployment", "UpsertDeployment")
+
 	return ds.upsertDeployment(ctx, deployment, true)
 }
 
 // UpsertDeployment inserts a deployment into deploymentStore
 func (ds *datastoreImpl) UpsertDeploymentIntoStoreOnly(ctx context.Context, deployment *storage.Deployment) error {
+	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Deployment", "UpsertDeploymentIntoStoreOnly")
+
 	return ds.upsertDeployment(ctx, deployment, false)
 }
 
@@ -232,6 +244,8 @@ func (ds *datastoreImpl) upsertDeployment(ctx context.Context, deployment *stora
 
 // RemoveDeployment removes an alert from the deploymentStore and the deploymentIndexer
 func (ds *datastoreImpl) RemoveDeployment(ctx context.Context, clusterID, id string) error {
+	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Deployment", "RemoveDeployment")
+
 	if ok, err := deploymentsSAC.WriteAllowed(ctx); err != nil {
 		return err
 	} else if !ok {

@@ -5,11 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"time"
 
 	"github.com/stackrox/rox/central/alert/convert"
 	"github.com/stackrox/rox/central/alert/datastore/internal/index"
 	"github.com/stackrox/rox/central/alert/datastore/internal/search"
 	"github.com/stackrox/rox/central/alert/datastore/internal/store"
+	"github.com/stackrox/rox/central/metrics"
 	"github.com/stackrox/rox/central/role/resources"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
@@ -45,20 +47,28 @@ type datastoreImpl struct {
 }
 
 func (ds *datastoreImpl) Search(ctx context.Context, q *v1.Query) ([]searchCommon.Result, error) {
+	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Alert", "Search")
+
 	return ds.searcher.Search(ctx, q)
 }
 
 func (ds *datastoreImpl) SearchListAlerts(ctx context.Context, q *v1.Query) ([]*storage.ListAlert, error) {
+	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Alert", "SearchListAlerts")
+
 	return ds.searcher.SearchListAlerts(ctx, q)
 }
 
 // SearchAlerts returns search results for the given request.
 func (ds *datastoreImpl) SearchAlerts(ctx context.Context, q *v1.Query) ([]*v1.SearchResult, error) {
+	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Alert", "SearchAlerts")
+
 	return ds.searcher.SearchAlerts(ctx, q)
 }
 
 // SearchRawAlerts returns search results for the given request in the form of a slice of alerts.
 func (ds *datastoreImpl) SearchRawAlerts(ctx context.Context, q *v1.Query) ([]*storage.Alert, error) {
+	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Alert", "SearchRawAlerts")
+
 	return ds.searcher.SearchRawAlerts(ctx, q)
 }
 
@@ -108,6 +118,8 @@ func (ds *datastoreImpl) CountAlerts(ctx context.Context) (int, error) {
 
 // AddAlert inserts an alert into storage and into the indexer
 func (ds *datastoreImpl) UpsertAlert(ctx context.Context, alert *storage.Alert) error {
+	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Alert", "UpsertAlert")
+
 	if ok, err := alertSAC.WriteAllowed(ctx, sac.KeyForNSScopedObj(alert.GetDeployment())...); err != nil || !ok {
 		return errors.New("permission denied")
 	}
@@ -123,6 +135,8 @@ func (ds *datastoreImpl) UpsertAlert(ctx context.Context, alert *storage.Alert) 
 
 // UpdateAlert updates an alert in storage and in the indexer
 func (ds *datastoreImpl) UpdateAlertBatch(ctx context.Context, alert *storage.Alert, waitGroup *sync.WaitGroup, c chan error) {
+	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Alert", "UpdateAlertBatch")
+
 	defer waitGroup.Done()
 	ds.keyedMutex.Lock(alert.GetId())
 	defer ds.keyedMutex.Unlock(alert.GetId())
@@ -146,6 +160,8 @@ func (ds *datastoreImpl) UpdateAlertBatch(ctx context.Context, alert *storage.Al
 
 // UpdateAlert updates an alert in storage and in the indexer
 func (ds *datastoreImpl) UpsertAlerts(ctx context.Context, alertBatch []*storage.Alert) error {
+	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Alert", "UpsertAlerts")
+
 	var waitGroup sync.WaitGroup
 	c := make(chan error, len(alertBatch))
 	for _, alert := range alertBatch {
@@ -165,6 +181,8 @@ func (ds *datastoreImpl) UpsertAlerts(ctx context.Context, alertBatch []*storage
 }
 
 func (ds *datastoreImpl) MarkAlertStale(ctx context.Context, id string) error {
+	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Alert", "MarkAlertStale")
+
 	ds.keyedMutex.Lock(id)
 	defer ds.keyedMutex.Unlock(id)
 
@@ -184,6 +202,8 @@ func (ds *datastoreImpl) MarkAlertStale(ctx context.Context, id string) error {
 }
 
 func (ds *datastoreImpl) DeleteAlerts(ctx context.Context, ids ...string) error {
+	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Alert", "DeleteAlerts")
+
 	if ok, err := alertSAC.WriteAllowed(ctx); err != nil {
 		return err
 	} else if !ok {

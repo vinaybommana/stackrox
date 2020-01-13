@@ -3,11 +3,13 @@ package datastore
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/central/image/datastore/internal/search"
 	"github.com/stackrox/rox/central/image/datastore/internal/store"
 	"github.com/stackrox/rox/central/image/index"
+	"github.com/stackrox/rox/central/metrics"
 	"github.com/stackrox/rox/central/ranking"
 	riskDS "github.com/stackrox/rox/central/risk/datastore"
 	"github.com/stackrox/rox/central/role/resources"
@@ -58,15 +60,21 @@ func newDatastoreImpl(storage store.Store, indexer index.Indexer, searcher searc
 }
 
 func (ds *datastoreImpl) Search(ctx context.Context, q *v1.Query) ([]searchPkg.Result, error) {
+	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Image", "Search")
+
 	return ds.searcher.Search(ctx, q)
 }
 
 func (ds *datastoreImpl) SearchImages(ctx context.Context, q *v1.Query) ([]*v1.SearchResult, error) {
+	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Image", "SearchImages")
+
 	return ds.searcher.SearchImages(ctx, q)
 }
 
 // SearchRawImages delegates to the underlying searcher.
 func (ds *datastoreImpl) SearchRawImages(ctx context.Context, q *v1.Query) ([]*storage.Image, error) {
+	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Image", "SearchRawImages")
+
 	imgs, err := ds.searcher.SearchRawImages(ctx, q)
 	if err != nil {
 		return nil, err
@@ -78,6 +86,8 @@ func (ds *datastoreImpl) SearchRawImages(ctx context.Context, q *v1.Query) ([]*s
 }
 
 func (ds *datastoreImpl) SearchListImages(ctx context.Context, q *v1.Query) ([]*storage.ListImage, error) {
+	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Image", "SearchListImages")
+
 	imgs, err := ds.searcher.SearchListImages(ctx, q)
 	if err != nil {
 		return nil, err
@@ -176,6 +186,8 @@ func (ds *datastoreImpl) GetImagesBatch(ctx context.Context, shas []string) ([]*
 
 // UpsertImage dedupes the image with the underlying storage and adds the image to the index.
 func (ds *datastoreImpl) UpsertImage(ctx context.Context, image *storage.Image) error {
+	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Image", "UpsertImage")
+
 	if image.GetId() == "" {
 		return errors.New("cannot upsert an image without an id")
 	}
@@ -207,6 +219,8 @@ func (ds *datastoreImpl) UpsertImage(ctx context.Context, image *storage.Image) 
 }
 
 func (ds *datastoreImpl) DeleteImages(ctx context.Context, ids ...string) error {
+	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Image", "DeleteImages")
+
 	if ok, err := imagesSAC.WriteAllowed(ctx); err != nil {
 		return err
 	} else if !ok {
@@ -237,6 +251,8 @@ func (ds *datastoreImpl) DeleteImages(ctx context.Context, ids ...string) error 
 }
 
 func (ds *datastoreImpl) Exists(ctx context.Context, id string) (bool, error) {
+	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Image", "Exists")
+
 	if ok, err := ds.canReadImage(ctx, id); err != nil || !ok {
 		return false, err
 	}
