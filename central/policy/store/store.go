@@ -1,6 +1,9 @@
 package store
 
 import (
+	"sort"
+	"strings"
+
 	bolt "github.com/etcd-io/bbolt"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
@@ -71,11 +74,26 @@ func addDefaults(store Store) {
 		count++
 
 		// fill multi-word sort helper field
-		p.SORTName = p.Name
+		FillMultiWordSortHelperFields(p)
 
 		if _, err := store.AddPolicy(p); err != nil {
 			panic(err)
 		}
 	}
 	log.Infof("Loaded %d new default Policies", count)
+}
+
+// FillMultiWordSortHelperFields fills multi word sort fields such as Name, Lifecycle Stages etc.
+func FillMultiWordSortHelperFields(policies ...*storage.Policy) {
+	for _, policy := range policies {
+		policy.SORTName = policy.Name
+		sort.Slice(policy.GetLifecycleStages(), func(i, j int) bool {
+			return policy.GetLifecycleStages()[i].String() < policy.GetLifecycleStages()[j].String()
+		})
+		var stages []string
+		for _, lifecycleStage := range policy.GetLifecycleStages() {
+			stages = append(stages, lifecycleStage.String())
+		}
+		policy.SORTLifecycleStage = strings.Join(stages, ",")
+	}
 }

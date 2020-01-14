@@ -161,9 +161,12 @@ var (
 	RiskSubjectType = newFieldLabel("Risk Subject Type")
 	RiskIndicator   = newFieldLabel("Risk Indicator")
 
+	PolicyLastUpdated = newFieldLabel("Policy Last Updated")
+
 	// Following are helper fields used for sorting
 	// For example, "SORTPolicyName" field should be used to sort policies when the query sort field is "PolicyName"
-	SORTPolicyName = newFieldLabel("SORT_Policy")
+	SORTPolicyName     = newFieldLabel("SORT_Policy")
+	SORTLifecycleStage = newFieldLabel("SORT_PolicyLifecycleStage")
 )
 
 func newFieldLabel(s string) FieldLabel {
