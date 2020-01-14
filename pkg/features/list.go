@@ -21,4 +21,7 @@ var (
 	// IQTAnalystNotesUI enables the IQT Analyst Notes UI.
 	// NB: When removing this feature flag, remove references in ui/src/utils/featureFlags.js
 	IQTAnalystNotesUI = registerFeature("Enable IQT Analyst Notes UI", "ROX_IQT_ANALYST_NOTES_UI", false)
+
+	// NistSP800_53 enables the NIST SP 800-53 compliance standard.
+	NistSP800_53 = registerFeature("NIST SP 800-53", "ROX_NIST_800_53", false)
 )
