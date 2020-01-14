@@ -42,6 +42,8 @@ func init() {
 			"deployments(query: String): [Deployment!]!",
 			"deploymentCount(query: String): Int!",
 			"priority: Int!",
+			"source: String!",
+			"location: String!",
 		}),
 		schema.AddExtraResolver("ImageScan", `components(query: String): [EmbeddedImageScanComponent!]!`),
 		schema.AddExtraResolver("ImageScan", `componentCount(query: String): Int!`),
@@ -195,6 +197,18 @@ func (eicr *EmbeddedImageScanComponentResolver) Version(ctx context.Context) str
 // Priority returns the priority of the component.
 func (eicr *EmbeddedImageScanComponentResolver) Priority(ctx context.Context) int32 {
 	return int32(eicr.data.GetPriority())
+}
+
+// Source returns the source of the component.
+// TODO: replace this placeholder return value with actual data when available
+func (eicr *EmbeddedImageScanComponentResolver) Source(ctx context.Context) string {
+	return "placeholder source"
+}
+
+// Location returns the location of the component.
+// TODO: replace this placeholder return value with actual data when available
+func (eicr *EmbeddedImageScanComponentResolver) Location(ctx context.Context) string {
+	return "placeholder location"
 }
 
 // LayerIndex is the index in the parent image.
