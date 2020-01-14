@@ -117,11 +117,11 @@ const DeploymentsWithMostSeverePolicyViolations = ({ entityContext, limit }) => 
     const workflowState = useContext(workflowStateContext);
     const viewAllURL = workflowState
         .pushList(entityTypes.DEPLOYMENT)
-        .setSort([
-            { id: 'policyStatus', desc: false },
-            { id: 'failingPolicyCount', desc: true },
-            { id: 'name', desc: false }
-        ])
+        // @TODO: re-enable sorting again, after these fields are available for sorting in back-end pagination
+        // .setSort([
+        //     { id: 'failingPolicyCount', desc: true },
+        //     { id: 'name', desc: false }
+        // ])
         .toUrl();
 
     if (!loading) {

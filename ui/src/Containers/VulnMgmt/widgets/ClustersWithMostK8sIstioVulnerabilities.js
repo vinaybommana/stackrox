@@ -151,7 +151,8 @@ const ClustersWithMostK8sVulnerabilities = ({ entityContext, limit }) => {
 
     const viewAllURL = workflowState
         .pushList(entityTypes.CLUSTER)
-        .setSort([{ id: 'vulnCounter.all.total', desc: true }])
+        // @TODO: re-enable sorting again, after this fields is available for sorting in back-end pagination
+        // .setSort([{ id: 'vulnCounter.all.total', desc: true }])
         .toUrl();
 
     return (
