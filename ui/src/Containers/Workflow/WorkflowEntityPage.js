@@ -84,10 +84,11 @@ const WorkflowEntityPage = ({
 
     const listData = entityListType ? result[fieldName] : null;
     const listCountKey = defaultCountKeyMap[entityListType];
+    const totalResults = result[listCountKey];
     return entityListType ? (
         <ListComponent
             entityListType={entityListType}
-            totalResults={result[listCountKey]}
+            totalResults={totalResults}
             data={listData}
             search={search}
             sort={sort}

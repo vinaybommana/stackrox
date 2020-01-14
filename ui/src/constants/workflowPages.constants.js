@@ -12,5 +12,5 @@ export const defaultCountKeyMap = {
     [entityTypes.DEPLOYMENT]: 'deploymentCount',
     [entityTypes.NAMESPACE]: 'namespaceCount',
     [entityTypes.IMAGE]: 'imageCount',
-    [entityTypes.POLICY]: 'policyCount'
+    [entityTypes.POLICY]: 'failingPolicyCount'
 };
