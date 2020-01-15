@@ -334,6 +334,8 @@ describe.skip('Entities list Page', () => {
             'Component',
             'CVEs',
             'Top CVSS',
+            'Source',
+            'Location',
             'Images',
             'Deployments',
             'Risk Priority'

@@ -92,6 +92,21 @@ export function getComponentTableColumns(workflowState) {
             sortField: componentSortFields.TOP_CVSS
         },
         {
+            Header: `Source`,
+            headerClassName: `w-1/8 ${defaultHeaderClassName}`,
+            className: `w-1/8 ${defaultColumnClassName}`,
+            accessor: 'source'
+            // @TODO uncomment once source is sortable on backend
+            // sortField: componentSortFields.SOURCE
+        },
+        {
+            Header: `Location`,
+            headerClassName: `w-1/8 ${defaultHeaderClassName}`,
+            className: `w-1/8 ${defaultColumnClassName}`,
+            accessor: 'location',
+            sortable: false
+        },
+        {
             Header: `Images`,
             entityType: entityTypes.IMAGE,
             headerClassName: `w-1/8 ${defaultHeaderClassName}`,

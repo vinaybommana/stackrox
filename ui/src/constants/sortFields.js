@@ -43,6 +43,7 @@ export const componentSortFields = {
     COMPONENT: 'Component',
     CVE_COUNT: 'CVE Count',
     TOP_CVSS: 'CVSS',
+    SOURCE: 'Source',
     IMAGE_COUNT: 'Image Count',
     DEPLOYMENT_COUNT: 'Deployment Count',
     PRIORITY: 'Priority'
