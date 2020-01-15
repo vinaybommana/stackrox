@@ -5,8 +5,6 @@ import (
 	"github.com/stackrox/rox/pkg/process/filter"
 	"github.com/stackrox/rox/sensor/common/clusterentities"
 	"github.com/stackrox/rox/sensor/common/config"
-	"github.com/stackrox/rox/sensor/common/roxmetadata"
-	"github.com/stackrox/rox/sensor/kubernetes/listener/resources/references"
 	v1Listers "k8s.io/client-go/listers/core/v1"
 )
 
@@ -34,7 +32,7 @@ type DispatcherRegistry interface {
 }
 
 // NewDispatcherRegistry creates and returns a new DispatcherRegistry.
-func NewDispatcherRegistry(podLister v1Listers.PodLister, entityStore *clusterentities.Store, roxMetadata roxmetadata.Metadata, processFilter filter.Filter, configHandler config.Handler) DispatcherRegistry {
+func NewDispatcherRegistry(podLister v1Listers.PodLister, entityStore *clusterentities.Store, processFilter filter.Filter, configHandler config.Handler) DispatcherRegistry {
 	serviceStore := newServiceStore()
 	deploymentStore := newDeploymentStore()
 	nodeStore := newNodeStore()
@@ -42,9 +40,8 @@ func NewDispatcherRegistry(podLister v1Listers.PodLister, entityStore *clusteren
 	endpointManager := newEndpointManager(serviceStore, deploymentStore, nodeStore, entityStore)
 	rbacUpdater := newRBACUpdater()
 
-	hierarchy := references.NewParentHierarchy()
 	return &registryImpl{
-		deploymentHandler: newDeploymentHandler(serviceStore, deploymentStore, endpointManager, nsStore, roxMetadata, podLister, processFilter, configHandler, hierarchy),
+		deploymentHandler: newDeploymentHandler(serviceStore, deploymentStore, endpointManager, nsStore, podLister, processFilter, configHandler),
 
 		roleDispatcher:           newRoleDispatcher(rbacUpdater),
 		bindingDispatcher:        newBindingDispatcher(rbacUpdater),

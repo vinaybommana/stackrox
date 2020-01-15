@@ -35,7 +35,6 @@ import (
 	networkConnManager "github.com/stackrox/rox/sensor/common/networkflow/manager"
 	networkFlowService "github.com/stackrox/rox/sensor/common/networkflow/service"
 	"github.com/stackrox/rox/sensor/common/networkpolicies"
-	"github.com/stackrox/rox/sensor/common/roxmetadata"
 	signalService "github.com/stackrox/rox/sensor/common/signal"
 	"github.com/stackrox/rox/sensor/common/upgrade"
 	"golang.org/x/net/http2"
@@ -85,7 +84,7 @@ type Sensor struct {
 
 // NewSensor initializes a Sensor, including reading configurations from the environment.
 func NewSensor(l listeners.Listener, e enforcers.Enforcer, o orchestrators.Orchestrator, n networkConnManager.Manager,
-	m roxmetadata.Metadata, networkPoliciesCommandHandler networkpolicies.CommandHandler, clusterStatusUpdater clusterstatus.Updater,
+	networkPoliciesCommandHandler networkpolicies.CommandHandler, clusterStatusUpdater clusterstatus.Updater,
 	configHandler config.Handler, upgradeCommandHandler upgrade.CommandHandler) *Sensor {
 
 	complianceService := compliance.NewService(o)
@@ -99,7 +98,7 @@ func NewSensor(l listeners.Listener, e enforcers.Enforcer, o orchestrators.Orche
 		orchestrator:                  o,
 		networkConnManager:            n,
 		complianceService:             complianceService,
-		commandHandler:                compliance.NewCommandHandler(m, complianceService),
+		commandHandler:                compliance.NewCommandHandler(complianceService),
 		networkPoliciesCommandHandler: networkPoliciesCommandHandler,
 		clusterStatusUpdater:          clusterStatusUpdater,
 		configHandler:                 configHandler,

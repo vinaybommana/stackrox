@@ -4,7 +4,6 @@ import (
 	"github.com/stackrox/rox/generated/internalapi/central"
 	"github.com/stackrox/rox/pkg/process/filter"
 	"github.com/stackrox/rox/sensor/common/config"
-	"github.com/stackrox/rox/sensor/common/roxmetadata"
 	"github.com/stackrox/rox/sensor/kubernetes/listener/resources/references"
 	v1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -58,7 +57,6 @@ type deploymentHandler struct {
 	deploymentStore *deploymentStore
 	endpointManager *endpointManager
 	namespaceStore  *namespaceStore
-	roxMetadata     roxmetadata.Metadata
 	processFilter   filter.Filter
 	config          config.Handler
 	hierarchy       references.ParentHierarchy
@@ -66,17 +64,16 @@ type deploymentHandler struct {
 
 // newDeploymentHandler creates and returns a new deployment handler.
 func newDeploymentHandler(serviceStore *serviceStore, deploymentStore *deploymentStore, endpointManager *endpointManager, namespaceStore *namespaceStore,
-	roxMetadata roxmetadata.Metadata, podLister v1listers.PodLister, processFilter filter.Filter, config config.Handler, hierarchy references.ParentHierarchy) *deploymentHandler {
+	podLister v1listers.PodLister, processFilter filter.Filter, config config.Handler) *deploymentHandler {
 	return &deploymentHandler{
 		podLister:       podLister,
 		serviceStore:    serviceStore,
 		deploymentStore: deploymentStore,
 		endpointManager: endpointManager,
 		namespaceStore:  namespaceStore,
-		roxMetadata:     roxMetadata,
 		processFilter:   processFilter,
 		config:          config,
-		hierarchy:       hierarchy,
+		hierarchy:       references.NewParentHierarchy(),
 	}
 }
 
@@ -89,7 +86,6 @@ func (d *deploymentHandler) processWithType(obj interface{}, action central.Reso
 	if action != central.ResourceAction_REMOVE_RESOURCE {
 		d.deploymentStore.addOrUpdateDeployment(wrap)
 		d.endpointManager.OnDeploymentCreateOrUpdate(wrap)
-		d.roxMetadata.AddDeployment(wrap.GetDeployment())
 		d.processFilter.Update(wrap.GetDeployment())
 	} else {
 		d.deploymentStore.removeDeployment(wrap)

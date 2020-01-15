@@ -9,7 +9,6 @@ import (
 	"github.com/stackrox/rox/sensor/common/clusterentities"
 	"github.com/stackrox/rox/sensor/common/config"
 	"github.com/stackrox/rox/sensor/common/processfilter"
-	"github.com/stackrox/rox/sensor/common/roxmetadata"
 	"github.com/stackrox/rox/sensor/kubernetes/listener/resources"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/informers"
@@ -23,7 +22,7 @@ func handleAllEvents(sif informers.SharedInformerFactory, osf externalversions.S
 
 	// Create the dispatcher registry, which provides dispatchers to all of the handlers.
 	podInformer := sif.Core().V1().Pods()
-	dispatchers := resources.NewDispatcherRegistry(podInformer.Lister(), clusterentities.StoreInstance(), roxmetadata.Singleton(), processfilter.Singleton(), config)
+	dispatchers := resources.NewDispatcherRegistry(podInformer.Lister(), clusterentities.StoreInstance(), processfilter.Singleton(), config)
 
 	namespaceInformer := sif.Core().V1().Namespaces().Informer()
 	secretInformer := sif.Core().V1().Secrets().Informer()

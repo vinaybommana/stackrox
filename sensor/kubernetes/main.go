@@ -14,7 +14,6 @@ import (
 	"github.com/stackrox/rox/pkg/version"
 	"github.com/stackrox/rox/sensor/common/config"
 	"github.com/stackrox/rox/sensor/common/networkflow/manager"
-	"github.com/stackrox/rox/sensor/common/roxmetadata"
 	"github.com/stackrox/rox/sensor/common/sensor"
 	"github.com/stackrox/rox/sensor/kubernetes/clusterstatus"
 	"github.com/stackrox/rox/sensor/kubernetes/enforcer"
@@ -54,7 +53,6 @@ func main() {
 		enforcer.MustCreate(),
 		orchestrator.New(),
 		manager.Singleton(),
-		roxmetadata.Singleton(),
 		networkpolicies.NewCommandHandler(),
 		clusterstatus.NewUpdater(),
 		configHandler,

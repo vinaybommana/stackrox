@@ -9,7 +9,6 @@ import (
 	"github.com/stackrox/rox/generated/internalapi/sensor"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/logging"
-	"github.com/stackrox/rox/sensor/common/roxmetadata"
 )
 
 var (
@@ -17,8 +16,6 @@ var (
 )
 
 type commandHandlerImpl struct {
-	roxMetadata roxmetadata.Metadata
-
 	commands chan *central.ScrapeCommand
 	updates  chan *central.ScrapeUpdate
 
