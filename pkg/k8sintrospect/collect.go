@@ -1,8 +1,7 @@
 package k8sintrospect
 
 import (
-	"context"
-
+	"github.com/stackrox/rox/pkg/concurrency"
 	"k8s.io/client-go/rest"
 )
 
@@ -12,9 +11,25 @@ type File struct {
 	Contents []byte
 }
 
-// Collect collects Kubernetes data relevant to our deployment.
-func Collect(ctx context.Context, collectionCfg Config, k8sClientConfig *rest.Config, filesC chan<- File) error {
-	c, err := newCollector(ctx, k8sClientConfig, collectionCfg, filesC)
+// FileCallback is a callback function to process a single file.
+type FileCallback func(ctx concurrency.ErrorWaitable, file File) error
+
+// SendToChan returns a file callback that sends to the given channel, bound by the given context.
+func SendToChan(filesC chan<- File) FileCallback {
+	return func(ctx concurrency.ErrorWaitable, f File) error {
+		select {
+		case filesC <- f:
+			return nil
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
+}
+
+// Collect collects Kubernetes data relevant to the given config. If cb returns an error, processing stops and the error
+// is passed through.
+func Collect(ctx concurrency.ErrorWaitable, collectionCfg Config, k8sClientConfig *rest.Config, cb FileCallback) error {
+	c, err := newCollector(ctx, k8sClientConfig, collectionCfg, cb)
 	if err != nil {
 		return err
 	}

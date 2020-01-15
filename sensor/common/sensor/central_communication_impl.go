@@ -7,6 +7,7 @@ import (
 	"github.com/stackrox/rox/generated/internalapi/central"
 	"github.com/stackrox/rox/pkg/centralsensor"
 	"github.com/stackrox/rox/pkg/concurrency"
+	"github.com/stackrox/rox/sensor/common"
 	"github.com/stackrox/rox/sensor/common/config"
 	"google.golang.org/grpc"
 )
@@ -19,6 +20,8 @@ type centralCommunicationImpl struct {
 
 	stopC    concurrency.ErrorSignal
 	stoppedC concurrency.ErrorSignal
+
+	components []common.SensorComponent
 }
 
 func (s *centralCommunicationImpl) Start(conn *grpc.ClientConn, centralReachable *concurrency.Flag, configHandler config.Handler) {
@@ -46,6 +49,13 @@ func (s *centralCommunicationImpl) sendEvents(client central.SensorServiceClient
 		s.stopC.SignalWithError(err)
 		return
 	}
+
+	capsSet := centralsensor.NewSensorCapabilitySet()
+	for _, component := range s.components {
+		capsSet.AddAll(component.Capabilities()...)
+	}
+	ctx = centralsensor.AppendCapsInfoToContext(ctx, capsSet)
+
 	stream, err := client.Communicate(ctx)
 	if err != nil {
 		s.stopC.SignalWithError(errors.Wrap(err, "opening stream"))

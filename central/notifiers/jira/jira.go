@@ -83,6 +83,10 @@ func isPriorityNeeded(client *jiraLib.Client, project, issueType string) (bool, 
 }
 
 func (j *jira) getAlertDescription(alert *storage.Alert) (string, error) {
+	var i jiraLib.Issue
+	var x map[string]interface{}
+	i.Fields.Unknowns = x
+
 	funcMap := template.FuncMap{
 		"header": func(s string) string {
 			return fmt.Sprintf("\r\n h4. %v\r\n", s)

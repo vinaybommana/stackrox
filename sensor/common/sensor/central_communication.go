@@ -4,6 +4,7 @@ import (
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/enforcers"
 	"github.com/stackrox/rox/pkg/listeners"
+	"github.com/stackrox/rox/sensor/common"
 	"github.com/stackrox/rox/sensor/common/clusterstatus"
 	complianceLogic "github.com/stackrox/rox/sensor/common/compliance"
 	"github.com/stackrox/rox/sensor/common/config"
@@ -32,12 +33,14 @@ func NewCentralCommunication(
 	networkPoliciesCommandHandler networkpolicies.CommandHandler,
 	clusterStatusUpdater clusterstatus.Updater,
 	configCommandHandler config.Handler,
-	upgradeCommandHandler upgrade.CommandHandler) CentralCommunication {
+	upgradeCommandHandler upgrade.CommandHandler,
+	otherComponents ...common.SensorComponent) CentralCommunication {
 	return &centralCommunicationImpl{
-		receiver: NewCentralReceiver(scrapeCommandHandler, enforcer, networkPoliciesCommandHandler, configCommandHandler, upgradeCommandHandler),
-		sender:   NewCentralSender(listener, signalService, networkConnManager, scrapeCommandHandler, networkPoliciesCommandHandler, clusterStatusUpdater, configCommandHandler),
+		receiver: NewCentralReceiver(scrapeCommandHandler, enforcer, networkPoliciesCommandHandler, configCommandHandler, upgradeCommandHandler, otherComponents...),
+		sender:   NewCentralSender(listener, signalService, networkConnManager, scrapeCommandHandler, networkPoliciesCommandHandler, clusterStatusUpdater, configCommandHandler, otherComponents...),
 
-		stopC:    concurrency.NewErrorSignal(),
-		stoppedC: concurrency.NewErrorSignal(),
+		stopC:      concurrency.NewErrorSignal(),
+		stoppedC:   concurrency.NewErrorSignal(),
+		components: otherComponents,
 	}
 }

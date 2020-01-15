@@ -4,6 +4,7 @@ import (
 	"github.com/stackrox/rox/generated/internalapi/central"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/listeners"
+	"github.com/stackrox/rox/sensor/common"
 	"github.com/stackrox/rox/sensor/common/clusterstatus"
 	"github.com/stackrox/rox/sensor/common/compliance"
 	"github.com/stackrox/rox/sensor/common/config"
@@ -27,7 +28,8 @@ func NewCentralSender(listener listeners.Listener,
 	scrapeCommandHandler compliance.CommandHandler,
 	networkPoliciesCommandHandler networkpolicies.CommandHandler,
 	clusterStatusUpdater clusterstatus.Updater,
-	configCommandHandler config.Handler) CentralSender {
+	configCommandHandler config.Handler,
+	otherComponents ...common.SensorComponent) CentralSender {
 	return &centralSenderImpl{
 		listener:                      listener,
 		signalService:                 signalService,
@@ -36,6 +38,7 @@ func NewCentralSender(listener listeners.Listener,
 		networkPoliciesCommandHandler: networkPoliciesCommandHandler,
 		clusterStatusUpdater:          clusterStatusUpdater,
 		configCommandHandler:          configCommandHandler,
+		components:                    otherComponents,
 
 		stopC:    concurrency.NewErrorSignal(),
 		stoppedC: concurrency.NewErrorSignal(),

@@ -18,4 +18,5 @@ type ObjectConfig struct {
 type Config struct {
 	Namespaces []string
 	Objects    []ObjectConfig
+	PathPrefix string
 }

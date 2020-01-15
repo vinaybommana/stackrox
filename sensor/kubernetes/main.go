@@ -7,11 +7,13 @@ import (
 
 	"github.com/stackrox/rox/pkg/debughandler"
 	"github.com/stackrox/rox/pkg/devbuild"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/metrics"
 	"github.com/stackrox/rox/pkg/premain"
 	"github.com/stackrox/rox/pkg/utils"
 	"github.com/stackrox/rox/pkg/version"
+	"github.com/stackrox/rox/sensor/common"
 	"github.com/stackrox/rox/sensor/common/config"
 	"github.com/stackrox/rox/sensor/common/networkflow/manager"
 	"github.com/stackrox/rox/sensor/common/sensor"
@@ -20,6 +22,7 @@ import (
 	"github.com/stackrox/rox/sensor/kubernetes/listener"
 	"github.com/stackrox/rox/sensor/kubernetes/networkpolicies"
 	"github.com/stackrox/rox/sensor/kubernetes/orchestrator"
+	"github.com/stackrox/rox/sensor/kubernetes/telemetry"
 	k8sUpgrade "github.com/stackrox/rox/sensor/kubernetes/upgrade"
 )
 
@@ -48,6 +51,11 @@ func main() {
 
 	configHandler := config.NewCommandHandler()
 
+	var sensorComponents []common.SensorComponent
+	if features.DiagnosticBundle.Enabled() || features.Telemetry.Enabled() {
+		sensorComponents = append(sensorComponents, telemetry.NewCommandHandler())
+	}
+
 	s := sensor.NewSensor(
 		listener.New(configHandler),
 		enforcer.MustCreate(),
@@ -57,6 +65,7 @@ func main() {
 		clusterstatus.NewUpdater(),
 		configHandler,
 		upgradeCmdHandler,
+		sensorComponents...,
 	)
 	s.Start()
 

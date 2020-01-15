@@ -6,6 +6,7 @@ import (
 	"github.com/stackrox/rox/generated/internalapi/central"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/listeners"
+	"github.com/stackrox/rox/sensor/common"
 	"github.com/stackrox/rox/sensor/common/clusterstatus"
 	"github.com/stackrox/rox/sensor/common/compliance"
 	"github.com/stackrox/rox/sensor/common/config"
@@ -25,6 +26,7 @@ type centralSenderImpl struct {
 	configCommandHandler          config.Handler
 	networkPoliciesCommandHandler networkpolicies.CommandHandler
 	clusterStatusUpdater          clusterstatus.Updater
+	components                    []common.SensorComponent
 
 	stopC    concurrency.ErrorSignal
 	stoppedC concurrency.ErrorSignal
@@ -42,6 +44,24 @@ func (s *centralSenderImpl) Stopped() concurrency.ReadOnlyErrorSignal {
 	return &s.stoppedC
 }
 
+func (s *centralSenderImpl) forwardResponses(from <-chan *central.MsgFromSensor, to chan<- *central.MsgFromSensor) {
+	for !s.stopC.IsDone() {
+		select {
+		case msg, ok := <-from:
+			if !ok {
+				return
+			}
+			select {
+			case to <- msg:
+			case <-s.stopC.Done():
+				return
+			}
+		case <-s.stopC.Done():
+			return
+		}
+	}
+}
+
 func (s *centralSenderImpl) send(stream central.SensorService_CommunicateClient, onStops ...func(error)) {
 	defer func() {
 		s.stoppedC.SignalWithError(s.stopC.Err())
@@ -51,6 +71,13 @@ func (s *centralSenderImpl) send(stream central.SensorService_CommunicateClient,
 	wrappedStream := metrics.NewCountingEventStream(stream, "unique")
 	wrappedStream = deduper.NewDedupingMessageStream(wrappedStream)
 	wrappedStream = metrics.NewCountingEventStream(wrappedStream, "total")
+
+	componentMsgsC := make(chan *central.MsgFromSensor)
+	for _, component := range s.components {
+		if responsesC := component.ResponsesC(); responsesC != nil {
+			go s.forwardResponses(responsesC, componentMsgsC)
+		}
+	}
 
 	// NB: The centralSenderImpl reserves the right to perform arbitrary reads and writes on the returned objects.
 	// The providers that send the messages below are responsible for making sure that once they send events here,
@@ -122,6 +149,8 @@ func (s *centralSenderImpl) send(stream central.SensorService_CommunicateClient,
 					ClusterStatusUpdate: clusterStatusUpdate,
 				},
 			}
+		case componentMsg := <-componentMsgsC:
+			msg = componentMsg
 		case <-s.stopC.Done():
 			return
 		case <-stream.Context().Done():

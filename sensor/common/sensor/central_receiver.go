@@ -4,6 +4,7 @@ import (
 	"github.com/stackrox/rox/generated/internalapi/central"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/enforcers"
+	"github.com/stackrox/rox/sensor/common"
 	complianceLogic "github.com/stackrox/rox/sensor/common/compliance"
 	"github.com/stackrox/rox/sensor/common/config"
 	"github.com/stackrox/rox/sensor/common/networkpolicies"
@@ -23,13 +24,15 @@ func NewCentralReceiver(scrapeCommandHandler complianceLogic.CommandHandler,
 	enforcer enforcers.Enforcer,
 	networkPoliciesCommandHandler networkpolicies.CommandHandler,
 	configCommandHandler config.Handler,
-	upgradeCommandHandler upgrade.CommandHandler) CentralReceiver {
+	upgradeCommandHandler upgrade.CommandHandler,
+	otherComponents ...common.SensorComponent) CentralReceiver {
 	return &centralReceiverImpl{
 		scrapeCommandHandler:          scrapeCommandHandler,
 		enforcer:                      enforcer,
 		networkPoliciesCommandHandler: networkPoliciesCommandHandler,
 		configCommandHandler:          configCommandHandler,
 		upgradeCommandHandler:         upgradeCommandHandler,
+		components:                    otherComponents,
 
 		stopC:    concurrency.NewErrorSignal(),
 		stoppedC: concurrency.NewErrorSignal(),

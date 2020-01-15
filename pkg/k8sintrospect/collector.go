@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"path"
 	"strings"
 	"time"
 
@@ -31,10 +32,8 @@ var (
 )
 
 type collector struct {
-	started concurrency.Flag
-
-	ctx    concurrency.ErrorWaitable
-	filesC chan<- File
+	ctx      concurrency.ErrorWaitable
+	callback FileCallback
 
 	cfg Config
 
@@ -44,7 +43,7 @@ type collector struct {
 	errors []error
 }
 
-func newCollector(ctx concurrency.ErrorWaitable, k8sRESTConfig *rest.Config, cfg Config, filesC chan<- File) (*collector, error) {
+func newCollector(ctx concurrency.ErrorWaitable, k8sRESTConfig *rest.Config, cfg Config, cb FileCallback) (*collector, error) {
 	restConfigShallowCopy := *k8sRESTConfig
 	oldWrapTransport := restConfigShallowCopy.WrapTransport
 	restConfigShallowCopy.WrapTransport = func(rt http.RoundTripper) http.RoundTripper {
@@ -65,7 +64,7 @@ func newCollector(ctx concurrency.ErrorWaitable, k8sRESTConfig *rest.Config, cfg
 
 	return &collector{
 		ctx:           ctx,
-		filesC:        filesC,
+		callback:      cb,
 		cfg:           cfg,
 		client:        k8sClient,
 		dynamicClient: dynamicClient,
@@ -94,16 +93,11 @@ func (c *collector) emitFile(obj k8sutil.Object, suffix string, data []byte) err
 
 func (c *collector) emitFileRaw(filePath string, data []byte) error {
 	file := File{
-		Path:     filePath,
+		Path:     path.Join(c.cfg.PathPrefix, filePath),
 		Contents: data,
 	}
 
-	select {
-	case c.filesC <- file:
-		return nil
-	case <-c.ctx.Done():
-		return c.ctx.Err()
-	}
+	return c.callback(c.ctx, file)
 }
 
 func (c *collector) createDynamicClients() map[schema.GroupVersionKind]dynamic.NamespaceableResourceInterface {
@@ -136,7 +130,6 @@ func (c *collector) createDynamicClients() map[schema.GroupVersionKind]dynamic.N
 				Kind:    apiResource.Kind,
 			}
 			if _, ok := gvkSet[gvk]; !ok {
-				log.Infof("Resource %v not relevant", gvk)
 				continue
 			}
 			gvr := schema.GroupVersionResource{
@@ -144,7 +137,6 @@ func (c *collector) createDynamicClients() map[schema.GroupVersionKind]dynamic.N
 				Version:  gv.Version,
 				Resource: apiResource.Name,
 			}
-			log.Infof("Creating client for resource %v", gvr)
 			clientMap[gvk] = c.dynamicClient.Resource(gvr)
 		}
 	}
@@ -295,13 +287,8 @@ func (c *collector) collectErrors() error {
 	return c.emitFileRaw("errors.txt", errorsText.Bytes())
 }
 
-// Run performs the collection process. May only be invoked a single time.
+// Run performs the collection process.
 func (c *collector) Run() error {
-	if c.started.TestAndSet(true) {
-		return errors.New("collector already ran once")
-	}
-	defer close(c.filesC)
-
 	clientMap := c.createDynamicClients()
 
 	for _, ns := range c.cfg.Namespaces {

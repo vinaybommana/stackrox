@@ -28,6 +28,7 @@ import (
 	"github.com/stackrox/rox/pkg/probeupload"
 	"github.com/stackrox/rox/pkg/retry"
 	"github.com/stackrox/rox/pkg/utils"
+	"github.com/stackrox/rox/sensor/common"
 	"github.com/stackrox/rox/sensor/common/admissioncontroller"
 	"github.com/stackrox/rox/sensor/common/clusterstatus"
 	"github.com/stackrox/rox/sensor/common/compliance"
@@ -72,6 +73,7 @@ type Sensor struct {
 	configHandler                 config.Handler
 	upgradeCommandHandler         upgrade.CommandHandler
 	complianceService             compliance.Service
+	components                    []common.SensorComponent
 
 	server          pkgGRPC.API
 	profilingServer *http.Server
@@ -85,7 +87,7 @@ type Sensor struct {
 // NewSensor initializes a Sensor, including reading configurations from the environment.
 func NewSensor(l listeners.Listener, e enforcers.Enforcer, o orchestrators.Orchestrator, n networkConnManager.Manager,
 	networkPoliciesCommandHandler networkpolicies.CommandHandler, clusterStatusUpdater clusterstatus.Updater,
-	configHandler config.Handler, upgradeCommandHandler upgrade.CommandHandler) *Sensor {
+	configHandler config.Handler, upgradeCommandHandler upgrade.CommandHandler, components ...common.SensorComponent) *Sensor {
 
 	complianceService := compliance.NewService(o)
 	return &Sensor{
@@ -103,6 +105,7 @@ func NewSensor(l listeners.Listener, e enforcers.Enforcer, o orchestrators.Orche
 		clusterStatusUpdater:          clusterStatusUpdater,
 		configHandler:                 configHandler,
 		upgradeCommandHandler:         upgradeCommandHandler,
+		components:                    components,
 
 		stoppedSig: concurrency.NewErrorSignal(),
 	}
@@ -241,6 +244,12 @@ func (s *Sensor) Start() {
 		}
 	}
 
+	for _, component := range s.components {
+		if err := component.Start(); err != nil {
+			log.Panicf("Sensor component %T failed to start: %v", component, err)
+		}
+	}
+
 	// Wait for central so we can initiate our GRPC connection to send sensor events.
 	s.waitUntilCentralIsReady(s.centralConnection)
 
@@ -266,6 +275,9 @@ func (s *Sensor) Stop() {
 		if toStop != nil {
 			toStop.Stop()
 		}
+	}
+	for _, component := range s.components {
+		component.Stop(nil)
 	}
 
 	if s.profilingServer != nil {
@@ -324,7 +336,8 @@ func pollMetadataWithTimeout(svc v1.MetadataServiceClient) error {
 
 func (s *Sensor) communicationWithCentral(centralReachable *concurrency.Flag) {
 	s.centralCommunication = NewCentralCommunication(s.commandHandler, s.enforcer, s.listener, signalService.Singleton(),
-		s.networkConnManager, s.networkPoliciesCommandHandler, s.clusterStatusUpdater, s.configHandler, s.upgradeCommandHandler)
+		s.networkConnManager, s.networkPoliciesCommandHandler, s.clusterStatusUpdater, s.configHandler, s.upgradeCommandHandler,
+		s.components...)
 
 	s.centralCommunication.Start(s.centralConnection, centralReachable, s.configHandler)
 

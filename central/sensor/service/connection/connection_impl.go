@@ -8,8 +8,11 @@ import (
 	"github.com/stackrox/rox/central/sensor/networkpolicies"
 	"github.com/stackrox/rox/central/sensor/service/pipeline"
 	"github.com/stackrox/rox/central/sensor/service/recorder"
+	"github.com/stackrox/rox/central/sensor/telemetry"
 	"github.com/stackrox/rox/generated/internalapi/central"
+	"github.com/stackrox/rox/pkg/centralsensor"
 	"github.com/stackrox/rox/pkg/concurrency"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/reflectutils"
 	"github.com/stackrox/rox/pkg/sac"
@@ -28,6 +31,7 @@ type sensorConnection struct {
 
 	scrapeCtrl          scrape.Controller
 	networkPoliciesCtrl networkpolicies.Controller
+	telemetryCtrl       telemetry.Controller
 
 	sensorEventHandler *sensorEventHandler
 
@@ -36,9 +40,11 @@ type sensorConnection struct {
 	eventPipeline pipeline.ClusterPipeline
 
 	clusterMgr ClusterManager
+
+	capabilities centralsensor.SensorCapabilitySet
 }
 
-func newConnection(clusterID string, eventPipeline pipeline.ClusterPipeline, clusterMgr ClusterManager) *sensorConnection {
+func newConnection(ctx context.Context, clusterID string, eventPipeline pipeline.ClusterPipeline, clusterMgr ClusterManager) *sensorConnection {
 	conn := &sensorConnection{
 		stopSig:       concurrency.NewErrorSignal(),
 		stoppedSig:    concurrency.NewErrorSignal(),
@@ -48,12 +54,17 @@ func newConnection(clusterID string, eventPipeline pipeline.ClusterPipeline, clu
 
 		clusterID:  clusterID,
 		clusterMgr: clusterMgr,
+
+		capabilities: centralsensor.ExtractCapsFromContext(ctx),
 	}
 
 	// Need a reference to conn for injector
 	conn.sensorEventHandler = newSensorEventHandler(eventPipeline, conn, &conn.stopSig)
 	conn.scrapeCtrl = scrape.NewController(conn, &conn.stopSig)
 	conn.networkPoliciesCtrl = networkpolicies.NewController(conn, &conn.stopSig)
+	if features.Telemetry.Enabled() || features.DiagnosticBundle.Enabled() {
+		conn.telemetryCtrl = telemetry.NewController(conn, &conn.stopSig)
+	}
 
 	return conn
 }
@@ -129,6 +140,10 @@ func (c *sensorConnection) NetworkPolicies() networkpolicies.Controller {
 	return c.networkPoliciesCtrl
 }
 
+func (c *sensorConnection) Telemetry() telemetry.Controller {
+	return c.telemetryCtrl
+}
+
 func (c *sensorConnection) InjectMessage(ctx concurrency.Waitable, msg *central.MsgToSensor) error {
 	select {
 	case c.sendC <- msg:
@@ -146,6 +161,11 @@ func (c *sensorConnection) handleMessage(ctx context.Context, msg *central.MsgFr
 		return c.scrapeCtrl.ProcessScrapeUpdate(m.ScrapeUpdate)
 	case *central.MsgFromSensor_NetworkPoliciesResponse:
 		return c.networkPoliciesCtrl.ProcessNetworkPoliciesResponse(m.NetworkPoliciesResponse)
+	case *central.MsgFromSensor_TelemetryDataResponse:
+		if c.telemetryCtrl != nil {
+			return c.telemetryCtrl.ProcessTelemetryDataResponse(m.TelemetryDataResponse)
+		}
+		return errors.New("received unsupported telemetry message from sensor")
 	case *central.MsgFromSensor_Event:
 		// Special case the reprocess deployment because its fields are already set
 		if msg.GetEvent().GetReprocessDeployment() != nil {
@@ -205,4 +225,8 @@ func (c *sensorConnection) Run(ctx context.Context, server central.SensorService
 
 func (c *sensorConnection) ClusterID() string {
 	return c.clusterID
+}
+
+func (c *sensorConnection) HasCapability(capability centralsensor.SensorCapability) bool {
+	return c.capabilities.Contains(capability)
 }
