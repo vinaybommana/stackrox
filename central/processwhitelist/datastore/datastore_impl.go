@@ -41,19 +41,19 @@ func (ds *datastoreImpl) Search(ctx context.Context, q *v1.Query) ([]pkgSearch.R
 	return ds.searcher.Search(ctx, q)
 }
 
-func (ds *datastoreImpl) GetProcessWhitelist(ctx context.Context, key *storage.ProcessWhitelistKey) (*storage.ProcessWhitelist, error) {
+func (ds *datastoreImpl) GetProcessWhitelist(ctx context.Context, key *storage.ProcessWhitelistKey) (*storage.ProcessWhitelist, bool, error) {
 	if ok, err := processWhitelistSAC.ScopeChecker(ctx, storage.Access_READ_ACCESS).ForNamespaceScopedObject(key).Allowed(ctx); err != nil || !ok {
-		return nil, err
+		return nil, false, err
 	}
 	id, err := keyToID(key)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	processWhitelist, err := ds.storage.GetWhitelist(id)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
-	return processWhitelist, nil
+	return processWhitelist, processWhitelist != nil, nil
 }
 
 func (ds *datastoreImpl) AddProcessWhitelist(ctx context.Context, whitelist *storage.ProcessWhitelist) (string, error) {
@@ -288,12 +288,12 @@ func (ds *datastoreImpl) UpsertProcessWhitelist(ctx context.Context, key *storag
 	ds.whitelistLock.Lock(id)
 	defer ds.whitelistLock.Unlock(id)
 
-	whitelist, err := ds.GetProcessWhitelist(ctx, key)
+	whitelist, exists, err := ds.GetProcessWhitelist(ctx, key)
 	if err != nil {
 		return nil, err
 	}
 
-	if whitelist != nil {
+	if exists {
 		return ds.updateProcessWhitelistElementsUnlocked(whitelist, addElements, nil, auto)
 	}
 

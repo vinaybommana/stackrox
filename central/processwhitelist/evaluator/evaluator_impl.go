@@ -57,7 +57,7 @@ func (e *evaluator) EvaluateWhitelistsAndPersistResult(deployment *storage.Deplo
 	containerNameToWhitelistedProcesses := make(map[string]*set.StringSet)
 	containerNameToWhitelistResults := make(map[string]*storage.ContainerNameAndWhitelistStatus)
 	for _, container := range deployment.GetContainers() {
-		whitelist, err := e.whitelists.GetProcessWhitelist(evaluatorCtx, &storage.ProcessWhitelistKey{
+		whitelist, exists, err := e.whitelists.GetProcessWhitelist(evaluatorCtx, &storage.ProcessWhitelistKey{
 			DeploymentId:  deployment.GetId(),
 			ContainerName: container.GetName(),
 			ClusterId:     deployment.GetClusterId(),
@@ -70,7 +70,7 @@ func (e *evaluator) EvaluateWhitelistsAndPersistResult(deployment *storage.Deplo
 			ContainerName:   container.GetName(),
 			WhitelistStatus: getWhitelistStatus(whitelist),
 		}
-		if whitelist == nil {
+		if !exists {
 			continue
 		}
 		processSet := processwhitelist.Processes(whitelist, processwhitelist.RoxOrUserLocked)

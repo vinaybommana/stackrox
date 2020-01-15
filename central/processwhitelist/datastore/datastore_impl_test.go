@@ -110,16 +110,18 @@ func (suite *ProcessWhitelistDataStoreTestSuite) createAndStoreWhitelistWithRand
 	})
 }
 
-func (suite *ProcessWhitelistDataStoreTestSuite) doGet(key *storage.ProcessWhitelistKey, exists bool, equals *storage.ProcessWhitelist) *storage.ProcessWhitelist {
-	whitelist, err := suite.datastore.GetProcessWhitelist(suite.requestContext, key)
+func (suite *ProcessWhitelistDataStoreTestSuite) doGet(key *storage.ProcessWhitelistKey, shouldExist bool, equals *storage.ProcessWhitelist) *storage.ProcessWhitelist {
+	whitelist, exists, err := suite.datastore.GetProcessWhitelist(suite.requestContext, key)
 	suite.NoError(err)
-	if exists {
+	if shouldExist {
+		suite.True(exists)
 		suite.NotNil(whitelist)
 		if equals != nil {
 			suite.Equal(equals, whitelist)
 		}
 	} else {
 		suite.Nil(whitelist)
+		suite.False(exists)
 	}
 	return whitelist
 }

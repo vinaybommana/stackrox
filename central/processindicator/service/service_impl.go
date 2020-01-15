@@ -119,8 +119,8 @@ func (s *serviceImpl) getElementSet(ctx context.Context, deploymentID string, co
 		DeploymentId:  deploymentID,
 		ContainerName: containerName,
 	}
-	whitelist, err := s.whitelists.GetProcessWhitelist(ctx, key)
-	if err != nil {
+	whitelist, exists, err := s.whitelists.GetProcessWhitelist(ctx, key)
+	if !exists || err != nil {
 		return nil, err
 	}
 	return processwhitelist.Processes(whitelist, processwhitelist.RoxOrUserLocked), nil

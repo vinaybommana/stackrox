@@ -20,7 +20,7 @@ type DataStore interface {
 	SearchRawProcessWhitelists(ctx context.Context, q *v1.Query) ([]*storage.ProcessWhitelist, error)
 	Search(ctx context.Context, q *v1.Query) ([]pkgSearch.Result, error)
 
-	GetProcessWhitelist(ctx context.Context, key *storage.ProcessWhitelistKey) (*storage.ProcessWhitelist, error)
+	GetProcessWhitelist(ctx context.Context, key *storage.ProcessWhitelistKey) (*storage.ProcessWhitelist, bool, error)
 	AddProcessWhitelist(ctx context.Context, whitelist *storage.ProcessWhitelist) (string, error)
 	RemoveProcessWhitelist(ctx context.Context, key *storage.ProcessWhitelistKey) error
 	RemoveProcessWhitelistsByDeployment(ctx context.Context, deploymentID string) error

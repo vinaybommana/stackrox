@@ -240,13 +240,13 @@ func (m *managerImpl) checkWhitelist(indicator *storage.ProcessIndicator) (userW
 	}
 
 	// TODO joseph what to do if whitelist doesn't exist?  Always create for now?
-	whitelist, err := m.whitelists.GetProcessWhitelist(lifecycleMgrCtx, key)
+	whitelist, exists, err := m.whitelists.GetProcessWhitelist(lifecycleMgrCtx, key)
 	if err != nil {
 		return
 	}
 
 	insertableElement := &storage.WhitelistItem{Item: &storage.WhitelistItem_ProcessName{ProcessName: processwhitelist.WhitelistItemFromProcess(indicator)}}
-	if whitelist == nil {
+	if !exists {
 		_, err = m.whitelists.UpsertProcessWhitelist(lifecycleMgrCtx, key, []*storage.WhitelistItem{insertableElement}, true)
 		if err == nil {
 			// This updates the risk for deployments after the whitelist gets locked.

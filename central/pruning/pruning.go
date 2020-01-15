@@ -178,13 +178,13 @@ func (g *garbageCollectorImpl) removeOrphanedProcessWhitelists(deployments set.F
 
 		now := types.TimestampNow()
 		for _, whitelistKey := range whitelistKeysToPrune {
-			whitelist, err := g.processwhitelist.GetProcessWhitelist(pruningCtx, whitelistKey)
+			whitelist, exists, err := g.processwhitelist.GetProcessWhitelist(pruningCtx, whitelistKey)
 			if err != nil {
 				log.Error(errors.Wrapf(err, "unable to fetch whitelist for key %v", whitelistKey))
 				continue
 			}
 
-			if protoutils.Sub(now, whitelist.Created) < orphanWindow {
+			if !exists || protoutils.Sub(now, whitelist.GetCreated()) < orphanWindow {
 				continue
 			}
 

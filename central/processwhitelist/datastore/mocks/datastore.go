@@ -67,12 +67,13 @@ func (mr *MockDataStoreMockRecorder) Search(ctx, q interface{}) *gomock.Call {
 }
 
 // GetProcessWhitelist mocks base method
-func (m *MockDataStore) GetProcessWhitelist(ctx context.Context, key *storage.ProcessWhitelistKey) (*storage.ProcessWhitelist, error) {
+func (m *MockDataStore) GetProcessWhitelist(ctx context.Context, key *storage.ProcessWhitelistKey) (*storage.ProcessWhitelist, bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProcessWhitelist", ctx, key)
 	ret0, _ := ret[0].(*storage.ProcessWhitelist)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(bool)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetProcessWhitelist indicates an expected call of GetProcessWhitelist

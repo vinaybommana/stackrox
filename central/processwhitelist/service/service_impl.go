@@ -66,11 +66,11 @@ func (s *serviceImpl) GetProcessWhitelist(ctx context.Context, request *v1.GetPr
 	if err := validateKeyNotEmpty(request.GetKey()); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
-	whitelist, err := s.dataStore.GetProcessWhitelist(ctx, request.GetKey())
+	whitelist, exists, err := s.dataStore.GetProcessWhitelist(ctx, request.GetKey())
 	if err != nil {
 		return nil, err
 	}
-	if whitelist == nil {
+	if !exists {
 		return nil, status.Errorf(codes.NotFound, "No process whitelist with key %+v found", request.GetKey())
 	}
 	return whitelist, nil
