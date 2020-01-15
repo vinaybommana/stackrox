@@ -42,7 +42,7 @@ export function enhanceWordBreak({ doc, cell, column }) {
 
     // calculate longest word width
     const maxWordUnitWidth = words
-        .map(s => Math.floor(doc.getStringUnitWidth(s) * 100) / 100)
+        .map(s => s && Math.floor(doc.getStringUnitWidth(s) * 100) / 100)
         .reduce((a, b) => Math.max(a, b), 0);
     const maxWordWidth = maxWordUnitWidth * (cell.styles.fontSize / doc.internal.scaleFactor);
 
