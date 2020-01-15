@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 
+import { getUserName } from 'services/AuthService';
+
 import CommentThread from 'Components/CommentThread';
 
 const defaultComments = [
     {
         id: '1',
         message: 'Completely unrelated, but check out this subreddit https://www.reddit.com/r/aww/',
-        email: 'sc@stackrox.com',
+        user: 'Saif Chaudhry',
         createdTime: '2019-12-29T21:21:31.218853651Z',
         updatedTime: '2019-12-30T21:21:31.218853651Z',
         canModify: true
@@ -14,7 +16,7 @@ const defaultComments = [
     {
         id: '2',
         message: 'Oh nice! This is the content I like',
-        email: 'ls@stackrox.com',
+        user: 'Linda Song',
         createdTime: '2019-12-30T21:21:31.218853651Z',
         updatedTime: '2019-12-30T21:21:31.218853651Z',
         canModify: false
@@ -22,7 +24,7 @@ const defaultComments = [
     {
         id: '3',
         message: 'Also, do you want to hear a joke?',
-        email: 'sc@stackrox.com',
+        user: 'Saif Chaudhry',
         createdTime: '2019-12-30T22:21:31.218853651Z',
         updatedTime: '2019-12-30T22:21:31.218853651Z',
         canModify: true
@@ -30,7 +32,7 @@ const defaultComments = [
     {
         id: '4',
         message: 'No',
-        email: 'ls@stackrox.com',
+        user: 'Linda Song',
         createdTime: '2019-12-31T21:21:31.218853651Z',
         updatedTime: '2019-12-31T21:21:31.218853651Z',
         canModify: false
@@ -40,9 +42,18 @@ const defaultComments = [
 const ProcessComments = () => {
     const [comments, setComments] = useState(defaultComments);
 
+    const currentUser = getUserName();
+
     function onSave(comment, message) {
         const newComments = comments.filter(datum => datum.id !== comment.id);
-        newComments.push({ ...comment, message });
+        const newComment = { ...comment, message };
+        if (!comment.id) {
+            newComment.id = comments.length;
+            newComment.createdTime = new Date().toISOString();
+        } else {
+            newComment.updatedTime = new Date().toISOString();
+        }
+        newComments.push(newComment);
         setComments(newComments);
     }
 
@@ -50,7 +61,16 @@ const ProcessComments = () => {
         setComments(comments.filter(datum => datum.id !== comment.id));
     }
 
-    return <CommentThread type="Process" comments={comments} onSave={onSave} onDelete={onDelete} />;
+    return (
+        <CommentThread
+            type="Process"
+            currentUser={currentUser}
+            comments={comments}
+            onSave={onSave}
+            onDelete={onDelete}
+            defaultOpen={false}
+        />
+    );
 };
 
 export default ProcessComments;

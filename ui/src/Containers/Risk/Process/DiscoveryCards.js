@@ -7,7 +7,7 @@ import { knownBackendFlags } from 'utils/featureFlags';
 import FeatureEnabled from 'Containers/FeatureEnabled';
 import ProcessDiscoveryCard from './DiscoveryCard';
 import Binaries from './Binaries';
-import ProcessComments from './ProcessComments';
+import RiskProcessComments from './RiskProcessComments';
 
 function DiscoveryCards({ deploymentId, processGroup, processEpoch, setProcessEpoch }) {
     const sortedProcessGroups = orderBy(
@@ -25,7 +25,7 @@ function DiscoveryCards({ deploymentId, processGroup, processEpoch, setProcessEp
             >
                 <div className="p-2">
                     <FeatureEnabled featureFlag={knownBackendFlags.ROX_IQT_ANALYST_NOTES_UI}>
-                        <ProcessComments />
+                        <RiskProcessComments />
                     </FeatureEnabled>
                 </div>
                 <Binaries processes={pg.groups} />

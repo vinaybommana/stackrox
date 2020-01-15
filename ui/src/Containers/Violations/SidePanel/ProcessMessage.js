@@ -6,7 +6,8 @@ import dateTimeFormat from 'constants/dateTimeFormat';
 import { knownBackendFlags } from 'utils/featureFlags';
 
 import FeatureEnabled from 'Containers/FeatureEnabled';
-import ProcessComments from './ProcessComments';
+import ViolationProcessComments from './ViolationProcessComments';
+import ViolationProcessTags from './ViolationProcessTags';
 
 function KeyValue({ label, value }) {
     return (
@@ -51,7 +52,10 @@ function ProcessMessage({ process }) {
             {ancestors}
             <div className="mb-4 p-2">
                 <FeatureEnabled featureFlag={knownBackendFlags.ROX_IQT_ANALYST_NOTES_UI}>
-                    <ProcessComments />
+                    <div className="mb-3">
+                        <ViolationProcessTags />
+                    </div>
+                    <ViolationProcessComments />
                 </FeatureEnabled>
             </div>
         </div>
