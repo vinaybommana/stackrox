@@ -3,14 +3,23 @@ import PropTypes from 'prop-types';
 import Tooltip from 'rc-tooltip';
 import 'rc-tooltip/assets/bootstrap.css';
 
-const PanelButton = ({ children, icon, text, onClick, className, disabled, tooltip }) => {
-    const tooltipText = tooltip || text;
+const PanelButton = ({
+    children,
+    icon,
+    text,
+    onClick,
+    className,
+    disabled,
+    tooltip,
+    alwaysVisibleText
+}) => {
+    const tooltipContent = tooltip || text;
     const tooltipClassName = !tooltip ? 'visible xl:invisible' : '';
     return (
         <Tooltip
             placement="top"
             mouseLeaveDelay={0}
-            overlay={<div>{tooltipText}</div>}
+            overlay={<div>{tooltipContent}</div>}
             overlayClassName={tooltipClassName}
         >
             <button
@@ -21,7 +30,11 @@ const PanelButton = ({ children, icon, text, onClick, className, disabled, toolt
                 data-test-id={`${text.toLowerCase()}-button`}
             >
                 {icon && <span className="flex items-center">{icon}</span>}
-                {children && <span className="mx-2 hidden xl:flex items-center">{children}</span>}
+                {children && (
+                    <span className={`mx-2 items-center ${alwaysVisibleText ? 'flex' : 'hidden'}`}>
+                        {children}
+                    </span>
+                )}
             </button>
         </Tooltip>
     );
@@ -34,7 +47,8 @@ PanelButton.propTypes = {
     onClick: PropTypes.func.isRequired,
     className: PropTypes.string,
     disabled: PropTypes.bool,
-    tooltip: PropTypes.string
+    tooltip: PropTypes.node,
+    alwaysVisibleText: PropTypes.bool
 };
 
 PanelButton.defaultProps = {
@@ -43,7 +57,8 @@ PanelButton.defaultProps = {
     text: '',
     className: '',
     disabled: false,
-    tooltip: ''
+    tooltip: '',
+    alwaysVisibleText: false
 };
 
 export default PanelButton;
