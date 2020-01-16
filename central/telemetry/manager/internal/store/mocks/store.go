@@ -8,6 +8,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	storage "github.com/stackrox/rox/generated/storage"
 	reflect "reflect"
+	time "time"
 )
 
 // MockStore is a mock of Store interface
@@ -60,4 +61,33 @@ func (m *MockStore) SetTelemetryConfig(configuration *storage.TelemetryConfigura
 func (mr *MockStoreMockRecorder) SetTelemetryConfig(configuration interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTelemetryConfig", reflect.TypeOf((*MockStore)(nil).SetTelemetryConfig), configuration)
+}
+
+// GetNextSendTime mocks base method
+func (m *MockStore) GetNextSendTime() (time.Time, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetNextSendTime")
+	ret0, _ := ret[0].(time.Time)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNextSendTime indicates an expected call of GetNextSendTime
+func (mr *MockStoreMockRecorder) GetNextSendTime() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNextSendTime", reflect.TypeOf((*MockStore)(nil).GetNextSendTime))
+}
+
+// SetNextSendTime mocks base method
+func (m *MockStore) SetNextSendTime(t time.Time) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetNextSendTime", t)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetNextSendTime indicates an expected call of SetNextSendTime
+func (mr *MockStoreMockRecorder) SetNextSendTime(t interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetNextSendTime", reflect.TypeOf((*MockStore)(nil).SetNextSendTime), t)
 }

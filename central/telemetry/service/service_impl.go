@@ -5,7 +5,7 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/stackrox/rox/central/role/resources"
-	"github.com/stackrox/rox/central/telemetry/datastore"
+	"github.com/stackrox/rox/central/telemetry/manager"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/auth/permissions"
@@ -27,7 +27,7 @@ var (
 )
 
 type serviceImpl struct {
-	dataStore datastore.DataStore
+	manager manager.Manager
 }
 
 func (s *serviceImpl) AuthFuncOverride(ctx context.Context, fullMethodName string) (context.Context, error) {
@@ -43,9 +43,12 @@ func (s *serviceImpl) RegisterServiceHandler(ctx context.Context, mux *runtime.S
 }
 
 func (s *serviceImpl) GetTelemetryConfiguration(ctx context.Context, _ *v1.Empty) (*storage.TelemetryConfiguration, error) {
-	return s.dataStore.GetConfig(ctx)
+	return s.manager.GetTelemetryConfig(ctx)
 }
 
 func (s *serviceImpl) ConfigureTelemetry(ctx context.Context, config *storage.TelemetryConfiguration) (*storage.TelemetryConfiguration, error) {
-	return s.dataStore.SetConfig(ctx, config)
+	if err := s.manager.UpdateTelemetryConfig(ctx, config); err != nil {
+		return nil, err
+	}
+	return config, nil
 }

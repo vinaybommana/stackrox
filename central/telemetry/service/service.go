@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	"github.com/stackrox/rox/central/telemetry/datastore"
+	"github.com/stackrox/rox/central/telemetry/manager"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/pkg/grpc"
 	"github.com/stackrox/rox/pkg/logging"
@@ -23,8 +23,8 @@ type Service interface {
 }
 
 // New returns a new Service instance using the given DataStore.
-func New(store datastore.DataStore) Service {
+func New(mgr manager.Manager) Service {
 	return &serviceImpl{
-		dataStore: store,
+		manager: mgr,
 	}
 }

@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"crypto/sha256"
 	"io/ioutil"
 	"sort"
 	"time"
@@ -16,6 +17,7 @@ import (
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/buildinfo"
 	"github.com/stackrox/rox/pkg/concurrency"
+	"github.com/stackrox/rox/pkg/license"
 	"github.com/stackrox/rox/pkg/license/validator"
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/sac"
@@ -576,4 +578,32 @@ func (m *manager) GetLicenseStatus() v1.Metadata_LicenseStatus {
 	defer m.mutex.RUnlock()
 
 	return m.licenseStatus
+}
+
+func (m *manager) SignWithLicenseKeyHash(licenseID string, payload []byte) ([]byte, error) {
+	var licenseKey string
+	concurrency.WithRLock(&m.mutex, func() {
+		licData := m.licenses[licenseID]
+		if licData != nil {
+			licenseKey = licData.licenseKey
+		}
+	})
+	if licenseKey == "" {
+		return nil, errors.Errorf("unknown license %q", licenseID)
+	}
+
+	normalizedKey, err := license.NormalizeLicenseKey(licenseKey)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to normalize license key")
+	}
+
+	keyFP := sha256.Sum256([]byte(normalizedKey))
+
+	sigInput := make([]byte, 0, 2*len(keyFP)+len(payload))
+	sigInput = append(sigInput, keyFP[:]...)
+	sigInput = append(sigInput, payload...)
+	sigInput = append(sigInput, keyFP[:]...)
+
+	signature := sha256.Sum256(sigInput)
+	return signature[:], nil
 }

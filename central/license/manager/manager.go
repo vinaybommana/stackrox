@@ -24,6 +24,8 @@ type LicenseManager interface {
 	SelectLicense(licenseID string) (*v1.LicenseInfo, error)
 
 	GetLicenseStatus() v1.Metadata_LicenseStatus
+
+	SignWithLicenseKeyHash(licenseID string, payload []byte) ([]byte, error)
 }
 
 // New creates and returns a new license manager, using the given license key store and validator.
