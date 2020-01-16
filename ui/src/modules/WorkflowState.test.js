@@ -517,4 +517,31 @@ describe('WorkflowState', () => {
             { t: entityTypes.DEPLOYMENT }
         ]);
     });
+
+    describe('getCurrentEntityType', () => {
+        it('returns the type of the last (current) entity on the state stack', () => {
+            const workflowState = new WorkflowState(useCase, [
+                new WorkflowEntity(entityTypes.IMAGE),
+                new WorkflowEntity(entityTypes.IMAGE, entityId1),
+                new WorkflowEntity(entityTypes.DEPLOYMENT),
+                new WorkflowEntity(entityTypes.DEPLOYMENT, entityId2)
+            ]);
+
+            expect(workflowState.getCurrentEntityType()).toEqual(entityTypes.DEPLOYMENT);
+        });
+
+        it('returns the type of the only entity on the state stack', () => {
+            const workflowState = new WorkflowState(useCase, [
+                new WorkflowEntity(entityTypes.IMAGE)
+            ]);
+
+            expect(workflowState.getCurrentEntityType()).toEqual(entityTypes.IMAGE);
+        });
+
+        it('returns null when there is nothing on the state stack', () => {
+            const workflowState = new WorkflowState(useCase, []);
+
+            expect(workflowState.getCurrentEntityType()).toEqual(null);
+        });
+    });
 });

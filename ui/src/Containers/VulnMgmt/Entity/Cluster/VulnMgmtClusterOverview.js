@@ -14,7 +14,10 @@ import { getCveTableColumns } from 'Containers/VulnMgmt/List/Cves/VulnMgmtListCv
 import entityTypes from 'constants/entityTypes';
 import { overviewLimit } from 'constants/workflowPages.constants';
 import { entityGridContainerClassName } from 'Containers/Workflow/WorkflowEntityPage';
+import { exportCvesAsCsv } from 'services/VulnerabilitiesService';
+import { getCveExportName } from 'utils/vulnerabilityUtils';
 
+import FixableCveExportButton from '../../VulnMgmtComponents/FixableCveExportButton';
 import TopRiskyEntitiesByVulnerabilities from '../../widgets/TopRiskyEntitiesByVulnerabilities';
 import RecentlyDetectedVulnerabilities from '../../widgets/RecentlyDetectedVulnerabilities';
 import TopRiskiestImagesAndComponents from '../../widgets/TopRiskiestImagesAndComponents';
@@ -66,6 +69,17 @@ const VulnMgmtClusterOverview = ({ data, entityContext }) => {
     const { failingPolicies } = policyStatus;
     const fixableCves = vulnerabilities.filter(cve => cve.isFixable);
 
+    function customCsvExportHandler() {
+        const { useCase } = workflowState;
+        const pageEntityType = workflowState.getCurrentEntityType();
+        const entityName = safeData.name;
+        const csvName = getCveExportName(useCase, pageEntityType, entityName);
+
+        const stateWithFixable = workflowState.setSearch({ 'Fixed By': 'r/.*' });
+
+        exportCvesAsCsv(csvName, stateWithFixable);
+    }
+
     function yesNoMaybe(value) {
         if (!value && value !== false) {
             return '—';
@@ -97,6 +111,12 @@ const VulnMgmtClusterOverview = ({ data, entityContext }) => {
     ];
 
     const newEntityContext = { ...entityContext, [entityTypes.CLUSTER]: id };
+    const cveActions = (
+        <FixableCveExportButton
+            disabled={!fixableCves || !fixableCves.length}
+            clickHandler={customCsvExportHandler}
+        />
+    );
 
     return (
         <div className="flex h-full">
@@ -171,6 +191,7 @@ const VulnMgmtClusterOverview = ({ data, entityContext }) => {
                                         entityTypes.CVE,
                                         fixableCves.length
                                     )} found across this cluster`}
+                                    headerActions={cveActions}
                                     rows={fixableCves}
                                     entityType={entityTypes.CVE}
                                     noDataText="No fixable CVEs available in this cluster"

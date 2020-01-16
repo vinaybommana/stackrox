@@ -10,7 +10,10 @@ import Metadata from 'Components/Metadata';
 import CvesByCvssScore from 'Containers/VulnMgmt/widgets/CvesByCvssScore';
 import { getCveTableColumns } from 'Containers/VulnMgmt/List/Cves/VulnMgmtListCves';
 import { entityGridContainerClassName } from 'Containers/Workflow/WorkflowEntityPage';
+import { exportCvesAsCsv } from 'services/VulnerabilitiesService';
+import { getCveExportName } from 'utils/vulnerabilityUtils';
 
+import FixableCveExportButton from '../../VulnMgmtComponents/FixableCveExportButton';
 import TableWidget from '../TableWidget';
 import RelatedEntitiesSideList from '../RelatedEntitiesSideList';
 
@@ -49,7 +52,24 @@ function VulnMgmtComponentOverview({ data, entityContext }) {
         );
     }
 
+    function customCsvExportHandler() {
+        const { useCase } = workflowState;
+        const pageEntityType = workflowState.getCurrentEntityType();
+        const entityName = safeData.name;
+        const csvName = getCveExportName(useCase, pageEntityType, entityName);
+
+        const stateWithFixable = workflowState.setSearch({ 'Fixed By': 'r/.*' });
+
+        exportCvesAsCsv(csvName, stateWithFixable);
+    }
+
     const newEntityContext = { ...entityContext, [entityTypes.COMPONENT]: id };
+    const cveActions = (
+        <FixableCveExportButton
+            disabled={!fixableCVEs || !fixableCVEs.length}
+            clickHandler={customCsvExportHandler}
+        />
+    );
 
     return (
         <div className="flex h-full">
@@ -71,13 +91,14 @@ function VulnMgmtComponentOverview({ data, entityContext }) {
                         </div>
                     </div>
                 </CollapsibleSection>
-                <CollapsibleSection title="Component Findings">
+                <CollapsibleSection title="Component Findings" headerComponents={cveActions}>
                     <div className="flex pdf-page pdf-stretch shadow rounded relative rounded bg-base-100 mb-4 ml-4 mr-4">
                         <TableWidget
                             header={`${fixableCVEs.length} fixable ${pluralize(
                                 entityTypes.CVE,
                                 fixableCVEs.length
                             )} found across this component`}
+                            headerActions={cveActions}
                             rows={fixableCVEs}
                             entityType={entityTypes.CVE}
                             noDataText="No fixable CVEs available in this component"

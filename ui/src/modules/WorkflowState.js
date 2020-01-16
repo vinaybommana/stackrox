@@ -142,6 +142,15 @@ export class WorkflowState {
         return this.stateStack.slice(-1)[0];
     }
 
+    // Returns type of the current entity (top of stack)
+    getCurrentEntityType() {
+        const currentEntity = this.getCurrentEntity();
+
+        if (!currentEntity) return null;
+
+        return currentEntity.t;
+    }
+
     // Returns base (first) entity of stack
     getBaseEntity() {
         if (!this.stateStack.length) return null;

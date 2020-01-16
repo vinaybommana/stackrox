@@ -18,9 +18,13 @@ import workflowStateContext from 'Containers/workflowStateContext';
 import { getPolicyTableColumns } from 'Containers/VulnMgmt/List/Policies/VulnMgmtListPolicies';
 import { getCveTableColumns } from 'Containers/VulnMgmt/List/Cves/VulnMgmtListCves';
 import { entityGridContainerClassName } from 'Containers/Workflow/WorkflowEntityPage';
+import { exportCvesAsCsv } from 'services/VulnerabilitiesService';
+import { getCveExportName } from 'utils/vulnerabilityUtils';
+
 // TO DO: factor this out from config management
 import ViolationsAcrossThisDeployment from 'Containers/ConfigManagement/Entity/widgets/ViolationsAcrossThisDeployment';
 
+import FixableCveExportButton from '../../VulnMgmtComponents/FixableCveExportButton';
 import RelatedEntitiesSideList from '../RelatedEntitiesSideList';
 import TableWidget from '../TableWidget';
 
@@ -64,6 +68,17 @@ const VulnMgmtDeploymentOverview = ({ data, entityContext }) => {
 
     const metadataKeyValuePairs = [];
 
+    function customCsvExportHandler() {
+        const { useCase } = workflowState;
+        const pageEntityType = workflowState.getCurrentEntityType();
+        const entityName = safeData.name;
+        const csvName = getCveExportName(useCase, pageEntityType, entityName);
+
+        const stateWithFixable = workflowState.setSearch({ 'Fixed By': 'r/.*' });
+
+        exportCvesAsCsv(csvName, stateWithFixable);
+    }
+
     const fixableCves = vulnerabilities.filter(cve => cve.isFixable);
 
     if (!entityContext[entityTypes.CLUSTER]) {
@@ -94,6 +109,12 @@ const VulnMgmtDeploymentOverview = ({ data, entityContext }) => {
     ];
 
     const newEntityContext = { ...entityContext, [entityTypes.DEPLOYMENT]: id };
+    const cveActions = (
+        <FixableCveExportButton
+            disabled={!fixableCves || !fixableCves.length}
+            clickHandler={customCsvExportHandler}
+        />
+    );
 
     let deploymentFindingsContent = null;
     if (entityContext[entityTypes.POLICY]) {
@@ -127,6 +148,7 @@ const VulnMgmtDeploymentOverview = ({ data, entityContext }) => {
                                 entityTypes.CVE,
                                 fixableCves.length
                             )} found across this deployment`}
+                            headerActions={cveActions}
                             rows={fixableCves}
                             entityType={entityTypes.CVE}
                             noDataText="No fixable CVEs available in this deployment"
