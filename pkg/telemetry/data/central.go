@@ -10,27 +10,35 @@ import (
 
 // GRPCInvocationStats contains telemetry data about GRPC API calls
 type GRPCInvocationStats struct {
-	Code      codes.Code
-	PanicDesc string `json:",omitempty"`
-
+	Code  codes.Code
 	Count uint64 `json:",omitempty"`
 }
 
 // HTTPInvocationStats contains telemetry data about HTTP API calls
 type HTTPInvocationStats struct {
-	Code      int    `json:",omitempty"` // HTTP status code, or -1 if there was a write error.
-	PanicDesc string `json:",omitempty"` // Code location of panic, if the handler panicked.
-
+	Code  string `json:",omitempty"` // HTTP status code, or -1 if there was a write error.
 	Count uint64
+}
+
+// PanicStats contains telemetry data about API panics
+type PanicStats struct {
+	PanicDesc string // Code location of panic, if the handler panicked.
+	Count     uint64
 }
 
 // APIStat contains telemetry data about different kinds of API calls
 type APIStat struct {
 	MethodName string
-	IsGRPC     bool `json:"isGRPC,omitempty"`
 
-	HTTP []HTTPInvocationStats `json:"http,omitempty"`
-	GRPC []GRPCInvocationStats `json:"grpc,omitempty"`
+	HTTP   []HTTPInvocationStats `json:"http,omitempty"`
+	GRPC   []GRPCInvocationStats `json:"grpc,omitempty"`
+	Panics []*PanicStats
+}
+
+// APIInfo contains metrics about API calls and errors gathering those metrics
+type APIInfo struct {
+	APIStats []*APIStat
+	Errors   string
 }
 
 // BucketStats contains telemetry data about a DB bucket
@@ -81,7 +89,7 @@ type CentralInfo struct {
 
 	License      *LicenseJSON
 	Storage      *StorageInfo
-	APIStats     []*APIStat
+	APIStats     *APIInfo
 	Orchestrator *OrchestratorInfo
 
 	Clusters []*ClusterInfo

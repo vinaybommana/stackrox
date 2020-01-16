@@ -26,6 +26,7 @@ import (
 	"github.com/stackrox/rox/pkg/grpc/authz/deny"
 	"github.com/stackrox/rox/pkg/grpc/authz/interceptor"
 	downgradingServer "github.com/stackrox/rox/pkg/grpc/http1downgrade/server"
+	"github.com/stackrox/rox/pkg/grpc/metrics"
 	"github.com/stackrox/rox/pkg/grpc/requestinfo"
 	"github.com/stackrox/rox/pkg/grpc/routes"
 	"github.com/stackrox/rox/pkg/httputil"
@@ -190,6 +191,7 @@ type apiImpl struct {
 	apiServices        []APIService
 	config             Config
 	requestInfoHandler *requestinfo.Handler
+	metrics            metrics.GRPCMetrics
 }
 
 // A Config configures the server.
@@ -217,6 +219,7 @@ func NewAPI(config Config) API {
 	return &apiImpl{
 		config:             config,
 		requestInfoHandler: requestinfo.NewDefaultRequestInfoHandler(),
+		metrics:            metrics.Singleton(),
 	}
 }
 
@@ -257,7 +260,8 @@ func (a *apiImpl) unaryInterceptors() []grpc.UnaryServerInterceptor {
 	}
 
 	u = append(u, a.config.UnaryInterceptors...)
-	u = append(u, a.unaryRecovery())
+	// Panic recovery interceptor must be last in the interceptor list
+	u = append(u, a.metrics.UnaryMonitorAndRecover)
 	return u
 }
 

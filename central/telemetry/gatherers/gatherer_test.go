@@ -8,6 +8,7 @@ import (
 	"github.com/etcd-io/bbolt"
 	"github.com/stackrox/rox/pkg/badgerhelper"
 	"github.com/stackrox/rox/pkg/bolthelper"
+	"github.com/stackrox/rox/pkg/grpc/metrics"
 	"github.com/stackrox/rox/pkg/telemetry/data"
 	"github.com/stackrox/rox/pkg/telemetry/gatherers"
 	"github.com/stackrox/rox/pkg/testutils"
@@ -37,7 +38,7 @@ func (s *gathererTestSuite) SetupSuite() {
 	s.badger = badgerDB
 	s.dir = dir
 
-	s.gatherer = NewCentralGatherer(nil, newDatabaseGatherer(newBadgerGatherer(s.badger), newBoltGatherer(s.bolt)), newAPIGatherer(), gatherers.NewComponentInfoGatherer())
+	s.gatherer = NewCentralGatherer(nil, newDatabaseGatherer(newBadgerGatherer(s.badger), newBoltGatherer(s.bolt)), newAPIGatherer(metrics.Singleton()), gatherers.NewComponentInfoGatherer())
 }
 
 func (s *gathererTestSuite) TearDownSuite() {
