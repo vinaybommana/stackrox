@@ -70,7 +70,7 @@ function getQueryBasedOnSearchContext(query, searchParam) {
     return searchParam && query && query[searchParam] ? query[searchParam] : query || {};
 }
 
-function getListFieldName(entityType, listType) {
+function getListFieldName(entityType, listType, useCase) {
     // TODO: Back end should rename these fields and these exceptions should be removed
     if (entityType === entityTypes.COMPONENT) {
         if (listType === entityTypes.CVE) {
@@ -101,6 +101,9 @@ function getListFieldName(entityType, listType) {
         }
 
         if (listType === entityTypes.POLICY) {
+            if (useCase === useCases.VULN_MANAGEMENT) {
+                return 'policies';
+            }
             return 'failingPolicies';
         }
     }
@@ -187,10 +190,10 @@ function getFragment(entityType, useCase) {
     return fragmentMap[entityType];
 }
 
-function getFragmentInfo(entityType, listType, appContext) {
-    const listFieldName = getListFieldName(entityType, listType);
+function getFragmentInfo(entityType, listType, useCase) {
+    const listFieldName = getListFieldName(entityType, listType, useCase);
     const fragmentName = getFragmentName(listType);
-    const fragment = getFragment(listType, appContext);
+    const fragment = getFragment(listType, useCase);
 
     return {
         listFieldName,
