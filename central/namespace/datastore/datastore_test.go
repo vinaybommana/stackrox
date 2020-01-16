@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-func TestClusterDataStore(t *testing.T) {
+func TestNamespaceDataStore(t *testing.T) {
 	suite.Run(t, new(NamespaceDataStoreTestSuite))
 }
 

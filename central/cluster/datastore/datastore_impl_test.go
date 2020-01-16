@@ -20,8 +20,10 @@ import (
 	connectionMocks "github.com/stackrox/rox/central/sensor/service/connection/mocks"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/concurrency"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/sac"
 	"github.com/stackrox/rox/pkg/search"
+	"github.com/stackrox/rox/pkg/testutils"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -321,6 +323,11 @@ func (suite *ClusterDataStoreTestSuite) TestAllowsSearch() {
 }
 
 func (suite *ClusterDataStoreTestSuite) TestClusterPriority() {
+	envIsolator := testutils.NewEnvIsolator(suite.T())
+	defer envIsolator.RestoreAll()
+
+	envIsolator.Setenv(features.VulnMgmtUI.EnvVar(), "true")
+
 	ranker := ranking.DeploymentRanker()
 	ranker.Add("dep1", 1.0)
 	ranker.Add("dep2", 2.0)

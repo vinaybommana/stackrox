@@ -20,6 +20,7 @@ import (
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/sac"
 	pkgSearch "github.com/stackrox/rox/pkg/search"
+	"github.com/stackrox/rox/pkg/simplecache"
 )
 
 var (
@@ -34,8 +35,10 @@ var (
 //go:generate mockgen-wrapper DataStore
 type DataStore interface {
 	GetCluster(ctx context.Context, id string) (*storage.Cluster, bool, error)
+	GetClusterName(ctx context.Context, id string) (string, bool, error)
 	GetClusters(ctx context.Context) ([]*storage.Cluster, error)
 	CountClusters(ctx context.Context) (int, error)
+	Exists(ctx context.Context, id string) (bool, error)
 
 	AddCluster(ctx context.Context, cluster *storage.Cluster) (string, error)
 	UpdateCluster(ctx context.Context, cluster *storage.Cluster) error
@@ -71,6 +74,8 @@ func New(
 		ss:       ss,
 		cm:       cm,
 		notifier: notifier,
+
+		cache: simplecache.New(),
 	}
 	if err := ds.buildIndex(); err != nil {
 		return ds, err

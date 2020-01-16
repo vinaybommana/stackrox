@@ -259,15 +259,15 @@ func (s *serviceImpl) populateDeploymentWithClusterInfo(ctx context.Context, clu
 	if clusterID == "" {
 		return nil
 	}
-	cluster, exists, err := s.clusters.GetCluster(ctx, clusterID)
+	clusterName, exists, err := s.clusters.GetClusterName(ctx, clusterID)
 	if err != nil {
 		return err
 	}
 	if !exists {
 		return status.Errorf(codes.InvalidArgument, "cluster with ID %q does not exist", clusterID)
 	}
-	deployment.ClusterId = cluster.GetId()
-	deployment.ClusterName = cluster.GetName()
+	deployment.ClusterId = clusterID
+	deployment.ClusterName = clusterName
 	return nil
 }
 

@@ -145,7 +145,7 @@ func (s *pipelineImpl) validateInput(sa *storage.ServiceAccount) error {
 func (s *pipelineImpl) enrichCluster(ctx context.Context, sa *storage.ServiceAccount) error {
 	sa.ClusterName = ""
 
-	cluster, clusterExists, err := s.clusters.GetCluster(ctx, sa.GetClusterId())
+	clusterName, clusterExists, err := s.clusters.GetClusterName(ctx, sa.GetClusterId())
 	switch {
 	case err != nil:
 		log.Warnf("Couldn't get name of cluster: %s", err)
@@ -154,7 +154,7 @@ func (s *pipelineImpl) enrichCluster(ctx context.Context, sa *storage.ServiceAcc
 		log.Warnf("Couldn't find cluster '%s'", sa.GetClusterId())
 		return err
 	default:
-		sa.ClusterName = cluster.GetName()
+		sa.ClusterName = clusterName
 	}
 	return nil
 }

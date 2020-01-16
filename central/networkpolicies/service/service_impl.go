@@ -115,7 +115,7 @@ func (s *serviceImpl) GetNetworkPolicies(ctx context.Context, request *v1.GetNet
 	if request.GetClusterId() == "" {
 		return nil, status.Error(codes.InvalidArgument, "cluster id is required")
 	}
-	_, exists, err := s.clusterStore.GetCluster(ctx, request.GetClusterId())
+	exists, err := s.clusterStore.Exists(ctx, request.GetClusterId())
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -159,7 +159,7 @@ func (s *serviceImpl) GetNetworkGraph(ctx context.Context, request *v1.GetNetwor
 	}
 
 	// Check that the cluster exists. If not there is nothing to we can process.
-	_, exists, err := s.clusterStore.GetCluster(ctx, request.GetClusterId())
+	exists, err := s.clusterStore.Exists(ctx, request.GetClusterId())
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -233,7 +233,7 @@ func (s *serviceImpl) SimulateNetworkGraph(ctx context.Context, request *v1.Simu
 	}
 
 	// Check that the cluster exists. If not there is nothing to we can process.
-	_, exists, err := s.clusterStore.GetCluster(ctx, request.GetClusterId())
+	exists, err := s.clusterStore.Exists(ctx, request.GetClusterId())
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -313,7 +313,7 @@ func (s *serviceImpl) SendNetworkPolicyYAML(ctx context.Context, request *v1.Sen
 		return nil, status.Errorf(codes.InvalidArgument, "Modification must have contents")
 	}
 
-	cluster, exists, err := s.clusterStore.GetCluster(ctx, request.GetClusterId())
+	clusterName, exists, err := s.clusterStore.GetClusterName(ctx, request.GetClusterId())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to retrieve cluster: %s", err.Error())
 	}
@@ -344,7 +344,7 @@ func (s *serviceImpl) SendNetworkPolicyYAML(ctx context.Context, request *v1.Sen
 			continue
 		}
 
-		err = netpolNotifier.NetworkPolicyYAMLNotify(request.GetModification().GetApplyYaml(), cluster.GetName())
+		err = netpolNotifier.NetworkPolicyYAMLNotify(request.GetModification().GetApplyYaml(), clusterName)
 		if err != nil {
 			errorList.AddStringf("error sending yaml notification to %s: %v", notifierProto.GetName(), err)
 		}

@@ -25,6 +25,7 @@ import (
 	"github.com/stackrox/rox/pkg/sac"
 	pkgSearch "github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/set"
+	"github.com/stackrox/rox/pkg/simplecache"
 	"github.com/stackrox/rox/pkg/utils"
 )
 
@@ -50,6 +51,8 @@ type datastoreImpl struct {
 
 	clusterRanker    *ranking.Ranker
 	deploymentRanker *ranking.Ranker
+
+	cache simplecache.Cache
 }
 
 func (ds *datastoreImpl) initializeRanker() error {
@@ -78,6 +81,9 @@ func (ds *datastoreImpl) buildIndex() error {
 	clusters, err := ds.storage.GetClusters()
 	if err != nil {
 		return err
+	}
+	for _, c := range clusters {
+		ds.cache.Add(c.GetId(), c.GetName())
 	}
 	return ds.indexer.AddClusters(clusters)
 }
@@ -129,6 +135,25 @@ func (ds *datastoreImpl) GetClusters(ctx context.Context) ([]*storage.Cluster, e
 	return ds.searchRawClusters(ctx, pkgSearch.EmptyQuery())
 }
 
+func (ds *datastoreImpl) GetClusterName(ctx context.Context, id string) (string, bool, error) {
+	if ok, err := clusterSAC.ReadAllowed(ctx, sac.ClusterScopeKey(id)); err != nil || !ok {
+		return "", false, err
+	}
+	val, ok := ds.cache.Get(id)
+	if !ok {
+		return "", false, nil
+	}
+	return val.(string), true, nil
+}
+
+func (ds *datastoreImpl) Exists(ctx context.Context, id string) (bool, error) {
+	if ok, err := clusterSAC.ReadAllowed(ctx, sac.ClusterScopeKey(id)); err != nil || !ok {
+		return false, err
+	}
+	_, ok := ds.cache.Get(id)
+	return ok, nil
+}
+
 func (ds *datastoreImpl) SearchRawClusters(ctx context.Context, q *v1.Query) ([]*storage.Cluster, error) {
 	return ds.searchRawClusters(ctx, q)
 }
@@ -165,7 +190,11 @@ func (ds *datastoreImpl) AddCluster(ctx context.Context, cluster *storage.Cluste
 	if err != nil {
 		return "", err
 	}
-	return id, ds.indexer.AddCluster(cluster)
+	if err := ds.indexer.AddCluster(cluster); err != nil {
+		return "", err
+	}
+	ds.cache.Add(cluster.GetId(), cluster.GetName())
+	return id, nil
 }
 
 func (ds *datastoreImpl) UpdateCluster(ctx context.Context, cluster *storage.Cluster) error {
@@ -179,6 +208,9 @@ func (ds *datastoreImpl) UpdateCluster(ctx context.Context, cluster *storage.Clu
 	if err := ds.indexer.AddCluster(cluster); err != nil {
 		return err
 	}
+
+	ds.cache.Add(cluster.GetId(), cluster.GetName())
+
 	conn := ds.cm.GetConnection(cluster.GetId())
 	if conn == nil {
 		return nil
@@ -224,6 +256,7 @@ func (ds *datastoreImpl) RemoveCluster(ctx context.Context, id string, done *con
 	if err := ds.storage.RemoveCluster(id); err != nil {
 		return errors.Wrapf(err, "failed to remove cluster %q", id)
 	}
+	ds.cache.Remove(id)
 
 	deleteRelatedCtx := sac.WithGlobalAccessScopeChecker(ctx,
 		sac.AllowFixedScopes(
