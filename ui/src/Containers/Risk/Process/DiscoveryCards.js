@@ -8,6 +8,7 @@ import FeatureEnabled from 'Containers/FeatureEnabled';
 import ProcessDiscoveryCard from './DiscoveryCard';
 import Binaries from './Binaries';
 import RiskProcessComments from './RiskProcessComments';
+import RiskProcessTags from './RiskProcessTags';
 
 function DiscoveryCards({ deploymentId, processGroup, processEpoch, setProcessEpoch }) {
     const sortedProcessGroups = orderBy(
@@ -25,6 +26,9 @@ function DiscoveryCards({ deploymentId, processGroup, processEpoch, setProcessEp
             >
                 <div className="p-2">
                     <FeatureEnabled featureFlag={knownBackendFlags.ROX_IQT_ANALYST_NOTES_UI}>
+                        <div className="mb-3">
+                            <RiskProcessTags />
+                        </div>
                         <RiskProcessComments />
                     </FeatureEnabled>
                 </div>
