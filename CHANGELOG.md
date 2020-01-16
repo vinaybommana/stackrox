@@ -2,6 +2,11 @@
 All notable changes to this project that require documentation updates will be documented in this file.
 
 ## [NEXT RELEASE]
+### ADDED
+- Added functionality for downloading a diagnostic bundle to facilitate support inquiries. The bundle can either
+  be download through the UI (in the `Platform Configuration` menu), or, using the CLI, by running
+  `roxctl central debug download-diagnostics`. Obtaining the bundle requires read access to the `DebugLogs`
+  resource.
 
 ## [37.0]
 ### Changed

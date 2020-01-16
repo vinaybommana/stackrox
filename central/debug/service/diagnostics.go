@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"regexp"
 
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/central/sensor/service/connection"
@@ -16,6 +17,14 @@ import (
 	"github.com/stackrox/rox/pkg/set"
 	"k8s.io/client-go/rest"
 )
+
+var (
+	invalidPathElementChars = regexp.MustCompile(`[^a-zA-Z0-9_-]`)
+)
+
+func sanitizeClusterName(rawClusterName string) string {
+	return invalidPathElementChars.ReplaceAllString(rawClusterName, "_")
+}
 
 func pullK8sDiagnosticsFilesFromSensor(ctx context.Context, clusterName string, sensorConn connection.SensorConnection, filesC chan<- k8sintrospect.File, wg *concurrency.WaitGroup) {
 	defer wg.Add(-1)
@@ -125,7 +134,7 @@ func (s *serviceImpl) getK8sDiagnostics(ctx context.Context, zipWriter *zip.Writ
 		delete(clusterNameMap, clusterID)
 
 		// Make sure we use a name that doesn't clash with any other cluster name.
-		clusterName = validPathElementChars.ReplaceAllString(clusterName, "_")
+		clusterName = sanitizeClusterName(clusterName)
 		candidateName := clusterName
 
 		i := 0

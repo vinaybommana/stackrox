@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"regexp"
 	"runtime/pprof"
 	"strconv"
 	"strings"
@@ -63,8 +62,6 @@ var (
 	})
 
 	mainClusterConfig = k8sintrospect.DefaultConfig
-
-	validPathElementChars = regexp.MustCompile(`[a-zA-Z0-9_-]`)
 )
 
 func init() {

@@ -13,10 +13,12 @@ var (
 	Dackbox = registerFeature("Use DackBox layer for the embedded Badger DB", "ROX_DACKBOX", false)
 
 	// Telemetry enables the telemetry features
+	// NB: When removing this feature flag, remove references in ui/src/utils/featureFlags.js
 	Telemetry = registerFeature("Enable support for telemetry", "ROX_TELEMETRY", false)
 
 	// DiagnosticBundle enables support for obtaining extended diagnostic information.
-	DiagnosticBundle = registerFeature("Enable support for diagnostic bundle download", "ROX_DIAGNOSTIC_BUNDLE", false)
+	// NB: When removing this feature flag, remove references in ui/src/utils/featureFlags.js
+	DiagnosticBundle = registerFeature("Enable support for diagnostic bundle download", "ROX_DIAGNOSTIC_BUNDLE", true)
 
 	// IQTAnalystNotesUI enables the IQT Analyst Notes UI.
 	// NB: When removing this feature flag, remove references in ui/src/utils/featureFlags.js
