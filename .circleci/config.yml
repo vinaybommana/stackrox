@@ -1723,6 +1723,8 @@ jobs:
       - ROX_VULN_MGMT_UI: true
       - ROX_IQT_ANALYST_NOTES_UI: true
       - ROX_BADGER_DB: true
+      - ROX_TELEMETRY: true
+      - ROX_DIAGNOSTIC_BUNDLE: true
 
     steps:
       - checkout
@@ -1907,6 +1909,8 @@ jobs:
       - LOAD_BALANCER: lb
       - ADMISSION_CONTROLLER: true
       - ROX_BADGER_DB: true
+      - ROX_TELEMETRY: true
+      - ROX_DIAGNOSTIC_BUNDLE: true
 
     steps:
       - run-qa-tests:
