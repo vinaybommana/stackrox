@@ -34,13 +34,17 @@ const PoliciesCountTile = () => {
     const failingPoliciesCountText = `(${failingPoliciesCount} failing)`;
 
     const workflowState = useContext(workflowStateContext);
-    const url = workflowState.pushList(entityTypes.POLICY).toUrl();
+    const url = workflowState
+        .clear()
+        .pushList(entityTypes.POLICY)
+        .toUrl();
 
     return (
         <EntityTileLink
             count={policyCount}
             entityType={entityTypes.POLICY}
             position="first"
+            short
             subText={failingPoliciesCountText}
             loading={loading}
             isError={!!failingPoliciesCount}

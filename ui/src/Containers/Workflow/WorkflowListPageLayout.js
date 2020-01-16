@@ -5,18 +5,20 @@ import startCase from 'lodash/startCase';
 import { searchParams, sortParams, pagingParams } from 'constants/searchParams';
 import PageHeader from 'Components/PageHeader';
 import ExportButton from 'Components/ExportButton';
-import EntitiesMenu from 'Components/workflow/EntitiesMenu';
 import entityLabels from 'messages/entity';
 import useCaseLabels from 'messages/useCase';
 import getSidePanelEntity from 'utils/getSidePanelEntity';
 import parseURL from 'modules/URLParser';
 import workflowStateContext from 'Containers/workflowStateContext';
 import { WorkflowState } from 'modules/WorkflowState';
-import { useCaseEntityMap } from 'modules/entityRelationships';
 import { exportCvesAsCsv } from 'services/VulnerabilitiesService';
 
 import WorkflowSidePanel from './WorkflowSidePanel';
-import { EntityComponentMap, ListComponentMap } from './UseCaseComponentMaps';
+import {
+    EntityComponentMap,
+    ListComponentMap,
+    NavHeaderComponentMap
+} from './UseCaseComponentMaps';
 
 const WorkflowListPageLayout = ({ location }) => {
     const workflowState = parseURL(location);
@@ -36,9 +38,10 @@ const WorkflowListPageLayout = ({ location }) => {
         return exportCvesAsCsv(fileName, workflowState);
     }
 
-    // Get the list / entity components
+    // Get the list / entity / nav header components
     const ListComponent = ListComponentMap[useCase];
     const EntityComponent = EntityComponentMap[useCase];
+    const NavHeaderComponent = NavHeaderComponentMap[useCase];
 
     // Page props
     const pageListType = workflowState.getBaseEntity().entityType;
@@ -68,8 +71,8 @@ const WorkflowListPageLayout = ({ location }) => {
         <workflowStateContext.Provider value={pageState}>
             <div className="flex flex-col relative min-h-full">
                 <PageHeader header={header} subHeader="Entity List" classes="pr-0">
-                    <div className="flex flex-1 justify-end h-full">
-                        <div className="flex items-center pr-2">
+                    <div className="flex flex-1 justify-end h-10 pr-2">
+                        <div className="flex items-center">
                             <ExportButton
                                 fileName={exportFilename}
                                 type={pageListType}
@@ -79,13 +82,7 @@ const WorkflowListPageLayout = ({ location }) => {
                                 customCsvExportHandler={customCsvExportHandler}
                             />
                         </div>
-                        <div className="flex items-center pl-2">
-                            <EntitiesMenu
-                                text="All Entities"
-                                options={useCaseEntityMap[useCase]}
-                                grouped
-                            />
-                        </div>
+                        <NavHeaderComponent />
                     </div>
                 </PageHeader>
                 <div className="h-full bg-base-100 relative z-0 min-h-0" id="capture-list">

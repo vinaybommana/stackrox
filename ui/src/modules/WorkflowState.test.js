@@ -59,6 +59,10 @@ function getListState(isSidePanelOpen) {
 }
 
 describe('WorkflowState', () => {
+    it('clears current state on current use case', () => {
+        expect(getEntityState().clear().stateStack).toEqual([]);
+    });
+
     it('resets current state based on given parameters', () => {
         expect(
             getEntityState().reset(useCase, entityTypes.DEPLOYMENT, entityId2).stateStack

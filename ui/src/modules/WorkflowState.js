@@ -203,6 +203,13 @@ export class WorkflowState {
         return new WorkflowState(useCase, newStateStack);
     }
 
+    // Returns a cleared stack on current use case. Useful when building state from scratch.
+    clear() {
+        const newStateStack = [];
+        const { useCase } = this;
+        return new WorkflowState(useCase, newStateStack);
+    }
+
     // sets the stateStack to base state when returning from side panel
     removeSidePanelParams() {
         const { useCase, search, sort, paging } = this;

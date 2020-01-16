@@ -23,17 +23,18 @@ describe('Entities single views', () => {
             .click();
 
         cy.get(selectors.backButton).click();
+        cy.wait(1000);
 
         // act
         cy.get(selectors.tileLinks)
-            .eq(1)
+            .eq(3)
             .find(selectors.tileLinkSuperText)
             .invoke('text')
             .then(value => {
                 const numDeployments = value;
 
                 cy.get(selectors.tileLinks)
-                    .eq(1)
+                    .eq(3)
                     // force: true option needed because this open issue for cypress
                     //   https://github.com/cypress-io/cypress/issues/4856
                     .click({ force: true });

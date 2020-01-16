@@ -4,15 +4,10 @@ import ReactRouterPropTypes from 'react-router-prop-types';
 
 import entityTypes from 'constants/entityTypes';
 import DashboardLayout from 'Components/DashboardLayout';
-import EntitiesMenu from 'Components/workflow/EntitiesMenu';
 import ExportButton from 'Components/ExportButton';
 import RadioButtonGroup from 'Components/RadioButtonGroup';
 import workflowStateContext from 'Containers/workflowStateContext';
-
 import { dashboardLimit } from 'constants/workflowPages.constants';
-import PoliciesCountTile from './PoliciesCountTile';
-import CvesCountTile from './CvesCountTile';
-
 import TopRiskyEntitiesByVulnerabilities from '../widgets/TopRiskyEntitiesByVulnerabilities';
 import TopRiskiestImagesAndComponents from '../widgets/TopRiskiestImagesAndComponents';
 import FrequentlyViolatedPolicies from '../widgets/FrequentlyViolatedPolicies';
@@ -20,6 +15,7 @@ import RecentlyDetectedVulnerabilities from '../widgets/RecentlyDetectedVulnerab
 import MostCommonVulnerabilities from '../widgets/MostCommonVulnerabilities';
 import DeploymentsWithMostSeverePolicyViolations from '../widgets/DeploymentsWithMostSeverePolicyViolations';
 import ClustersWithMostK8sIstioVulnerabilities from '../widgets/ClustersWithMostK8sIstioVulnerabilities';
+import VulnMgmtNavHeader from '../Components/VulnMgmtNavHeader';
 
 // layout-specific graph widget counts
 
@@ -57,26 +53,11 @@ const VulnDashboardPage = ({ history }) => {
         history.push(targetUrl);
     }
 
-    const entityMenuTypes = [
-        entityTypes.CLUSTER,
-        entityTypes.NAMESPACE,
-        entityTypes.DEPLOYMENT,
-        entityTypes.IMAGE,
-        entityTypes.COMPONENT
-    ];
-
     const cveFilter = searchState.IsFixable ? 'Fixable' : 'All';
 
     const headerComponents = (
         <>
-            <div className="flex h-full">
-                <PoliciesCountTile />
-                <CvesCountTile />
-                <div className="flex w-32">
-                    <EntitiesMenu text="Application & Infrastructure" options={entityMenuTypes} />
-                </div>
-            </div>
-            <div className="flex items-center pr-2 ml-6 pl-3 border-l border-base-400">
+            <div className="flex items-center">
                 <RadioButtonGroup
                     buttons={cveFilterButtons}
                     headerText="Filter CVEs"
@@ -89,6 +70,7 @@ const VulnDashboardPage = ({ history }) => {
                     pdfId="capture-dashboard"
                 />
             </div>
+            <VulnMgmtNavHeader />
         </>
     );
     return (

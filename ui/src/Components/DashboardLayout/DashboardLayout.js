@@ -26,7 +26,7 @@ const DashboardLayout = ({ headerText, headerComponents, children }) => {
                 header={headerText}
                 subHeader="Dashboard"
             >
-                <div className="flex flex-1 justify-end">{headerComponents}</div>
+                <div className="flex flex-1 justify-end h-10">{headerComponents}</div>
             </PageHeader>
             <img
                 className="absolute left-0 pointer-events-none z-10 w-full"
