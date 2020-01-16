@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/auth/permissions"
 	"github.com/stackrox/rox/pkg/badgerhelper"
 	"github.com/stackrox/rox/pkg/dackbox/graph"
 	"github.com/stackrox/rox/pkg/dackbox/graph/mocks"
@@ -42,6 +44,15 @@ var (
 
 	toID4 = [][]byte{prefixedID6}
 	toID5 = [][]byte{prefixedID7}
+
+	globalResource = permissions.ResourceMetadata{
+		Resource: "resource",
+		Scope:    permissions.GlobalScope,
+	}
+	clusterResource = permissions.ResourceMetadata{
+		Resource: "resource",
+		Scope:    permissions.ClusterScope,
+	}
 )
 
 func TestDerivedFieldCounter(t *testing.T) {
@@ -75,15 +86,15 @@ func (s *derivedFieldCounterTestSuite) TestCounterForward() {
 	s.mockRGraph.EXPECT().GetRefsFrom(prefixedID2).Return(fromID2)
 	s.mockRGraph.EXPECT().GetRefsFrom(prefixedID3).Return(fromID3)
 
-	checker := sac.NewScopeChecker(sac.AllowAllAccessScopeChecker())
+	ctx := sac.WithGlobalAccessScopeChecker(context.Background(), sac.AllowAllAccessScopeChecker())
 
 	filter, err := filtered.NewSACFilter(
-		filtered.WithScopeChecker(checker),
+		filtered.WithResourceHelper(sac.ForResource(globalResource)),
 	)
 	s.NoError(err, "filter creation should have succeeded")
 
 	counter := NewGraphBasedDerivedFieldCounter(fakeGraphProvider{mg: s.mockRGraph}, [][]byte{prefix1, prefix2, prefix3}, filter, true)
-	count, _ := counter.Count(context.Background(), string(id1))
+	count, _ := counter.Count(ctx, string(id1))
 	s.Equal(map[string]int32{string(id1): int32(2)}, count)
 }
 
@@ -96,15 +107,15 @@ func (s *derivedFieldCounterTestSuite) TestCounterForwardWithPartialPath() {
 	s.mockRGraph.EXPECT().GetRefsFrom(prefixedID2).Return(fromID2)
 	s.mockRGraph.EXPECT().GetRefsFrom(prefixedID3).Return([][]byte{})
 
-	checker := sac.NewScopeChecker(sac.AllowAllAccessScopeChecker())
+	ctx := sac.WithGlobalAccessScopeChecker(context.Background(), sac.AllowAllAccessScopeChecker())
 
 	filter, err := filtered.NewSACFilter(
-		filtered.WithScopeChecker(checker),
+		filtered.WithResourceHelper(sac.ForResource(globalResource)),
 	)
 	s.NoError(err, "filter creation should have succeeded")
 
 	counter := NewGraphBasedDerivedFieldCounter(fakeGraphProvider{mg: s.mockRGraph}, [][]byte{prefix1, prefix2, prefix3}, filter, true)
-	count, _ := counter.Count(context.Background(), string(id1))
+	count, _ := counter.Count(ctx, string(id1))
 	s.Equal(map[string]int32{string(id1): int32(1)}, count)
 }
 
@@ -121,20 +132,20 @@ func (s *derivedFieldCounterTestSuite) TestCounterForwardWithSACFilter() {
 
 	graphProvider := fakeGraphProvider{mg: s.mockRGraph}
 
-	checker := sac.NewScopeChecker(sac.OneStepSCC{
-		sac.ClusterScopeKey("id6"): sac.AllowAllAccessScopeChecker(),
-		sac.ClusterScopeKey("id7"): sac.DenyAllAccessScopeChecker(),
-	})
+	ctx := sac.WithGlobalAccessScopeChecker(context.Background(), sac.AllowFixedScopes(
+		sac.AccessModeScopeKeys(storage.Access_READ_ACCESS),
+		sac.ResourceScopeKeys(clusterResource),
+		sac.ClusterScopeKeys("id6")))
 
 	filter, err := filtered.NewSACFilter(
-		filtered.WithScopeChecker(checker),
+		filtered.WithResourceHelper(sac.ForResource(clusterResource)),
 		filtered.WithGraphProvider(graphProvider),
 		filtered.WithClusterPath(prefix3, clusterPrefix),
 	)
 	s.NoError(err, "filter creation should have succeeded")
 
 	counter := NewGraphBasedDerivedFieldCounter(graphProvider, [][]byte{prefix1, prefix2, prefix3}, filter, true)
-	count, _ := counter.Count(context.Background(), string(id1))
+	count, _ := counter.Count(ctx, string(id1))
 	s.Equal(map[string]int32{string(id1): int32(1)}, count)
 }
 
@@ -148,14 +159,14 @@ func (s *derivedFieldCounterTestSuite) TestCounterForwardRepeated() {
 	s.mockRGraph.EXPECT().GetRefsFrom(prefixedID3).Return(fromID3)
 
 	graphProvider := fakeGraphProvider{mg: s.mockRGraph}
-	checker := sac.NewScopeChecker(sac.AllowAllAccessScopeChecker())
+	ctx := sac.WithGlobalAccessScopeChecker(context.Background(), sac.AllowAllAccessScopeChecker())
 	filter, err := filtered.NewSACFilter(
-		filtered.WithScopeChecker(checker),
+		filtered.WithResourceHelper(sac.ForResource(globalResource)),
 	)
 	s.NoError(err, "filter creation should have succeeded")
 
 	counter := NewGraphBasedDerivedFieldCounter(graphProvider, [][]byte{prefix1, prefix2, prefix3}, filter, true)
-	count, _ := counter.Count(context.Background(), string(id1))
+	count, _ := counter.Count(ctx, string(id1))
 	s.Equal(map[string]int32{string(id1): int32(1)}, count)
 }
 
@@ -170,14 +181,14 @@ func (s *derivedFieldCounterTestSuite) TestCounterForwardOneToMany() {
 	s.mockRGraph.EXPECT().GetRefsFrom(prefixedID3).Return([][]byte{prefixedID5, badgerhelper.GetBucketKey(prefix3, id6)})
 
 	graphProvider := fakeGraphProvider{mg: s.mockRGraph}
-	checker := sac.NewScopeChecker(sac.AllowAllAccessScopeChecker())
+	ctx := sac.WithGlobalAccessScopeChecker(context.Background(), sac.AllowAllAccessScopeChecker())
 	filter, err := filtered.NewSACFilter(
-		filtered.WithScopeChecker(checker),
+		filtered.WithResourceHelper(sac.ForResource(globalResource)),
 	)
 	s.NoError(err, "filter creation should have succeeded")
 
 	counter := NewGraphBasedDerivedFieldCounter(graphProvider, [][]byte{prefix1, prefix2, prefix3}, filter, true)
-	count, _ := counter.Count(context.Background(), string(id1))
+	count, _ := counter.Count(ctx, string(id1))
 	s.Equal(map[string]int32{string(id1): int32(3)}, count)
 }
 
@@ -192,14 +203,14 @@ func (s *derivedFieldCounterTestSuite) TestCounterForwardWithDiffPrefix() {
 	s.mockRGraph.EXPECT().GetRefsFrom(prefixedID3).Return([][]byte{prefixedID5, prefixedID6})
 
 	graphProvider := fakeGraphProvider{mg: s.mockRGraph}
-	checker := sac.NewScopeChecker(sac.AllowAllAccessScopeChecker())
+	ctx := sac.WithGlobalAccessScopeChecker(context.Background(), sac.AllowAllAccessScopeChecker())
 	filter, err := filtered.NewSACFilter(
-		filtered.WithScopeChecker(checker),
+		filtered.WithResourceHelper(sac.ForResource(globalResource)),
 	)
 	s.NoError(err, "filter creation should have succeeded")
 
 	counter := NewGraphBasedDerivedFieldCounter(graphProvider, [][]byte{prefix1, prefix2, prefix3}, filter, true)
-	count, _ := counter.Count(context.Background(), string(id1))
+	count, _ := counter.Count(ctx, string(id1))
 	s.Equal(map[string]int32{string(id1): int32(2)}, count)
 }
 
