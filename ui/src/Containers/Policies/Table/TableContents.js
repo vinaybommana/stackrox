@@ -102,13 +102,13 @@ class TableContents extends Component {
                     text={enableTooltip}
                     onClick={this.toggleEnabledDisabledPolicy(policy)}
                     className={`hover:bg-primary-200 ${enableIconColor} hover:${enableIconHoverColor}`}
-                    icon={<Icon.Power className="mt-1 h-4 w-4" />}
+                    icon={<Icon.Power className="h-4 w-4" />}
                 />
                 <RowActionButton
                     text="Delete policy"
                     onClick={this.onDeletePolicy(policy)}
                     border="border-l-2 border-base-400"
-                    icon={<Icon.Trash2 className="mt-1 h-4 w-4" />}
+                    icon={<Icon.Trash2 className="h-4 w-4" />}
                 />
             </div>
         );
