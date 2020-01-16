@@ -34,6 +34,10 @@ type managerSuite struct {
 	store store.Store
 }
 
+func (s *managerSuite) createManager(ctx context.Context) *manager {
+	return newManager(ctx, s.store, nil, nil)
+}
+
 func (s *managerSuite) SetupTest() {
 	s.envIsolator = testutils.NewEnvIsolator(s.T())
 	s.envIsolator.Setenv(env.OfflineModeEnv.EnvVar(), "true")
@@ -54,7 +58,7 @@ func (s *managerSuite) TearDownTest() {
 func (s *managerSuite) TestInitConfig_Unset() {
 	s.envIsolator.Unsetenv(env.InitialTelemetryEnabledEnv.EnvVar())
 
-	mgr := newManager(context.Background(), s.store, nil)
+	mgr := newManager(context.Background(), s.store, nil, nil)
 
 	cfg, err := mgr.GetTelemetryConfig(withAccessCtx)
 	s.NoError(err)
@@ -64,7 +68,7 @@ func (s *managerSuite) TestInitConfig_Unset() {
 func (s *managerSuite) TestInitConfig_False() {
 	s.envIsolator.Setenv(env.InitialTelemetryEnabledEnv.EnvVar(), "false")
 
-	mgr := newManager(context.Background(), s.store, nil)
+	mgr := s.createManager(context.Background())
 
 	cfg, err := mgr.GetTelemetryConfig(withAccessCtx)
 	s.NoError(err)
@@ -74,7 +78,7 @@ func (s *managerSuite) TestInitConfig_False() {
 func (s *managerSuite) TestInitConfig_True() {
 	s.envIsolator.Setenv(env.InitialTelemetryEnabledEnv.EnvVar(), "true")
 
-	mgr := newManager(context.Background(), s.store, nil)
+	mgr := s.createManager(context.Background())
 
 	cfg, err := mgr.GetTelemetryConfig(withAccessCtx)
 	s.NoError(err)
@@ -82,14 +86,14 @@ func (s *managerSuite) TestInitConfig_True() {
 }
 
 func (s *managerSuite) TestReadConfig_WithoutAccess() {
-	mgr := newManager(context.Background(), s.store, nil)
+	mgr := s.createManager(context.Background())
 
 	_, err := mgr.GetTelemetryConfig(context.Background())
 	s.Error(err)
 }
 
 func (s *managerSuite) TestUpdateConfig_WithAccess() {
-	mgr := newManager(context.Background(), s.store, nil)
+	mgr := s.createManager(context.Background())
 
 	cfg, err := mgr.GetTelemetryConfig(withAccessCtx)
 	s.NoError(err)
@@ -106,7 +110,7 @@ func (s *managerSuite) TestUpdateConfig_WithAccess() {
 }
 
 func (s *managerSuite) TestUpdateConfig_WithoutAccess() {
-	mgr := newManager(context.Background(), s.store, nil)
+	mgr := s.createManager(context.Background())
 
 	cfg := &storage.TelemetryConfiguration{}
 
@@ -116,7 +120,7 @@ func (s *managerSuite) TestUpdateConfig_WithoutAccess() {
 
 func (s *managerSuite) TestUpdateConfig_AfterCancel() {
 	ctx, cancel := context.WithCancel(context.Background())
-	mgr := newManager(ctx, s.store, nil)
+	mgr := s.createManager(ctx)
 	cancel()
 	time.Sleep(100 * time.Millisecond)
 

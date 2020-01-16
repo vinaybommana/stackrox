@@ -14,6 +14,7 @@ import (
 	"github.com/pkg/errors"
 	licenseMgr "github.com/stackrox/rox/central/license/manager"
 	"github.com/stackrox/rox/central/role/resources"
+	"github.com/stackrox/rox/central/telemetry/gatherers"
 	"github.com/stackrox/rox/central/telemetry/manager/internal/store"
 	licenseproto "github.com/stackrox/rox/generated/shared/license"
 	"github.com/stackrox/rox/generated/storage"
@@ -23,7 +24,6 @@ import (
 	"github.com/stackrox/rox/pkg/httputil/proxy"
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/sac"
-	"github.com/stackrox/rox/pkg/telemetry/data"
 	"github.com/stackrox/rox/pkg/timeutil"
 	"github.com/stackrox/rox/pkg/utils"
 )
@@ -63,13 +63,14 @@ type manager struct {
 	configUpdateC chan configUpdate
 	store         store.Store
 	httpClient    *http.Client
+	gatherer      *gatherers.CentralGatherer
 
 	// Populated by init.
 	activeConfig atomic.Value // *storage.TelemetryConfiguration
 	nextSendTime time.Time
 }
 
-func newManager(ctx context.Context, store store.Store, licenseMgr licenseMgr.LicenseManager) *manager {
+func newManager(ctx context.Context, store store.Store, gatherer *gatherers.CentralGatherer, licenseMgr licenseMgr.LicenseManager) *manager {
 	mgr := &manager{
 		ctx: ctx,
 
@@ -80,6 +81,7 @@ func newManager(ctx context.Context, store store.Store, licenseMgr licenseMgr.Li
 		httpClient: &http.Client{
 			Transport: proxy.RoundTripper(),
 		},
+		gatherer: gatherer,
 	}
 	mgr.Init()
 	go mgr.Run()
@@ -173,7 +175,7 @@ func (m *manager) doCollectAndSendData(ctx context.Context) (time.Duration, erro
 		return 0, errors.New("invoked telemetry collection in spite of offline mode")
 	}
 
-	var telemetryData data.CentralInfo // TODO(ROX-3749): Implement actual data gathering.
+	telemetryData := m.gatherer.Gather()
 
 	if telemetryData.License == nil {
 		return 0, errors.New("cannot send telemetry data as no license information is available")
@@ -188,7 +190,7 @@ func (m *manager) doCollectAndSendData(ctx context.Context) (time.Duration, erro
 	}
 
 	var sendBody bytes.Buffer
-	if err := json.NewEncoder(&sendBody).Encode(&telemetryData); err != nil {
+	if err := json.NewEncoder(&sendBody).Encode(telemetryData); err != nil {
 		return 0, errors.Wrap(err, "could not encode telemetry data to JSON")
 	}
 	telemetryReq, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, &sendBody)
