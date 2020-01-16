@@ -23,7 +23,7 @@ import {
     rtTrActionsClassName
 } from 'Components/Table';
 import { lifecycleStageLabels } from 'messages/common';
-import { sortSeverity, sortLifecycle } from 'sorters/sorters';
+import { sortAscii, sortSeverity, sortLifecycle } from 'sorters/sorters';
 
 // TableContents are the policy rows.
 class TableContents extends Component {
@@ -149,6 +149,7 @@ class TableContents extends Component {
                         </div>
                     </div>
                 ),
+                sortMethod: sortAscii,
                 className: `w-1/5 sticky-column left-checkbox-offset ${wrapClassName} ${defaultColumnClassName}`,
                 headerClassName: `w-1/5 sticky-column left-checkbox-offset ${defaultHeaderClassName}`
             },
@@ -210,6 +211,12 @@ class TableContents extends Component {
                     selectedRowId={id}
                     noDataText="No results found. Please refine your search."
                     page={this.props.page}
+                    defaultSorted={[
+                        {
+                            id: 'name',
+                            desc: false
+                        }
+                    ]}
                 />
             </div>
         );
