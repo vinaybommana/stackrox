@@ -4,11 +4,13 @@ import (
 	"context"
 
 	"github.com/stackrox/rox/central/imagecomponentedge/index"
+	pkgImageComponentEdgeSAC "github.com/stackrox/rox/central/imagecomponentedge/sac"
 	"github.com/stackrox/rox/central/imagecomponentedge/store"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/blevesearch"
+	"github.com/stackrox/rox/pkg/search/filtered"
 )
 
 type searcherImpl struct {
@@ -75,7 +77,7 @@ func convertOne(cve *storage.ImageComponentEdge, result *search.Result) *v1.Sear
 
 // Format the search functionality of the indexer to be filtered (for sac) and paginated.
 func formatSearcher(unsafeSearcher blevesearch.UnsafeSearcher) search.Searcher {
-	return blevesearch.WrapUnsafeSearcherAsSearcher(unsafeSearcher)
+	return filtered.Searcher(unsafeSearcher, pkgImageComponentEdgeSAC.ImageComponentEdgeSACFilter)
 }
 
 func (ds *searcherImpl) searchImageComponentEdges(ctx context.Context, q *v1.Query) ([]*storage.ImageComponentEdge, error) {

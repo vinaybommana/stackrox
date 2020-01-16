@@ -4,11 +4,13 @@ import (
 	"context"
 
 	"github.com/stackrox/rox/central/componentcveedge/index"
+	pkgComponentCVEEdgeSAC "github.com/stackrox/rox/central/componentcveedge/sac"
 	"github.com/stackrox/rox/central/componentcveedge/store"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/blevesearch"
+	"github.com/stackrox/rox/pkg/search/filtered"
 )
 
 type searcherImpl struct {
@@ -75,7 +77,7 @@ func convertOne(cve *storage.ComponentCVEEdge, result *search.Result) *v1.Search
 
 // Format the search functionality of the indexer to be filtered (for sac) and paginated.
 func formatSearcher(unsafeSearcher blevesearch.UnsafeSearcher) search.Searcher {
-	return blevesearch.WrapUnsafeSearcherAsSearcher(unsafeSearcher)
+	return filtered.Searcher(unsafeSearcher, pkgComponentCVEEdgeSAC.ComponentCVEEdgeSACFilter)
 }
 
 func (ds *searcherImpl) searchComponentCVEEdges(ctx context.Context, q *v1.Query) ([]*storage.ComponentCVEEdge, error) {

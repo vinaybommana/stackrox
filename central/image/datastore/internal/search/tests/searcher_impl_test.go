@@ -75,7 +75,7 @@ func (s *searcherSuite) SetupTest() {
 
 	s.store = badgerStore.New(s.badgerDB, false)
 
-	s.searcher = New(s.store, s.indexer)
+	s.searcher = New(s.store, nil, nil, nil, nil, nil, s.indexer)
 }
 
 func (s *searcherSuite) TestNoAccess() {

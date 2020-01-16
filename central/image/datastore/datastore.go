@@ -6,13 +6,19 @@ import (
 	"github.com/blevesearch/bleve"
 	"github.com/dgraph-io/badger"
 	"github.com/pkg/errors"
+	componentCVEEdgeIndexer "github.com/stackrox/rox/central/componentcveedge/index"
+	cveIndexer "github.com/stackrox/rox/central/cve/index"
+	globalDackBox "github.com/stackrox/rox/central/globaldb/dackbox"
 	"github.com/stackrox/rox/central/image/datastore/internal/search"
 	"github.com/stackrox/rox/central/image/datastore/internal/store"
 	badgerStore "github.com/stackrox/rox/central/image/datastore/internal/store/badger"
-	"github.com/stackrox/rox/central/image/index"
+	imageIndexer "github.com/stackrox/rox/central/image/index"
+	componentIndexer "github.com/stackrox/rox/central/imagecomponent/index"
+	imageComponentEdgeIndexer "github.com/stackrox/rox/central/imagecomponentedge/index"
 	riskDS "github.com/stackrox/rox/central/risk/datastore"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/features"
 	searchPkg "github.com/stackrox/rox/pkg/search"
 )
 
@@ -37,8 +43,19 @@ type DataStore interface {
 }
 
 func newDatastore(storage store.Store, bleveIndex bleve.Index, noUpdateTimestamps bool, risks riskDS.DataStore) (DataStore, error) {
-	indexer := index.New(bleveIndex)
-	searcher := search.New(storage, indexer)
+	var searcher search.Searcher
+	indexer := imageIndexer.New(bleveIndex)
+	if features.Dackbox.Enabled() {
+		searcher = search.New(storage,
+			globalDackBox.GetGlobalDackBox(),
+			cveIndexer.Singleton(),
+			componentCVEEdgeIndexer.Singleton(),
+			componentIndexer.Singleton(),
+			imageComponentEdgeIndexer.Singleton(),
+			imageIndexer.New(bleveIndex))
+	} else {
+		searcher = search.New(storage, nil, nil, nil, nil, nil, indexer)
+	}
 
 	ds, err := newDatastoreImpl(storage, indexer, searcher, risks)
 	if err != nil {
