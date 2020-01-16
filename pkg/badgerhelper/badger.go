@@ -82,6 +82,23 @@ func Count(txn *badger.Txn, keyPrefix []byte) (int, error) {
 	return count, err
 }
 
+// CountWithBytes gets the number of keys with a specific prefix and the size in bytes of the specified prefix
+// Count gets the number of keys with a specific prefix
+func CountWithBytes(txn *badger.Txn, keyPrefix []byte) (int, int, error) {
+	var count int
+	var size int64
+	opts := ForEachOptions{
+		IteratorOptions: DefaultIteratorOptions(),
+	}
+	opts.IteratorOptions.PrefetchValues = false
+	err := ForEachItemWithPrefix(txn, keyPrefix, opts, func(k []byte, item *badger.Item) error {
+		count++
+		size += item.KeySize() + item.ValueSize()
+		return nil
+	})
+	return count, int(size), err
+}
+
 // GetBucketKey returns a key which combines the prefix and the id with a separator
 func GetBucketKey(prefix []byte, id []byte) []byte {
 	result := make([]byte, 0, len(prefix)+len(separator)+len(id))

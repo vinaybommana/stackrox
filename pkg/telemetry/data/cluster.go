@@ -54,13 +54,14 @@ type OrchestratorInfo struct {
 type SensorInfo struct {
 	*RoxComponentInfo
 
-	ClusterID   string
-	ClusterName string
 	LastCheckIn *time.Time
 }
 
 // ClusterInfo contains telemetry data about a Kubernetes cluster
 type ClusterInfo struct {
+	ID   string
+	Name string
+
 	Sensor       *SensorInfo
 	Orchestrator *OrchestratorInfo
 	Nodes        []*NodeInfo

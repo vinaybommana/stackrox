@@ -36,18 +36,26 @@ type APIStat struct {
 // BucketStats contains telemetry data about a DB bucket
 type BucketStats struct {
 	Name        string
-	UsedGB      int
+	UsedBytes   int64
 	Cardinality int
 }
 
 // DatabaseStats contains telemetry data about a DB
 type DatabaseStats struct {
-	Type        string
-	Path        string
-	CapacityGB  int
-	UsedGB      int
-	StorageType string
-	Buckets     []*BucketStats
+	Type      string
+	Path      string
+	UsedBytes int64
+	Buckets   []*BucketStats
+	Errors    []string
+}
+
+// StorageInfo contains telemetry data about available disk, storage type, and the available databases
+type StorageInfo struct {
+	DiskCapacityBytes int64
+	DiskUsedBytes     int64
+	StorageType       string
+	Database          []*DatabaseStats
+	Errors            []string
 }
 
 // LicenseJSON type encapsulates the License type and adds Marshal/Unmarshal methods
@@ -72,9 +80,11 @@ type CentralInfo struct {
 	*RoxComponentInfo
 
 	License      *LicenseJSON
-	Database     []*DatabaseStats
+	Storage      *StorageInfo
 	APIStats     []*APIStat
 	Orchestrator *OrchestratorInfo
 
 	Clusters []*ClusterInfo
+
+	Errors []string
 }
