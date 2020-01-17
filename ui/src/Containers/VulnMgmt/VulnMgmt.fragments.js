@@ -232,7 +232,7 @@ export const NAMESPACE_LIST_FRAGMENT = gql`
                 total
             }
         }
-        deploymentCount: numDeployments
+        deploymentCount
         imageCount
         policyCount(query: $policyQuery)
         policyStatus(query: $policyQuery) {

@@ -458,8 +458,10 @@ func registerGeneratedTypes(builder generator.SchemaBuilder) {
 	utils.Must(builder.AddType("ImageComponent", []string{
 		"id: ID!",
 		"license: ImageComponent_License",
+		"location: String!",
 		"name: String!",
 		"priority: Int!",
+		"source: ImageComponent_SourceType!",
 		"version: String!",
 	}))
 	utils.Must(builder.AddType("ImageComponent_License", []string{
@@ -467,6 +469,7 @@ func registerGeneratedTypes(builder generator.SchemaBuilder) {
 		"type: String!",
 		"url: String!",
 	}))
+	generator.RegisterProtoEnum(builder, reflect.TypeOf(storage.ImageComponent_SourceType(0)))
 	utils.Must(builder.AddType("ImageLayer", []string{
 		"author: String!",
 		"created: Time",
@@ -4505,6 +4508,11 @@ func (resolver *imageComponentResolver) License(ctx context.Context) (*imageComp
 	return resolver.root.wrapImageComponent_License(value, true, nil)
 }
 
+func (resolver *imageComponentResolver) Location(ctx context.Context) string {
+	value := resolver.data.GetLocation()
+	return value
+}
+
 func (resolver *imageComponentResolver) Name(ctx context.Context) string {
 	value := resolver.data.GetName()
 	return value
@@ -4513,6 +4521,11 @@ func (resolver *imageComponentResolver) Name(ctx context.Context) string {
 func (resolver *imageComponentResolver) Priority(ctx context.Context) int32 {
 	value := resolver.data.GetPriority()
 	return int32(value)
+}
+
+func (resolver *imageComponentResolver) Source(ctx context.Context) string {
+	value := resolver.data.GetSource()
+	return value.String()
 }
 
 func (resolver *imageComponentResolver) Version(ctx context.Context) string {
@@ -4556,6 +4569,24 @@ func (resolver *imageComponent_LicenseResolver) Type(ctx context.Context) string
 func (resolver *imageComponent_LicenseResolver) Url(ctx context.Context) string {
 	value := resolver.data.GetUrl()
 	return value
+}
+
+func toImageComponent_SourceType(value *string) storage.ImageComponent_SourceType {
+	if value != nil {
+		return storage.ImageComponent_SourceType(storage.ImageComponent_SourceType_value[*value])
+	}
+	return storage.ImageComponent_SourceType(0)
+}
+
+func toImageComponent_SourceTypes(values *[]string) []storage.ImageComponent_SourceType {
+	if values == nil {
+		return nil
+	}
+	output := make([]storage.ImageComponent_SourceType, len(*values))
+	for i, v := range *values {
+		output[i] = toImageComponent_SourceType(&v)
+	}
+	return output
 }
 
 type imageLayerResolver struct {

@@ -16,7 +16,6 @@ const (
 )
 
 func TestNvdCVEsToProtoCVEs(t *testing.T) {
-
 	cves := []*schema.NVDCVEFeedJSON10DefCVEItem{
 		{
 			CVE: &schema.CVEJSON40{

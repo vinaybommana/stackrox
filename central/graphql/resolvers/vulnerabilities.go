@@ -42,11 +42,11 @@ func init() {
 			"fixedByVersion: String!",
 			"isFixable: Boolean!",
 			"lastScanned: Time",
-			"components(query: String): [EmbeddedImageScanComponent!]!",
+			"components(query: String, pagination: Pagination): [EmbeddedImageScanComponent!]!",
 			"componentCount(query: String): Int!",
-			"images(query: String): [Image!]!",
+			"images(query: String, pagination: Pagination): [Image!]!",
 			"imageCount(query: String): Int!",
-			"deployments(query: String): [Deployment!]!",
+			"deployments(query: String, pagination: Pagination): [Deployment!]!",
 			"deploymentCount(query: String): Int!",
 			"envImpact: Float!",
 			"severity: String!",
@@ -59,17 +59,25 @@ func init() {
 		schema.AddQuery("vulnerabilities(query: String, pagination: Pagination): [EmbeddedVulnerability!]!"),
 		schema.AddQuery("vulnerabilityCount(query: String): Int!"),
 		schema.AddQuery("k8sVulnerability(id: ID): EmbeddedVulnerability"),
-		schema.AddQuery("k8sVulnerabilities(query: String): [EmbeddedVulnerability!]!"),
+		schema.AddQuery("k8sVulnerabilities(query: String, pagination: Pagination): [EmbeddedVulnerability!]!"),
 		schema.AddQuery("istioVulnerability(id: ID): EmbeddedVulnerability"),
-		schema.AddQuery("istioVulnerabilities(query: String): [EmbeddedVulnerability!]!"),
-		schema.AddQuery("allK8sVulnerabilities(query: String, pagination: Pagination): [EmbeddedVulnerability!]!"),
-		schema.AddQuery("allIstioVulnerabilities(query: String, pagination: Pagination): [EmbeddedVulnerability!]!"),
+		schema.AddQuery("istioVulnerabilities(query: String, pagination: Pagination): [EmbeddedVulnerability!]!"),
 	)
+	if devbuild.IsEnabled() {
+		utils.Must(
+			schema.AddQuery("allK8sVulnerabilities(query: String, pagination: Pagination): [EmbeddedVulnerability!]!"),
+			schema.AddQuery("allIstioVulnerabilities(query: String, pagination: Pagination): [EmbeddedVulnerability!]!"),
+		)
+	}
 }
 
 // Vulnerability resolves a single vulnerability based on an id (the CVE value).
-func (resolver *Resolver) Vulnerability(ctx context.Context, args struct{ *graphql.ID }) (*EmbeddedVulnerabilityResolver, error) {
+func (resolver *Resolver) Vulnerability(ctx context.Context, args idQuery) (*EmbeddedVulnerabilityResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "Vulnerability")
+	if features.Dackbox.Enabled() {
+		return resolver.getCVEFromDackBox(ctx, args)
+	}
+
 	if err := readImages(ctx); err != nil {
 		return nil, err
 	}
@@ -89,6 +97,10 @@ func (resolver *Resolver) Vulnerability(ctx context.Context, args struct{ *graph
 // Vulnerabilities resolves a set of vulnerabilities based on a query.
 func (resolver *Resolver) Vulnerabilities(ctx context.Context, q PaginatedQuery) ([]*EmbeddedVulnerabilityResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "Vulnerabilities")
+	if features.Dackbox.Enabled() {
+		return resolver.getCVEsFromDackBox(ctx, q)
+	}
+
 	if err := readImages(ctx); err != nil {
 		return nil, err
 	}
@@ -108,6 +120,10 @@ func (resolver *Resolver) Vulnerabilities(ctx context.Context, q PaginatedQuery)
 // VulnerabilityCount returns count of all clusters across infrastructure
 func (resolver *Resolver) VulnerabilityCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "VulnerabilityCount")
+	if features.Dackbox.Enabled() {
+		return resolver.CveCount(ctx, args)
+	}
+
 	if err := readImages(ctx); err != nil {
 		return 0, err
 	}
@@ -123,8 +139,12 @@ func (resolver *Resolver) VulnerabilityCount(ctx context.Context, args RawQuery)
 }
 
 // K8sVulnerability resolves a single k8s vulnerability based on an id (the CVE value).
-func (resolver *Resolver) K8sVulnerability(ctx context.Context, args struct{ *graphql.ID }) (*EmbeddedVulnerabilityResolver, error) {
+func (resolver *Resolver) K8sVulnerability(ctx context.Context, args idQuery) (*EmbeddedVulnerabilityResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "K8sVulnerability")
+	if features.Dackbox.Enabled() {
+		return resolver.getCVEFromDackBox(ctx, args)
+	}
+
 	if err := readImages(ctx); err != nil {
 		return nil, err
 	}
@@ -142,8 +162,13 @@ func (resolver *Resolver) K8sVulnerability(ctx context.Context, args struct{ *gr
 }
 
 // K8sVulnerabilities resolves a set of k8s vulnerabilities based on a query.
-func (resolver *Resolver) K8sVulnerabilities(ctx context.Context, q RawQuery) ([]*EmbeddedVulnerabilityResolver, error) {
+func (resolver *Resolver) K8sVulnerabilities(ctx context.Context, q PaginatedQuery) ([]*EmbeddedVulnerabilityResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "K8sVulnerabilities")
+	if features.Dackbox.Enabled() {
+		query := search.AddRawQueriesAsConjunction(q.String(), getK8sCVEBaseRawQuery())
+		return resolver.getCVEsFromDackBox(ctx, PaginatedQuery{Query: &query, Pagination: q.Pagination})
+	}
+
 	if err := readImages(ctx); err != nil {
 		return nil, err
 	}
@@ -153,7 +178,13 @@ func (resolver *Resolver) K8sVulnerabilities(ctx context.Context, q RawQuery) ([
 		return nil, err
 	}
 
-	return k8sIstioVulnerabilities(ctx, resolver, query, converter.K8s)
+	pagination := query.Pagination
+	query.Pagination = nil
+
+	resolvers, err := paginationWrapper{
+		pv: pagination,
+	}.paginate(k8sIstioVulnerabilities(ctx, resolver, query, converter.K8s))
+	return resolvers.([]*EmbeddedVulnerabilityResolver), err
 }
 
 // AllK8sVulnerabilities resolves a set of k8s vulnerabilities based on a query.
@@ -187,8 +218,12 @@ func (resolver *Resolver) AllK8sVulnerabilities(ctx context.Context, q Paginated
 }
 
 // IstioVulnerability resolves a single istio vulnerability based on an id (the CVE value).
-func (resolver *Resolver) IstioVulnerability(ctx context.Context, args struct{ *graphql.ID }) (*EmbeddedVulnerabilityResolver, error) {
+func (resolver *Resolver) IstioVulnerability(ctx context.Context, args idQuery) (*EmbeddedVulnerabilityResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "IstioVulnerability")
+	if features.Dackbox.Enabled() {
+		return resolver.getCVEFromDackBox(ctx, args)
+	}
+
 	if err := readImages(ctx); err != nil {
 		return nil, err
 	}
@@ -206,8 +241,13 @@ func (resolver *Resolver) IstioVulnerability(ctx context.Context, args struct{ *
 }
 
 // IstioVulnerabilities resolves a set of istio vulnerabilities based on a query.
-func (resolver *Resolver) IstioVulnerabilities(ctx context.Context, q RawQuery) ([]*EmbeddedVulnerabilityResolver, error) {
+func (resolver *Resolver) IstioVulnerabilities(ctx context.Context, q PaginatedQuery) ([]*EmbeddedVulnerabilityResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "IstioVulnerabilities")
+	if features.Dackbox.Enabled() {
+		query := search.AddRawQueriesAsConjunction(q.String(), getIstioCVEBaseRawQuery())
+		return resolver.getCVEsFromDackBox(ctx, PaginatedQuery{Query: &query, Pagination: q.Pagination})
+	}
+
 	if err := readImages(ctx); err != nil {
 		return nil, err
 	}
@@ -217,7 +257,13 @@ func (resolver *Resolver) IstioVulnerabilities(ctx context.Context, q RawQuery) 
 		return nil, err
 	}
 
-	return k8sIstioVulnerabilities(ctx, resolver, query, converter.Istio)
+	pagination := query.Pagination
+	query.Pagination = nil
+
+	resolvers, err := paginationWrapper{
+		pv: pagination,
+	}.paginate(k8sIstioVulnerabilities(ctx, resolver, query, converter.Istio))
+	return resolvers.([]*EmbeddedVulnerabilityResolver), err
 }
 
 // AllIstioVulnerabilities resolves a set of k8s vulnerabilities based on a query.
@@ -446,21 +492,17 @@ func (evr *EmbeddedVulnerabilityResolver) LastScanned(ctx context.Context) (*gra
 }
 
 // Components are the components that contain the CVE/Vulnerability.
-func (evr *EmbeddedVulnerabilityResolver) Components(ctx context.Context, args RawQuery) ([]*EmbeddedImageScanComponentResolver, error) {
-	query, err := args.AsV1QueryOrEmpty()
-	if err != nil {
-		return nil, err
-	}
-	query, err = search.AddAsConjunction(evr.vulnQuery(), query)
-	if err != nil {
-		return nil, err
-	}
-	return components(ctx, evr.root, query)
+func (evr *EmbeddedVulnerabilityResolver) Components(ctx context.Context, args PaginatedQuery) ([]*EmbeddedImageScanComponentResolver, error) {
+	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.CVEs, "Components")
+
+	query := search.AddRawQueriesAsConjunction(args.String(), evr.vulnRawQuery())
+
+	return evr.root.Components(ctx, PaginatedQuery{Query: &query, Pagination: args.Pagination})
 }
 
 // ComponentCount is the number of components that contain the CVE/Vulnerability.
 func (evr *EmbeddedVulnerabilityResolver) ComponentCount(ctx context.Context, args RawQuery) (int32, error) {
-	components, err := evr.Components(ctx, args)
+	components, err := evr.Components(ctx, PaginatedQuery{Query: args.Query})
 	if err != nil {
 		return 0, err
 	}
@@ -468,7 +510,7 @@ func (evr *EmbeddedVulnerabilityResolver) ComponentCount(ctx context.Context, ar
 }
 
 // Images are the images that contain the CVE/Vulnerability.
-func (evr *EmbeddedVulnerabilityResolver) Images(ctx context.Context, args RawQuery) ([]*imageResolver, error) {
+func (evr *EmbeddedVulnerabilityResolver) Images(ctx context.Context, args PaginatedQuery) ([]*imageResolver, error) {
 	// Convert to query, but link the fields for the search.
 	query, err := args.AsV1QueryOrEmpty()
 	if err != nil {
@@ -499,7 +541,7 @@ func (evr *EmbeddedVulnerabilityResolver) ImageCount(ctx context.Context, args R
 }
 
 // Deployments are the deployments that contain the CVE/Vulnerability.
-func (evr *EmbeddedVulnerabilityResolver) Deployments(ctx context.Context, args RawQuery) ([]*deploymentResolver, error) {
+func (evr *EmbeddedVulnerabilityResolver) Deployments(ctx context.Context, args PaginatedQuery) ([]*deploymentResolver, error) {
 	if err := readDeployments(ctx); err != nil {
 		return nil, err
 	}
@@ -653,16 +695,22 @@ func (evr *EmbeddedVulnerabilityResolver) loadImages(ctx context.Context, query 
 		return nil, err
 	}
 
+	pagination := query.GetPagination()
+	query.Pagination = nil
+
 	query, err = search.AddAsConjunction(evr.vulnQuery(), query)
 	if err != nil {
 		return nil, err
 	}
+
+	query.Pagination = pagination
+
 	return evr.root.wrapImages(imageLoader.FromQuery(ctx, query))
 }
 
 func (evr *EmbeddedVulnerabilityResolver) loadDeployments(ctx context.Context, query *v1.Query) ([]*deploymentResolver, error) {
-	q, err := evr.getDeploymentBaseQuery(ctx)
-	if err != nil || q == nil {
+	deploymentBaseQuery, err := evr.getDeploymentBaseQuery(ctx)
+	if err != nil || deploymentBaseQuery == nil {
 		return nil, err
 	}
 	// Search the deployments.
@@ -670,7 +718,18 @@ func (evr *EmbeddedVulnerabilityResolver) loadDeployments(ctx context.Context, q
 	if err != nil {
 		return nil, err
 	}
-	return evr.root.wrapListDeployments(ListDeploymentLoader.FromQuery(ctx, search.ConjunctionQuery(q, query)))
+
+	pagination := query.GetPagination()
+	query.Pagination = nil
+
+	query, err = search.AddAsConjunction(deploymentBaseQuery, query)
+	if err != nil {
+		return nil, err
+	}
+
+	query.Pagination = pagination
+
+	return evr.root.wrapListDeployments(ListDeploymentLoader.FromQuery(ctx, query))
 }
 
 func (evr *EmbeddedVulnerabilityResolver) getDeploymentBaseQuery(ctx context.Context) (*v1.Query, error) {
@@ -690,6 +749,10 @@ func (evr *EmbeddedVulnerabilityResolver) getDeploymentBaseQuery(ctx context.Con
 
 func (evr *EmbeddedVulnerabilityResolver) vulnQuery() *v1.Query {
 	return search.NewQueryBuilder().AddExactMatches(search.CVE, evr.data.GetCve()).ProtoQuery()
+}
+
+func (evr *EmbeddedVulnerabilityResolver) vulnRawQuery() string {
+	return search.NewQueryBuilder().AddExactMatches(search.CVE, evr.data.GetCve()).Query()
 }
 
 // VulnerabilityType returns the type of vulnerability
@@ -745,4 +808,80 @@ func mapImagesToVulnerabilityResolvers(root *Resolver, images []*storage.Image, 
 		resolvers = append(resolvers, vuln)
 	}
 	return resolvers, nil
+}
+
+func (resolver *Resolver) getCVEFromDackBox(ctx context.Context, args idQuery) (*EmbeddedVulnerabilityResolver, error) {
+	cve, err := resolver.Cve(ctx, args)
+	if err != nil {
+		return nil, err
+	}
+
+	results, err := mapCveResolverToEmbeddedVulnerabilityResolver(ctx, resolver, cve)
+	if err != nil {
+		return nil, err
+	}
+	return results[0], err
+}
+
+func (resolver *Resolver) getCVEsFromDackBox(ctx context.Context, q PaginatedQuery) ([]*EmbeddedVulnerabilityResolver, error) {
+	cves, err := resolver.Cves(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+
+	return mapCveResolverToEmbeddedVulnerabilityResolver(ctx, resolver, cves...)
+}
+
+func mapCveResolverToEmbeddedVulnerabilityResolver(ctx context.Context, root *Resolver, cves ...*cVEResolver) ([]*EmbeddedVulnerabilityResolver, error) {
+	ret := make([]*EmbeddedVulnerabilityResolver, 0, len(cves))
+
+	for _, cve := range cves {
+		embedded := &EmbeddedVulnerabilityResolver{
+			root: root,
+			data: converter.ProtoCVEToEmbeddedCVE(cve.data),
+		}
+
+		err := embedded.updateLastScanned(ctx, cve)
+		if err != nil {
+			return nil, err
+		}
+
+		err = embedded.updateFixedByVersion(ctx, cve)
+		if err != nil {
+			return nil, err
+		}
+
+		ret = append(ret, embedded)
+	}
+	return ret, nil
+}
+
+func getK8sCVEBaseRawQuery() string {
+	return search.NewQueryBuilder().AddExactMatches(search.CVEType, storage.CVE_K8S_CVE.String()).Query()
+}
+
+func getIstioCVEBaseRawQuery() string {
+	return search.NewQueryBuilder().AddExactMatches(search.CVEType, storage.CVE_ISTIO_CVE.String()).Query()
+}
+
+func (evr *EmbeddedVulnerabilityResolver) updateLastScanned(ctx context.Context, cve *cVEResolver) error {
+	ls, err := cve.getLastScannedTime(ctx)
+	if err != nil {
+		return err
+	}
+
+	evr.lastScanned = ls
+	return nil
+}
+
+func (evr *EmbeddedVulnerabilityResolver) updateFixedByVersion(ctx context.Context, cve *cVEResolver) error {
+	fixedBy, err := cve.FixedByVersion(ctx)
+	if err != nil {
+		return err
+	}
+
+	evr.data.SetFixedBy = &storage.EmbeddedVulnerability_FixedBy{
+		FixedBy: fixedBy,
+	}
+	return nil
 }

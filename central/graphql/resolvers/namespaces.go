@@ -42,7 +42,7 @@ func init() {
 		schema.AddExtraResolver("Namespace", `componentCount(query: String): Int!`),
 		schema.AddExtraResolver("Namespace", `vulns(query: String, pagination: Pagination): [EmbeddedVulnerability!]!`),
 		schema.AddExtraResolver("Namespace", `vulnCount(query: String): Int!`),
-		schema.AddExtraResolver("Namespace", `vulnCounter: VulnerabilityCounter!`),
+		schema.AddExtraResolver("Namespace", `vulnCounter(query: String): VulnerabilityCounter!`),
 		schema.AddExtraResolver("Namespace", `secrets(query: String, pagination: Pagination): [Secret!]!`),
 		schema.AddExtraResolver("Namespace", `deployments(query: String, pagination: Pagination): [Deployment!]!`),
 		schema.AddExtraResolver("Namespace", "cluster: Cluster!"),
@@ -254,6 +254,17 @@ func (resolver *namespaceResolver) K8sRoles(ctx context.Context, args PaginatedQ
 	return resolver.root.K8sRoles(ctx, PaginatedQuery{Query: &query, Pagination: args.Pagination})
 }
 
+func (resolver *namespaceResolver) Images(ctx context.Context, args PaginatedQuery) ([]*imageResolver, error) {
+	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Namespaces, "Images")
+	if err := readImages(ctx); err != nil {
+		return nil, err
+	}
+
+	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getClusterNamespaceRawQuery())
+
+	return resolver.root.Images(ctx, PaginatedQuery{Query: &query, Pagination: args.Pagination})
+}
+
 func (resolver *namespaceResolver) ImageCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Namespaces, "ImageCount")
 	if err := readNamespaces(ctx); err != nil {
@@ -390,19 +401,8 @@ func (resolver *namespaceResolver) getActiveDeployAlerts(ctx context.Context, q 
 				AddStrings(search.LifecycleStage, storage.LifecycleStage_DEPLOY.String()).ProtoQuery()))
 }
 
-func (resolver *namespaceResolver) Images(ctx context.Context, args PaginatedQuery) ([]*imageResolver, error) {
-	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Namespaces, "Images")
-	if err := readImages(ctx); err != nil {
-		return nil, err
-	}
-
-	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getClusterNamespaceRawQuery())
-
-	return resolver.root.Images(ctx, PaginatedQuery{Query: &query, Pagination: args.Pagination})
-}
-
 func (resolver *namespaceResolver) Components(ctx context.Context, args PaginatedQuery) ([]*EmbeddedImageScanComponentResolver, error) {
-	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "Components")
+	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Namespaces, "Components")
 	if err := readImages(ctx); err != nil {
 		return nil, err
 	}
@@ -413,27 +413,18 @@ func (resolver *namespaceResolver) Components(ctx context.Context, args Paginate
 }
 
 func (resolver *namespaceResolver) ComponentCount(ctx context.Context, args RawQuery) (int32, error) {
-	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "ComponentCount")
+	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Namespaces, "ComponentCount")
 	if err := readImages(ctx); err != nil {
 		return 0, err
 	}
-	query, err := args.AsV1QueryOrEmpty()
-	if err != nil {
-		return 0, err
-	}
-	nested, err := search.AddAsConjunction(resolver.getClusterNamespaceQuery(), query)
-	if err != nil {
-		return 0, err
-	}
-	comps, err := components(ctx, resolver.root, nested)
-	if err != nil {
-		return 0, err
-	}
-	return int32(len(comps)), nil
+
+	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getClusterNamespaceRawQuery())
+
+	return resolver.root.ComponentCount(ctx, RawQuery{Query: &query})
 }
 
 func (resolver *namespaceResolver) Vulns(ctx context.Context, args PaginatedQuery) ([]*EmbeddedVulnerabilityResolver, error) {
-	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "Vulns")
+	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Namespaces, "Vulns")
 	if err := readImages(ctx); err != nil {
 		return nil, err
 	}
@@ -444,40 +435,33 @@ func (resolver *namespaceResolver) Vulns(ctx context.Context, args PaginatedQuer
 }
 
 func (resolver *namespaceResolver) VulnCount(ctx context.Context, args RawQuery) (int32, error) {
-	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "VulnCount")
+	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Namespaces, "VulnCount")
 	if err := readImages(ctx); err != nil {
 		return 0, err
 	}
-	query, err := args.AsV1QueryOrEmpty()
-	if err != nil {
-		return 0, err
-	}
-	nested, err := search.AddAsConjunction(resolver.getClusterNamespaceQuery(), query)
-	if err != nil {
-		return 0, err
-	}
-	vulns, err := vulnerabilities(ctx, resolver.root, nested)
-	if err != nil {
-		return 0, err
-	}
-	return int32(len(vulns)), nil
+
+	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getClusterNamespaceRawQuery())
+
+	return resolver.root.VulnerabilityCount(ctx, RawQuery{Query: &query})
 }
 
-func (resolver *namespaceResolver) VulnCounter(ctx context.Context) (*VulnerabilityCounterResolver, error) {
-	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "VulnCounter")
+func (resolver *namespaceResolver) VulnCounter(ctx context.Context, args RawQuery) (*VulnerabilityCounterResolver, error) {
+	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Namespaces, "VulnCounter")
 	if err := readImages(ctx); err != nil {
 		return nil, err
 	}
 
-	imageLoader, err := loaders.GetImageLoader(ctx)
+	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getClusterNamespaceRawQuery())
+	vulnResolvers, err := resolver.Vulns(ctx, PaginatedQuery{Query: &query})
 	if err != nil {
 		return nil, err
 	}
-	images, err := imageLoader.FromQuery(ctx, resolver.getClusterNamespaceQuery())
-	if err != nil {
-		return nil, err
+
+	var vulns []*storage.EmbeddedVulnerability
+	for _, vulnsResolver := range vulnResolvers {
+		vulns = append(vulns, vulnsResolver.data)
 	}
-	return mapImagesToVulnerabilityCounter(images), nil
+	return mapVulnsToVulnerabilityCounter(vulns), nil
 }
 
 func (resolver *namespaceResolver) Secrets(ctx context.Context, args PaginatedQuery) ([]*secretResolver, error) {

@@ -16,10 +16,14 @@ import (
 	"github.com/stackrox/rox/central/compliance/manager/service"
 	complianceService "github.com/stackrox/rox/central/compliance/service"
 	complianceStandards "github.com/stackrox/rox/central/compliance/standards"
+	componentCVEEdgeDataStore "github.com/stackrox/rox/central/componentcveedge/datastore"
+	cveDataStore "github.com/stackrox/rox/central/cve/datastore"
 	"github.com/stackrox/rox/central/cve/fetcher"
 	deploymentDatastore "github.com/stackrox/rox/central/deployment/datastore"
 	groupDataStore "github.com/stackrox/rox/central/group/datastore"
 	imageDatastore "github.com/stackrox/rox/central/image/datastore"
+	imageComponentDataStore "github.com/stackrox/rox/central/imagecomponent/datastore"
+	imageComponentEdgeDataStore "github.com/stackrox/rox/central/imagecomponentedge/datastore"
 	namespaceDataStore "github.com/stackrox/rox/central/namespace/datastore"
 	nfDS "github.com/stackrox/rox/central/networkflow/datastore"
 	npDS "github.com/stackrox/rox/central/networkpolicies/datastore"
@@ -50,8 +54,12 @@ type Resolver struct {
 	ComplianceService           v1.ComplianceServiceServer
 	ComplianceManagementService v1.ComplianceManagementServiceServer
 	ComplianceManager           complianceManager.ComplianceManager
+	ComponentCVEEdgeDataStore   componentCVEEdgeDataStore.DataStore
+	CVEDataStore                cveDataStore.DataStore
 	DeploymentDataStore         deploymentDatastore.DataStore
 	ImageDataStore              imageDatastore.DataStore
+	ImageComponentDataStore     imageComponentDataStore.DataStore
+	ImageComponentEdgeDataStore imageComponentEdgeDataStore.DataStore
 	GroupDataStore              groupDataStore.DataStore
 	NamespaceDataStore          namespaceDataStore.DataStore
 	NetworkFlowDataStore        nfDS.ClusterDataStore
@@ -81,8 +89,12 @@ func New() *Resolver {
 		ComplianceManager:           complianceManager.Singleton(),
 		ComplianceService:           complianceService.Singleton(),
 		ClusterDataStore:            clusterDatastore.Singleton(),
+		ComponentCVEEdgeDataStore:   componentCVEEdgeDataStore.Singleton(),
+		CVEDataStore:                cveDataStore.Singleton(),
 		DeploymentDataStore:         deploymentDatastore.Singleton(),
 		ImageDataStore:              imageDatastore.Singleton(),
+		ImageComponentDataStore:     imageComponentDataStore.Singleton(),
+		ImageComponentEdgeDataStore: imageComponentEdgeDataStore.Singleton(),
 		GroupDataStore:              groupDataStore.Singleton(),
 		NamespaceDataStore:          namespaceDataStore.Singleton(),
 		NetworkPoliciesStore:        npDS.Singleton(),
@@ -111,9 +123,11 @@ var (
 	readCompliance             = readAuth(resources.Compliance)
 	readComplianceRuns         = readAuth(resources.ComplianceRuns)
 	readComplianceRunSchedule  = readAuth(resources.ComplianceRunSchedule)
+	readCVEs                   = readAuth(resources.CVE)
 	readDeployments            = readAuth(resources.Deployment)
 	readGroups                 = readAuth(resources.Group)
 	readImages                 = readAuth(resources.Image)
+	readImageComponents        = readAuth(resources.ImageComponent)
 	readIndicators             = readAuth(resources.Indicator)
 	readNamespaces             = readAuth(resources.Namespace)
 	readNodes                  = readAuth(resources.Node)

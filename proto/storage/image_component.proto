@@ -19,6 +19,15 @@ message ImageComponent {
     string                         version      = 3 [(gogoproto.moretags) = "search:\"Component Version,store\""];
     License                        license      = 4;
     int64                          priority     = 5;
+    enum SourceType {
+        OS     = 0;
+        PYTHON = 1;
+        JAVA   = 2;
+        RUBY   = 3;
+        NODEJS = 4;
+    }
+    SourceType                     source       = 6 [(gogoproto.moretags) = "search:\"Component Source,store\""];
+    string                         location     = 7 [(gogoproto.moretags) = "search:\"Component Location,store\""];
 }
 
 message ComponentCVEEdge {

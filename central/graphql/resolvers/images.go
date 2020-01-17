@@ -8,6 +8,7 @@ import (
 	"github.com/stackrox/rox/central/graphql/resolvers/loaders"
 	"github.com/stackrox/rox/central/metrics"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/features"
 	pkgMetrics "github.com/stackrox/rox/pkg/metrics"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/utils"
@@ -24,7 +25,7 @@ func init() {
 		schema.AddExtraResolver("Image", "topVuln(query: String): EmbeddedVulnerability"),
 		schema.AddExtraResolver("Image", "vulns(query: String, pagination: Pagination): [EmbeddedVulnerability]!"),
 		schema.AddExtraResolver("Image", "vulnCount(query: String): Int!"),
-		schema.AddExtraResolver("Image", "vulnCounter: VulnerabilityCounter!"),
+		schema.AddExtraResolver("Image", "vulnCounter(query: String): VulnerabilityCounter!"),
 		schema.AddExtraResolver("EmbeddedImageScanComponent", "layerIndex: Int"),
 		schema.AddExtraResolver("Image", "components(query: String, pagination: Pagination): [EmbeddedImageScanComponent!]!"),
 		schema.AddExtraResolver("Image", `componentCount(query: String): Int!`),
@@ -157,6 +158,11 @@ func (resolver *imageResolver) Vulns(ctx context.Context, args PaginatedQuery) (
 		return nil, err
 	}
 
+	if features.Dackbox.Enabled() {
+		query := search.AddRawQueriesAsConjunction(args.String(), resolver.getImageRawQuery())
+		return resolver.root.Vulnerabilities(ctx, PaginatedQuery{Query: &query, Pagination: args.Pagination})
+	}
+
 	q, err := args.AsV1QueryOrEmpty()
 	if err != nil {
 		return nil, err
@@ -177,28 +183,40 @@ func (resolver *imageResolver) VulnCount(ctx context.Context, args RawQuery) (in
 	if err := resolver.ensureImage(ctx); err != nil {
 		return 0, err
 	}
-	query, err := args.AsV1QueryOrEmpty()
+
+	vulns, err := resolver.Vulns(ctx, PaginatedQuery{Query: args.Query})
 	if err != nil {
 		return 0, err
 	}
-	resolvers, err := mapImagesToVulnerabilityResolvers(resolver.root, []*storage.Image{resolver.data}, query)
-	if err != nil {
-		return 0, err
-	}
-	return int32(len(resolvers)), nil
+	return int32(len(vulns)), nil
 }
 
 // VulnCounter resolves the number of different types of vulnerabilities contained in an image component.
-func (resolver *imageResolver) VulnCounter(ctx context.Context) (*VulnerabilityCounterResolver, error) {
+func (resolver *imageResolver) VulnCounter(ctx context.Context, args RawQuery) (*VulnerabilityCounterResolver, error) {
 	if err := resolver.ensureImage(ctx); err != nil {
 		return nil, err
 	}
-	return mapImagesToVulnerabilityCounter([]*storage.Image{resolver.data}), nil
+
+	resolvers, err := resolver.Vulns(ctx, PaginatedQuery{Query: args.Query})
+	if err != nil {
+		return nil, err
+	}
+
+	var vulns []*storage.EmbeddedVulnerability
+	for _, resolver := range resolvers {
+		vulns = append(vulns, resolver.data)
+	}
+	return mapVulnsToVulnerabilityCounter(vulns), nil
 }
 
 // Vulns returns all of the vulnerabilities in the image.
 func (resolver *imageResolver) Components(ctx context.Context, args PaginatedQuery) ([]*EmbeddedImageScanComponentResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Images, "ImageComponents")
+
+	if features.Dackbox.Enabled() {
+		query := search.AddRawQueriesAsConjunction(args.String(), resolver.getImageRawQuery())
+		return resolver.root.Components(ctx, PaginatedQuery{Query: &query, Pagination: args.Pagination})
+	}
 
 	q, err := args.AsV1QueryOrEmpty()
 	if err != nil {
@@ -221,17 +239,11 @@ func (resolver *imageResolver) ComponentCount(ctx context.Context, args RawQuery
 		return 0, err
 	}
 
-	query, err := args.AsV1QueryOrEmpty()
+	components, err := resolver.Components(ctx, PaginatedQuery{Query: args.Query})
 	if err != nil {
 		return 0, err
 	}
-
-	resolvers, err := mapImagesToComponentResolvers(resolver.root, []*storage.Image{resolver.data}, query)
-	if err != nil {
-		return 0, err
-	}
-
-	return int32(len(resolvers)), nil
+	return int32(len(components)), nil
 }
 
 func (resolver *imageResolver) ensureImage(ctx context.Context) error {
@@ -261,4 +273,8 @@ func (resolver *Resolver) getImage(ctx context.Context, id string) *storage.Imag
 		return nil
 	}
 	return image
+}
+
+func (resolver *imageResolver) getImageRawQuery() string {
+	return search.NewQueryBuilder().AddExactMatches(search.ImageSHA, resolver.data.GetId()).Query()
 }

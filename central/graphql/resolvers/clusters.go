@@ -8,7 +8,6 @@ import (
 
 	"github.com/graph-gophers/graphql-go"
 	"github.com/pkg/errors"
-	"github.com/stackrox/rox/central/cve/converter"
 	"github.com/stackrox/rox/central/graphql/resolvers/loaders"
 	"github.com/stackrox/rox/central/metrics"
 	"github.com/stackrox/rox/central/policy/matcher"
@@ -33,7 +32,7 @@ func init() {
 		schema.AddExtraResolver("Cluster", `alerts(query: String, pagination: Pagination): [Alert!]!`),
 		schema.AddExtraResolver("Cluster", `alertCount(query: String): Int!`),
 		schema.AddExtraResolver("Cluster", `latestViolation(query: String): Time`),
-		schema.AddExtraResolver("Cluster", `failingPolicyCounter: PolicyCounter`),
+		schema.AddExtraResolver("Cluster", `failingPolicyCounter(query: String): PolicyCounter`),
 		schema.AddExtraResolver("Cluster", `deployments(query: String, pagination: Pagination): [Deployment!]!`),
 		schema.AddExtraResolver("Cluster", `deploymentCount(query: String): Int!`),
 		schema.AddExtraResolver("Cluster", `nodes(query: String, pagination: Pagination): [Node!]!`),
@@ -49,7 +48,7 @@ func init() {
 		schema.AddExtraResolver("Cluster", `serviceAccounts(query: String, pagination: Pagination): [ServiceAccount!]!`),
 		schema.AddExtraResolver("Cluster", `serviceAccount(sa: ID!): ServiceAccount`),
 		schema.AddExtraResolver("Cluster", `serviceAccountCount(query: String): Int!`),
-		schema.AddExtraResolver("Cluster", `subjects(query: String, pagination: Pagination): [SubjectWithClusterID!]!`), //TODO
+		schema.AddExtraResolver("Cluster", `subjects(query: String, pagination: Pagination): [SubjectWithClusterID!]!`),
 		schema.AddExtraResolver("Cluster", `subject(name: String!): SubjectWithClusterID`),
 		schema.AddExtraResolver("Cluster", `subjectCount(query: String): Int!`),
 		schema.AddExtraResolver("Cluster", `images(query: String, pagination: Pagination): [Image!]!`),
@@ -58,7 +57,7 @@ func init() {
 		schema.AddExtraResolver("Cluster", `componentCount(query: String): Int!`),
 		schema.AddExtraResolver("Cluster", `vulns(query: String, pagination: Pagination): [EmbeddedVulnerability!]!`),
 		schema.AddExtraResolver("Cluster", `vulnCount(query: String): Int!`),
-		schema.AddExtraResolver("Cluster", `vulnCounter: VulnerabilityCounter!`),
+		schema.AddExtraResolver("Cluster", `vulnCounter(query: String): VulnerabilityCounter!`),
 		schema.AddExtraResolver("Cluster", `k8sVulns(query: String, pagination: Pagination): [EmbeddedVulnerability!]!`),
 		schema.AddExtraResolver("Cluster", `k8sVulnCount(query: String): Int!`),
 		schema.AddExtraResolver("Cluster", `istioVulns(query: String, pagination: Pagination): [EmbeddedVulnerability!]!`),
@@ -97,15 +96,6 @@ func (resolver *clusterResolver) getClusterConjunctionQuery(q *v1.Query) (*v1.Qu
 
 	q.Pagination = pagination
 	return q, nil
-}
-
-func (resolver *clusterResolver) getClusterConjunctionQueryFromPaginatedQuery(paginatedQuery PaginatedQuery) (*v1.Query, error) {
-	q, err := paginatedQuery.AsV1QueryOrEmpty()
-	if err != nil {
-		return nil, err
-	}
-
-	return resolver.getClusterConjunctionQuery(q)
 }
 
 // Cluster returns a GraphQL resolver for the given cluster
@@ -173,12 +163,22 @@ func (resolver *clusterResolver) AlertCount(ctx context.Context, args RawQuery) 
 }
 
 // FailingPolicyCounter returns a policy counter for all the failed policies.
-func (resolver *clusterResolver) FailingPolicyCounter(ctx context.Context) (*PolicyCounterResolver, error) {
+func (resolver *clusterResolver) FailingPolicyCounter(ctx context.Context, args RawQuery) (*PolicyCounterResolver, error) {
 	if err := readPolicies(ctx); err != nil {
 		return nil, err
 	}
-	query := resolver.getClusterQuery()
-	alerts, err := resolver.root.ViolationsDataStore.SearchListAlerts(ctx, query)
+
+	q, err := args.AsV1QueryOrEmpty()
+	if err != nil {
+		return nil, err
+	}
+
+	q, err = search.AddAsConjunction(q, resolver.getClusterQuery())
+	if err != nil {
+		return nil, err
+	}
+
+	alerts, err := resolver.root.ViolationsDataStore.SearchListAlerts(ctx, q)
 	if err != nil {
 		return nil, nil
 	}
@@ -435,12 +435,18 @@ func (resolver *clusterResolver) Subjects(ctx context.Context, args PaginatedQue
 		return nil, err
 	}
 
+	pagination := q.GetPagination()
+	q.Pagination = nil
+
 	subjectResolvers, err := resolver.root.wrapSubjects(resolver.getSubjects(ctx, q))
 	if err != nil {
 		return nil, err
 	}
 
-	return wrapSubjects(resolver.data.GetId(), resolver.data.GetName(), subjectResolvers), nil
+	resolvers, err := paginationWrapper{
+		pv: pagination,
+	}.paginate(wrapSubjects(resolver.data.GetId(), resolver.data.GetName(), subjectResolvers), nil)
+	return resolvers.([]*subjectWithClusterIDResolver), err
 }
 
 // SubjectCount returns count of Users and Groups in this cluster
@@ -541,19 +547,9 @@ func (resolver *clusterResolver) ComponentCount(ctx context.Context, args RawQue
 		return 0, err
 	}
 
-	query, err := args.AsV1QueryOrEmpty()
-	if err != nil {
-		return 0, err
-	}
-	nested, err := search.AddAsConjunction(resolver.getClusterQuery(), query)
-	if err != nil {
-		return 0, err
-	}
-	comps, err := components(ctx, resolver.root, nested)
-	if err != nil {
-		return 0, err
-	}
-	return int32(len(comps)), nil
+	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getClusterRawQuery())
+
+	return resolver.root.ComponentCount(ctx, RawQuery{Query: &query})
 }
 
 func (resolver *clusterResolver) Vulns(ctx context.Context, args PaginatedQuery) ([]*EmbeddedVulnerabilityResolver, error) {
@@ -573,70 +569,42 @@ func (resolver *clusterResolver) VulnCount(ctx context.Context, args RawQuery) (
 		return 0, err
 	}
 
-	query, err := args.AsV1QueryOrEmpty()
-	if err != nil {
-		return 0, err
-	}
-	nested, err := search.AddAsConjunction(resolver.getClusterQuery(), query)
-	if err != nil {
-		return 0, err
-	}
-	vulns, err := vulnerabilities(ctx, resolver.root, nested)
-	if err != nil {
-		return 0, err
-	}
-	return int32(len(vulns)), nil
+	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getClusterRawQuery())
+
+	return resolver.root.VulnerabilityCount(ctx, RawQuery{Query: &query})
 }
 
-func (resolver *clusterResolver) VulnCounter(ctx context.Context) (*VulnerabilityCounterResolver, error) {
+func (resolver *clusterResolver) VulnCounter(ctx context.Context, args RawQuery) (*VulnerabilityCounterResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "VulnCounter")
 	if err := readImages(ctx); err != nil {
 		return nil, err
 	}
 
-	vulnsResolvers, err := vulnerabilities(ctx, resolver.root, resolver.getClusterQuery())
+	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getClusterRawQuery())
+	vulnResolvers, err := resolver.Vulns(ctx, PaginatedQuery{Query: &query})
 	if err != nil {
 		return nil, err
 	}
 
 	var vulns []*storage.EmbeddedVulnerability
-	for _, vulnsResolver := range vulnsResolvers {
+	for _, vulnsResolver := range vulnResolvers {
 		vulns = append(vulns, vulnsResolver.data)
 	}
-
 	return mapVulnsToVulnerabilityCounter(vulns), nil
 }
 
 func (resolver *clusterResolver) K8sVulns(ctx context.Context, args PaginatedQuery) ([]*EmbeddedVulnerabilityResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "K8sVulns")
 
-	query, err := resolver.getClusterConjunctionQueryFromPaginatedQuery(args)
-	if err != nil {
-		return nil, err
-	}
+	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getClusterRawQuery())
 
-	// TODO: replace this with appropriate query once CVE DS layer with K8S supported is complete
-	resolvers, err := paginationWrapper{
-		pv: query.Pagination,
-	}.paginate(k8sIstioVulns(ctx, resolver, query, converter.K8s))
-
-	return resolvers.([]*EmbeddedVulnerabilityResolver), err
+	return resolver.root.K8sVulnerabilities(ctx, PaginatedQuery{Query: &query, Pagination: args.Pagination})
 }
 
 func (resolver *clusterResolver) K8sVulnCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "K8sVulnCount")
 
-	q, err := args.AsV1QueryOrEmpty()
-	if err != nil {
-		return 0, err
-	}
-
-	q, err = search.AddAsConjunction(resolver.getClusterQuery(), q)
-	if err != nil {
-		return 0, err
-	}
-
-	vulns, err := k8sIstioVulns(ctx, resolver, q, converter.K8s)
+	vulns, err := resolver.K8sVulns(ctx, PaginatedQuery{Query: args.Query})
 	if err != nil {
 		return 0, err
 	}
@@ -646,45 +614,19 @@ func (resolver *clusterResolver) K8sVulnCount(ctx context.Context, args RawQuery
 func (resolver *clusterResolver) IstioVulns(ctx context.Context, args PaginatedQuery) ([]*EmbeddedVulnerabilityResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "IstioVulns")
 
-	query, err := resolver.getClusterConjunctionQueryFromPaginatedQuery(args)
-	if err != nil {
-		return nil, err
-	}
+	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getClusterRawQuery())
 
-	// TODO: replace this with appropriate query once CVE DS layer with K8S supported is complete
-	resolvers, err := paginationWrapper{
-		pv: query.Pagination,
-	}.paginate(k8sIstioVulns(ctx, resolver, query, converter.Istio))
-
-	return resolvers.([]*EmbeddedVulnerabilityResolver), err
+	return resolver.root.IstioVulnerabilities(ctx, PaginatedQuery{Query: &query, Pagination: args.Pagination})
 }
 
 func (resolver *clusterResolver) IstioVulnCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "IstioVulnCount")
 
-	q, err := args.AsV1QueryOrEmpty()
-	if err != nil {
-		return 0, err
-	}
-
-	query, err := resolver.getClusterConjunctionQuery(q)
-	if err != nil {
-		return 0, err
-	}
-
-	vulns, err := k8sIstioVulns(ctx, resolver, query, converter.Istio)
+	vulns, err := resolver.IstioVulns(ctx, PaginatedQuery{Query: args.Query})
 	if err != nil {
 		return 0, err
 	}
 	return int32(len(vulns)), nil
-}
-
-func k8sIstioVulns(ctx context.Context, resolver *clusterResolver, q *v1.Query, ct converter.CveType) ([]*EmbeddedVulnerabilityResolver, error) {
-	if err := readImages(ctx); err != nil {
-		return nil, err
-	}
-
-	return k8sIstioVulnerabilities(ctx, resolver.root, q, ct)
 }
 
 func (resolver *clusterResolver) Policies(ctx context.Context, args PaginatedQuery) ([]*policyResolver, error) {

@@ -9,11 +9,14 @@ import (
 
 	protoTypes "github.com/gogo/protobuf/types"
 	"github.com/graph-gophers/graphql-go"
+	"github.com/stackrox/rox/central/cve/converter"
 	"github.com/stackrox/rox/central/graphql/resolvers/loaders"
 	"github.com/stackrox/rox/central/image/mappings"
+	imageComponentConverter "github.com/stackrox/rox/central/imagecomponent/converter"
 	"github.com/stackrox/rox/central/metrics"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/features"
 	pkgMetrics "github.com/stackrox/rox/pkg/metrics"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/predicate"
@@ -33,19 +36,19 @@ func init() {
 			"name: String!",
 			"version: String!",
 			"topVuln: EmbeddedVulnerability",
-			"vulns(query: String): [EmbeddedVulnerability]!",
+			"vulns(query: String, pagination: Pagination): [EmbeddedVulnerability]!",
 			"vulnCount(query: String): Int!",
-			"vulnCounter: VulnerabilityCounter!",
+			"vulnCounter(query: String): VulnerabilityCounter!",
 			"lastScanned: Time",
-			"images(query: String): [Image!]!",
+			"images(query: String, pagination: Pagination): [Image!]!",
 			"imageCount(query: String): Int!",
-			"deployments(query: String): [Deployment!]!",
+			"deployments(query: String, pagination: Pagination): [Deployment!]!",
 			"deploymentCount(query: String): Int!",
 			"priority: Int!",
 			"source: String!",
 			"location: String!",
 		}),
-		schema.AddExtraResolver("ImageScan", `components(query: String): [EmbeddedImageScanComponent!]!`),
+		schema.AddExtraResolver("ImageScan", `components(query: String, pagination: Pagination): [EmbeddedImageScanComponent!]!`),
 		schema.AddExtraResolver("ImageScan", `componentCount(query: String): Int!`),
 		schema.AddQuery("component(id: ID): EmbeddedImageScanComponent"),
 		schema.AddQuery("components(query: String, pagination: Pagination): [EmbeddedImageScanComponent!]!"),
@@ -54,8 +57,12 @@ func init() {
 }
 
 // Component returns an image scan component based on an input id (name:version)
-func (resolver *Resolver) Component(ctx context.Context, args struct{ *graphql.ID }) (*EmbeddedImageScanComponentResolver, error) {
+func (resolver *Resolver) Component(ctx context.Context, args idQuery) (*EmbeddedImageScanComponentResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "ImageComponent")
+	if features.Dackbox.Enabled() {
+		return resolver.getComponentFromDackBox(ctx, args)
+	}
+
 	if err := readImages(ctx); err != nil {
 		return nil, err
 	}
@@ -83,6 +90,10 @@ func (resolver *Resolver) Component(ctx context.Context, args struct{ *graphql.I
 // Components returns the image scan components that match the input query.
 func (resolver *Resolver) Components(ctx context.Context, q PaginatedQuery) ([]*EmbeddedImageScanComponentResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "ImageComponents")
+	if features.Dackbox.Enabled() {
+		return resolver.getComponentsFromDackBox(ctx, q)
+	}
+
 	if err := readImages(ctx); err != nil {
 		return nil, err
 	}
@@ -102,6 +113,10 @@ func (resolver *Resolver) Components(ctx context.Context, q PaginatedQuery) ([]*
 // ComponentCount returns count of all clusters across infrastructure
 func (resolver *Resolver) ComponentCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "ComponentCount")
+	if features.Dackbox.Enabled() {
+		return resolver.ComponentCountV2(ctx, args)
+	}
+
 	if err := readImages(ctx); err != nil {
 		return 0, err
 	}
@@ -132,30 +147,29 @@ func components(ctx context.Context, root *Resolver, query *v1.Query) ([]*Embedd
 	return mapImagesToComponentResolvers(root, images, query)
 }
 
-func (resolver *imageScanResolver) Components(ctx context.Context, args RawQuery) ([]*EmbeddedImageScanComponentResolver, error) {
+func (resolver *imageScanResolver) Components(ctx context.Context, args PaginatedQuery) ([]*EmbeddedImageScanComponentResolver, error) {
 	query, err := args.AsV1QueryOrEmpty()
 	if err != nil {
 		return nil, err
 	}
 
-	return mapImagesToComponentResolvers(resolver.root, []*storage.Image{
+	pagination := query.GetPagination()
+	query.Pagination = nil
+
+	vulns, err := mapImagesToComponentResolvers(resolver.root, []*storage.Image{
 		{
 			Scan: resolver.data,
 		},
 	}, query)
+
+	resolvers, err := paginationWrapper{
+		pv: pagination,
+	}.paginate(vulns, err)
+	return resolvers.([]*EmbeddedImageScanComponentResolver), err
 }
 
 func (resolver *imageScanResolver) ComponentCount(ctx context.Context, args RawQuery) (int32, error) {
-	query, err := args.AsV1QueryOrEmpty()
-	if err != nil {
-		return 0, err
-	}
-
-	resolvers, err := mapImagesToComponentResolvers(resolver.root, []*storage.Image{
-		{
-			Scan: resolver.data,
-		},
-	}, query)
+	resolvers, err := resolver.Components(ctx, PaginatedQuery{Query: args.Query})
 	if err != nil {
 		return 0, err
 	}
@@ -242,7 +256,7 @@ func (eicr *EmbeddedImageScanComponentResolver) TopVuln(ctx context.Context) (*E
 }
 
 // Vulns resolves the vulnerabilities contained in the image component.
-func (eicr *EmbeddedImageScanComponentResolver) Vulns(ctx context.Context, args RawQuery) ([]*EmbeddedVulnerabilityResolver, error) {
+func (eicr *EmbeddedImageScanComponentResolver) Vulns(ctx context.Context, args PaginatedQuery) ([]*EmbeddedVulnerabilityResolver, error) {
 	query, err := args.AsV1QueryOrEmpty()
 	if err != nil {
 		return nil, err
@@ -266,12 +280,20 @@ func (eicr *EmbeddedImageScanComponentResolver) Vulns(ctx context.Context, args 
 			lastScanned: eicr.lastScanned,
 		})
 	}
-	return vulns, nil
+
+	resolvers, err := paginationWrapper{
+		pv: query.GetPagination(),
+	}.paginate(vulns, nil)
+	return resolvers.([]*EmbeddedVulnerabilityResolver), err
 }
 
 // VulnCount resolves the number of vulnerabilities contained in the image component.
 func (eicr *EmbeddedImageScanComponentResolver) VulnCount(ctx context.Context, args RawQuery) (int32, error) {
-	vulns, err := eicr.Vulns(ctx, args)
+	if features.Dackbox.Enabled() {
+		return eicr.root.VulnerabilityCount(ctx, args)
+	}
+
+	vulns, err := eicr.Vulns(ctx, PaginatedQuery{Query: args.Query})
 	if err != nil {
 		return 0, err
 	}
@@ -279,12 +301,22 @@ func (eicr *EmbeddedImageScanComponentResolver) VulnCount(ctx context.Context, a
 }
 
 // VulnCounter resolves the number of different types of vulnerabilities contained in an image component.
-func (eicr *EmbeddedImageScanComponentResolver) VulnCounter(ctx context.Context) (*VulnerabilityCounterResolver, error) {
-	return mapVulnsToVulnerabilityCounter(eicr.data.GetVulns()), nil
+func (eicr *EmbeddedImageScanComponentResolver) VulnCounter(ctx context.Context, args RawQuery) (*VulnerabilityCounterResolver, error) {
+	vulnResolvers, err := eicr.Vulns(ctx, PaginatedQuery{Query: args.Query})
+	if err != nil {
+		return nil, err
+	}
+
+	vulns := make([]*storage.EmbeddedVulnerability, 0, len(vulnResolvers))
+	for _, vulnResolver := range vulnResolvers {
+		vulns = append(vulns, vulnResolver.data)
+	}
+
+	return mapVulnsToVulnerabilityCounter(vulns), nil
 }
 
 // Images are the images that contain the Component.
-func (eicr *EmbeddedImageScanComponentResolver) Images(ctx context.Context, args RawQuery) ([]*imageResolver, error) {
+func (eicr *EmbeddedImageScanComponentResolver) Images(ctx context.Context, args PaginatedQuery) ([]*imageResolver, error) {
 	// Convert to query, but link the fields for the search.
 	query, err := args.AsV1QueryOrEmpty()
 	if err != nil {
@@ -315,7 +347,7 @@ func (eicr *EmbeddedImageScanComponentResolver) ImageCount(ctx context.Context, 
 }
 
 // Deployments are the deployments that contain the Component.
-func (eicr *EmbeddedImageScanComponentResolver) Deployments(ctx context.Context, args RawQuery) ([]*deploymentResolver, error) {
+func (eicr *EmbeddedImageScanComponentResolver) Deployments(ctx context.Context, args PaginatedQuery) ([]*deploymentResolver, error) {
 	if err := readDeployments(ctx); err != nil {
 		return nil, err
 	}
@@ -352,16 +384,22 @@ func (eicr *EmbeddedImageScanComponentResolver) loadImages(ctx context.Context, 
 		return nil, err
 	}
 
+	pagination := query.GetPagination()
+	query.Pagination = nil
+
 	query, err = search.AddAsConjunction(eicr.componentQuery(), query)
 	if err != nil {
 		return nil, err
 	}
+
+	query.Pagination = pagination
+
 	return eicr.root.wrapImages(imageLoader.FromQuery(ctx, query))
 }
 
 func (eicr *EmbeddedImageScanComponentResolver) loadDeployments(ctx context.Context, query *v1.Query) ([]*deploymentResolver, error) {
-	q, err := eicr.getDeploymentBaseQuery(ctx)
-	if err != nil || q == nil {
+	deploymentBaseQuery, err := eicr.getDeploymentBaseQuery(ctx)
+	if err != nil || deploymentBaseQuery == nil {
 		return nil, err
 	}
 
@@ -369,7 +407,18 @@ func (eicr *EmbeddedImageScanComponentResolver) loadDeployments(ctx context.Cont
 	if err != nil {
 		return nil, err
 	}
-	return eicr.root.wrapListDeployments(ListDeploymentLoader.FromQuery(ctx, search.ConjunctionQuery(q, query)))
+
+	pagination := query.GetPagination()
+	query.Pagination = nil
+
+	query, err = search.AddAsConjunction(deploymentBaseQuery, query)
+	if err != nil {
+		return nil, err
+	}
+
+	query.Pagination = pagination
+
+	return eicr.root.wrapListDeployments(ListDeploymentLoader.FromQuery(ctx, query))
 }
 
 func (eicr *EmbeddedImageScanComponentResolver) getDeploymentBaseQuery(ctx context.Context) (*v1.Query, error) {
@@ -460,4 +509,106 @@ func mapImagesToComponentResolvers(root *Resolver, images []*storage.Image, quer
 		resolvers = append(resolvers, component)
 	}
 	return resolvers, nil
+}
+
+func (resolver *Resolver) getComponentFromDackBox(ctx context.Context, args idQuery) (*EmbeddedImageScanComponentResolver, error) {
+	component, err := resolver.ComponentV2(ctx, args)
+	if err != nil {
+		return nil, err
+	}
+
+	cves, err := resolver.getComponentCVEsFromDackBox(ctx, component.data.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	results, err := mapImageComponentResolverToEmbeddedImageScanComponentResolver(ctx, resolver, component, cves)
+	if err != nil {
+		return nil, err
+	}
+
+	return results, err
+}
+
+func (resolver *Resolver) getComponentsFromDackBox(ctx context.Context, q PaginatedQuery) ([]*EmbeddedImageScanComponentResolver, error) {
+	components, err := resolver.ComponentsV2(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := make([]*EmbeddedImageScanComponentResolver, 0, len(components))
+	for _, component := range components {
+		cves, err := resolver.getComponentCVEsFromDackBox(ctx, component.data.GetId())
+		if err != nil {
+			return nil, err
+		}
+
+		embedded, err := mapImageComponentResolverToEmbeddedImageScanComponentResolver(ctx, resolver, component, cves)
+		if err != nil {
+			return nil, err
+		}
+		ret = append(ret, embedded)
+	}
+	return ret, nil
+}
+
+func mapImageComponentResolverToEmbeddedImageScanComponentResolver(ctx context.Context, root *Resolver, component *imageComponentResolver, cves []*cVEResolver) (*EmbeddedImageScanComponentResolver, error) {
+	embedded := &EmbeddedImageScanComponentResolver{
+		root: root,
+		data: imageComponentConverter.ProtoImageComponentToEmbeddedImageScanComponent(component.data),
+	}
+
+	embedded.updateVulns(cves)
+
+	err := embedded.updateLastScanned(ctx, component)
+	if err != nil {
+		return nil, err
+	}
+
+	err = embedded.updateLayerIndex(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return embedded, nil
+}
+
+func (resolver *Resolver) getComponentCVEsFromDackBox(ctx context.Context, componentID string) ([]*cVEResolver, error) {
+	cveQuery := search.NewQueryBuilder().AddExactMatches(search.ComponentID, componentID).Query()
+	cves, err := resolver.Cves(ctx, PaginatedQuery{Query: &cveQuery})
+	if err != nil {
+		return nil, err
+	}
+	return cves, nil
+}
+
+func (eicr *EmbeddedImageScanComponentResolver) updateLastScanned(ctx context.Context, component *imageComponentResolver) error {
+	ls, err := component.getLastScannedTime(ctx)
+	if err != nil {
+		return err
+	}
+
+	eicr.lastScanned = ls
+	return nil
+}
+
+func (eicr *EmbeddedImageScanComponentResolver) updateVulns(cves []*cVEResolver) {
+	embeddedVulns := make([]*storage.EmbeddedVulnerability, 0, len(cves))
+	for _, cve := range cves {
+		embeddedVulns = append(embeddedVulns, converter.ProtoCVEToEmbeddedCVE(cve.data))
+	}
+	eicr.data.Vulns = embeddedVulns
+}
+
+func (eicr *EmbeddedImageScanComponentResolver) updateLayerIndex(ctx context.Context) error {
+	cID := &componentID{
+		Name:    eicr.data.GetName(),
+		Version: eicr.data.GetVersion(),
+	}
+	// TODO: cannot figure out this part
+	_, err := eicr.root.ImageComponentEdgeDataStore.SearchRawEdges(ctx, search.NewQueryBuilder().AddExactMatches(search.ComponentID, cID.toString()).ProtoQuery())
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
