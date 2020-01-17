@@ -37,7 +37,7 @@ func init() {
 		schema.AddExtraResolver("Namespace", `policies(query: String, pagination: Pagination): [Policy!]!`),
 		schema.AddExtraResolver("Namespace", `failingPolicyCounter: PolicyCounter`),
 		schema.AddExtraResolver("Namespace", `images(query: String, pagination: Pagination): [Image!]!`),
-		schema.AddExtraResolver("Namespace", `imageCount: Int!`),
+		schema.AddExtraResolver("Namespace", `imageCount(query: String): Int!`),
 		schema.AddExtraResolver("Namespace", `components(query: String, pagination: Pagination): [EmbeddedImageScanComponent!]!`),
 		schema.AddExtraResolver("Namespace", `componentCount(query: String): Int!`),
 		schema.AddExtraResolver("Namespace", `vulns(query: String, pagination: Pagination): [EmbeddedVulnerability!]!`),
@@ -254,7 +254,7 @@ func (resolver *namespaceResolver) K8sRoles(ctx context.Context, args PaginatedQ
 	return resolver.root.K8sRoles(ctx, PaginatedQuery{Query: &query, Pagination: args.Pagination})
 }
 
-func (resolver *namespaceResolver) ImageCount(ctx context.Context) (int32, error) {
+func (resolver *namespaceResolver) ImageCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Namespaces, "ImageCount")
 	if err := readNamespaces(ctx); err != nil {
 		return 0, err
@@ -263,7 +263,18 @@ func (resolver *namespaceResolver) ImageCount(ctx context.Context) (int32, error
 	if err != nil {
 		return 0, err
 	}
-	return imageLoader.CountFromQuery(ctx, resolver.getClusterNamespaceQuery())
+
+	q, err := args.AsV1QueryOrEmpty()
+	if err != nil {
+		return 0, err
+	}
+
+	q, err = search.AddAsConjunction(resolver.getClusterNamespaceQuery(), q)
+	if err != nil {
+		return 0, err
+	}
+
+	return imageLoader.CountFromQuery(ctx, q)
 }
 
 func (resolver *namespaceResolver) getApplicablePolicies(ctx context.Context, q *v1.Query) ([]*storage.Policy, error) {
