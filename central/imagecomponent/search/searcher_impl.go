@@ -9,7 +9,6 @@ import (
 	cveMappings "github.com/stackrox/rox/central/cve/mappings"
 	pkgCVESAC "github.com/stackrox/rox/central/cve/sac"
 	imageDackBox "github.com/stackrox/rox/central/image/dackbox"
-	imageMappings "github.com/stackrox/rox/central/image/mappings"
 	pkgImageSAC "github.com/stackrox/rox/central/image/sac"
 	componentDackBox "github.com/stackrox/rox/central/imagecomponent/dackbox"
 	"github.com/stackrox/rox/central/imagecomponent/index"
@@ -25,6 +24,7 @@ import (
 	"github.com/stackrox/rox/pkg/search/compound"
 	"github.com/stackrox/rox/pkg/search/filtered"
 	"github.com/stackrox/rox/pkg/search/idspace"
+	imageMappings "github.com/stackrox/rox/pkg/search/options/images"
 	"github.com/stackrox/rox/pkg/search/paginated"
 )
 

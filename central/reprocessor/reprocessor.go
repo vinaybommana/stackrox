@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/stackrox/rox/central/deployment/datastore"
-	"github.com/stackrox/rox/central/deployment/mappings"
 	"github.com/stackrox/rox/central/role/resources"
 	"github.com/stackrox/rox/central/sensor/service/connection"
 	"github.com/stackrox/rox/generated/internalapi/central"
@@ -14,6 +13,7 @@ import (
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/sac"
 	"github.com/stackrox/rox/pkg/search"
+	"github.com/stackrox/rox/pkg/search/options/deployments"
 	"github.com/stackrox/rox/pkg/set"
 	"github.com/stackrox/rox/pkg/sync"
 	"github.com/stackrox/rox/pkg/throttle"
@@ -144,7 +144,7 @@ func (l *loopImpl) sendDeployments(riskOnly bool, injectionPeriod time.Duration,
 		return
 	}
 
-	path, ok := mappings.OptionsMap.Get(search.ClusterID.String())
+	path, ok := deployments.OptionsMap.Get(search.ClusterID.String())
 	if !ok {
 		panic("No Cluster ID option for deployments")
 	}

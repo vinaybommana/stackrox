@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/stackrox/rox/central/deployment/index"
-	"github.com/stackrox/rox/central/deployment/mappings"
 	"github.com/stackrox/rox/central/deployment/store"
 	"github.com/stackrox/rox/central/role/resources"
 	v1 "github.com/stackrox/rox/generated/api/v1"
@@ -13,11 +12,12 @@ import (
 	"github.com/stackrox/rox/pkg/sac"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/blevesearch"
+	"github.com/stackrox/rox/pkg/search/options/deployments"
 	"github.com/stackrox/rox/pkg/search/paginated"
 )
 
 var (
-	deploymentsSearchHelper = sac.ForResource(resources.Deployment).MustCreateSearchHelper(mappings.OptionsMap)
+	deploymentsSearchHelper = sac.ForResource(resources.Deployment).MustCreateSearchHelper(deployments.OptionsMap)
 )
 
 // searcherImpl provides an intermediary implementation layer for AlertStorage.

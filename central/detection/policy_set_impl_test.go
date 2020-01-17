@@ -6,8 +6,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 	datastoreMocks "github.com/stackrox/rox/central/policy/datastore/mocks"
-	matcherMocks "github.com/stackrox/rox/central/searchbasedpolicies/matcher/mocks"
 	"github.com/stackrox/rox/generated/storage"
+	matcherMocks "github.com/stackrox/rox/pkg/searchbasedpolicies/matcher/mocks"
 	"github.com/stretchr/testify/suite"
 )
 

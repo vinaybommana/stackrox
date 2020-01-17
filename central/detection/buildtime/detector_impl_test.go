@@ -6,14 +6,14 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/mock/gomock"
 	"github.com/stackrox/rox/central/detection"
-	"github.com/stackrox/rox/central/image/mappings"
 	"github.com/stackrox/rox/central/policy/datastore/mocks"
-	"github.com/stackrox/rox/central/searchbasedpolicies/builders"
-	"github.com/stackrox/rox/central/searchbasedpolicies/matcher"
+	k8sBuilders "github.com/stackrox/rox/central/searchbasedpolicies/builders"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/image/policies"
 	"github.com/stackrox/rox/pkg/defaults"
 	"github.com/stackrox/rox/pkg/protoutils"
+	mappings "github.com/stackrox/rox/pkg/search/options/images"
+	"github.com/stackrox/rox/pkg/searchbasedpolicies/matcher"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -33,7 +33,7 @@ func TestDetector(t *testing.T) {
 	compilerWithoutProcessIndicators := detection.NewPolicyCompiler(
 		matcher.NewBuilder(
 			matcher.NewRegistry(
-				nil, builders.K8sRBACQueryBuilder{}),
+				nil, k8sBuilders.K8sRBACQueryBuilder{}),
 			mappings.OptionsMap,
 		),
 	)

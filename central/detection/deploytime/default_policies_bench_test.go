@@ -3,14 +3,14 @@ package deploytime
 import (
 	"testing"
 
-	"github.com/stackrox/rox/central/deployment/mappings"
 	"github.com/stackrox/rox/central/detection"
-	"github.com/stackrox/rox/central/searchbasedpolicies/builders"
-	"github.com/stackrox/rox/central/searchbasedpolicies/matcher"
+	k8sBuilders "github.com/stackrox/rox/central/searchbasedpolicies/builders"
 	imagePolicies "github.com/stackrox/rox/image/policies"
 	"github.com/stackrox/rox/pkg/defaults"
 	"github.com/stackrox/rox/pkg/fixtures"
 	pkgPolicies "github.com/stackrox/rox/pkg/policies"
+	"github.com/stackrox/rox/pkg/search/options/deployments"
+	"github.com/stackrox/rox/pkg/searchbasedpolicies/matcher"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,9 +18,9 @@ func BenchmarkDefaultPolicies(b *testing.B) {
 	builder := matcher.NewBuilder(
 		matcher.NewRegistry(
 			nil,
-			builders.K8sRBACQueryBuilder{},
+			k8sBuilders.K8sRBACQueryBuilder{},
 		),
-		mappings.OptionsMap,
+		deployments.OptionsMap,
 	)
 	policySet = detection.NewPolicySet(nil, detection.NewPolicyCompiler(builder))
 

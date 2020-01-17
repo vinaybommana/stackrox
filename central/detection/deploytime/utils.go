@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	ptypes "github.com/gogo/protobuf/types"
-	"github.com/stackrox/rox/central/alert/convert"
 	"github.com/stackrox/rox/central/detection"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/alert/convert"
 	"github.com/stackrox/rox/pkg/protoutils"
 	"github.com/stackrox/rox/pkg/uuid"
 )

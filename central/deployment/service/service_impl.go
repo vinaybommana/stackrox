@@ -8,7 +8,6 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/central/deployment/datastore"
-	"github.com/stackrox/rox/central/deployment/mappings"
 	processIndicatorStore "github.com/stackrox/rox/central/processindicator/datastore"
 	processWhitelistStore "github.com/stackrox/rox/central/processwhitelist/datastore"
 	processWhitelistResultsStore "github.com/stackrox/rox/central/processwhitelistresults/datastore"
@@ -24,6 +23,7 @@ import (
 	"github.com/stackrox/rox/pkg/grpc/authz/user"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/blevesearch"
+	"github.com/stackrox/rox/pkg/search/options/deployments"
 	"github.com/stackrox/rox/pkg/search/paginated"
 	"github.com/stackrox/rox/pkg/set"
 	"github.com/stackrox/rox/pkg/utils"
@@ -213,7 +213,7 @@ func (s *serviceImpl) GetLabels(ctx context.Context, _ *v1.Empty) (*v1.Deploymen
 }
 
 func labelsMapFromSearchResults(results []search.Result) (map[string]*v1.DeploymentLabelsResponse_LabelValues, []string) {
-	labelField, ok := mappings.OptionsMap.Get(search.Label.String())
+	labelField, ok := deployments.OptionsMap.Get(search.Label.String())
 	if !ok {
 		utils.Should(errors.Errorf("could not find label %q in options map", search.Label.String()))
 		return nil, nil

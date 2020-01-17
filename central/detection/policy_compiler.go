@@ -1,9 +1,9 @@
 package detection
 
 import (
-	"github.com/stackrox/rox/central/searchbasedpolicies/matcher"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/protoutils"
+	"github.com/stackrox/rox/pkg/searchbasedpolicies/matcher"
 )
 
 // PolicyCompiler compiles policies to CompiledPolicy objects.

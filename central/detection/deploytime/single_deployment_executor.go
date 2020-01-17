@@ -5,8 +5,8 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/central/detection"
-	"github.com/stackrox/rox/central/searchbasedpolicies"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/searchbasedpolicies"
 )
 
 func newSingleDeploymentExecutor(executorCtx context.Context, ctx DetectionContext, deployment *storage.Deployment, images []*storage.Image) alertCollectingExecutor {

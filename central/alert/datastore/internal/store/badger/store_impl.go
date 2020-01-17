@@ -5,11 +5,11 @@ import (
 
 	"github.com/dgraph-io/badger"
 	"github.com/gogo/protobuf/proto"
-	"github.com/stackrox/rox/central/alert/convert"
 	"github.com/stackrox/rox/central/alert/datastore/internal/store"
 	"github.com/stackrox/rox/central/globaldb"
 	"github.com/stackrox/rox/central/metrics"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/alert/convert"
 	"github.com/stackrox/rox/pkg/badgerhelper"
 	generic "github.com/stackrox/rox/pkg/badgerhelper/crud"
 	"github.com/stackrox/rox/pkg/logging"

@@ -5,7 +5,6 @@ import (
 
 	"github.com/blevesearch/bleve/document"
 	"github.com/blevesearch/bleve/index/upsidedown"
-	"github.com/stackrox/rox/central/deployment/mappings"
 	"github.com/stackrox/rox/central/metrics"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
@@ -14,6 +13,7 @@ import (
 	ops "github.com/stackrox/rox/pkg/metrics"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/blevesearch"
+	"github.com/stackrox/rox/pkg/search/options/deployments"
 )
 
 const batchSize = 5000
@@ -118,7 +118,7 @@ func (b *indexerImpl) ResetIndex() error {
 
 func (b *indexerImpl) Search(q *v1.Query, opts ...blevesearch.SearchOption) ([]search.Result, error) {
 	defer metrics.SetIndexOperationDurationTime(time.Now(), ops.Search, "Deployment")
-	return blevesearch.RunSearchRequest(v1.SearchCategory_DEPLOYMENTS, q, b.index.Index, mappings.OptionsMap, opts...)
+	return blevesearch.RunSearchRequest(v1.SearchCategory_DEPLOYMENTS, q, b.index.Index, deployments.OptionsMap, opts...)
 }
 
 func (b *indexerImpl) SetTxnCount(seq uint64) error {

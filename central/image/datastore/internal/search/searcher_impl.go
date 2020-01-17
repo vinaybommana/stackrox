@@ -11,8 +11,6 @@ import (
 	imageDackBox "github.com/stackrox/rox/central/image/dackbox"
 	"github.com/stackrox/rox/central/image/datastore/internal/store"
 	"github.com/stackrox/rox/central/image/index"
-	"github.com/stackrox/rox/central/image/mappings"
-	imageMappings "github.com/stackrox/rox/central/image/mappings"
 	pkgImageSAC "github.com/stackrox/rox/central/image/sac"
 	componentDackBox "github.com/stackrox/rox/central/imagecomponent/dackbox"
 	componentMappings "github.com/stackrox/rox/central/imagecomponent/mappings"
@@ -30,6 +28,7 @@ import (
 	"github.com/stackrox/rox/pkg/search/compound"
 	"github.com/stackrox/rox/pkg/search/filtered"
 	"github.com/stackrox/rox/pkg/search/idspace"
+	mappings "github.com/stackrox/rox/pkg/search/options/images"
 	"github.com/stackrox/rox/pkg/search/paginated"
 	"github.com/stackrox/rox/pkg/search/sortfields"
 )
@@ -191,7 +190,7 @@ func getCompoundImageSearcher(graphProvider idspace.GraphProvider,
 		},
 		{
 			Searcher: imageSearcher,
-			Options:  imageMappings.OptionsMap,
+			Options:  mappings.OptionsMap,
 		},
 	}...)
 }

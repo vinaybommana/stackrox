@@ -1,10 +1,10 @@
 package detection
 
 import (
-	"github.com/stackrox/rox/central/searchbasedpolicies"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/policies"
 	"github.com/stackrox/rox/pkg/scopecomp"
+	"github.com/stackrox/rox/pkg/searchbasedpolicies"
 )
 
 // CompiledPolicy is a compiled policy, which means it has a generated matcher and predicate function.

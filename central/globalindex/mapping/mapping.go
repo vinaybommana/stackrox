@@ -13,13 +13,10 @@ import (
 	"github.com/stackrox/rox/central/compliance/standards/index"
 	componentVulnEdgeMapping "github.com/stackrox/rox/central/componentcveedge/mappings"
 	cveMapping "github.com/stackrox/rox/central/cve/mappings"
-	deploymentMapping "github.com/stackrox/rox/central/deployment/mappings"
-	imageMapping "github.com/stackrox/rox/central/image/mappings"
 	imageComponentMapping "github.com/stackrox/rox/central/imagecomponent/mappings"
 	namespaceMapping "github.com/stackrox/rox/central/namespace/index/mappings"
 	nodeMapping "github.com/stackrox/rox/central/node/index/mappings"
 	policyMapping "github.com/stackrox/rox/central/policy/index/mappings"
-	processIndicatorMapping "github.com/stackrox/rox/central/processindicator/mappings"
 	processWhitelistMapping "github.com/stackrox/rox/central/processwhitelist/index/mappings"
 	roleOptions "github.com/stackrox/rox/central/rbac/k8srole/mappings"
 	roleBindingOptions "github.com/stackrox/rox/central/rbac/k8srolebinding/mappings"
@@ -30,6 +27,9 @@ import (
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/blevesearch"
+	"github.com/stackrox/rox/pkg/search/options/deployments"
+	imageMapping "github.com/stackrox/rox/pkg/search/options/images"
+	"github.com/stackrox/rox/pkg/search/options/processindicators"
 	"github.com/stackrox/rox/pkg/sync"
 	"github.com/stackrox/rox/pkg/utils"
 )
@@ -89,11 +89,11 @@ func GetEntityOptionsMap() map[v1.SearchCategory]search.OptionsMap {
 
 	entityOptionsMap := map[v1.SearchCategory]search.OptionsMap{
 		v1.SearchCategory_ALERTS:               alertMapping.OptionsMap,
-		v1.SearchCategory_DEPLOYMENTS:          deploymentMapping.OptionsMap,
+		v1.SearchCategory_DEPLOYMENTS:          deployments.OptionsMap,
 		v1.SearchCategory_IMAGES:               imageMapping.OptionsMap,
 		v1.SearchCategory_POLICIES:             policyMapping.OptionsMap,
 		v1.SearchCategory_SECRETS:              secretOptions.OptionsMap,
-		v1.SearchCategory_PROCESS_INDICATORS:   processIndicatorMapping.OptionsMap,
+		v1.SearchCategory_PROCESS_INDICATORS:   processindicators.OptionsMap,
 		v1.SearchCategory_COMPLIANCE_STANDARD:  index.StandardOptions,
 		v1.SearchCategory_COMPLIANCE_CONTROL:   index.ControlOptions,
 		v1.SearchCategory_CLUSTERS:             clusterMapping.OptionsMap,
