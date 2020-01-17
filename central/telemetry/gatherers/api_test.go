@@ -71,7 +71,6 @@ func (s *apiGathererTestSuite) TestAPIGatherer() {
 	s.mockMetrics.EXPECT().GetMetrics().Return(mockAPICalls, mockPanics)
 	apiInfo := s.gatherer.Gather()
 	s.NotNil(apiInfo)
-	s.Empty(apiInfo.Errors)
 
 	s.Len(apiInfo.APIStats, 2)
 
@@ -80,12 +79,12 @@ func (s *apiGathererTestSuite) TestAPIGatherer() {
 	s.Len(apiStat.GRPC, 1)
 	grpcStat := apiStat.GRPC[0]
 	s.Equal(codes.OK, grpcStat.Code)
-	s.Equal(uint64(1227), grpcStat.Count)
+	s.EqualValues(1227, grpcStat.Count)
 
 	s.Equal("otherTest.path", apiPanic.MethodName)
 	s.Len(apiPanic.Panics, 1)
 	grpcPanic := apiPanic.Panics[0]
 	s.Equal("Joseph Rules", grpcPanic.PanicDesc)
-	s.Equal(uint64(1337), grpcPanic.Count)
+	s.EqualValues(1337, grpcPanic.Count)
 
 }

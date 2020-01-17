@@ -24,6 +24,7 @@ import (
 	"github.com/stackrox/rox/pkg/httputil/proxy"
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/sac"
+	"github.com/stackrox/rox/pkg/telemetry/data"
 	"github.com/stackrox/rox/pkg/timeutil"
 	"github.com/stackrox/rox/pkg/utils"
 )
@@ -175,13 +176,17 @@ func (m *manager) doCollectAndSendData(ctx context.Context) (time.Duration, erro
 		return 0, errors.New("invoked telemetry collection in spite of offline mode")
 	}
 
-	telemetryData := m.gatherer.Gather()
+	telemetryData := &data.TelemetryData{
+		Central: m.gatherer.Gather(),
+	}
 
-	if telemetryData.License == nil {
+	if telemetryData.Central == nil || telemetryData.Central.License == nil {
 		return 0, errors.New("cannot send telemetry data as no license information is available")
 	}
 
-	endpoint, err := m.Endpoint(telemetryData.License.Metadata)
+	licenseMD := telemetryData.Central.License.Metadata
+
+	endpoint, err := m.Endpoint(licenseMD)
 	if err != nil {
 		return 0, errors.Wrap(err, "cannot determine telemetry endpoint from license metadata")
 	}
@@ -202,15 +207,15 @@ func (m *manager) doCollectAndSendData(ctx context.Context) (time.Duration, erro
 	if queryVars == nil {
 		queryVars = make(url.Values)
 	}
-	queryVars.Set("licenseId", telemetryData.License.Metadata.GetId())
-	queryVars.Set("licensedForId", telemetryData.License.Metadata.GetLicensedForId())
+	queryVars.Set("licenseId", licenseMD.GetId())
+	queryVars.Set("licensedForId", licenseMD.GetLicensedForId())
 	telemetryReq.URL.RawQuery = queryVars.Encode()
 
 	if telemetryReq.Header == nil {
 		telemetryReq.Header = make(http.Header)
 	}
 
-	authToken, err := createAuthToken(telemetryData.License.Metadata, time.Now(), m.licenseMgr)
+	authToken, err := createAuthToken(licenseMD, time.Now(), m.licenseMgr)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to obtain auth token for posting license data")
 	}

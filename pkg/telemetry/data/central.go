@@ -10,20 +10,20 @@ import (
 
 // GRPCInvocationStats contains telemetry data about GRPC API calls
 type GRPCInvocationStats struct {
-	Code  codes.Code
-	Count uint64 `json:",omitempty"`
+	Code  codes.Code `json:"code"`
+	Count int64      `json:"count"`
 }
 
 // HTTPInvocationStats contains telemetry data about HTTP API calls
 type HTTPInvocationStats struct {
-	Code  string `json:",omitempty"` // HTTP status code, or -1 if there was a write error.
-	Count uint64
+	StatusCode int   `json:"statusCode"` // HTTP status code, or -1 if there was a write error.
+	Count      int64 `json:"count"`
 }
 
 // PanicStats contains telemetry data about API panics
 type PanicStats struct {
-	PanicDesc string // Code location of panic, if the handler panicked.
-	Count     uint64
+	PanicDesc string `json:"panicDesc"` // Code location of panic, if the handler panicked.
+	Count     int64  `json:"count"`
 }
 
 // APIStat contains telemetry data about different kinds of API calls
@@ -32,38 +32,37 @@ type APIStat struct {
 
 	HTTP   []HTTPInvocationStats `json:"http,omitempty"`
 	GRPC   []GRPCInvocationStats `json:"grpc,omitempty"`
-	Panics []*PanicStats
+	Panics []PanicStats          `json:"panics,omitempty"`
 }
 
 // APIInfo contains metrics about API calls and errors gathering those metrics
 type APIInfo struct {
-	APIStats []*APIStat
-	Errors   string
+	APIStats []*APIStat `json:"apiStats,omitempty"`
 }
 
 // BucketStats contains telemetry data about a DB bucket
 type BucketStats struct {
-	Name        string
-	UsedBytes   int64
-	Cardinality int
+	Name        string `json:"name"`
+	UsedBytes   int64  `json:"usedBytes"`
+	Cardinality int    `json:"cardinality"`
 }
 
 // DatabaseStats contains telemetry data about a DB
 type DatabaseStats struct {
-	Type      string
-	Path      string
-	UsedBytes int64
-	Buckets   []*BucketStats
-	Errors    []string
+	Type      string         `json:"type"`
+	Path      string         `json:"path"`
+	UsedBytes int64          `json:"usedBytes"`
+	Buckets   []*BucketStats `json:"buckets,omitempty"`
+	Errors    []string       `json:"errors,omitempty"`
 }
 
 // StorageInfo contains telemetry data about available disk, storage type, and the available databases
 type StorageInfo struct {
-	DiskCapacityBytes int64
-	DiskUsedBytes     int64
-	StorageType       string
-	Database          []*DatabaseStats
-	Errors            []string
+	DiskCapacityBytes int64            `json:"diskCapacityBytes"`
+	DiskUsedBytes     int64            `json:"diskUsedBytes"`
+	StorageType       string           `json:"storageType,omitempty"`
+	Databases         []*DatabaseStats `json:"dbs,omitempty"`
+	Errors            []string         `json:"errors,omitempty"`
 }
 
 // LicenseJSON type encapsulates the License type and adds Marshal/Unmarshal methods
@@ -87,12 +86,10 @@ func (l *LicenseJSON) Unmarshal(data []byte) error {
 type CentralInfo struct {
 	*RoxComponentInfo
 
-	License      *LicenseJSON
-	Storage      *StorageInfo
-	APIStats     *APIInfo
-	Orchestrator *OrchestratorInfo
+	License      *LicenseJSON      `json:"license,omitempty"`
+	Storage      *StorageInfo      `json:"storage,omitempty"`
+	APIStats     *APIInfo          `json:"apiStats,omitempty"`
+	Orchestrator *OrchestratorInfo `json:"orchestrator,omitempty"`
 
-	Clusters []*ClusterInfo
-
-	Errors []string
+	Errors []string `json:"errors,omitempty"`
 }

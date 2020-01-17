@@ -2,23 +2,22 @@ package data
 
 // ProcessMemInfo contains telemetry data about the resources used by a process
 type ProcessMemInfo struct {
-	CurrentAllocBytes   uint64
-	CurrentAllocObjects uint64
+	CurrentAllocBytes   int64 `json:"currentAllocBytes"`
+	CurrentAllocObjects int64 `json:"currentAllocObjects"`
 
-	TotalAllocBytes   uint64
-	TotalAllocObjects uint64
+	TotalAllocBytes   int64 `json:"totalAllocBytes"`
+	TotalAllocObjects int64 `json:"totalAllocObjects"`
 
-	SysMemBytes uint64
+	SysMemBytes int64 `json:"sysMemBytes"`
 
-	NumGCs     uint32  `json:"numGCs,omitempty"`
+	NumGCs     int64   `json:"numGCs,omitempty"`
 	GCFraction float64 `json:"gcFraction,omitempty"`
 }
 
 // ProcessInfo contains telemetry data about a process
 type ProcessInfo struct {
-	Name          string
 	NumGoroutines int `json:"numGoroutines,omitempty"`
 	NumCPUs       int `json:"numCPUs,omitempty"`
 
-	Memory *ProcessMemInfo `json:",omitempty"`
+	Memory *ProcessMemInfo `json:"memory,omitempty"`
 }

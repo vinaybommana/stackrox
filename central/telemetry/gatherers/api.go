@@ -32,6 +32,10 @@ func (a *apiGatherer) Gather() *data.APIInfo {
 }
 
 func makeStatList(statMap map[string]map[codes.Code]*metrics.Metric, panicMap map[string][]*metrics.Panic) []*data.APIStat {
+	if len(statMap)+len(panicMap) == 0 {
+		return nil
+	}
+
 	apiStats := make(map[string]*data.APIStat, len(statMap))
 	for name, statusMap := range statMap {
 		stat := &data.APIStat{
@@ -41,7 +45,7 @@ func makeStatList(statMap map[string]map[codes.Code]*metrics.Metric, panicMap ma
 		for status, apiMetric := range statusMap {
 			stat.GRPC = append(stat.GRPC, data.GRPCInvocationStats{
 				Code:  status,
-				Count: uint64(apiMetric.Count),
+				Count: apiMetric.Count,
 			})
 		}
 		apiStats[name] = stat
@@ -52,13 +56,13 @@ func makeStatList(statMap map[string]map[codes.Code]*metrics.Metric, panicMap ma
 		if !ok {
 			stat = &data.APIStat{
 				MethodName: name,
-				Panics:     make([]*data.PanicStats, 0, len(panicList)),
+				Panics:     make([]data.PanicStats, 0, len(panicList)),
 			}
 			apiStats[name] = stat
 		}
 		for _, panicMetric := range panicList {
 			stat.Panics = append(stat.Panics,
-				&data.PanicStats{
+				data.PanicStats{
 					PanicDesc: panicMetric.PanicDesc,
 					Count:     panicMetric.Count,
 				},

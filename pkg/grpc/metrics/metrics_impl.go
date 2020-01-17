@@ -34,13 +34,13 @@ type grpcMetricsImpl struct {
 
 // Metric contains a count of whatever the metric is counting
 type Metric struct {
-	Count uint64
+	Count int64
 }
 
 // Panic contains a panic string and a count of the number of times we have seen that panic
 type Panic struct {
 	PanicDesc string
-	Count     uint64
+	Count     int64
 }
 
 func (g *grpcMetricsImpl) updateInternalMetric(path string, responseCode codes.Code) {

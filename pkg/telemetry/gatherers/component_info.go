@@ -1,7 +1,6 @@
 package gatherers
 
 import (
-	"os"
 	"runtime"
 
 	"github.com/stackrox/rox/pkg/telemetry/data"
@@ -28,7 +27,6 @@ func (c *ComponentInfoGatherer) Gather() *data.RoxComponentInfo {
 
 func getProcessInfo() *data.ProcessInfo {
 	return &data.ProcessInfo{
-		Name:          os.Args[0],
 		NumGoroutines: runtime.NumGoroutine(),
 		NumCPUs:       runtime.NumCPU(),
 		Memory:        getMemInfo(),
@@ -40,12 +38,12 @@ func getMemInfo() *data.ProcessMemInfo {
 	runtime.ReadMemStats(&m)
 
 	return &data.ProcessMemInfo{
-		CurrentAllocBytes:   m.Alloc,
-		CurrentAllocObjects: m.HeapObjects,
-		TotalAllocBytes:     m.TotalAlloc,
-		TotalAllocObjects:   m.Mallocs,
-		SysMemBytes:         m.Sys,
-		NumGCs:              m.NumGC,
+		CurrentAllocBytes:   int64(m.Alloc),
+		CurrentAllocObjects: int64(m.HeapObjects),
+		TotalAllocBytes:     int64(m.TotalAlloc),
+		TotalAllocObjects:   int64(m.Mallocs),
+		SysMemBytes:         int64(m.Sys),
+		NumGCs:              int64(m.NumGC),
 		GCFraction:          m.GCCPUFraction,
 	}
 }

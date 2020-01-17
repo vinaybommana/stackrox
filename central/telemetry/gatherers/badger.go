@@ -99,6 +99,10 @@ func (d *badgerGatherer) getBadgerBucketStats() ([]*data.BucketStats, []error) {
 		errList = append(errList, err)
 	}
 
+	if len(prefixCardinality) == 0 {
+		return nil, nil
+	}
+
 	buckets := make(map[string]*data.BucketStats, len(prefixCardinality))
 	summedCardinalities, cardErrors := getSummedBucketStats(prefixCardinality)
 	errList = append(errList, cardErrors...)

@@ -31,7 +31,7 @@ func (d *databaseGatherer) Gather() *data.StorageInfo {
 		DiskCapacityBytes: capacity,
 		DiskUsedBytes:     used,
 		StorageType:       "unknown", // TODO: Figure out how to determine storage type (pvc etc.)
-		Database: []*data.DatabaseStats{
+		Databases: []*data.DatabaseStats{
 			d.badger.Gather(),
 			d.bolt.Gather(),
 		},
