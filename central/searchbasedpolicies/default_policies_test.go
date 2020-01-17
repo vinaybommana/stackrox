@@ -1023,9 +1023,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 	}
 
 	for _, c := range deploymentTestCases {
-		if !strings.Contains(c.policyName, "Secure Shell") {
-			continue
-		}
 		p := suite.MustGetPolicy(c.policyName)
 		suite.T().Run(fmt.Sprintf("%s (on deployments)", c.policyName), func(t *testing.T) {
 			m, err := suite.matcherBuilder.ForPolicy(p)

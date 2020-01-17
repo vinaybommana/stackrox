@@ -1,13 +1,14 @@
 package predicate
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"strings"
 
+	"github.com/pkg/errors"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/pkg/search"
+	"github.com/stackrox/rox/pkg/utils"
 )
 
 // MergeResults merges predicate result into a single result
@@ -198,6 +199,15 @@ func (tb Factory) matchLinked(q *v1.MatchLinkedFieldsQuery) (internalPredicate, 
 		}
 	}
 
+	predRootTy := reflect.TypeOf(tb.exampleObj)
+	if len(commonPath) > 0 {
+		predRootTy = commonPath[len(commonPath)-1].Type
+		switch predRootTy.Kind() {
+		case reflect.Array, reflect.Slice:
+			predRootTy = predRootTy.Elem() // root type may be a pointer, but not a slice.
+		}
+	}
+
 	// Produce a predicate for each of the fields. Use the non common path.
 	var preds []internalPredicate
 	for _, fieldQuery := range q.GetQuery() {
@@ -211,7 +221,7 @@ func (tb Factory) matchLinked(q *v1.MatchLinkedFieldsQuery) (internalPredicate, 
 			fieldPath = searchField.GetFieldPath()
 		}
 
-		pred, err := tb.createPredicate(fieldPath, path[len(commonPath):], fieldQuery.GetValue())
+		pred, err := tb.createPredicateWithRootType(predRootTy, fieldPath, path[len(commonPath):], fieldQuery.GetValue())
 		if err != nil {
 			return nil, err
 		}
@@ -219,14 +229,25 @@ func (tb Factory) matchLinked(q *v1.MatchLinkedFieldsQuery) (internalPredicate, 
 	}
 
 	// Package all the of predicates as an AND on the common path.
-	linked, err := createLinkedNestedPredicate(commonPath[len(commonPath)-1].Type, preds...)
-	if err != nil {
-		return nil, err
+	var linked internalPredicate
+	if len(commonPath) > 0 {
+		var err error
+		linked, err = createLinkedNestedPredicate(commonPath[len(commonPath)-1].Type, preds...)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		linked = andOf(preds...)
 	}
+
 	return createPathPredicate(reflect.TypeOf(tb.exampleObj), commonPath, linked)
 }
 
 func (tb Factory) createPredicate(fullPath string, path FieldPath, value string) (internalPredicate, error) {
+	return tb.createPredicateWithRootType(reflect.TypeOf(tb.exampleObj), fullPath, path, value)
+}
+
+func (tb Factory) createPredicateWithRootType(rootTy reflect.Type, fullPath string, path FieldPath, value string) (internalPredicate, error) {
 	// Create the predicate for the search field value.
 	pred, err := createBasePredicate(fullPath, path[len(path)-1].Type, value)
 	if err != nil {
@@ -234,7 +255,7 @@ func (tb Factory) createPredicate(fullPath string, path FieldPath, value string)
 	}
 
 	// Create a wrapper predicate which traces the field path down to the value.
-	pred, err = createPathPredicate(reflect.TypeOf(tb.exampleObj), path, pred)
+	pred, err = createPathPredicate(rootTy, path, pred)
 	if err != nil {
 		return nil, err
 	}
@@ -301,16 +322,14 @@ func createPathPredicate(parentType reflect.Type, path FieldPath, pred internalP
 
 func createNestedPredicate(parentType reflect.Type, field reflect.StructField, pred internalPredicate) (internalPredicate, error) {
 	switch parentType.Kind() {
-	case reflect.Array:
-		return createSliceNestedPredicate(parentType, field, pred)
-	case reflect.Slice:
+	case reflect.Array, reflect.Slice:
 		return createSliceNestedPredicate(parentType, field, pred)
 	case reflect.Ptr:
 		return createPtrNestedPredicate(parentType, field, pred)
 	case reflect.Map:
 		return createMapNestedPredicate(parentType, field, pred)
 	case reflect.Struct:
-		return createStructFieldNestedPredicate(field, pred), nil
+		return createStructFieldNestedPredicate(field, parentType, pred), nil
 	case reflect.Interface:
 		return createInterfaceFieldNestedPredicate(field, pred), nil
 	default:
@@ -399,9 +418,13 @@ func nilCheck(f reflect.Value) bool {
 	return false
 }
 
-func createStructFieldNestedPredicate(field reflect.StructField, pred internalPredicate) internalPredicate {
+func createStructFieldNestedPredicate(field reflect.StructField, structTy reflect.Type, pred internalPredicate) internalPredicate {
 	return func(instance reflect.Value) (*search.Result, bool) {
-		nextValue := instance.FieldByName(field.Name)
+		if instance.Type() != structTy {
+			utils.Should(errors.Errorf("unexpected type mismatch for nested struct field: got %s, expected %s", instance.Type(), structTy))
+			return nil, false
+		}
+		nextValue := instance.FieldByIndex(field.Index)
 		if nilCheck(nextValue) {
 			return nil, false
 		}

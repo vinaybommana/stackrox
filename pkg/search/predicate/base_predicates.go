@@ -37,9 +37,7 @@ func createBasePredicate(fullPath string, fieldType reflect.Type, value string) 
 	switch fieldType.Kind() {
 	case reflect.Ptr:
 		return createPtrPredicate(fullPath, fieldType, value)
-	case reflect.Array:
-		return createSlicePredicate(fullPath, fieldType, value)
-	case reflect.Slice:
+	case reflect.Array, reflect.Slice:
 		return createSlicePredicate(fullPath, fieldType, value)
 	case reflect.Map:
 		return createMapPredicate(fullPath, fieldType, value)

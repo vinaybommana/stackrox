@@ -15,6 +15,8 @@ import (
 )
 
 func BenchmarkDefaultPolicies(b *testing.B) {
+	b.StopTimer()
+
 	builder := matcher.NewBuilder(
 		matcher.NewRegistry(
 			nil,
@@ -38,6 +40,8 @@ func BenchmarkDefaultPolicies(b *testing.B) {
 
 	dep := fixtures.GetDeployment()
 	images := fixtures.DeploymentImages()
+
+	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		_, err := detection.Detect(DetectionContext{}, dep, images)
 		require.NoError(b, err)
