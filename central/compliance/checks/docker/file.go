@@ -12,6 +12,10 @@ import (
 	"github.com/stackrox/rox/generated/internalapi/compliance"
 )
 
+var (
+	dockerDirRegex = regexp.MustCompile(`/var/lib/docker\s`)
+)
+
 func init() {
 	framework.MustRegisterChecks(
 		common.PerNodeNoteCheck("CIS_Docker_v1_2_0:1_1_1", "Ensure the container host has been Hardened"),
@@ -76,13 +80,12 @@ func auditCheckFunc(files ...string) framework.CheckFunc {
 const procMountsPath = "/proc/mounts"
 
 func containerPartition(funcCtx framework.ComplianceContext) {
-	r := regexp.MustCompile(`/var/lib/docker\s`)
 	common.PerNodeCheck(func(ctx framework.ComplianceContext, returnData *compliance.ComplianceReturn) {
 		f, ok := returnData.Files[procMountsPath]
 		if !ok {
 			framework.FailNowf(ctx, "File %q does not exist", procMountsPath)
 		}
-		if !r.Match(f.GetContent()) {
+		if !dockerDirRegex.Match(f.GetContent()) {
 			framework.FailNowf(ctx, "File %q does not contain file /var/lib/docker", procMountsPath)
 		}
 		framework.PassNowf(ctx, "File %q contains file %q", procMountsPath, "/var/lib/docker")

@@ -913,10 +913,7 @@ func (resolver *clusterResolver) getClusterRisk(ctx context.Context) (*storage.R
 
 func (resolver *clusterResolver) IsGKECluster() (bool, error) {
 	version := resolver.data.GetStatus().GetOrchestratorMetadata().GetVersion()
-	ok, err := isGKEVersion(version)
-	if err != nil {
-		return false, err
-	}
+	ok := isGKEVersion(version)
 	return ok, nil
 }
 

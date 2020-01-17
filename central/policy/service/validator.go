@@ -17,14 +17,19 @@ import (
 	"github.com/stackrox/rox/pkg/searchbasedpolicies/matcher"
 )
 
+var (
+	defaultNameValidator        = regexp.MustCompile(`^[^\n\r\$]{5,64}$`)
+	defaultDescriptionValidator = regexp.MustCompile(`^[^\$]{1,256}$`)
+)
+
 func newPolicyValidator(notifierStorage notifierDataStore.DataStore, clusterStorage clusterDataStore.DataStore, deploymentMatcherBuilder, imageMatcherBuilder matcher.Builder) *policyValidator {
 	return &policyValidator{
 		notifierStorage:          notifierStorage,
 		clusterStorage:           clusterStorage,
 		deploymentMatcherBuilder: deploymentMatcherBuilder,
 		imageMatcherBuilder:      imageMatcherBuilder,
-		nameValidator:            regexp.MustCompile(`^[^\n\r\$]{5,64}$`),
-		descriptionValidator:     regexp.MustCompile(`^[^\$]{1,256}$`),
+		nameValidator:            defaultNameValidator,
+		descriptionValidator:     defaultDescriptionValidator,
 	}
 }
 
