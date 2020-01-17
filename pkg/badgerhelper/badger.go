@@ -1,6 +1,7 @@
 package badgerhelper
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -70,6 +71,15 @@ func NewTemp(name string) (*badger.DB, string, error) {
 // BucketKeyCount returns the number of objects in a "Bucket"
 func BucketKeyCount(txn *badger.Txn, keyPrefix []byte) (int, error) {
 	return Count(txn, GetBucketKey(keyPrefix, nil))
+}
+
+// GetPrefix returns the first prefix found on the input key, and it's remainder afterwards.
+func GetPrefix(key []byte) (prefix []byte) {
+	idx := bytes.Index(key, separator)
+	if idx == -1 {
+		return nil
+	}
+	return append([]byte{}, key[:idx]...)
 }
 
 // Count gets the number of keys with a specific prefix
