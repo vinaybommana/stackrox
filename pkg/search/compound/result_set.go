@@ -149,10 +149,9 @@ func (rs resultSet) subtract(other resultSet) resultSet {
 func (rs *resultSet) asResultSlice() []search.Result {
 	ret := rs.results
 	if rs.order != nil {
-		ret = make([]search.Result, len(rs.results))
-		for _, res := range rs.results {
-			ret[rs.order[res.ID]] = res
-		}
+		sort.SliceStable(ret, func(i, j int) bool {
+			return rs.order[ret[i].ID] < rs.order[ret[j].ID]
+		})
 	}
 	return ret
 }

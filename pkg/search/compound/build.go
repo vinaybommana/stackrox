@@ -18,6 +18,10 @@ func build(q *v1.Query, specs []SearcherSpec) (*searchRequestSpec, error) {
 	if len(specs) == 1 {
 		return buildSingleSpec(q, specs[0])
 	}
+	// if the query is empty, use the default spec.
+	if q.GetQuery() == nil {
+		return buildDefaultSpec(specs)
+	}
 	// Otherwise, we need to walk the tree and separate which query parts refer to which spec.
 	return buildMultiSpec(q, specs)
 }
@@ -27,6 +31,25 @@ func buildSingleSpec(q *v1.Query, spec SearcherSpec) (*searchRequestSpec, error)
 		base: &baseRequestSpec{
 			Spec:  &spec,
 			Query: q,
+		},
+	}, nil
+}
+
+func buildDefaultSpec(specs []SearcherSpec) (*searchRequestSpec, error) {
+	var spec *SearcherSpec
+	for _, considered := range specs {
+		if considered.IsDefault {
+			spec = &considered
+			break
+		}
+	}
+	if spec == nil {
+		spec = &specs[0]
+	}
+	return &searchRequestSpec{
+		base: &baseRequestSpec{
+			Spec:  spec,
+			Query: &v1.Query{},
 		},
 	}, nil
 }
