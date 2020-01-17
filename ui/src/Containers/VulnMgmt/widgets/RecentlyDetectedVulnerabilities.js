@@ -16,8 +16,8 @@ import NoResultsMessage from 'Components/NoResultsMessage';
 // import { cveSortFields } from 'constants/sortFields';
 
 export const RECENTLY_DETECTED_VULNERABILITIES = gql`
-    query recentlyDetectedVulnerabilities($query: String) {
-        results: vulnerabilities(query: $query) {
+    query recentlyDetectedVulnerabilities($query: String, $pagination: Pagination) {
+        results: vulnerabilities(query: $query, pagination: $pagination) {
             id: cve
             cve
             cvss
@@ -52,7 +52,15 @@ const RecentlyDetectedVulnerabilities = ({ entityContext, search, limit }) => {
 
     const { loading, data = {} } = useQuery(RECENTLY_DETECTED_VULNERABILITIES, {
         variables: {
-            query
+            query,
+            pagination: queryService.getPagination(
+                {
+                    id: 'Image Scan Time',
+                    desc: true
+                },
+                0,
+                limit
+            )
         }
     });
 
