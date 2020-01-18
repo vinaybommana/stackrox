@@ -34,7 +34,7 @@ func checkNIST412(ctx framework.ComplianceContext) {
 	checkSSHPortAndProcesses(ctx)
 	checkPrivilegedCategoryPolicies(ctx)
 	common.CheckImageScannerInUseByCluster(ctx)
-	common.CheckBuildTimePolicyEnforced(ctx)
+	common.CheckAnyPolicyInLifecycleStageEnforced(ctx, storage.LifecycleStage_BUILD)
 }
 
 func checkSSHPortAndProcesses(ctx framework.ComplianceContext) {

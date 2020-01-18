@@ -701,13 +701,13 @@ class ComplianceTest extends BaseSpecification {
                 new Control(
                         "NIST_800_190:4_1_1",
                         ["Build time policies that disallows images with a critical CVSS score is enabled and enforced",
-                         "At least one build time policy is enabled and enforced",
+                         "At least one policy in lifecycle \"BUILD\" is enabled and enforced",
                          "Cluster has an image scanner in use"],
                         ComplianceState.COMPLIANCE_STATE_SUCCESS),
                 new Control(
                         "NIST_800_190:4_1_2",
                         ["Policies are in place to detect and enforce \"Privileges\" category issues.",
-                         "At least one build time policy is enabled and enforced",
+                         "At least one policy in lifecycle \"BUILD\" is enabled and enforced",
                          "Cluster has an image scanner in use"],
                         ComplianceState.COMPLIANCE_STATE_SUCCESS),
                 new Control(
