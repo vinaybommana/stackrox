@@ -28,7 +28,7 @@ type PanicStats struct {
 
 // APIStat contains telemetry data about different kinds of API calls
 type APIStat struct {
-	MethodName string
+	MethodName string `json:"methodName"`
 
 	HTTP   []HTTPInvocationStats `json:"http,omitempty"`
 	GRPC   []GRPCInvocationStats `json:"grpc,omitempty"`
