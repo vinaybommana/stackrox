@@ -4,15 +4,14 @@ import { useQuery } from 'react-apollo';
 import gql from 'graphql-tag';
 
 import workflowStateContext from 'Containers/workflowStateContext';
+import queryService from 'modules/queryService';
 
 import EntityTileLink from 'Components/EntityTileLink';
 
 const CVES_COUNT_QUERY = gql`
-    query cvesCount {
-        vulnerabilities {
-            cve
-            isFixable
-        }
+    query cvesCount($query: String) {
+        vulnerabilityCount
+        fixableCveCount: vulnerabilityCount(query: $query)
     }
 `;
 
@@ -25,12 +24,16 @@ const getURL = workflowState => {
 };
 
 const CvesCountTile = () => {
-    const { loading, data = {} } = useQuery(CVES_COUNT_QUERY);
+    const { loading, data = {} } = useQuery(CVES_COUNT_QUERY, {
+        variables: {
+            query: queryService.objectToWhereClause({
+                'Fixed By': 'r/.*'
+            })
+        }
+    });
 
-    const { vulnerabilities = [] } = data;
+    const { vulnerabilityCount = 0, fixableCveCount = 0 } = data;
 
-    const cveCount = vulnerabilities.length;
-    const fixableCveCount = vulnerabilities.filter(vuln => !!vuln.isFixable).length;
     const fixableCveCountText = `(${fixableCveCount} fixable)`;
 
     const workflowState = useContext(workflowStateContext);
@@ -38,7 +41,7 @@ const CvesCountTile = () => {
 
     return (
         <EntityTileLink
-            count={cveCount}
+            count={vulnerabilityCount}
             entityType={entityTypes.CVE}
             position="middle"
             subText={fixableCveCountText}
