@@ -9,12 +9,16 @@ function noOptionsMessage() {
     return null;
 }
 
-const Tags = ({ type, tags, onChange, disabled, defaultOpen }) => {
+const Tags = ({ type, tags, onChange, disabled, defaultOpen, isCollapsible }) => {
     const { length } = tags;
     const options = tags.map(tag => ({ label: tag, value: tag }));
 
     return (
-        <CollapsibleCard title={`${length} ${type} ${pluralize('Tag', length)}`} open={defaultOpen}>
+        <CollapsibleCard
+            title={`${length} ${type} ${pluralize('Tag', length)}`}
+            open={defaultOpen}
+            isCollapsible={isCollapsible}
+        >
             <div className="m-3">
                 <Creatable
                     id="tags"
@@ -38,13 +42,15 @@ Tags.propTypes = {
     tags: PropTypes.arrayOf(PropTypes.string),
     onChange: PropTypes.func.isRequired,
     disabled: PropTypes.bool,
-    defaultOpen: PropTypes.bool
+    defaultOpen: PropTypes.bool,
+    isCollapsible: PropTypes.bool
 };
 
 Tags.defaultProps = {
     tags: [],
     disabled: false,
-    defaultOpen: false
+    defaultOpen: false,
+    isCollapsible: true
 };
 
 export default Tags;

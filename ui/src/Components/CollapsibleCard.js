@@ -12,7 +12,8 @@ class CollapsibleCard extends Component {
         renderWhenOpened: PropTypes.func,
         renderWhenClosed: PropTypes.func,
         cardClassName: PropTypes.string,
-        headerComponents: PropTypes.element
+        headerComponents: PropTypes.element,
+        isCollapsible: PropTypes.bool
     };
 
     static defaultProps = {
@@ -22,7 +23,8 @@ class CollapsibleCard extends Component {
         renderWhenOpened: null,
         renderWhenClosed: null,
         cardClassName: 'border border-base-400',
-        headerComponents: null
+        headerComponents: null,
+        isCollapsible: true
     };
 
     renderTriggerElement = cardState => {
@@ -30,12 +32,13 @@ class CollapsibleCard extends Component {
             opened: <Icon.ChevronUp className="h-4 w-4" />,
             closed: <Icon.ChevronDown className="h-4 w-4" />
         };
-        const { title, titleClassName, headerComponents } = this.props;
+        const { title, titleClassName, headerComponents, isCollapsible } = this.props;
+        const className = isCollapsible ? titleClassName : `${titleClassName} pointer-events-none`;
         return (
-            <div className={titleClassName}>
+            <div className={className}>
                 <h1 className="flex flex-1 p-3 pb-2 text-base-600 font-700 text-lg">{title}</h1>
                 {headerComponents && <div>{headerComponents}</div>}
-                <div className="flex px-3">{icons[cardState]}</div>
+                {isCollapsible && <div className="flex px-3">{icons[cardState]}</div>}
             </div>
         );
     };
@@ -45,20 +48,24 @@ class CollapsibleCard extends Component {
     renderWhenClosed = () => this.renderTriggerElement('closed');
 
     render() {
-        const renderWhenOpened = this.props.renderWhenOpened
-            ? this.props.renderWhenOpened
-            : this.renderWhenOpened;
-        const renderWhenClosed = this.props.renderWhenClosed
-            ? this.props.renderWhenClosed
-            : this.renderWhenClosed;
+        const {
+            open,
+            renderWhenOpened,
+            renderWhenClosed,
+            cardClassName,
+            isCollapsible
+        } = this.props;
         return (
-            <div className={`bg-base-100 text-base-600 rounded ${this.props.cardClassName}`}>
+            <div className={`bg-base-100 text-base-600 rounded ${cardClassName}`}>
                 <Collapsible
-                    open={this.props.open}
-                    trigger={renderWhenClosed()}
-                    triggerWhenOpen={renderWhenOpened()}
+                    open={open}
+                    trigger={renderWhenClosed ? renderWhenClosed() : this.renderWhenClosed()}
+                    triggerWhenOpen={
+                        renderWhenOpened ? renderWhenOpened() : this.renderWhenOpened()
+                    }
                     transitionTime={100}
                     lazyRender
+                    triggerDisabled={!isCollapsible}
                 >
                     {this.props.children}
                 </Collapsible>
