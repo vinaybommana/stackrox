@@ -68,8 +68,8 @@ type StorageInfo struct {
 // LicenseJSON type encapsulates the License type and adds Marshal/Unmarshal methods
 type LicenseJSON licenseproto.License
 
-// Marshal marshals license data to bytes
-func (l *LicenseJSON) Marshal() ([]byte, error) {
+// MarshalJSON marshals license data to bytes, following jsonpb rules.
+func (l *LicenseJSON) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	if err := (&jsonpb.Marshaler{}).Marshal(&buf, (*licenseproto.License)(l)); err != nil {
 		return nil, err
@@ -77,8 +77,8 @@ func (l *LicenseJSON) Marshal() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// Unmarshal unmarshals license bytes into a License object
-func (l *LicenseJSON) Unmarshal(data []byte) error {
+// UnmarshalJSON unmarshals license JSON bytes into a License object, following jsonpb rules.
+func (l *LicenseJSON) UnmarshalJSON(data []byte) error {
 	return jsonpb.Unmarshal(bytes.NewReader(data), (*licenseproto.License)(l))
 }
 
