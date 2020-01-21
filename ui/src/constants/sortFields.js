@@ -122,7 +122,7 @@ export const policySortFields = {
     DESCRIPTION: 'Description',
     DISABLED: 'Disabled',
     ENFORCEMENT: 'Enforcement',
-    LAST_UPDATED: 'Last Updated',
+    LAST_UPDATED: 'Policy Last Updated',
     LATEST_VIOLATION: 'Latest Violation',
     LIFECYCLE_STAGE: 'Lifecycle Stage',
     POLICY: 'Policy',
