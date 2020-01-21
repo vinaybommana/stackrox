@@ -18,7 +18,7 @@ var (
 
 	// DiagnosticBundle enables support for obtaining extended diagnostic information.
 	// NB: When removing this feature flag, remove references in ui/src/utils/featureFlags.js
-	DiagnosticBundle = registerFeature("Enable support for diagnostic bundle download", "ROX_DIAGNOSTIC_BUNDLE", true)
+	DiagnosticBundle = registerFeature("Enable support for diagnostic bundle download", "ROX_DIAGNOSTIC_BUNDLE", false)
 
 	// IQTAnalystNotesUI enables the IQT Analyst Notes UI.
 	// NB: When removing this feature flag, remove references in ui/src/utils/featureFlags.js
