@@ -38,7 +38,7 @@ const searchFields = {
     [entityTypes.COMPONENT]: 'Component+ID',
     [entityTypes.DEPLOYMENT]: 'Deployment+ID',
     [entityTypes.NAMESPACE]: 'Namespace+ID',
-    [entityTypes.IMAGE]: 'Image+ID'
+    [entityTypes.IMAGE]: 'Image+Sha'
 };
 
 export function exportCvesAsCsv(fileName, workflowState) {
