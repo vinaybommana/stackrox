@@ -276,7 +276,7 @@ const VulnMgmtPolicyOverview = ({ data, entityContext, setRefreshTrigger }) => {
                         </div>
                         <div className="sx-1">
                             <Metadata
-                                className="h-full w-full min-w-48 bg-base-100 min-h-48 pdf-page"
+                                className="h-full w-full min-w-48 bg-base-100 pdf-page"
                                 keyValuePairs={details}
                                 title="Details"
                             />
