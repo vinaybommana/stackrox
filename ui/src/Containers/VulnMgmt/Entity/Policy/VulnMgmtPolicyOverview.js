@@ -283,20 +283,20 @@ const VulnMgmtPolicyOverview = ({ data, entityContext, setRefreshTrigger }) => {
                         </div>
                         <div className="s-1">
                             <PolicyConfigurationFields
-                                className="flex-1 min-w-48 bg-base-100 h-48 pdf-page"
+                                className="flex-1 min-w-48 bg-base-100 min-h-48 pdf-page"
                                 fields={fields}
                             />
                         </div>
                         <div className="s-1">
                             <Metadata
-                                className="flex-1 min-w-48 bg-base-100 h-48 pdf-page"
+                                className="flex-1 min-w-48 bg-base-100 min-h-48 pdf-page"
                                 keyValuePairs={scopeDetails}
                                 title="Scope"
                             />
                         </div>
                         <div className="s-1">
                             <Metadata
-                                className="flex-1 min-w-48 bg-base-100 h-48 pdf-page"
+                                className="flex-1 min-w-48 bg-base-100 min-h-48 pdf-page"
                                 keyValuePairs={whitelistDetails}
                                 title="Whitelist"
                             />

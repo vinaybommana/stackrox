@@ -127,6 +127,11 @@ const VulmMgmtEntityPolicy = ({
                         source
                         type
                     }
+                    imageAgeDays
+                    scanAgeDays
+                    noScanExists
+                    readOnlyRootFs
+                    whitelistEnabled
                 }
                 scope {
                     cluster

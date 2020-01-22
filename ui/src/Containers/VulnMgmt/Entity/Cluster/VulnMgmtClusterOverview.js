@@ -39,6 +39,7 @@ const emptyCluster = {
     priority: 0,
     status: {
         orchestratorMetadata: {
+            buildDate: '',
             version: 'N/A'
         }
     },
@@ -52,20 +53,12 @@ const VulnMgmtClusterOverview = ({ data, entityContext }) => {
     // guard against incomplete GraphQL-cached data
     const safeData = { ...emptyCluster, ...data };
 
-    const {
-        priority,
-        policyStatus,
-        createdAt,
-        status,
-        istioEnabled,
-        vulnerabilities,
-        id
-    } = safeData;
+    const { priority, policyStatus, status, istioEnabled, vulnerabilities, id } = safeData;
 
     if (!status || !policyStatus) return null;
 
     const { orchestratorMetadata = null } = status;
-    const { version = 'N/A' } = orchestratorMetadata;
+    const { buildDate = '', version = 'N/A' } = orchestratorMetadata;
     const { failingPolicies } = policyStatus;
     const fixableCves = vulnerabilities.filter(cve => cve.isFixable);
 
@@ -89,8 +82,8 @@ const VulnMgmtClusterOverview = ({ data, entityContext }) => {
 
     const metadataKeyValuePairs = [
         {
-            key: 'Created',
-            value: <DateTimeField date={createdAt} />
+            key: 'Build Date',
+            value: <DateTimeField date={buildDate} asString />
         },
         {
             key: 'K8s version',

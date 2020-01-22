@@ -39,6 +39,7 @@ const VulmMgmtEntityCluster = ({ entityId, entityListType, search, sort, page, e
                 #createdAt
                 status {
                     orchestratorMetadata {
+                        buildDate
                         version
                     }
                 }
