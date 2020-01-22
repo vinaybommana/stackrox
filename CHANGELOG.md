@@ -2,6 +2,8 @@
 All notable changes to this project that require documentation updates will be documented in this file.
 
 ## [NEXT RELEASE]
+### Added
+- Added a REST endpoint `/v1/group` that can be used to retrieve a single group by exact property match (cf. ROX-3928).
 
 ## [37.0]
 ### Changed
