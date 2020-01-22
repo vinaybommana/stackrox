@@ -575,23 +575,6 @@ func (resolver *deploymentResolver) hasImages() bool {
 	return false
 }
 
-func (resolver *deploymentResolver) getImageShas(ctx context.Context) []string {
-	if err := readImages(ctx); err != nil {
-		return nil
-	}
-
-	imageShas := set.NewStringSet()
-
-	deployment := resolver.data
-	containers := deployment.GetContainers()
-	for _, c := range containers {
-		if c.GetImage().GetId() != "" {
-			imageShas.Add(c.GetImage().GetId())
-		}
-	}
-	return imageShas.AsSlice()
-}
-
 func (resolver *deploymentResolver) unresolvedAlertsExists(ctx context.Context, q *v1.Query) (bool, error) {
 	if err := readAlerts(ctx); err != nil {
 		return false, err
@@ -618,20 +601,11 @@ func (resolver *deploymentResolver) getDeploymentRawQuery() string {
 }
 
 func (resolver *deploymentResolver) getImageQuery(ctx context.Context) *v1.Query {
-	imageShas := resolver.getImageShas(ctx)
-	if len(imageShas) == 0 {
-		return search.EmptyQuery()
-	}
-	return search.NewQueryBuilder().AddDocIDs(imageShas...).ProtoQuery()
+	return search.NewQueryBuilder().AddExactMatches(search.DeploymentID, resolver.data.GetId()).ProtoQuery()
 }
 
 func (resolver *deploymentResolver) getImageRawQuery(ctx context.Context) string {
-	imageShas := resolver.getImageShas(ctx)
-	if len(imageShas) == 0 {
-		return ""
-	}
-
-	return search.NewQueryBuilder().AddExactMatches(search.ImageSHA, imageShas...).Query()
+	return search.NewQueryBuilder().AddExactMatches(search.DeploymentID, resolver.data.GetId()).Query()
 }
 
 func (resolver *deploymentResolver) getConjunctionQuery(q *v1.Query) (*v1.Query, error) {
