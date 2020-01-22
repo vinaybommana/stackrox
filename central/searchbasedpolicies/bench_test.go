@@ -14,6 +14,7 @@ import (
 	processIndicatorSearch "github.com/stackrox/rox/central/processindicator/search"
 	processIndicatorStore "github.com/stackrox/rox/central/processindicator/store/badger"
 	"github.com/stackrox/rox/central/role/resources"
+	"github.com/stackrox/rox/central/searchbasedpolicies/builders"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/image/policies"
 	"github.com/stackrox/rox/pkg/badgerhelper"
@@ -108,6 +109,7 @@ func BenchmarkPolicies(b *testing.B) {
 			matcherBuilder := matcher.NewBuilder(
 				matcher.NewRegistry(
 					processDatastore,
+					builders.K8sRBACQueryBuilder{},
 				),
 				deployments.OptionsMap,
 			)

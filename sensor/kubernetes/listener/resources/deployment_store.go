@@ -1,13 +1,11 @@
 package resources
 
 import (
-	"github.com/stackrox/rox/pkg/sync"
 	"k8s.io/apimachinery/pkg/labels"
 )
 
 // deploymentStore stores deployments (by namespace and id).
 type deploymentStore struct {
-	lock        sync.RWMutex
 	deployments map[string]map[string]*deploymentWrap
 }
 
@@ -19,9 +17,6 @@ func newDeploymentStore() *deploymentStore {
 }
 
 func (ds *deploymentStore) addOrUpdateDeployment(wrap *deploymentWrap) {
-	ds.lock.Lock()
-	defer ds.lock.Unlock()
-
 	nsMap := ds.deployments[wrap.GetNamespace()]
 	if nsMap == nil {
 		nsMap = make(map[string]*deploymentWrap)
@@ -31,9 +26,6 @@ func (ds *deploymentStore) addOrUpdateDeployment(wrap *deploymentWrap) {
 }
 
 func (ds *deploymentStore) removeDeployment(wrap *deploymentWrap) {
-	ds.lock.Lock()
-	defer ds.lock.Unlock()
-
 	nsMap := ds.deployments[wrap.GetNamespace()]
 	if nsMap == nil {
 		return
@@ -42,9 +34,6 @@ func (ds *deploymentStore) removeDeployment(wrap *deploymentWrap) {
 }
 
 func (ds *deploymentStore) getOwningDeployments(namespace string, podLabels map[string]string) (owning []*deploymentWrap) {
-	ds.lock.RLock()
-	defer ds.lock.RUnlock()
-
 	podLabelSet := labels.Set(podLabels)
 	for _, wrap := range ds.deployments[namespace] {
 		if wrap.podSelector != nil && wrap.podSelector.Matches(podLabelSet) {
@@ -55,9 +44,6 @@ func (ds *deploymentStore) getOwningDeployments(namespace string, podLabels map[
 }
 
 func (ds *deploymentStore) getMatchingDeployments(namespace string, sel selector) (matching []*deploymentWrap) {
-	ds.lock.RLock()
-	defer ds.lock.RUnlock()
-
 	for _, wrap := range ds.deployments[namespace] {
 		if sel.Matches(labels.Set(wrap.PodLabels)) {
 			matching = append(matching, wrap)
@@ -68,8 +54,5 @@ func (ds *deploymentStore) getMatchingDeployments(namespace string, sel selector
 
 // OnNamespaceDeleted reacts to a namespace deletion, deleting all deployments in this namespace from the store.
 func (ds *deploymentStore) OnNamespaceDeleted(ns string) {
-	ds.lock.Lock()
-	defer ds.lock.Unlock()
-
 	delete(ds.deployments, ns)
 }

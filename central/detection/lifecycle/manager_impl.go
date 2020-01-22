@@ -448,6 +448,52 @@ func (m *managerImpl) UpsertPolicy(policy *storage.Policy) error {
 	return err
 }
 
+func (m *managerImpl) RecompilePolicy(policy *storage.Policy) error {
+	// Asynchronously update all deployments' risk after processing.
+	defer m.reprocessor.ReprocessRisk()
+
+	var presentAlerts []*storage.Alert
+
+	// Prevent two processes from writing/deleting the alerts for a policy at the same time
+	m.policyAlertsLock.Lock(policy.GetId())
+	defer m.policyAlertsLock.Unlock(policy.GetId())
+	if policies.AppliesAtDeployTime(policy) {
+		if err := m.deploytimeDetector.PolicySet().Recompile(policy.GetId()); err != nil {
+			return errors.Wrapf(err, "adding policy %s to deploy time detector", policy.GetName())
+		}
+		deployTimeAlerts, err := m.deploytimeDetector.AlertsForPolicy(policy.GetId())
+		if err != nil {
+			return errors.Wrapf(err, "error generating deploy-time alerts for policy %s", policy.GetName())
+		}
+		presentAlerts = append(presentAlerts, deployTimeAlerts...)
+	} else {
+		err := m.deploytimeDetector.PolicySet().RemovePolicy(policy.GetId())
+		if err != nil {
+			return errors.Wrapf(err, "removing policy %s from deploy time detector", policy.GetName())
+		}
+	}
+
+	if policies.AppliesAtRunTime(policy) {
+		if err := m.runtimeDetector.PolicySet().Recompile(policy.GetId()); err != nil {
+			return errors.Wrapf(err, "adding policy %s to runtime detector", policy.GetName())
+		}
+		runTimeAlerts, err := m.runtimeDetector.AlertsForPolicy(policy.GetId())
+		if err != nil {
+			return errors.Wrapf(err, "error generating runtime alerts for policy %s", policy.GetName())
+		}
+		presentAlerts = append(presentAlerts, runTimeAlerts...)
+	} else {
+		err := m.runtimeDetector.PolicySet().RemovePolicy(policy.GetId())
+		if err != nil {
+			return errors.Wrapf(err, "removing policy %s from runtime detector", policy.GetName())
+		}
+	}
+
+	// Perform notifications and update DB.
+	_, err := m.alertManager.AlertAndNotify(lifecycleMgrCtx, presentAlerts, alertmanager.WithPolicyID(policy.GetId()))
+	return err
+}
+
 func (m *managerImpl) DeploymentRemoved(deployment *storage.Deployment) error {
 	m.deploymentsPendingEnrichment.remove(deployment.GetId())
 	_, err := m.alertManager.AlertAndNotify(lifecycleMgrCtx, nil, alertmanager.WithDeploymentIDs(deployment.GetId()))

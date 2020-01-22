@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stackrox/rox/central/detection"
+	k8sBuilders "github.com/stackrox/rox/central/searchbasedpolicies/builders"
 	imagePolicies "github.com/stackrox/rox/image/policies"
 	"github.com/stackrox/rox/pkg/defaults"
 	"github.com/stackrox/rox/pkg/fixtures"
@@ -19,6 +20,7 @@ func BenchmarkDefaultPolicies(b *testing.B) {
 	builder := matcher.NewBuilder(
 		matcher.NewRegistry(
 			nil,
+			k8sBuilders.K8sRBACQueryBuilder{},
 		),
 		deployments.OptionsMap,
 	)

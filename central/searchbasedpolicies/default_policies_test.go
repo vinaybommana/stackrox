@@ -20,6 +20,7 @@ import (
 	processIndicatorSearch "github.com/stackrox/rox/central/processindicator/search"
 	processIndicatorBadgerStore "github.com/stackrox/rox/central/processindicator/store/badger"
 	"github.com/stackrox/rox/central/role/resources"
+	k8sBuilders "github.com/stackrox/rox/central/searchbasedpolicies/builders"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/image/policies"
 	"github.com/stackrox/rox/pkg/badgerhelper"
@@ -113,6 +114,7 @@ func (suite *DefaultPoliciesTestSuite) SetupTest() {
 	suite.matcherBuilder = matcher.NewBuilder(
 		matcher.NewRegistry(
 			suite.processDataStore,
+			k8sBuilders.K8sRBACQueryBuilder{},
 		),
 		deployments.OptionsMap,
 	)

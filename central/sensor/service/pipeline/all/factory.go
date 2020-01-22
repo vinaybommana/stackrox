@@ -11,6 +11,7 @@ import (
 	"github.com/stackrox/rox/central/sensor/service/pipeline/networkflowupdate"
 	"github.com/stackrox/rox/central/sensor/service/pipeline/networkpolicies"
 	"github.com/stackrox/rox/central/sensor/service/pipeline/nodes"
+	"github.com/stackrox/rox/central/sensor/service/pipeline/policyrefresh"
 	"github.com/stackrox/rox/central/sensor/service/pipeline/processindicators"
 	"github.com/stackrox/rox/central/sensor/service/pipeline/reprocessing"
 	"github.com/stackrox/rox/central/sensor/service/pipeline/rolebindings"
@@ -46,5 +47,6 @@ func (s *factoryImpl) PipelineForCluster(ctx context.Context, clusterID string) 
 		roles.GetPipeline(),
 		rolebindings.GetPipeline(),
 		reprocessing.GetPipeline(),
+		policyrefresh.GetPipeline(), // Needs to be after roles, rolebindings, and serviceaccounts pipelines.
 	), nil
 }

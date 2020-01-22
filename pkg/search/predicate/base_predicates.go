@@ -168,7 +168,7 @@ func createEnumPredicate(fullPath, value string, enumRef protoreflect.ProtoEnum)
 	if hasIntValue {
 		int64Value = int64(int32Value)
 	} else {
-		return nil, errors.Errorf("unrecognized enum value: %s in %+v", value, nameToNumber)
+		return nil, errors.Errorf("unrecognized enum value: %s", value)
 	}
 
 	// Generate the comparator for the integer values.

@@ -1792,10 +1792,6 @@
               {
                 "name": "V3",
                 "integer": 1
-              },
-              {
-                "name": "UNKNOWN",
-                "integer": 2
               }
             ]
           },
@@ -1812,10 +1808,6 @@
               {
                 "name": "K8S_CVE",
                 "integer": 2
-              },
-              {
-                "name": "ISTIO_CVE",
-                "integer": 3
               }
             ]
           },
@@ -2097,28 +2089,6 @@
                 "id": 11,
                 "name": "cvss_v3",
                 "type": "CVSSV3"
-              },
-              {
-                "id": 12,
-                "name": "supressed",
-                "type": "bool",
-                "options": [
-                  {
-                    "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"CVE Supressed,store\\"
-                  }
-                ]
-              },
-              {
-                "id": 13,
-                "name": "fixed_by",
-                "type": "string",
-                "options": [
-                  {
-                    "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Fixed By,store\\"
-                  }
-                ]
               }
             ],
             "messages": [
@@ -2504,17 +2474,6 @@
                 ]
               },
               {
-                "id": 28,
-                "name": "service_account_permission_level",
-                "type": "PermissionLevel",
-                "options": [
-                  {
-                    "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Service Account Permission Level,store\\"
-                  }
-                ]
-              },
-              {
                 "id": 25,
                 "name": "automount_service_account_token",
                 "type": "bool"
@@ -2543,7 +2502,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "hash:\\\"ignore\\\" sensorhash:\\\"ignore\\"
+                    "value": "hash:\\\"ignore\\"
                   }
                 ]
               }
@@ -2832,17 +2791,6 @@
                 "id": 4,
                 "name": "started",
                 "type": "google.protobuf.Timestamp"
-              },
-              {
-                "id": 5,
-                "name": "image_digest",
-                "type": "string",
-                "options": [
-                  {
-                    "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Container Image Digest,hidden\\"
-                  }
-                ]
               }
             ]
           },
@@ -3260,9 +3208,6 @@
           },
           {
             "path": "storage/taints.proto"
-          },
-          {
-            "path": "storage/rbac.proto"
           },
           {
             "path": "protobuf/gogoproto/gogo.proto"
@@ -5528,34 +5473,6 @@
                 "id": 4,
                 "name": "issue_type",
                 "type": "string"
-              },
-              {
-                "id": 5,
-                "name": "priority_mappings",
-                "type": "PriorityMapping",
-                "is_repeated": true
-              },
-              {
-                "id": 6,
-                "name": "default_fields_json",
-                "type": "string"
-              }
-            ],
-            "messages": [
-              {
-                "name": "PriorityMapping",
-                "fields": [
-                  {
-                    "id": 1,
-                    "name": "severity",
-                    "type": "Severity"
-                  },
-                  {
-                    "id": 2,
-                    "name": "priority_name",
-                    "type": "string"
-                  }
-                ]
               }
             ]
           },
@@ -5732,9 +5649,6 @@
           },
           {
             "path": "storage/common.proto"
-          },
-          {
-            "path": "storage/policy.proto"
           }
         ],
         "package": {
@@ -5831,6 +5745,34 @@
               {
                 "name": "GREATER_THAN",
                 "integer": 4
+              }
+            ]
+          },
+          {
+            "name": "PermissionLevel",
+            "enum_fields": [
+              {
+                "name": "UNSET"
+              },
+              {
+                "name": "NONE",
+                "integer": 1
+              },
+              {
+                "name": "DEFAULT",
+                "integer": 2
+              },
+              {
+                "name": "ELEVATED_IN_NAMESPACE",
+                "integer": 3
+              },
+              {
+                "name": "ELEVATED_CLUSTER_WIDE",
+                "integer": 4
+              },
+              {
+                "name": "CLUSTER_ADMIN",
+                "integer": 5
               }
             ]
           }
@@ -5966,35 +5908,7 @@
               {
                 "id": 15,
                 "name": "last_updated",
-                "type": "google.protobuf.Timestamp",
-                "options": [
-                  {
-                    "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Policy Last Updated\\"
-                  }
-                ]
-              },
-              {
-                "id": 16,
-                "name": "SORT_name",
-                "type": "string",
-                "options": [
-                  {
-                    "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"SORT_Policy,hidden,analyzer=keyword\\"
-                  }
-                ]
-              },
-              {
-                "id": 17,
-                "name": "SORT_lifecycleStage",
-                "type": "string",
-                "options": [
-                  {
-                    "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"SORT_PolicyLifecycleStage,hidden\\"
-                  }
-                ]
+                "type": "google.protobuf.Timestamp"
               }
             ]
           },
@@ -6498,9 +6412,6 @@
           },
           {
             "path": "storage/deployment.proto"
-          },
-          {
-            "path": "storage/rbac.proto"
           }
         ],
         "package": {
@@ -6965,34 +6876,6 @@
               {
                 "name": "GROUP",
                 "integer": 3
-              }
-            ]
-          },
-          {
-            "name": "PermissionLevel",
-            "enum_fields": [
-              {
-                "name": "UNSET"
-              },
-              {
-                "name": "NONE",
-                "integer": 1
-              },
-              {
-                "name": "DEFAULT",
-                "integer": 2
-              },
-              {
-                "name": "ELEVATED_IN_NAMESPACE",
-                "integer": 3
-              },
-              {
-                "name": "ELEVATED_CLUSTER_WIDE",
-                "integer": 4
-              },
-              {
-                "name": "CLUSTER_ADMIN",
-                "integer": 5
               }
             ]
           }
@@ -8422,34 +8305,6 @@
           }
         ],
         "imports": [
-          {
-            "path": "protobuf/gogoproto/gogo.proto"
-          }
-        ],
-        "package": {
-          "name": "storage"
-        }
-      }
-    },
-    {
-      "protopath": "telemetry.proto",
-      "def": {
-        "messages": [
-          {
-            "name": "TelemetryConfiguration",
-            "fields": [
-              {
-                "id": 1,
-                "name": "enabled",
-                "type": "bool"
-              }
-            ]
-          }
-        ],
-        "imports": [
-          {
-            "path": "google/protobuf/timestamp.proto"
-          },
           {
             "path": "protobuf/gogoproto/gogo.proto"
           }

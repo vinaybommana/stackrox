@@ -90,6 +90,20 @@ func (mr *MockPolicySetMockRecorder) UpsertPolicy(arg0 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertPolicy", reflect.TypeOf((*MockPolicySet)(nil).UpsertPolicy), arg0)
 }
 
+// Recompile mocks base method
+func (m *MockPolicySet) Recompile(policyID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Recompile", policyID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Recompile indicates an expected call of Recompile
+func (mr *MockPolicySetMockRecorder) Recompile(policyID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Recompile", reflect.TypeOf((*MockPolicySet)(nil).Recompile), policyID)
+}
+
 // RemovePolicy mocks base method
 func (m *MockPolicySet) RemovePolicy(policyID string) error {
 	m.ctrl.T.Helper()

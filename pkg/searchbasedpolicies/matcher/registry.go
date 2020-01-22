@@ -14,7 +14,8 @@ var log = logging.LoggerForModule()
 type Registry []searchbasedpolicies.PolicyQueryBuilder
 
 // NewRegistry returns a new registry of the builders with the given underlying datastore for fetching process indicators.
-func NewRegistry(processIndicators searchbasedpolicies.ProcessIndicatorGetter) Registry {
+func NewRegistry(processIndicators searchbasedpolicies.ProcessIndicatorGetter,
+	k8sRBACBuilder searchbasedpolicies.PolicyQueryBuilder) Registry {
 	reg := []searchbasedpolicies.PolicyQueryBuilder{
 		fields.ImageNameQueryBuilder,
 		fields.ImageAgeQueryBuilder,
@@ -41,7 +42,7 @@ func NewRegistry(processIndicators searchbasedpolicies.ProcessIndicatorGetter) R
 		builders.PortExposureQueryBuilder{},
 		builders.ProcessWhitelistingBuilder{},
 		builders.HostMountQueryBuilder{},
-		builders.K8sRBACQueryBuilder{},
+		k8sRBACBuilder,
 	}
 	return reg
 }
