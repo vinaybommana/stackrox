@@ -19,6 +19,8 @@ var (
 )
 
 func TestManager(t *testing.T) {
+	t.Parallel()
+
 	suite.Run(t, new(managerSuite))
 }
 

@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	prodTelemetryEndpoint = "https://stackrox-telemetry-prod.appspot.com/ingest"
+	prodTelemetryEndpoint = "https://telemetry.stackrox.io/ingest"
 	testTelemetryEndpoint = "https://stackrox-telemetry-test.appspot.com/ingest"
 
 	telemetrySendTimeout = 30 * time.Second
