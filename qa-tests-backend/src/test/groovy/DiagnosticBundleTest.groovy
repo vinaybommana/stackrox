@@ -47,9 +47,15 @@ class DiagnosticBundleTest extends BaseSpecification {
     }
 
     def cleanupSpec() {
-        services.ApiTokenService.revokeToken(adminToken.metadata.id)
-        services.ApiTokenService.revokeToken(debugLogsReaderToken.metadata.id)
-        services.ApiTokenService.revokeToken(noAccessToken.metadata.id)
+        if (adminToken != null) {
+            services.ApiTokenService.revokeToken(adminToken.metadata.id)
+        }
+        if (debugLogsReaderToken != null) {
+            services.ApiTokenService.revokeToken(debugLogsReaderToken.metadata.id)
+        }
+        if (noAccessToken != null) {
+            services.ApiTokenService.revokeToken(noAccessToken.metadata.id)
+        }
         RoleService.deleteRole(debugLogsReaderRoleName)
     }
 
