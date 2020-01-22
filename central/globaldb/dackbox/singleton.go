@@ -1,19 +1,22 @@
-package globaldb
+package dakcbox
 
 import (
 	"github.com/stackrox/rox/central/globaldb"
 	"github.com/stackrox/rox/pkg/dackbox"
+	"github.com/stackrox/rox/pkg/dackbox/indexer"
 	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/sync"
 )
 
 var (
-	dackBoxInit sync.Once
+	// GraphBucket specifies the prefix for the id map DackBox tracks and stores in the DB.
+	GraphBucket = []byte("dackbox_graph")
 
-	// Bucket specifies the prefix for the id map DackBox tracks and stores in the DB.
-	Bucket  = []byte("dackbox_graph")
-	duckBox *dackbox.DackBox
+	registry indexer.IndexRegistry
+	duckBox  *dackbox.DackBox
+
+	dackBoxInit sync.Once
 
 	log = logging.LoggerForModule()
 )
@@ -24,15 +27,26 @@ func GetGlobalDackBox() *dackbox.DackBox {
 	return duckBox
 }
 
+// GetIndexerRegistry returns the registry of indices that DackBox will use to index items in the queue.
+func GetIndexerRegistry() indexer.IndexRegistry {
+	initializeDackBox()
+	return registry
+}
+
 func initializeDackBox() {
 	dackBoxInit.Do(func() {
-		if features.Dackbox.Enabled() {
-			globaldb.RegisterBucket(Bucket, "Graph Keys")
-			var err error
-			duckBox, err = dackbox.NewDackBox(globaldb.GetGlobalBadgerDB(), Bucket)
-			if err != nil {
-				log.Panicf("Could not load stored indices: %v", err)
-			}
+		if !features.Dackbox.Enabled() {
+			return
+		}
+
+		globaldb.RegisterBucket(GraphBucket, "Graph Keys")
+
+		registry = indexer.NewIndexRegistry()
+
+		var err error
+		duckBox, err = dackbox.NewDackBox(globaldb.GetGlobalBadgerDB(), GraphBucket)
+		if err != nil {
+			log.Panicf("Could not load stored indices: %v", err)
 		}
 	})
 }

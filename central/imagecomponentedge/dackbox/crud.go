@@ -18,15 +18,23 @@ var (
 	)
 
 	// Upserter writes storage.ImageComponentEdges directly to the store.
-	Upserter = crud.NewUpserter(
-		crud.WithKeyFunction(crud.PrefixKey(Bucket, keyFunc)),
-	)
+	Upserter = crud.NewUpserter(crud.WithKeyFunction(crud.PrefixKey(Bucket, keyFunc)))
 
 	// Deleter deletes the edges from the store.
-	Deleter = crud.NewDeleter(
-		crud.GCAllChildren(),
-	)
+	Deleter = crud.NewDeleter()
 )
+
+func init() {
+	globaldb.RegisterBucket(Bucket, "Image Component Edge")
+}
+
+func keyFunc(msg proto.Message) []byte {
+	return []byte(msg.(interface{ GetId() string }).GetId())
+}
+
+func alloc() proto.Message {
+	return &storage.ImageComponentEdge{}
+}
 
 // GetKey returns the prefixed key for the given id.
 func GetKey(id string) []byte {
@@ -42,14 +50,27 @@ func GetKeys(ids ...string) [][]byte {
 	return keys
 }
 
-func init() {
-	globaldb.RegisterBucket(Bucket, "Image Component Edge")
+// GetID returns the ID for the prefixed key.
+func GetID(key []byte) string {
+	return string(badgerhelper.StripBucket(Bucket, key))
 }
 
-func keyFunc(msg proto.Message) []byte {
-	return []byte(msg.(interface{ GetId() string }).GetId())
+// GetIDs returns the ids for the prefixed keys.
+func GetIDs(keys ...[]byte) []string {
+	ids := make([]string, 0, len(keys))
+	for _, key := range keys {
+		ids = append(ids, GetID(key))
+	}
+	return ids
 }
 
-func alloc() proto.Message {
-	return &storage.ImageComponentEdge{}
+// FilterKeys filters the image component edge keys out of a list of keys.
+func FilterKeys(keys [][]byte) [][]byte {
+	ret := make([][]byte, 0, len(keys))
+	for _, key := range keys {
+		if badgerhelper.HasPrefix(Bucket, key) {
+			ret = append(ret, key)
+		}
+	}
+	return ret
 }

@@ -14,19 +14,30 @@ var (
 
 	// Reader reads storage.CVEs directly from the store.
 	Reader = crud.NewReader(
-		crud.WithAllocFunction(alloc),
+		crud.WithAllocFunction(Alloc),
 	)
 
 	// Upserter writes storage.CVEs directly to the store.
-	Upserter = crud.NewUpserter(
-		crud.WithKeyFunction(crud.PrefixKey(Bucket, keyFunc)),
-	)
+	Upserter = crud.NewUpserter(crud.WithKeyFunction(KeyFunc))
 
 	// Deleter deletes vulns from the store.
-	Deleter = crud.NewDeleter(
-		crud.GCAllChildren(),
-	)
+	Deleter = crud.NewDeleter()
 )
+
+func init() {
+	globaldb.RegisterBucket(Bucket, "Component Vuln Edge")
+}
+
+// KeyFunc returns the key for a ComponentCVEEdge.
+func KeyFunc(msg proto.Message) []byte {
+	unPrefixed := []byte(msg.(interface{ GetId() string }).GetId())
+	return badgerhelper.GetBucketKey(Bucket, unPrefixed)
+}
+
+// Alloc allocates a ComponentCVEEdge.
+func Alloc() proto.Message {
+	return &storage.ComponentCVEEdge{}
+}
 
 // GetKey returns the prefixed key for the given id.
 func GetKey(id string) []byte {
@@ -42,14 +53,27 @@ func GetKeys(ids ...string) [][]byte {
 	return keys
 }
 
-func init() {
-	globaldb.RegisterBucket(Bucket, "Component Vuln Edge")
+// GetID returns the ID for the prefixed key.
+func GetID(key []byte) string {
+	return string(badgerhelper.StripBucket(Bucket, key))
 }
 
-func keyFunc(msg proto.Message) []byte {
-	return []byte(msg.(interface{ GetId() string }).GetId())
+// GetIDs returns the ids for the prefixed keys.
+func GetIDs(keys ...[]byte) []string {
+	ids := make([]string, 0, len(keys))
+	for _, key := range keys {
+		ids = append(ids, GetID(key))
+	}
+	return ids
 }
 
-func alloc() proto.Message {
-	return &storage.ComponentCVEEdge{}
+// FilterKeys filters the edge keys out of a list of keys.
+func FilterKeys(keys [][]byte) [][]byte {
+	ret := make([][]byte, 0, len(keys))
+	for _, key := range keys {
+		if badgerhelper.HasPrefix(Bucket, key) {
+			ret = append(ret, key)
+		}
+	}
+	return ret
 }

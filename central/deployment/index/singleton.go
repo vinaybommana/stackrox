@@ -2,9 +2,9 @@ package index
 
 import (
 	"github.com/gogo/protobuf/proto"
+	deploymentDackBox "github.com/stackrox/rox/central/deployment/dackbox"
 	globalDackBox "github.com/stackrox/rox/central/globaldb/dackbox"
 	"github.com/stackrox/rox/central/globalindex"
-	edgeDackBox "github.com/stackrox/rox/central/imagecomponentedge/dackbox"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/dackbox/indexer"
 	"github.com/stackrox/rox/pkg/sync"
@@ -18,7 +18,7 @@ var (
 
 func initialize() {
 	dx = New(globalindex.GetGlobalIndex())
-	globalDackBox.GetIndexerRegistry().RegisterIndex(edgeDackBox.Bucket, wrapIndex(dx))
+	globalDackBox.GetIndexerRegistry().RegisterIndex(deploymentDackBox.Bucket, wrapIndex(dx))
 }
 
 // Singleton returns a singleton instance of cve indexer
@@ -29,18 +29,18 @@ func Singleton() Indexer {
 
 func wrapIndex(indexer Indexer) indexer.Indexer {
 	return indexWrap{
-		imageIndex: indexer,
+		deploymentIndex: indexer,
 	}
 }
 
 type indexWrap struct {
-	imageIndex Indexer
+	deploymentIndex Indexer
 }
 
 func (ir indexWrap) Index(_ []byte, msg proto.Message) error {
-	return ir.imageIndex.AddImageComponentEdge(msg.(*storage.ImageComponentEdge))
+	return ir.deploymentIndex.AddDeployment(msg.(*storage.Deployment))
 }
 
 func (ir indexWrap) Delete(key []byte) error {
-	return ir.imageIndex.DeleteImageComponentEdge(string(key))
+	return ir.deploymentIndex.DeleteDeployment(string(key))
 }
