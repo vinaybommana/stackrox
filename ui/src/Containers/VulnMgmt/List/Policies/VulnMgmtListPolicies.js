@@ -29,7 +29,7 @@ import { deletePolicies } from 'services/PoliciesService';
 import removeEntityContextColumns from 'utils/tableUtils';
 import { policySortFields } from 'constants/sortFields';
 
-import { POLICY_LIST_FRAGMENT } from 'Containers/VulnMgmt/VulnMgmt.fragments';
+import { UNSCOPED_POLICY_LIST_FRAGMENT } from 'Containers/VulnMgmt/VulnMgmt.fragments';
 
 export const defaultPolicySort = [
     // @TODO: remove this fake default sort on Policy name, when latest violation is available
@@ -209,11 +209,12 @@ const VulnMgmtPolicies = ({
     const POLICIES_QUERY = gql`
         query getPolicies($policyQuery: String, $pagination: Pagination) {
             results: policies(query: $policyQuery, pagination: $pagination) {
-                ...policyFields
+                ...unscopedPolicyFields
+                deploymentCount
             }
             count: policyCount(query: $policyQuery)
         }
-        ${POLICY_LIST_FRAGMENT}
+        ${UNSCOPED_POLICY_LIST_FRAGMENT}
     `;
 
     const tableSort = sort || defaultPolicySort;

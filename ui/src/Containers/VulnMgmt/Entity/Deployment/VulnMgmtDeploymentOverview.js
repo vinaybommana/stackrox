@@ -122,7 +122,7 @@ const VulnMgmtDeploymentOverview = ({ data, entityContext }) => {
             <ViolationsAcrossThisDeployment
                 deploymentID={id}
                 policyID={entityContext[entityTypes.POLICY]}
-                message="No policies failed across this deployment"
+                message="This deployment has not failed on this policy"
             />
         );
     } else {

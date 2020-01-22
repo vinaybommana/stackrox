@@ -56,9 +56,9 @@ export const VULN_CVE_LIST_FRAGMENT = gql`
         isFixable
         lastScanned
         publishedOn
-        deploymentCount
-        imageCount
-        componentCount
+        deploymentCount(query: $query)
+        imageCount(query: $query)
+        componentCount(query: $query)
     }
 `;
 
@@ -120,7 +120,7 @@ export const IMAGE_LIST_FRAGMENT = gql`
         name {
             fullName
         }
-        deploymentCount
+        deploymentCount(query: $query)
         priority
         topVuln {
             cvss
@@ -133,7 +133,7 @@ export const IMAGE_LIST_FRAGMENT = gql`
         }
         scan {
             scanTime
-            components {
+            components(query: $query) {
                 name
             }
         }
@@ -195,8 +195,8 @@ export const VULN_COMPONENT_LIST_FRAGMENT = gql`
             cvss
             scoreVersion
         }
-        imageCount
-        deploymentCount
+        imageCount(query: $query)
+        deploymentCount(query: $query)
         priority
     }
 `;
@@ -233,7 +233,7 @@ export const NAMESPACE_LIST_FRAGMENT = gql`
             }
         }
         deploymentCount
-        imageCount
+        imageCount(query: $query)
         policyCount(query: $policyQuery)
         policyStatus(query: $policyQuery) {
             status
@@ -242,8 +242,8 @@ export const NAMESPACE_LIST_FRAGMENT = gql`
     }
 `;
 
-export const POLICY_LIST_FRAGMENT = gql`
-    fragment policyFields on Policy {
+export const UNSCOPED_POLICY_LIST_FRAGMENT = gql`
+    fragment unscopedPolicyFields on Policy {
         id
         disabled
         notifiers
@@ -253,10 +253,17 @@ export const POLICY_LIST_FRAGMENT = gql`
         lastUpdated
         latestViolation
         severity
-        deploymentCount
         lifecycleStages
         enforcementActions
     }
+`;
+
+export const POLICY_LIST_FRAGMENT = gql`
+    fragment policyFields on Policy {
+        ...unscopedPolicyFields
+        deploymentCount(query: $query)
+    }
+    ${UNSCOPED_POLICY_LIST_FRAGMENT}
 `;
 
 export const POLICY_ENTITY_ALL_FIELDS_FRAGMENT = gql`

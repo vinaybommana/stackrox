@@ -1,3 +1,6 @@
+import { selectors as tablePaginationSelectors } from './TablePagination';
+import sidePanelSelectors from '../selectors/panel';
+
 export const baseURL = '/main/vulnerability-management';
 
 export const url = {
@@ -22,17 +25,21 @@ export const listSelectors = {
     componentsRiskScoreCol: '.rt-table > .rt-tbody >div > div > div:nth-child(7)',
     cvesCvssScoreCol: '.rt-table > .rt-tbody > div > .rt-tr.-odd > div:nth-child(4) > div > span',
     tableRows: '.rt-tr',
+    tableBodyRows: '.rt-tbody .rt-tr',
     tableColumn: '.rt-th.leading-normal > div',
     tableBodyColumn: '.rt-tr-group:nth-child(1) > .rt-tr > .rt-td',
     tableColumnLinks: '.rt-tr-group:nth-child(1)> .rt-tr > .rt-td > a',
     allCVEColumnLink: '[data-testid="allCvesLink"]',
     fixableCVELink: '[data-testid="fixableCvesLink"]',
-    numCVEColLink: '.rt-tr > .rt-td'
+    numCVEColLink: '.rt-tr > .rt-td',
+    statusChips: '[data-testid="label-chip"]',
+    deploymentCountLink: '[data-test-id="deploymentCountLink"]'
 };
 
 export const sidePanelListEntityPageSelectors = {
     entityRowHeader:
         '[data-test-id="side-panel"] > .h-full > .flex > .flex-no-wrap > .flex > [data-test-id="panel-header"]',
+    sidePanelTableBodyRows: '[data-test-id="side-panel"] .rt-tbody .rt-tr',
     parentEntityInfoHeader: '[data-test-id="breadcrumb-link-text"] > a',
     childEntityInfoHeader: '[data-test-id="breadcrumb-link-text"] > span',
     tileLinkText: '[data-testid="tileLinkSuperText"]',
@@ -40,7 +47,8 @@ export const sidePanelListEntityPageSelectors = {
     tabButton: '[data-test-id="tab"]',
     getSidePanelTabHeader: title => {
         return `[data-test-id="widget-header"] > .w-full:contains('${title}')`;
-    }
+    },
+    emptyFindingsSection: '[data-testid="results-message"]'
 };
 
 export const dashboardSelectors = {
@@ -107,5 +115,7 @@ export const selectors = {
     ...linkSelectors,
     ...sidepanelSelectors,
     ...sidePanelListEntityPageSelectors,
-    ...policySidePanelSelectors
+    ...policySidePanelSelectors,
+    ...tablePaginationSelectors,
+    ...sidePanelSelectors
 };

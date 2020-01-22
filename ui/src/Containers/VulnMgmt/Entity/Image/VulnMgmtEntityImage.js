@@ -16,11 +16,11 @@ import {
 
 const VulnMgmtImage = ({ entityId, entityListType, search, entityContext, sort, page }) => {
     const overviewQuery = gql`
-        query getImage($id: ID!${entityListType ? ', $query: String' : ''}) {
+        query getImage($id: ID!, $query: String) {
             result: image(sha: $id) {
                 id
                 lastUpdated
-                ${entityContext[entityTypes.DEPLOYMENT] ? '' : 'deploymentCount'}
+                ${entityContext[entityTypes.DEPLOYMENT] ? '' : 'deploymentCount(query: $query)'}
                 metadata {
                     layerShas
                     v1 {
@@ -32,7 +32,7 @@ const VulnMgmtImage = ({ entityId, entityListType, search, entityContext, sort, 
                         }
                     }
                 }
-                vulnCount
+                vulnCount(query: $query)
                 priority
                 topVuln {
                     cvss

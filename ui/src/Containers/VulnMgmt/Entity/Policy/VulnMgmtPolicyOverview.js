@@ -208,7 +208,7 @@ const VulnMgmtPolicyOverview = ({ data, entityContext, setRefreshTrigger }) => {
                     header={`${failingDeployments.length} ${pluralize(
                         entityTypes.DEPLOYMENT,
                         failingDeployments.length
-                    )} have failed across this policy`}
+                    )} ${failingDeployments.length ? 'have' : 'has'} failed across this policy`}
                     rows={failingDeployments}
                     entityType={entityTypes.DEPLOYMENT}
                     noDataText="No deployments have failed across this policy"

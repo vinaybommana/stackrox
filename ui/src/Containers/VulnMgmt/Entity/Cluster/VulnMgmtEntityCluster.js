@@ -17,7 +17,7 @@ import EntityList from '../../List/VulnMgmtList';
 
 const VulmMgmtEntityCluster = ({ entityId, entityListType, search, sort, page, entityContext }) => {
     const overviewQuery = gql`
-        query getCluster($id: ID!, $policyQuery: String) {
+        query getCluster($id: ID!, $policyQuery: String, $query: String) {
             result: cluster(id: $id) {
                 id
                 name
@@ -31,7 +31,7 @@ const VulmMgmtEntityCluster = ({ entityId, entityListType, search, sort, page, e
                         policyStatus
                         latestViolation
                         severity
-                        deploymentCount
+                        deploymentCount(query: $query)
                         lifecycleStages
                         enforcementActions
                     }
@@ -49,7 +49,7 @@ const VulmMgmtEntityCluster = ({ entityId, entityListType, search, sort, page, e
                 imageCount
                 componentCount
                 vulnCount
-                vulnerabilities: vulns {
+                vulnerabilities: vulns(query: $query) {
                     ...cveFields
                 }
             }
@@ -79,7 +79,7 @@ const VulmMgmtEntityCluster = ({ entityId, entityListType, search, sort, page, e
     const queryOptions = {
         variables: {
             id: entityId,
-            query: tryUpdateQueryWithVulMgmtPolicyClause(entityListType, search)
+            query: tryUpdateQueryWithVulMgmtPolicyClause(entityListType, search, entityContext)
         }
     };
 

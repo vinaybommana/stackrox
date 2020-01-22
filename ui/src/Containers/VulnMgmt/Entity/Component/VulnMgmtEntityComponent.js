@@ -15,15 +15,15 @@ import {
 
 const VulnMgmtComponent = ({ entityId, entityListType, search, entityContext, sort, page }) => {
     const overviewQuery = gql`
-        query getComponent($id: ID!) {
+        query getComponent($id: ID!, $query: String) {
             result: component(id: $id) {
                 id
                 name
                 version
                 priority
-                vulnCount
-                deploymentCount
-                imageCount
+                vulnCount(query: $query)
+                deploymentCount(query: $query)
+                imageCount(query: $query)
                 topVuln {
                     cvss
                     scoreVersion
@@ -54,7 +54,7 @@ const VulnMgmtComponent = ({ entityId, entityListType, search, entityContext, so
     const queryOptions = {
         variables: {
             id: entityId,
-            query: tryUpdateQueryWithVulMgmtPolicyClause(entityListType, search),
+            query: tryUpdateQueryWithVulMgmtPolicyClause(entityListType, search, entityContext),
             policyQuery: queryService.objectToWhereClause({ Category: 'Vulnerability Management' })
         }
     };

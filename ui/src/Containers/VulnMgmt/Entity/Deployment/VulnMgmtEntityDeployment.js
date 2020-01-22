@@ -17,7 +17,7 @@ import {
 
 const VulmMgmtDeployment = ({ entityId, entityListType, search, entityContext, sort, page }) => {
     const overviewQuery = gql`
-        query getDeployment($id: ID!, $policyQuery: String) {
+        query getDeployment($id: ID!, $policyQuery: String, $query: String) {
             result: deployment(id: $id) {
                 id
                 priority
@@ -29,7 +29,6 @@ const VulmMgmtDeployment = ({ entityId, entityListType, search, entityContext, s
                     policyStatus
                     latestViolation
                     severity
-                    deploymentCount
                     lifecycleStages
                     enforcementActions
                 }
@@ -84,7 +83,7 @@ const VulmMgmtDeployment = ({ entityId, entityListType, search, entityContext, s
                 imageCount
                 componentCount
                 vulnCount
-                vulnerabilities: vulns {
+                vulnerabilities: vulns(query: $query) {
                     ...cveFields
                 }
             }
@@ -110,7 +109,7 @@ const VulmMgmtDeployment = ({ entityId, entityListType, search, entityContext, s
     const queryOptions = {
         variables: {
             id: entityId,
-            query: tryUpdateQueryWithVulMgmtPolicyClause(entityListType, search),
+            query: tryUpdateQueryWithVulMgmtPolicyClause(entityListType, search, entityContext),
             policyQuery: queryService.objectToWhereClause({ Category: 'Vulnerability Management' })
         }
     };

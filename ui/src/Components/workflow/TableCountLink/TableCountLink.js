@@ -19,7 +19,7 @@ const TableCountLink = ({ selectedRowId, entityType, textOnly, count, entityType
         .pushListItem(selectedRowId)
         .pushList(entityType)
         .toUrl();
-    return <TableCellLink pdf={textOnly} url={url} text={text} />;
+    return <TableCellLink pdf={textOnly} url={url} text={text} dataTestId={`${type}CountLink`} />;
 };
 
 TableCountLink.propTypes = {

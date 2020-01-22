@@ -22,7 +22,7 @@ const VulmMgmtEntityPolicy = ({
     setRefreshTrigger
 }) => {
     const overviewQuery = gql`
-        query getPolicy($id: ID!, $policyQuery: String) {
+        query getPolicy($id: ID!, $policyQuery: String, $query: String) {
             result: policy(id: $id) {
                 id
                 name
@@ -155,7 +155,7 @@ const VulmMgmtEntityPolicy = ({
                     name
                 }
                 deploymentCount
-                deployments {
+                deployments(query: $query) {
                     ...deploymentFields
                 }
             }
@@ -181,7 +181,11 @@ const VulmMgmtEntityPolicy = ({
             id: entityId,
             query: queryService.objectToWhereClause(search),
             policyQuery: queryService.objectToWhereClause({
-                Category: 'Vulnerability Management'
+                Category: 'Vulnerability Management',
+                ...queryService.entityContextToQueryObject({
+                    ...entityContext,
+                    [entityTypes.POLICY]: entityId
+                })
             })
         }
     };

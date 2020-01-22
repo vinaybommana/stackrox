@@ -11,8 +11,9 @@ export function getPolicyQueryVar(entityType) {
     return entitiesWithPolicyField.includes(entityType) ? ', $policyQuery: String' : '';
 }
 
-export function tryUpdateQueryWithVulMgmtPolicyClause(entityType, search) {
+export function tryUpdateQueryWithVulMgmtPolicyClause(entityType, search, entityContext) {
+    const whereObj = { ...search, ...queryService.entityContextToQueryObject(entityContext) };
     return entityType === entityTypes.POLICY
-        ? queryService.objectToWhereClause({ ...search, Category: 'Vulnerability Management' })
-        : queryService.objectToWhereClause(search);
+        ? queryService.objectToWhereClause({ ...whereObj, Category: 'Vulnerability Management' })
+        : queryService.objectToWhereClause(whereObj);
 }

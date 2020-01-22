@@ -15,7 +15,7 @@ import {
 
 const VulmMgmtCve = ({ entityId, entityListType, search, entityContext, sort, page }) => {
     const overviewQuery = gql`
-        query getCve($id: ID!) {
+        query getCve($id: ID!, $query: String) {
             result: vulnerability(id: $id) {
                 id: cve
                 cve
@@ -42,9 +42,9 @@ const VulmMgmtCve = ({ entityId, entityListType, search, entityContext, sort, pa
                 fixedByVersion
                 isFixable
                 lastScanned
-                componentCount
-                imageCount
-                deploymentCount
+                componentCount(query: $query)
+                imageCount(query: $query)
+                deploymentCount(query: $query)
             }
         }
     `;
@@ -67,7 +67,7 @@ const VulmMgmtCve = ({ entityId, entityListType, search, entityContext, sort, pa
     const queryOptions = {
         variables: {
             id: entityId,
-            query: tryUpdateQueryWithVulMgmtPolicyClause(entityListType, search),
+            query: tryUpdateQueryWithVulMgmtPolicyClause(entityListType, search, entityContext),
             policyQuery: queryService.objectToWhereClause({ Category: 'Vulnerability Management' })
         }
     };

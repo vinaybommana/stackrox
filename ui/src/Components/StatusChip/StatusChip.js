@@ -7,7 +7,7 @@ import LabelChip from 'Components/LabelChip';
 const successStates = ['active', 'pass'];
 const alertStates = ['inactive', 'fail'];
 
-const StatusChip = ({ status, size, asString }) => {
+const StatusChip = ({ status, size, asString, dataTestId }) => {
     if (asString) return capitalize(status);
     let type = null;
     if (successStates.includes(status)) {
@@ -16,19 +16,25 @@ const StatusChip = ({ status, size, asString }) => {
         type = 'alert';
     }
 
-    return type ? <LabelChip text={status} type={type} size={size} /> : '—';
+    return type ? (
+        <LabelChip text={status} type={type} size={size} data-testid={dataTestId} />
+    ) : (
+        '—'
+    );
 };
 
 StatusChip.propTypes = {
     status: PropTypes.string,
     size: PropTypes.string,
-    asString: PropTypes.bool
+    asString: PropTypes.bool,
+    dataTestId: PropTypes.string
 };
 
 StatusChip.defaultProps = {
     status: '',
     size: 'large',
-    asString: false
+    asString: false,
+    dataTestId: 'status-chip'
 };
 
 export default StatusChip;

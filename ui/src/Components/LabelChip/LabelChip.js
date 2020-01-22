@@ -19,7 +19,7 @@ const getClassNameBySize = (className, size) => {
     return `${className} ${sizeClassName}`;
 };
 
-const LabelChip = ({ text, type, size, fade }) => {
+const LabelChip = ({ text, type, size, fade, dataTestId }) => {
     let className =
         'inline-block border rounded font-600 text-center whitespace-no-wrap min-h-6 flex justify-center items-center';
     className = getClassNameBySize(className, size);
@@ -28,7 +28,7 @@ const LabelChip = ({ text, type, size, fade }) => {
         fade ? 'opacity-50' : ''
     }`;
     return (
-        <span className={className}>
+        <span className={className} data-testid={dataTestId}>
             <span>{text}</span>
         </span>
     );
@@ -38,13 +38,15 @@ LabelChip.propTypes = {
     text: PropTypes.string.isRequired,
     type: PropTypes.oneOf(colorTypes),
     size: PropTypes.oneOf(['small', 'medium', 'large']),
-    fade: PropTypes.bool
+    fade: PropTypes.bool,
+    dataTestId: PropTypes.string
 };
 
 LabelChip.defaultProps = {
     type: defaultColorType,
     size: 'medium',
-    fade: false
+    fade: false,
+    dataTestId: 'label-chip'
 };
 
 export default LabelChip;
