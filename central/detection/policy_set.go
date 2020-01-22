@@ -19,7 +19,6 @@ type PolicySet interface {
 	ForEach(pt PolicyExecutor) error
 
 	UpsertPolicy(*storage.Policy) error
-	Recompile(policyID string) error
 	RemovePolicy(policyID string) error
 	RemoveNotifier(notifierID string) error
 }

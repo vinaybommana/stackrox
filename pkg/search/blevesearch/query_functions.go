@@ -195,7 +195,16 @@ func newEnumQuery(_ v1.SearchCategory, field, value string, queryModifiers ...qu
 			return nil, errors.Errorf("unsupported query modifier for enum query: %v", queryModifiers[0])
 		}
 	case 0:
+		prefix, value := parseNumericPrefix(value)
+		if prefix == "" {
+			prefix = "="
+		}
 		enumValues = enumregistry.Get(field, value)
+		dq := bleve.NewDisjunctionQuery()
+		for _, s := range enumValues {
+			dq.AddQuery(createNumericQuery(field, prefix, floatPtr(float64(s))))
+		}
+		return dq, nil
 	}
 
 	if len(enumValues) == 0 {

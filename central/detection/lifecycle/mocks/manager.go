@@ -77,20 +77,6 @@ func (mr *MockManagerMockRecorder) UpsertPolicy(policy interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertPolicy", reflect.TypeOf((*MockManager)(nil).UpsertPolicy), policy)
 }
 
-// RecompilePolicy mocks base method
-func (m *MockManager) RecompilePolicy(policy *storage.Policy) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RecompilePolicy", policy)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// RecompilePolicy indicates an expected call of RecompilePolicy
-func (mr *MockManagerMockRecorder) RecompilePolicy(policy interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecompilePolicy", reflect.TypeOf((*MockManager)(nil).RecompilePolicy), policy)
-}
-
 // DeploymentRemoved mocks base method
 func (m *MockManager) DeploymentRemoved(deployment *storage.Deployment) error {
 	m.ctrl.T.Helper()

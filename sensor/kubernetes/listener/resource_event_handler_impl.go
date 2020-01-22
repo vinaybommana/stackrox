@@ -101,11 +101,6 @@ func (h *resourceEventHandlerImpl) sendResourceEvent(obj interface{}, action cen
 		kubernetes.TrimAnnotations(metaObj)
 	}
 
-	// Make sure sensor events are sent in order so that we don't send old state to Central after we send new state to
-	// Central
-	h.eventLock.Lock()
-	defer h.eventLock.Unlock()
-
 	evWraps := h.dispatcher.ProcessEvent(obj, action)
 	h.sendEvents(evWraps...)
 }

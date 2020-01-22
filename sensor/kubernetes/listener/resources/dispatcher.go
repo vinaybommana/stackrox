@@ -25,10 +25,7 @@ type DispatcherRegistry interface {
 	ForSecrets() Dispatcher
 	ForServices() Dispatcher
 	ForServiceAccounts() Dispatcher
-	ForRoles() Dispatcher
-	ForRoleBindings() Dispatcher
-	ForClusterRoles() Dispatcher
-	ForClusterRoleBindings() Dispatcher
+	ForRBAC() Dispatcher
 }
 
 // NewDispatcherRegistry creates and returns a new DispatcherRegistry.
@@ -41,12 +38,9 @@ func NewDispatcherRegistry(podLister v1Listers.PodLister, entityStore *clusteren
 	rbacUpdater := newRBACUpdater()
 
 	return &registryImpl{
-		deploymentHandler: newDeploymentHandler(serviceStore, deploymentStore, endpointManager, nsStore, podLister, processFilter, configHandler),
+		deploymentHandler: newDeploymentHandler(serviceStore, deploymentStore, endpointManager, nsStore, rbacUpdater, podLister, processFilter, configHandler),
 
-		roleDispatcher:           newRoleDispatcher(rbacUpdater),
-		bindingDispatcher:        newBindingDispatcher(rbacUpdater),
-		clusterRoleDispatcher:    newClusterRoleDispatcher(rbacUpdater),
-		clusterBindingDispatcher: newClusterBindingDispatcher(rbacUpdater),
+		rbacDispatcher:           newRBACDispatcher(rbacUpdater),
 		namespaceDispatcher:      newNamespaceDispatcher(nsStore, serviceStore, deploymentStore),
 		serviceDispatcher:        newServiceDispatcher(serviceStore, deploymentStore, endpointManager),
 		secretDispatcher:         newSecretDispatcher(),
@@ -59,10 +53,7 @@ func NewDispatcherRegistry(podLister v1Listers.PodLister, entityStore *clusteren
 type registryImpl struct {
 	deploymentHandler *deploymentHandler
 
-	roleDispatcher           *roleDispatcher
-	bindingDispatcher        *bindingDispatcher
-	clusterRoleDispatcher    *clusterRoleDispatcher
-	clusterBindingDispatcher *clusterBindingDispatcher
+	rbacDispatcher           *rbacDispatcher
 	namespaceDispatcher      *namespaceDispatcher
 	serviceDispatcher        *serviceDispatcher
 	secretDispatcher         *secretDispatcher
@@ -99,18 +90,6 @@ func (d *registryImpl) ForServiceAccounts() Dispatcher {
 	return d.serviceAccountDispatcher
 }
 
-func (d *registryImpl) ForRoles() Dispatcher {
-	return d.roleDispatcher
-}
-
-func (d *registryImpl) ForRoleBindings() Dispatcher {
-	return d.bindingDispatcher
-}
-
-func (d *registryImpl) ForClusterRoles() Dispatcher {
-	return d.clusterRoleDispatcher
-}
-
-func (d *registryImpl) ForClusterRoleBindings() Dispatcher {
-	return d.clusterBindingDispatcher
+func (d *registryImpl) ForRBAC() Dispatcher {
+	return d.rbacDispatcher
 }

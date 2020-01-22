@@ -7,7 +7,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stackrox/rox/central/detection"
 	"github.com/stackrox/rox/central/policy/datastore/mocks"
-	k8sBuilders "github.com/stackrox/rox/central/searchbasedpolicies/builders"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/image/policies"
 	"github.com/stackrox/rox/pkg/defaults"
@@ -32,8 +31,7 @@ func TestDetector(t *testing.T) {
 	controller := gomock.NewController(t)
 	compilerWithoutProcessIndicators := detection.NewPolicyCompiler(
 		matcher.NewBuilder(
-			matcher.NewRegistry(
-				nil, k8sBuilders.K8sRBACQueryBuilder{}),
+			matcher.NewRegistry(nil),
 			mappings.OptionsMap,
 		),
 	)
