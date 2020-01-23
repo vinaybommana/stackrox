@@ -161,42 +161,42 @@ func (mr *MockDataStoreMockRecorder) SearchRawCVEs(arg0, arg1 interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchRawCVEs", reflect.TypeOf((*MockDataStore)(nil).SearchRawCVEs), arg0, arg1)
 }
 
-// Supress mocks base method
-func (m *MockDataStore) Supress(arg0 context.Context, arg1 ...string) error {
+// Suppress mocks base method
+func (m *MockDataStore) Suppress(arg0 context.Context, arg1 ...string) error {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
 	}
-	ret := m.ctrl.Call(m, "Supress", varargs...)
+	ret := m.ctrl.Call(m, "Suppress", varargs...)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Supress indicates an expected call of Supress
-func (mr *MockDataStoreMockRecorder) Supress(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+// Suppress indicates an expected call of Suppress
+func (mr *MockDataStoreMockRecorder) Suppress(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0}, arg1...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Supress", reflect.TypeOf((*MockDataStore)(nil).Supress), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Suppress", reflect.TypeOf((*MockDataStore)(nil).Suppress), varargs...)
 }
 
-// Unsupress mocks base method
-func (m *MockDataStore) Unsupress(arg0 context.Context, arg1 ...string) error {
+// Unsuppress mocks base method
+func (m *MockDataStore) Unsuppress(arg0 context.Context, arg1 ...string) error {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
 	}
-	ret := m.ctrl.Call(m, "Unsupress", varargs...)
+	ret := m.ctrl.Call(m, "Unsuppress", varargs...)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Unsupress indicates an expected call of Unsupress
-func (mr *MockDataStoreMockRecorder) Unsupress(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+// Unsuppress indicates an expected call of Unsuppress
+func (mr *MockDataStoreMockRecorder) Unsuppress(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0}, arg1...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Unsupress", reflect.TypeOf((*MockDataStore)(nil).Unsupress), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Unsuppress", reflect.TypeOf((*MockDataStore)(nil).Unsuppress), varargs...)
 }
 
 // Upsert mocks base method

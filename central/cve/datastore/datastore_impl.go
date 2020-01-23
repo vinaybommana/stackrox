@@ -112,19 +112,16 @@ func (ds *datastoreImpl) Upsert(ctx context.Context, cves ...*storage.CVE) error
 	var currentIndex int
 	for newIndex := 0; newIndex < len(cves) && currentIndex < len(currentCVEs); newIndex++ {
 		if currentCVEs[currentIndex].GetId() == cves[newIndex].GetId() {
-			cves[newIndex].Supressed = currentCVEs[currentIndex].Supressed
+			cves[newIndex].Suppressed = currentCVEs[currentIndex].Suppressed
 			currentIndex++
 		}
 	}
 
 	// Store the new CVE data.
-	if err := ds.storage.Upsert(cves...); err != nil {
-		return err
-	}
-	return ds.indexer.AddCVEs(cves)
+	return ds.storage.Upsert(cves...)
 }
 
-func (ds *datastoreImpl) Supress(ctx context.Context, ids ...string) error {
+func (ds *datastoreImpl) Suppress(ctx context.Context, ids ...string) error {
 	if ok, err := imagesSAC.WriteAllowed(ctx); err != nil {
 		return err
 	} else if !ok {
@@ -136,15 +133,12 @@ func (ds *datastoreImpl) Supress(ctx context.Context, ids ...string) error {
 		return err
 	}
 	for _, cve := range cves {
-		cve.Supressed = true
+		cve.Suppressed = true
 	}
-	if err := ds.storage.Upsert(cves...); err != nil {
-		return err
-	}
-	return ds.indexer.AddCVEs(cves)
+	return ds.storage.Upsert(cves...)
 }
 
-func (ds *datastoreImpl) Unsupress(ctx context.Context, ids ...string) error {
+func (ds *datastoreImpl) Unsuppress(ctx context.Context, ids ...string) error {
 	if ok, err := imagesSAC.WriteAllowed(ctx); err != nil {
 		return err
 	} else if !ok {
@@ -156,12 +150,9 @@ func (ds *datastoreImpl) Unsupress(ctx context.Context, ids ...string) error {
 		return err
 	}
 	for _, cve := range cves {
-		cve.Supressed = false
+		cve.Suppressed = false
 	}
-	if err := ds.storage.Upsert(cves...); err != nil {
-		return err
-	}
-	return ds.indexer.AddCVEs(cves)
+	return ds.storage.Upsert(cves...)
 }
 
 func (ds *datastoreImpl) Delete(ctx context.Context, ids ...string) error {
@@ -171,8 +162,5 @@ func (ds *datastoreImpl) Delete(ctx context.Context, ids ...string) error {
 		return errors.New("permission denied")
 	}
 
-	if err := ds.storage.Delete(ids...); err != nil {
-		return err
-	}
-	return ds.indexer.DeleteCVEs(ids)
+	return ds.storage.Delete(ids...)
 }

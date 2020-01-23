@@ -105,7 +105,7 @@ func (s *filteredSearcherTestSuite) TestGlobalAllowed() {
 	)
 	s.NoError(err, "filter creation should have succeeded")
 
-	searcher := Searcher(s.mockUnsafeSearcher, filter)
+	searcher := UnsafeSearcher(s.mockUnsafeSearcher, filter)
 	results, err := searcher.Search(ctx, &v1.Query{})
 	s.NoError(err, "search should have succeeded")
 	s.Equal([]search.Result{
@@ -135,7 +135,7 @@ func (s *filteredSearcherTestSuite) TestGlobalDenied() {
 	)
 	s.NoError(err, "filter creation should have succeeded")
 
-	searcher := Searcher(s.mockUnsafeSearcher, filter)
+	searcher := UnsafeSearcher(s.mockUnsafeSearcher, filter)
 	results, err := searcher.Search(ctx, &v1.Query{})
 	s.NoError(err, "search should have succeeded")
 	s.Equal([]search.Result{}, results)
@@ -171,7 +171,7 @@ func (s *filteredSearcherTestSuite) TestClusterScoped() {
 	)
 	s.NoError(err, "filter creation should have succeeded")
 
-	searcher := Searcher(s.mockUnsafeSearcher, filter)
+	searcher := UnsafeSearcher(s.mockUnsafeSearcher, filter)
 	results, err := searcher.Search(ctx, &v1.Query{})
 	s.NoError(err, "search should have succeeded")
 	s.Equal([]search.Result{
@@ -215,7 +215,7 @@ func (s *filteredSearcherTestSuite) TestClusterScopedMultiCluster() {
 	)
 	s.NoError(err, "filter creation should have succeeded")
 
-	searcher := Searcher(s.mockUnsafeSearcher, filter)
+	searcher := UnsafeSearcher(s.mockUnsafeSearcher, filter)
 	results, err := searcher.Search(ctx, &v1.Query{})
 	s.NoError(err, "search should have succeeded")
 	s.Equal([]search.Result{
@@ -258,7 +258,7 @@ func (s *filteredSearcherTestSuite) TestNamespaceScoped() {
 	)
 	s.NoError(err, "filter creation should have succeeded")
 
-	searcher := Searcher(s.mockUnsafeSearcher, filter)
+	searcher := UnsafeSearcher(s.mockUnsafeSearcher, filter)
 	results, err := searcher.Search(ctx, &v1.Query{})
 	s.NoError(err, "search should have succeeded")
 	s.Equal([]search.Result{
@@ -300,7 +300,7 @@ func (s *filteredSearcherTestSuite) TestNamespaceScopedMultiCluster() {
 	)
 	s.NoError(err, "filter creation should have succeeded")
 
-	searcher := Searcher(s.mockUnsafeSearcher, filter)
+	searcher := UnsafeSearcher(s.mockUnsafeSearcher, filter)
 	results, err := searcher.Search(ctx, &v1.Query{})
 	s.NoError(err, "search should have succeeded")
 	s.Equal([]search.Result{

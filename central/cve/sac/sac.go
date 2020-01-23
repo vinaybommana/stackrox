@@ -11,6 +11,7 @@ import (
 	"github.com/stackrox/rox/central/role/resources"
 	"github.com/stackrox/rox/pkg/sac"
 	"github.com/stackrox/rox/pkg/search/filtered"
+	"github.com/stackrox/rox/pkg/sync"
 	"github.com/stackrox/rox/pkg/utils"
 )
 
@@ -34,17 +35,21 @@ var (
 		namespaceDackBox.Bucket,
 	}
 
-	// CVESACFilter represents the SAC filter for CVEs
-	CVESACFilter filtered.Filter
+	cveSACFilter filtered.Filter
+	once         sync.Once
 )
 
-func init() {
-	var err error
-	CVESACFilter, err = filtered.NewSACFilter(
-		filtered.WithResourceHelper(cveSAC),
-		filtered.WithGraphProvider(globaldb.GetGlobalDackBox()),
-		filtered.WithClusterPath(cveClusterPath...),
-		filtered.WithNamespacePath(cveNamespacePath...),
-	)
-	utils.Must(err)
+// GetSACFilter returns the sac filter for cve ids.
+func GetSACFilter() filtered.Filter {
+	once.Do(func() {
+		var err error
+		cveSACFilter, err = filtered.NewSACFilter(
+			filtered.WithResourceHelper(cveSAC),
+			filtered.WithGraphProvider(globaldb.GetGlobalDackBox()),
+			filtered.WithClusterPath(cveClusterPath...),
+			filtered.WithNamespacePath(cveNamespacePath...),
+		)
+		utils.Must(err)
+	})
+	return cveSACFilter
 }

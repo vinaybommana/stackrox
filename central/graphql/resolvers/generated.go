@@ -77,13 +77,14 @@ func registerGeneratedTypes(builder generator.SchemaBuilder) {
 		"cvssV2: CVSSV2",
 		"cvssV3: CVSSV3",
 		"id: ID!",
+		"impactScore: Float!",
 		"lastModified: Time",
 		"link: String!",
 		"publishedOn: Time",
 		"references: [CVE_Reference]!",
 		"scoreVersion: CVE_ScoreVersion!",
 		"summary: String!",
-		"supressed: Boolean!",
+		"suppressed: Boolean!",
 		"type: CVE_CVEType!",
 	}))
 	generator.RegisterProtoEnum(builder, reflect.TypeOf(storage.CVE_CVEType(0)))
@@ -1505,6 +1506,11 @@ func (resolver *cVEResolver) Id(ctx context.Context) graphql.ID {
 	return graphql.ID(value)
 }
 
+func (resolver *cVEResolver) ImpactScore(ctx context.Context) float64 {
+	value := resolver.data.GetImpactScore()
+	return float64(value)
+}
+
 func (resolver *cVEResolver) LastModified(ctx context.Context) (*graphql.Time, error) {
 	value := resolver.data.GetLastModified()
 	return timestamp(value)
@@ -1535,8 +1541,8 @@ func (resolver *cVEResolver) Summary(ctx context.Context) string {
 	return value
 }
 
-func (resolver *cVEResolver) Supressed(ctx context.Context) bool {
-	value := resolver.data.GetSupressed()
+func (resolver *cVEResolver) Suppressed(ctx context.Context) bool {
+	value := resolver.data.GetSuppressed()
 	return value
 }
 

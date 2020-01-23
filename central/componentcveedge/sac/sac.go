@@ -4,20 +4,25 @@ import (
 	"github.com/stackrox/rox/central/role/resources"
 	"github.com/stackrox/rox/pkg/sac"
 	"github.com/stackrox/rox/pkg/search/filtered"
+	"github.com/stackrox/rox/pkg/sync"
 	"github.com/stackrox/rox/pkg/utils"
 )
 
 var (
 	imageSAC = sac.ForResource(resources.Image)
 
-	// ComponentCVEEdgeSACFilter represents the SAC filter for component-cve edges
-	ComponentCVEEdgeSACFilter filtered.Filter
+	componentCVEEdgeSACFilter filtered.Filter
+	once                      sync.Once
 )
 
-func init() {
-	var err error
-	ComponentCVEEdgeSACFilter, err = filtered.NewSACFilter(
-		filtered.WithResourceHelper(imageSAC),
-	)
-	utils.Must(err)
+// GetSACFilter returns the sac filter for componentCVEEdge ids.
+func GetSACFilter() filtered.Filter {
+	once.Do(func() {
+		var err error
+		componentCVEEdgeSACFilter, err = filtered.NewSACFilter(
+			filtered.WithResourceHelper(imageSAC),
+		)
+		utils.Must(err)
+	})
+	return componentCVEEdgeSACFilter
 }

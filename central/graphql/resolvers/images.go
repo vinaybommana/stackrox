@@ -158,11 +158,6 @@ func (resolver *imageResolver) Vulns(ctx context.Context, args PaginatedQuery) (
 		return nil, err
 	}
 
-	if features.Dackbox.Enabled() {
-		query := search.AddRawQueriesAsConjunction(args.String(), resolver.getImageRawQuery())
-		return resolver.root.Vulnerabilities(ctx, PaginatedQuery{Query: &query, Pagination: args.Pagination})
-	}
-
 	q, err := args.AsV1QueryOrEmpty()
 	if err != nil {
 		return nil, err

@@ -4,19 +4,15 @@ import (
 	"context"
 
 	componentCVEEdgeMappings "github.com/stackrox/rox/central/componentcveedge/mappings"
-	pkgComponentCVEEdgeSAC "github.com/stackrox/rox/central/componentcveedge/sac"
 	cveDackBox "github.com/stackrox/rox/central/cve/dackbox"
 	"github.com/stackrox/rox/central/cve/index"
 	cveMappings "github.com/stackrox/rox/central/cve/mappings"
-	pkgCVESAC "github.com/stackrox/rox/central/cve/sac"
+	cveSAC "github.com/stackrox/rox/central/cve/sac"
 	"github.com/stackrox/rox/central/cve/store"
 	imageDackBox "github.com/stackrox/rox/central/image/dackbox"
-	pkgImageSAC "github.com/stackrox/rox/central/image/sac"
 	componentDackBox "github.com/stackrox/rox/central/imagecomponent/dackbox"
 	componentMappings "github.com/stackrox/rox/central/imagecomponent/mappings"
-	pkgComponentSAC "github.com/stackrox/rox/central/imagecomponent/sac"
 	imageComponentEdgeMappings "github.com/stackrox/rox/central/imagecomponentedge/mappings"
-	pkgImageComponentEdgeSAC "github.com/stackrox/rox/central/imagecomponentedge/sac"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/search"
@@ -26,6 +22,7 @@ import (
 	"github.com/stackrox/rox/pkg/search/idspace"
 	imageMappings "github.com/stackrox/rox/pkg/search/options/images"
 	"github.com/stackrox/rox/pkg/search/paginated"
+	"github.com/stackrox/rox/pkg/search/sortfields"
 )
 
 var (
@@ -98,11 +95,12 @@ func formatSearcher(graphProvider idspace.GraphProvider,
 	componentIndexer blevesearch.UnsafeSearcher,
 	imageComponentEdgeIndexer blevesearch.UnsafeSearcher,
 	imageIndexer blevesearch.UnsafeSearcher) search.Searcher {
-	cveSearcher := filtered.Searcher(cveIndexer, pkgCVESAC.CVESACFilter)
-	componentCVEEdgeSearcher := filtered.Searcher(componentCVEEdgeIndexer, pkgComponentCVEEdgeSAC.ComponentCVEEdgeSACFilter)
-	componentSearcher := filtered.Searcher(componentIndexer, pkgComponentSAC.ImageComponentSACFilter)
-	imageComponentEdgeSearcher := filtered.Searcher(imageComponentEdgeIndexer, pkgImageComponentEdgeSAC.ImageComponentEdgeSACFilter)
-	imageSearcher := filtered.Searcher(imageIndexer, pkgImageSAC.ImageSACFilter)
+
+	cveSearcher := blevesearch.WrapUnsafeSearcherAsSearcher(cveIndexer)
+	componentCVEEdgeSearcher := blevesearch.WrapUnsafeSearcherAsSearcher(componentCVEEdgeIndexer)
+	componentSearcher := blevesearch.WrapUnsafeSearcherAsSearcher(componentIndexer)
+	imageComponentEdgeSearcher := blevesearch.WrapUnsafeSearcherAsSearcher(imageComponentEdgeIndexer)
+	imageSearcher := blevesearch.WrapUnsafeSearcherAsSearcher(imageIndexer)
 
 	compoundSearcher := getCompoundCVESearcher(graphProvider,
 		cveSearcher,
@@ -110,7 +108,9 @@ func formatSearcher(graphProvider idspace.GraphProvider,
 		componentSearcher,
 		imageComponentEdgeSearcher,
 		imageSearcher)
-	paginatedSearcher := paginated.Paginated(compoundSearcher)
+	filteredSearcher := filtered.Searcher(compoundSearcher, cveSAC.GetSACFilter())
+	transformedSortSearcher := sortfields.TransformSortFields(filteredSearcher)
+	paginatedSearcher := paginated.Paginated(transformedSortSearcher)
 	defaultSortedSearcher := paginated.WithDefaultSortOption(paginatedSearcher, defaultSortOption)
 	return defaultSortedSearcher
 }
@@ -138,8 +138,9 @@ func getCompoundCVESearcher(graphProvider idspace.GraphProvider,
 	imageComponentEdgeToComponentSearcher := idspace.TransformIDs(imageComponentEdgeSearcher, idspace.NewEdgeToChildTransformer())
 	return compound.NewSearcher([]compound.SearcherSpec{
 		{
-			Searcher: cveSearcher,
-			Options:  cveMappings.OptionsMap,
+			IsDefault: true,
+			Searcher:  cveSearcher,
+			Options:   cveMappings.OptionsMap,
 		},
 		{
 			Searcher: idspace.TransformIDs(componentCVEEdgeSearcher, idspace.NewEdgeToChildTransformer()),

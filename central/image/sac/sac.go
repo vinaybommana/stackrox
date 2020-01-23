@@ -9,6 +9,7 @@ import (
 	"github.com/stackrox/rox/central/role/resources"
 	"github.com/stackrox/rox/pkg/sac"
 	"github.com/stackrox/rox/pkg/search/filtered"
+	"github.com/stackrox/rox/pkg/sync"
 	"github.com/stackrox/rox/pkg/utils"
 )
 
@@ -28,17 +29,21 @@ var (
 		namespaceDackBox.Bucket,
 	}
 
-	// ImageSACFilter represents the SAC filter for images
-	ImageSACFilter filtered.Filter
+	imageSACFilter filtered.Filter
+	once           sync.Once
 )
 
-func init() {
-	var err error
-	ImageSACFilter, err = filtered.NewSACFilter(
-		filtered.WithResourceHelper(imageSAC),
-		filtered.WithGraphProvider(globaldb.GetGlobalDackBox()),
-		filtered.WithClusterPath(imageClusterPath...),
-		filtered.WithNamespacePath(imageNamespacePath...),
-	)
-	utils.Must(err)
+// GetSACFilter returns the sac filter for image ids.
+func GetSACFilter() filtered.Filter {
+	once.Do(func() {
+		var err error
+		imageSACFilter, err = filtered.NewSACFilter(
+			filtered.WithResourceHelper(imageSAC),
+			filtered.WithGraphProvider(globaldb.GetGlobalDackBox()),
+			filtered.WithClusterPath(imageClusterPath...),
+			filtered.WithNamespacePath(imageNamespacePath...),
+		)
+		utils.Must(err)
+	})
+	return imageSACFilter
 }

@@ -23,8 +23,8 @@ type DataStore interface {
 	Count(ctx context.Context) (int, error)
 	GetBatch(ctx context.Context, id []string) ([]*storage.CVE, error)
 
-	Supress(ctx context.Context, ids ...string) error
-	Unsupress(ctx context.Context, ids ...string) error
+	Suppress(ctx context.Context, ids ...string) error
+	Unsuppress(ctx context.Context, ids ...string) error
 
 	Upsert(ctx context.Context, cves ...*storage.CVE) error
 	Delete(ctx context.Context, ids ...string) error

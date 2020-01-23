@@ -110,8 +110,10 @@ func generateCVE(from *storage.EmbeddedVulnerability) *storage.CVE {
 	}
 	if ret.CvssV3 != nil {
 		ret.ScoreVersion = storage.CVE_V3
+		ret.ImpactScore = from.GetCvssV3().GetImpactScore()
 	} else if ret.CvssV2 != nil {
 		ret.ScoreVersion = storage.CVE_V2
+		ret.ImpactScore = from.GetCvssV2().GetImpactScore()
 	}
 	return ret
 }
