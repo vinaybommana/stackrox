@@ -27,9 +27,14 @@ const imageMap = {
     [entityTypes.CONTROL]: control
 };
 
-const EntityIcon = ({ className, entityType }) => {
-    return <img className={className} src={imageMap[entityType]} alt={`${entityType} entity`} />;
-};
+const EntityIcon = ({ className, entityType }) => (
+    <img
+        className={className}
+        src={imageMap[entityType]}
+        alt={`${entityType} entity`}
+        data-testid="entity-icon"
+    />
+);
 
 EntityIcon.propTypes = {
     className: PropTypes.string,

@@ -98,6 +98,7 @@ const linkSelectors = {
 
 const sidepanelSelectors = {
     backButton: '[data-testid="sidepanelBackButton"]',
+    entityIcon: '[data-testid="entity-icon"]',
     sidePanelExpandButton: '[data-test-id = "external-link"]',
     getSidePanelTabLink: title => {
         return `[data-test-id="tab"]:contains('${title}')`;

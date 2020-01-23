@@ -378,4 +378,19 @@ describe.skip('Entities list Page', () => {
 
         validateSortForCVE(selectors.cvesCvssScoreCol);
     });
+
+    it('should show entity icon, not back button, if there is only one item on the side panel stack', () => {
+        cy.visit(url.list.images);
+
+        cy.get(selectors.deploymentCountLink)
+            .eq(0)
+            .click({ force: true });
+        cy.wait(1000);
+        cy.get(selectors.backButton).should('exist');
+        cy.get(selectors.entityIcon).should('not.exist');
+
+        cy.get(selectors.backButton).click();
+        cy.get(selectors.backButton).should('not.exist');
+        cy.get(selectors.entityIcon).should('exist');
+    });
 });
