@@ -31,7 +31,11 @@ const PanelButton = ({
             >
                 {icon && <span className="flex items-center">{icon}</span>}
                 {children && (
-                    <span className={`mx-2 items-center ${alwaysVisibleText ? 'flex' : 'hidden'}`}>
+                    <span
+                        className={`mx-2 items-center ${
+                            alwaysVisibleText ? 'flex' : 'hidden xl:flex'
+                        }`}
+                    >
                         {children}
                     </span>
                 )}

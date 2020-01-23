@@ -1,9 +1,10 @@
 /* eslint-disable react/jsx-no-bind */
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import PropTypes from 'prop-types';
 import gql from 'graphql-tag';
 import * as Icon from 'react-feather';
 import { connect } from 'react-redux';
+import { withRouter } from 'react-router-dom';
 
 import { defaultHeaderClassName, defaultColumnClassName } from 'Components/Table';
 import RowActionButton from 'Components/RowActionButton';
@@ -13,6 +14,7 @@ import TableCountLink from 'Components/workflow/TableCountLink';
 import TopCvssLabel from 'Components/TopCvssLabel';
 import PanelButton from 'Components/PanelButton';
 import WorkflowListPage from 'Containers/Workflow/WorkflowListPage';
+import workflowStateContext from 'Containers/workflowStateContext';
 import entityTypes from 'constants/entityTypes';
 import { LIST_PAGE_SIZE } from 'constants/workflowPages.constants';
 import queryService from 'modules/queryService';
@@ -20,6 +22,7 @@ import { workflowListPropTypes, workflowListDefaultProps } from 'constants/entit
 import { actions as notificationActions } from 'reducers/notifications';
 import { updateCveSuppressedState } from 'services/VulnerabilitiesService';
 import removeEntityContextColumns from 'utils/tableUtils';
+import { doesSearchContain } from 'utils/searchUtils';
 import { truncate } from 'utils/textUtils';
 import { cveSortFields } from 'constants/sortFields';
 
@@ -215,6 +218,7 @@ export function renderCveDescription(row) {
 }
 
 const VulnMgmtCves = ({
+    history,
     selectedRowId,
     search,
     sort,
@@ -229,6 +233,8 @@ const VulnMgmtCves = ({
     const [selectedCveIds, setSelectedCveIds] = useState([]);
     const [bulkActionCveIds, setBulkActionCveIds] = useState([]);
 
+    const workflowState = useContext(workflowStateContext);
+
     const CVES_QUERY = gql`
         query getCves($query: String, $pagination: Pagination) {
             results: vulnerabilities(query: $query, pagination: $pagination) {
@@ -238,6 +244,8 @@ const VulnMgmtCves = ({
         }
         ${VULN_CVE_LIST_FRAGMENT}
     `;
+
+    const viewingSuppressed = doesSearchContain(search, cveSortFields.SUPPRESSED);
 
     const tableSort = sort || defaultCveSort;
     const queryOptions = {
@@ -262,14 +270,16 @@ const VulnMgmtCves = ({
         }
     };
 
-    const suppressCVEs = cveId => e => {
+    const toggleCveSuppression = cveId => e => {
         e.stopPropagation();
 
         const cveIdsToSuppress = cveId ? [cveId] : selectedCveIds;
 
         const promises = cveIdsToSuppress.map(id => {
-            const suppress = true;
-            return updateCveSuppressedState(id, suppress);
+            // if not viewing suppress, the suppressed state will become true
+            // otherwise, it will become false
+            const suppressionState = !viewingSuppressed;
+            return updateCveSuppressedState(id, suppressionState);
         });
         Promise.all(promises)
             .then(() => {
@@ -289,8 +299,19 @@ const VulnMgmtCves = ({
                 setTimeout(removeToast, 2000);
             });
     };
-    const viewSuppressed = () => {
-        // TODO: implement 'view suppressed' functionality
+    const toggleSuppressedView = () => {
+        const currentSearchState = workflowState.getCurrentSearchState();
+
+        const targetSearchState = { ...currentSearchState };
+        if (viewingSuppressed) {
+            delete targetSearchState[cveSortFields.SUPPRESSED];
+        } else {
+            targetSearchState[cveSortFields.SUPPRESSED] = true;
+        }
+
+        const newWorkflowState = workflowState.setSearch(targetSearchState);
+        const newUrl = newWorkflowState.toUrl();
+        history.push(newUrl);
     };
 
     function closeDialog(idsToStaySelected = []) {
@@ -306,13 +327,22 @@ const VulnMgmtCves = ({
                 icon={<Icon.Plus className="mt-1 h-4 w-4" />}
             />
             <RowActionButton
-                text="Suppress CVE"
+                text={`${viewingSuppressed ? 'Unsuppress CVE' : 'Suppress CVE'}`}
                 border="border-l-2 border-base-400"
-                onClick={suppressCVEs(id)}
-                icon={<Icon.BellOff className="mt-1 h-4 w-4" />}
+                onClick={toggleCveSuppression(id)}
+                icon={
+                    viewingSuppressed ? (
+                        <Icon.Bell className="mt-1 h-4 w-4" />
+                    ) : (
+                        <Icon.BellOff className="mt-1 h-4 w-4" />
+                    )
+                }
             />
         </div>
     );
+
+    const toggleButtonText = viewingSuppressed ? 'Unsuppress' : 'Suppress';
+    const viewButtonText = viewingSuppressed ? 'View Unsuppressed' : 'View Suppressed';
 
     const tableHeaderComponents = (
         <React.Fragment>
@@ -326,22 +356,34 @@ const VulnMgmtCves = ({
                 Add to Policy
             </PanelButton>
             <PanelButton
-                icon={<Icon.BellOff className="h-4 w-4" />}
+                icon={
+                    viewingSuppressed ? (
+                        <Icon.Bell className="h-4 w-4" />
+                    ) : (
+                        <Icon.BellOff className="h-4 w-4" />
+                    )
+                }
                 className="btn-icon btn-tertiary ml-2"
-                onClick={suppressCVEs()}
+                onClick={toggleCveSuppression()}
                 disabled={selectedCveIds.length === 0}
-                tooltip="Suppress Selected CVEs"
+                tooltip={`${toggleButtonText} Selected CVEs`}
             >
-                Suppress
+                {toggleButtonText}
             </PanelButton>
             <span className="w-px bg-base-400 ml-2" />
             <PanelButton
-                icon={<Icon.Archive className="h-4 w-4" />}
+                icon={
+                    viewingSuppressed ? (
+                        <Icon.Zap className="h-4 w-4" />
+                    ) : (
+                        <Icon.Archive className="h-4 w-4" />
+                    )
+                }
                 className="btn-icon btn-tertiary ml-2"
-                onClick={viewSuppressed}
-                tooltip="View Suppressed CVEs"
+                onClick={toggleSuppressedView}
+                tooltip={`${viewButtonText} CVEs`}
             >
-                View Suppressed
+                {viewButtonText}
             </PanelButton>
         </React.Fragment>
     );
@@ -394,7 +436,9 @@ const mapDispatchToProps = {
     removeToast: notificationActions.removeOldestNotification
 };
 
-export default connect(
-    null,
-    mapDispatchToProps
-)(VulnMgmtCves);
+export default withRouter(
+    connect(
+        null,
+        mapDispatchToProps
+    )(VulnMgmtCves)
+);

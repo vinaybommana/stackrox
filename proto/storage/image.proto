@@ -97,7 +97,7 @@ message EmbeddedVulnerability {
     ScoreVersion score_version              = 8;
     CVSSV2 cvss_v2                          = 6;
     CVSSV3 cvss_v3                          = 7;
-    google.protobuf.Timestamp published_on  = 9;
+    google.protobuf.Timestamp published_on  = 9 [(gogoproto.moretags) = "search:\"CVE Published On,store\""];
     google.protobuf.Timestamp last_modified = 10;
     VulnerabilityType vulnerability_type    = 11;
 }

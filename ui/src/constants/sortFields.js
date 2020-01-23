@@ -60,6 +60,7 @@ export const componentSortFields = {
 export const cveSortFields = {
     CVE: 'CVE',
     CVSS_SCORE: 'CVSS',
+    SUPPRESSED: 'CVE Suppressed',
     FIXABLE: 'Fixed By',
     ENV_IMPACT: 'Env. Impact',
     IMPACT_SCORE: 'Impact Score',
