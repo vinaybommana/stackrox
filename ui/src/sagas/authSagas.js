@@ -100,8 +100,19 @@ function* handleLoginPageRedirect({ location }) {
     }
 }
 
-function* handleOidcResponse(location) {
+function parseFragment(location) {
     const hash = queryString.parse(location.hash.slice(1)); // ignore '#' https://github.com/ljharb/qs/issues/222
+    // The fragment as a whole is URL-encoded, which means that each individual field is doubly URL-encoded. We need
+    // to decode one additional level of URL encoding here.
+    const transformedHash = {};
+    Object.entries(hash).forEach(([key, value]) => {
+        transformedHash[key] = decodeURIComponent(value);
+    });
+    return transformedHash;
+}
+
+function* handleOidcResponse(location) {
+    const hash = parseFragment(location);
     if (hash.error) {
         return hash;
     }
@@ -118,7 +129,7 @@ function* handleOidcResponse(location) {
 }
 
 function handleGenericResponse(location) {
-    const hash = queryString.parse(location.hash.slice(1)); // ignore '#' https://github.com/ljharb/qs/issues/222
+    const hash = parseFragment(location);
     if (hash.error) {
         return hash;
     }
