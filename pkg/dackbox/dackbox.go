@@ -10,14 +10,14 @@ import (
 
 // NewDackBox returns a new DackBox object using the given DB and prefix for storing data and ids.
 func NewDackBox(db *badger.DB, graphPrefix []byte) (*DackBox, error) {
-	initial, err := loadIntoMem(db, graphPrefix)
+	initial, err := loadGraphIntoMem(db, graphPrefix)
 	if err != nil {
 		return nil, err
 	}
 	ret := &DackBox{
-		history: graph.NewHistory(initial),
-		db:      db,
-		prefix:  graphPrefix,
+		history:     graph.NewHistory(initial),
+		db:          db,
+		graphPrefix: graphPrefix,
 	}
 	return ret, nil
 }
@@ -26,9 +26,9 @@ func NewDackBox(db *badger.DB, graphPrefix []byte) (*DackBox, error) {
 type DackBox struct {
 	lock sync.RWMutex
 
-	prefix  []byte
-	db      *badger.DB
-	history graph.History
+	graphPrefix []byte
+	db          *badger.DB
+	history     graph.History
 }
 
 // NewTransaction returns a new Transaction object for read and write operations on both key/value pairs, and ids.
@@ -42,7 +42,7 @@ func (rc *DackBox) NewTransaction() *Transaction {
 	return &Transaction{
 		ts:           ts,
 		txn:          txn,
-		graph:        graph.NewPersistedGraph(rc.prefix, txn, modified),
+		graph:        graph.NewPersistedGraph(rc.graphPrefix, txn, modified),
 		modification: modified,
 		discard:      rc.discard,
 		commit:       rc.commit,
@@ -60,7 +60,7 @@ func (rc *DackBox) NewReadOnlyTransaction() *Transaction {
 	return &Transaction{
 		ts:           ts,
 		txn:          txn,
-		graph:        graph.NewPersistedGraph(rc.prefix, txn, modified),
+		graph:        graph.NewPersistedGraph(rc.graphPrefix, txn, modified),
 		modification: modified,
 		discard:      rc.discard,
 		commit:       rc.commit,
@@ -85,7 +85,6 @@ func (rc *DackBox) AtomicKVUpdate(provide func() (key, value []byte)) error {
 	rc.lock.Lock()
 	defer rc.lock.Unlock()
 
-	_ = rc.history.StepForward()
 	txn := rc.db.NewTransaction(true)
 	defer txn.Discard()
 	if err := txn.Set(provide()); err != nil {
@@ -117,14 +116,13 @@ func (rc *DackBox) commit(openedAt uint64, txn *badger.Txn, modification graph.M
 	rc.lock.Lock()
 	defer rc.lock.Unlock()
 
-	_ = rc.history.StepForward()
+	rc.history.Release(openedAt)
 	if txn != nil {
 		if err := txn.Commit(); err != nil {
 			return err
 		}
 	}
 	rc.history.Apply(modification)
-	rc.history.Release(openedAt)
 	return nil
 }
 
@@ -139,7 +137,7 @@ var onLoadForEachOptions = badgerhelper.ForEachOptions{
 	StripKeyPrefix: true,
 }
 
-func loadIntoMem(db *badger.DB, graphPrefix []byte) (*graph.Graph, error) {
+func loadGraphIntoMem(db *badger.DB, graphPrefix []byte) (*graph.Graph, error) {
 	initial := graph.NewGraph()
 	err := badgerhelper.BucketForEach(db.NewTransaction(false), graphPrefix, onLoadForEachOptions, func(k, v []byte) error {
 		sk, err := sortedkeys.Unmarshal(v)

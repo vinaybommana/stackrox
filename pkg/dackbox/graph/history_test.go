@@ -13,7 +13,6 @@ func TestHistory(t *testing.T) {
 
 	emptyTS := history.Hold()
 
-	history.StepForward()
 	modification1 := NewModifiedGraph(NewRemoteGraph(NewGraph(), func(fn func(g RGraph)) {
 		fn(history.View(emptyTS))
 	}))
@@ -25,7 +24,6 @@ func TestHistory(t *testing.T) {
 	firstStateVew1 := history.Hold()
 	firstStateVew2 := history.Hold()
 
-	history.StepForward()
 	modification2 := NewModifiedGraph(NewRemoteGraph(NewGraph(), func(fn func(g RGraph)) {
 		fn(history.View(firstStateVew1))
 	}))
