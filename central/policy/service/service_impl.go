@@ -125,6 +125,7 @@ func convertPoliciesToListPolicies(policies []*storage.Policy) []*storage.ListPo
 			Disabled:        p.GetDisabled(),
 			LifecycleStages: p.GetLifecycleStages(),
 			Notifiers:       p.GetNotifiers(),
+			LastUpdated:     p.GetLastUpdated(),
 		})
 	}
 	return listPolicies
