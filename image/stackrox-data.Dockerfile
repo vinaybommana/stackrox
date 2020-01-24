@@ -1,4 +1,5 @@
 FROM alpine:3.10
+ARG ALPINE_MIRROR=sjc.edge.kernel.org
 
 RUN mkdir /stackrox-data
 
@@ -7,6 +8,9 @@ RUN wget -O product-docs.tgz https://storage.googleapis.com/doc-bundles/03c318a8
     mv public /stackrox-data/product-docs && \
     ls /stackrox-data/product-docs/index.html && \
     rm product-docs.tgz
+
+RUN echo http://$ALPINE_MIRROR/alpine/v3.10/main > /etc/apk/repositories; \
+    echo http://$ALPINE_MIRROR/alpine/v3.10/community >> /etc/apk/repositories
 
 RUN apk update && \
     apk add --no-cache \

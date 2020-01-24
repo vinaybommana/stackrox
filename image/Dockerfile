@@ -2,11 +2,15 @@ ARG DATA_IMAGE_TAG=latest
 FROM stackrox-data:$DATA_IMAGE_TAG AS data
 
 FROM alpine:3.10
+ARG ALPINE_MIRROR=sjc.edge.kernel.org
 LABEL "com.vendor"="StackRox (support@stackrox.com)"
 
 # Pulled from https://github.com/connorgorman/telegraf/releases with the slimmed down version of telegraf
 RUN wget -O telegraf https://github.com/connorgorman/telegraf/releases/download/1.8.0%2B49-slim/telegraf && \
     chmod +x /telegraf
+
+RUN echo http://${ALPINE_MIRROR}/alpine/v3.10/main > /etc/apk/repositories; \
+    echo http://${ALPINE_MIRROR}/alpine/v3.10/community >> /etc/apk/repositories
 
 RUN apk update && \
     apk add --no-cache \
