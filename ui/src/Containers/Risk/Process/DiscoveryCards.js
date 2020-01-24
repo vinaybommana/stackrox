@@ -5,10 +5,10 @@ import orderBy from 'lodash/orderBy';
 import { knownBackendFlags } from 'utils/featureFlags';
 
 import FeatureEnabled from 'Containers/FeatureEnabled';
+import AnalystComments from 'Containers/AnalystNotes/AnalystComments';
+import AnalystTags from 'Containers/AnalystNotes/AnalystTags';
 import ProcessDiscoveryCard from './DiscoveryCard';
 import Binaries from './Binaries';
-import RiskProcessComments from './RiskProcessComments';
-import RiskProcessTags from './RiskProcessTags';
 
 function DiscoveryCards({ deploymentId, processGroup, processEpoch, setProcessEpoch }) {
     const sortedProcessGroups = orderBy(
@@ -27,9 +27,9 @@ function DiscoveryCards({ deploymentId, processGroup, processEpoch, setProcessEp
                 <div className="p-2">
                     <FeatureEnabled featureFlag={knownBackendFlags.ROX_IQT_ANALYST_NOTES_UI}>
                         <div className="mb-3">
-                            <RiskProcessTags />
+                            <AnalystTags type="Process" />
                         </div>
-                        <RiskProcessComments />
+                        <AnalystComments type="Process" />
                     </FeatureEnabled>
                 </div>
                 <Binaries processes={pg.groups} />

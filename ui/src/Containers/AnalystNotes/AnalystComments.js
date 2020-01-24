@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 
 import { getUserName } from 'services/AuthService';
 
@@ -39,7 +40,7 @@ const defaultComments = [
     }
 ];
 
-const ViolationProcessComments = () => {
+const AnalystComments = ({ className, type }) => {
     const [comments, setComments] = useState(defaultComments);
 
     const currentUser = getUserName();
@@ -63,14 +64,24 @@ const ViolationProcessComments = () => {
 
     return (
         <CommentThread
-            type="Process"
+            className={className}
+            type={type}
             currentUser={currentUser}
             comments={comments}
             onSave={onSave}
             onDelete={onDelete}
-            defaultOpen={false}
+            defaultOpen
         />
     );
 };
 
-export default ViolationProcessComments;
+AnalystComments.propTypes = {
+    type: PropTypes.string.isRequired,
+    className: PropTypes.string
+};
+
+AnalystComments.defaultProps = {
+    className: 'border border-base-400'
+};
+
+export default React.memo(AnalystComments);

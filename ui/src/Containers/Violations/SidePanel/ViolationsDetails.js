@@ -4,8 +4,8 @@ import PropTypes from 'prop-types';
 import { knownBackendFlags } from 'utils/featureFlags';
 
 import FeatureEnabled from 'Containers/FeatureEnabled';
-import ViolationComments from './ViolationComments';
-import ViolationTags from './ViolationTags';
+import AnalystComments from 'Containers/AnalystNotes/AnalystComments';
+import AnalystTags from 'Containers/AnalystNotes/AnalystTags';
 import DeploytimeMessages from './DeploytimeMessages';
 import RuntimeMessages from './RuntimeMessages';
 
@@ -14,10 +14,10 @@ function ViolationsDetails({ violations, processViolation }) {
         <div className="w-full px-3 pb-5 mt-5">
             <FeatureEnabled featureFlag={knownBackendFlags.ROX_IQT_ANALYST_NOTES_UI}>
                 <div className="mb-4">
-                    <ViolationTags />
+                    <AnalystTags type="Violation" />
                 </div>
                 <div className="mb-4">
-                    <ViolationComments />
+                    <AnalystComments type="Violation" />
                 </div>
             </FeatureEnabled>
             <RuntimeMessages processViolation={processViolation} />

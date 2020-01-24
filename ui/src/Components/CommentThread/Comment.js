@@ -23,7 +23,7 @@ const ActionButtons = ({ isEditing, canModify, onEdit, onDelete, onClose }) => {
         );
     }
     return (
-        <div className={`${!canModify && 'invisible'}`}>
+        <div className={`flex ${!canModify && 'invisible'}`}>
             <Edit
                 className="h-4 w-4 mx-2 text-primary-800 cursor-pointer hover:text-primary-500"
                 onClick={onEdit}

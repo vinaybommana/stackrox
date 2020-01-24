@@ -5,7 +5,7 @@ import queryService from 'modules/queryService';
 
 import Query from 'Components/ThrowingQuery';
 import Loader from 'Components/Loader';
-import ViolationFindings from 'Components/ViolationFindings';
+import ViolationFindings from './ViolationFindings';
 
 const QUERY = gql`
     query violationsInDeployment($query: String) {

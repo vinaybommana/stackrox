@@ -10,6 +10,7 @@ import NoResultsMessage from 'Components/NoResultsMessage';
 import Comment from './Comment';
 
 const CommentThread = ({
+    className,
     type,
     currentUser,
     comments,
@@ -80,6 +81,7 @@ const CommentThread = ({
 
     return (
         <CollapsibleCard
+            cardClassName={className}
             title={`${length} ${type} ${pluralize('Comment', length)}`}
             headerComponents={
                 <Button
@@ -113,13 +115,15 @@ CommentThread.propTypes = {
     onSave: PropTypes.func.isRequired,
     onDelete: PropTypes.func.isRequired,
     defaultLimit: PropTypes.number,
-    defaultOpen: PropTypes.bool
+    defaultOpen: PropTypes.bool,
+    className: PropTypes.string
 };
 
 CommentThread.defaultProps = {
     comments: [],
     defaultLimit: 3,
-    defaultOpen: false
+    defaultOpen: false,
+    className: 'border border-base-400'
 };
 
 export default CommentThread;

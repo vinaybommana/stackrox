@@ -21,8 +21,7 @@ import { entityGridContainerClassName } from 'Containers/Workflow/WorkflowEntity
 import { exportCvesAsCsv } from 'services/VulnerabilitiesService';
 import { getCveExportName } from 'utils/vulnerabilityUtils';
 
-// TO DO: factor this out from config management
-import ViolationsAcrossThisDeployment from 'Containers/ConfigManagement/Entity/widgets/ViolationsAcrossThisDeployment';
+import ViolationsAcrossThisDeployment from 'Containers/Workflow/widgets/ViolationsAcrossThisDeployment';
 
 import FixableCveExportButton from '../../VulnMgmtComponents/FixableCveExportButton';
 import RelatedEntitiesSideList from '../RelatedEntitiesSideList';
