@@ -5,6 +5,7 @@ import cluster from 'images/side-panel-icons/cluster.svg';
 import deployment from 'images/side-panel-icons/deployment.svg';
 import group from 'images/side-panel-icons/group.svg';
 import image from 'images/side-panel-icons/image.svg';
+import component from 'images/side-panel-icons/image-layer.svg';
 import namespace from 'images/side-panel-icons/namespace.svg';
 import node from 'images/side-panel-icons/node.svg';
 import policy from 'images/side-panel-icons/policy.svg';
@@ -18,6 +19,7 @@ const imageMap = {
     [entityTypes.DEPLOYMENT]: deployment,
     [entityTypes.SUBJECT]: group,
     [entityTypes.IMAGE]: image,
+    [entityTypes.COMPONENT]: component,
     [entityTypes.NAMESPACE]: namespace,
     [entityTypes.NODE]: node,
     [entityTypes.POLICY]: policy,
