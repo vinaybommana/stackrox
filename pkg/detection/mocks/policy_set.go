@@ -131,17 +131,3 @@ func (mr *MockPolicySetMockRecorder) RemovePolicy(policyID interface{}) *gomock.
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePolicy", reflect.TypeOf((*MockPolicySet)(nil).RemovePolicy), policyID)
 }
-
-// RemoveNotifier mocks base method
-func (m *MockPolicySet) RemoveNotifier(notifierID string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveNotifier", notifierID)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// RemoveNotifier indicates an expected call of RemoveNotifier
-func (mr *MockPolicySetMockRecorder) RemoveNotifier(notifierID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveNotifier", reflect.TypeOf((*MockPolicySet)(nil).RemoveNotifier), notifierID)
-}

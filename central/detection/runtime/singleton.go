@@ -9,6 +9,7 @@ import (
 	"github.com/stackrox/rox/central/role/resources"
 	"github.com/stackrox/rox/central/searchbasedpolicies"
 	"github.com/stackrox/rox/generated/storage"
+	detectionPkg "github.com/stackrox/rox/pkg/detection"
 	policyUtils "github.com/stackrox/rox/pkg/policies"
 	"github.com/stackrox/rox/pkg/sac"
 	"github.com/stackrox/rox/pkg/sync"
@@ -39,7 +40,7 @@ func SingletonPolicySet() detection.PolicySet {
 }
 
 func initialize() {
-	policySet = detection.NewPolicySet(policyDataStore.Singleton(), detection.NewPolicyCompiler(searchbasedpolicies.DeploymentBuilderSingleton()))
+	policySet = detection.NewPolicySet(policyDataStore.Singleton(), detectionPkg.NewPolicyCompiler(searchbasedpolicies.DeploymentBuilderSingleton()))
 	policies, err := policyDataStore.Singleton().GetPolicies(policyCtx)
 	utils.Must(err)
 

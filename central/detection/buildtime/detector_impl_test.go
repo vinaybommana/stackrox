@@ -11,6 +11,7 @@ import (
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/image/policies"
 	"github.com/stackrox/rox/pkg/defaults"
+	detectionPkg "github.com/stackrox/rox/pkg/detection"
 	"github.com/stackrox/rox/pkg/protoutils"
 	mappings "github.com/stackrox/rox/pkg/search/options/images"
 	"github.com/stackrox/rox/pkg/searchbasedpolicies/matcher"
@@ -30,7 +31,7 @@ func getPolicy(defaultPolicies []*storage.Policy, name string, t *testing.T) *st
 
 func TestDetector(t *testing.T) {
 	controller := gomock.NewController(t)
-	compilerWithoutProcessIndicators := detection.NewPolicyCompiler(
+	compilerWithoutProcessIndicators := detectionPkg.NewPolicyCompiler(
 		matcher.NewBuilder(
 			matcher.NewRegistry(
 				nil, k8sBuilders.K8sRBACQueryBuilder{}),

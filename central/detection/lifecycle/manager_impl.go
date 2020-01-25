@@ -24,6 +24,7 @@ import (
 	"github.com/stackrox/rox/generated/internalapi/central"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/concurrency"
+	deployTimePkg "github.com/stackrox/rox/pkg/detection/deploytime"
 	"github.com/stackrox/rox/pkg/enforcers"
 	"github.com/stackrox/rox/pkg/env"
 	"github.com/stackrox/rox/pkg/expiringcache"
@@ -360,7 +361,7 @@ func (m *managerImpl) processDeploymentUpdate(ctx enricher.EnrichmentContext, de
 	// There is no need to save the deployment in this function as it will be saved post reprocessing risk
 	defer m.riskManager.ReprocessDeploymentRiskWithImages(deployment, images)
 
-	presentAlerts, err := m.deploytimeDetector.Detect(deploytime.DetectionContext{}, deployment, images)
+	presentAlerts, err := m.deploytimeDetector.Detect(deployTimePkg.DetectionContext{}, deployment, images)
 	if err != nil {
 		return false, errors.Wrap(err, "fetching deploy time alerts")
 	}

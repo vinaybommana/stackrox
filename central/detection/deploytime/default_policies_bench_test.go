@@ -7,6 +7,8 @@ import (
 	k8sBuilders "github.com/stackrox/rox/central/searchbasedpolicies/builders"
 	imagePolicies "github.com/stackrox/rox/image/policies"
 	"github.com/stackrox/rox/pkg/defaults"
+	detectionPkg "github.com/stackrox/rox/pkg/detection"
+	"github.com/stackrox/rox/pkg/detection/deploytime"
 	"github.com/stackrox/rox/pkg/fixtures"
 	pkgPolicies "github.com/stackrox/rox/pkg/policies"
 	"github.com/stackrox/rox/pkg/search/options/deployments"
@@ -24,7 +26,7 @@ func BenchmarkDefaultPolicies(b *testing.B) {
 		),
 		deployments.OptionsMap,
 	)
-	policySet = detection.NewPolicySet(nil, detection.NewPolicyCompiler(builder))
+	policySet = detection.NewPolicySet(nil, detectionPkg.NewPolicyCompiler(builder))
 
 	defaults.PoliciesPath = imagePolicies.Directory()
 	policies, err := defaults.Policies()
@@ -43,7 +45,7 @@ func BenchmarkDefaultPolicies(b *testing.B) {
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := detection.Detect(DetectionContext{}, dep, images)
+		_, err := detection.Detect(deploytime.DetectionContext{}, dep, images)
 		require.NoError(b, err)
 	}
 }

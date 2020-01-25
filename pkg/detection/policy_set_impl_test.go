@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	datastoreMocks "github.com/stackrox/rox/central/policy/datastore/mocks"
 	"github.com/stackrox/rox/generated/storage"
 	matcherMocks "github.com/stackrox/rox/pkg/searchbasedpolicies/matcher/mocks"
 	"github.com/stretchr/testify/suite"
@@ -19,13 +18,11 @@ type PolicyTestSuite struct {
 	suite.Suite
 
 	mockController     *gomock.Controller
-	mockDataStore      *datastoreMocks.MockDataStore
 	mockMatcherBuilder *matcherMocks.MockBuilder
 }
 
 func (suite *PolicyTestSuite) SetupTest() {
 	suite.mockController = gomock.NewController(suite.T())
-	suite.mockDataStore = datastoreMocks.NewMockDataStore(suite.mockController)
 	suite.mockMatcherBuilder = matcherMocks.NewMockBuilder(suite.mockController)
 }
 
@@ -34,7 +31,7 @@ func (suite *PolicyTestSuite) TearDownTest() {
 }
 
 func (suite *PolicyTestSuite) TestAddsCompilable() {
-	policySet := NewPolicySet(suite.mockDataStore, NewPolicyCompiler(suite.mockMatcherBuilder))
+	policySet := NewPolicySet(NewPolicyCompiler(suite.mockMatcherBuilder))
 
 	suite.mockMatcherBuilder.EXPECT().ForPolicy(goodPolicy).Return(nil, nil)
 
@@ -52,7 +49,7 @@ func (suite *PolicyTestSuite) TestAddsCompilable() {
 }
 
 func (suite *PolicyTestSuite) TestForOneSucceeds() {
-	policySet := NewPolicySet(suite.mockDataStore, NewPolicyCompiler(suite.mockMatcherBuilder))
+	policySet := NewPolicySet(NewPolicyCompiler(suite.mockMatcherBuilder))
 
 	suite.mockMatcherBuilder.EXPECT().ForPolicy(goodPolicy).Return(nil, nil)
 
@@ -69,7 +66,7 @@ func (suite *PolicyTestSuite) TestForOneSucceeds() {
 }
 
 func (suite *PolicyTestSuite) TestForOneFails() {
-	policySet := NewPolicySet(suite.mockDataStore, NewPolicyCompiler(suite.mockMatcherBuilder))
+	policySet := NewPolicySet(NewPolicyCompiler(suite.mockMatcherBuilder))
 
 	err := policySet.ForOne("1", FunctionAsExecutor(func(compiled CompiledPolicy) error {
 		return nil
@@ -78,7 +75,7 @@ func (suite *PolicyTestSuite) TestForOneFails() {
 }
 
 func (suite *PolicyTestSuite) TestThrowsErrorForNotCompilable() {
-	policySet := NewPolicySet(suite.mockDataStore, NewPolicyCompiler(suite.mockMatcherBuilder))
+	policySet := NewPolicySet(NewPolicyCompiler(suite.mockMatcherBuilder))
 
 	suite.mockMatcherBuilder.EXPECT().ForPolicy(badPolicy).Return(nil, errors.New("cant create matcher"))
 

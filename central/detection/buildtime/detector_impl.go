@@ -5,8 +5,8 @@ import (
 
 	ptypes "github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
-	"github.com/stackrox/rox/central/detection"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/detection"
 	"github.com/stackrox/rox/pkg/protoutils"
 	"github.com/stackrox/rox/pkg/uuid"
 )

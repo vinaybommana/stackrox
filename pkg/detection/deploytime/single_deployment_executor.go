@@ -4,17 +4,16 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
-	"github.com/stackrox/rox/central/detection"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/detection"
 	"github.com/stackrox/rox/pkg/searchbasedpolicies"
 )
 
-func newSingleDeploymentExecutor(executorCtx context.Context, ctx DetectionContext, deployment *storage.Deployment, images []*storage.Image) alertCollectingExecutor {
+func newSingleDeploymentExecutor(ctx DetectionContext, deployment *storage.Deployment, images []*storage.Image) AlertCollectingExecutor {
 	return &policyExecutor{
-		executorCtx: executorCtx,
-		ctx:         ctx,
-		deployment:  deployment,
-		images:      images,
+		ctx:        ctx,
+		deployment: deployment,
+		images:     images,
 	}
 }
 
@@ -55,7 +54,7 @@ func (d *policyExecutor) Execute(compiled detection.CompiledPolicy) error {
 		return errors.Wrapf(err, "evaluating violations for policy %s; deployment %s/%s", compiled.Policy().GetName(), d.deployment.GetNamespace(), d.deployment.GetName())
 	}
 	if len(violations) > 0 {
-		d.alerts = append(d.alerts, policyDeploymentAndViolationsToAlert(compiled.Policy(), d.deployment, violations))
+		d.alerts = append(d.alerts, PolicyDeploymentAndViolationsToAlert(compiled.Policy(), d.deployment, violations))
 	}
 	return nil
 }

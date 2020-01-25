@@ -4,23 +4,23 @@ import (
 	"fmt"
 
 	ptypes "github.com/gogo/protobuf/types"
-	"github.com/stackrox/rox/central/detection"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/alert/convert"
+	"github.com/stackrox/rox/pkg/detection"
 	"github.com/stackrox/rox/pkg/protoutils"
 	"github.com/stackrox/rox/pkg/uuid"
 )
 
-// Expansion of executor that holds resulting alerts.
-type alertCollectingExecutor interface {
+// AlertCollectingExecutor is the expansion of an executor that holds resulting alerts.
+type AlertCollectingExecutor interface {
 	detection.PolicyExecutor
 
 	GetAlerts() []*storage.Alert
 	ClearAlerts()
 }
 
-// policyDeploymentAndViolationsToAlert constructs an alert.
-func policyDeploymentAndViolationsToAlert(policy *storage.Policy, deployment *storage.Deployment, violations []*storage.Alert_Violation) *storage.Alert {
+// PolicyDeploymentAndViolationsToAlert constructs an alert.
+func PolicyDeploymentAndViolationsToAlert(policy *storage.Policy, deployment *storage.Deployment, violations []*storage.Alert_Violation) *storage.Alert {
 	if len(violations) == 0 {
 		return nil
 	}
