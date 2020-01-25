@@ -78,27 +78,25 @@ ObOdSTZUQI4TZOXOpJCpa97CnqroNi7RrT05JOfoe/DPmhoJmF4AUrnd/YUb8pgF
         // (Also test null, since 465 is the default.)
         /////////////////
         // Speaking TLS should work
-        465  | false      | false    | true
-        null | false      | false    | true
-        // Sending STARTTLS is not expected to work when already using TLS
-        465  | false      | true     | false
-        null | false      | true     | false
+        465  | false      | NotifierOuterClass.Email.AuthMethod.DISABLED   | true
+        null | false      | NotifierOuterClass.Email.AuthMethod.DISABLED   | true
+
         // Speaking non-TLS to a TLS port should fail and not time out, regardless of STARTTLS (see ROX-366)
-        465  | true       | false    | false
-        465  | true       | true     | false
-        null | true       | false    | false
-        null | true       | true     | false
+        465  | true       | NotifierOuterClass.Email.AuthMethod.DISABLED   | false
+        465  | true       | NotifierOuterClass.Email.AuthMethod.PLAIN      | false
+        null | true       | NotifierOuterClass.Email.AuthMethod.DISABLED   | false
+        null | true       | NotifierOuterClass.Email.AuthMethod.PLAIN      | false
 
         // Port 587 tests
         // At MailGun, this port begins unencrypted and supports STARTTLS.
         /////////////////
         // Starting unencrypted and _not_ using STARTTLS should work
-        587  | true       | false    | true
+        587  | true       | NotifierOuterClass.Email.AuthMethod.DISABLED | true
         // Starting unencrypted and using STARTTLS should work
-        587  | true       | true     | true
+        587  | true       | NotifierOuterClass.Email.AuthMethod.PLAIN    | true
+        587  | true       | NotifierOuterClass.Email.AuthMethod.LOGIN    | true
         // Speaking TLS to a non-TLS port should fail whether you use STARTTLS or not.
-        587  | false      | false    | false
-        587  | false      | true     | false
+        587  | false      | NotifierOuterClass.Email.AuthMethod.DISABLED | false
 
         // Cannot add port 25 tests since GCP blocks outgoing
         // connections to port 25

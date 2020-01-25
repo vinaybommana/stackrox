@@ -2,6 +2,9 @@
 All notable changes to this project that require documentation updates will be documented in this file.
 
 ## [NEXT RELEASE]
+### Changed
+- UseStartTLS field in the Email notifier configuration has been deprecated in lieu of an enum which supports several
+different authentication methods
 
 ## [38.0]
 ### Added

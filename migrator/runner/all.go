@@ -19,6 +19,7 @@ import (
 	_ "github.com/stackrox/rox/migrator/migrations/m_22_to_m_23_delete_cis_docker_1_1_0_cis_k8s_1_2_0"
 	_ "github.com/stackrox/rox/migrator/migrations/m_23_to_m_24_delete_cis_k8s_1_4_1"
 	_ "github.com/stackrox/rox/migrator/migrations/m_24_to_m_25_update_policy_texts"
+	_ "github.com/stackrox/rox/migrator/migrations/m_25_to_m_26_starttls_auth"
 	_ "github.com/stackrox/rox/migrator/migrations/m_2_to_3_network_flows_in_badger"
 	_ "github.com/stackrox/rox/migrator/migrations/m_3_to_4_cluster_spec_to_status"
 	_ "github.com/stackrox/rox/migrator/migrations/m_4_to_5_auth_provider_default_group"

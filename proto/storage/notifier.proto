@@ -54,8 +54,14 @@ message Email {
     string username  = 3;
     string password  = 4 [(gogoproto.moretags) = "scrub:\"always\""];
     bool disableTLS  = 5;
-    bool useSTARTTLS = 6;
+    bool DEPRECATED_useStartTLS = 6; // useStartTLS has been deprecated for startTLSAuthMethod
     string from      = 7;
+    enum AuthMethod {
+        DISABLED = 0;
+        PLAIN    = 1;
+        LOGIN    = 2;
+    }
+    AuthMethod startTLSAuthMethod = 8;
 }
 
 message Splunk {

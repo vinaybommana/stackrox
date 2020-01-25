@@ -308,10 +308,25 @@ const formDescriptors = {
                 placeholder: ''
             },
             {
-                label: 'Enable STARTTLS',
-                jsonpath: 'email.useSTARTTLS',
-                type: 'toggle',
-                placeholder: ''
+                label: 'Use STARTTLS (requires TLS to be disabled)',
+                jsonpath: 'email.startTLSAuthMethod',
+                type: 'select',
+                placeholder: '',
+                options: [
+                    {
+                        label: 'Disabled',
+                        value: 'DISABLED'
+                    },
+                    {
+                        label: 'Plain',
+                        value: 'PLAIN'
+                    },
+                    {
+                        label: 'Login',
+                        value: 'LOGIN'
+                    }
+                ],
+                default: 'DISABLED'
             }
         ],
         slack: [

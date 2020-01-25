@@ -7,6 +7,7 @@ import io.stackrox.proto.api.v1.NotifierServiceOuterClass
 import io.stackrox.proto.storage.Common
 import io.stackrox.proto.storage.ImageIntegrationOuterClass.ImageIntegration
 import io.stackrox.proto.storage.NotifierOuterClass.Notifier
+import io.stackrox.proto.storage.NotifierOuterClass.Email
 import io.stackrox.proto.storage.DeploymentOuterClass.ContainerImage
 import io.stackrox.proto.storage.RiskOuterClass
 import objects.NetworkPolicy
@@ -412,7 +413,7 @@ class Services extends BaseService {
         String prePackagedToken = "00000000-0000-0000-0000-000000000000"
         try {
             return getNotifierClient().postNotifier(
-                   NotifierOuterClass.Notifier.newBuilder()
+                   Notifier.newBuilder()
                        .setType("splunk")
                        .setName(name)
                        .setLabelKey(splunkIntegration)
@@ -500,11 +501,12 @@ class Services extends BaseService {
         }
     }
 
-    static addEmailNotifier(String name, Boolean disableTLS = false, startTLS = false, Integer port = null) {
+    static addEmailNotifier(String name, disableTLS = false, startTLS = Email.AuthMethod.DISABLED,
+                            Integer port = null) {
         return evaluateWithRetry(3, 10) {
-            NotifierOuterClass.Notifier.Builder builder =
-                    NotifierOuterClass.Notifier.newBuilder()
-                            .setEmail(NotifierOuterClass.Email.newBuilder())
+            Notifier.Builder builder =
+                    Notifier.newBuilder()
+                            .setEmail(Email.newBuilder())
             builder
                     .setType("email")
                     .setName(name)
@@ -520,7 +522,7 @@ class Services extends BaseService {
                             .setSender("from@example.com")
                             .setFrom("stackrox")
                             .setDisableTLS(disableTLS)
-                            .setUseSTARTTLS(startTLS)
+                            .setStartTLSAuthMethod(startTLS)
                     )
             port == null ?
                     builder.getEmailBuilder().setServer("smtp.mailgun.org") :

@@ -403,9 +403,10 @@ func registerGeneratedTypes(builder generator.SchemaBuilder) {
 		"password: String!",
 		"sender: String!",
 		"server: String!",
-		"useSTARTTLS: Boolean!",
+		"startTLSAuthMethod: Email_AuthMethod!",
 		"username: String!",
 	}))
+	generator.RegisterProtoEnum(builder, reflect.TypeOf(storage.Email_AuthMethod(0)))
 	generator.RegisterProtoEnum(builder, reflect.TypeOf(storage.EmbeddedImageScanComponent_SourceType(0)))
 	utils.Must(builder.AddType("EmbeddedSecret", []string{
 		"name: String!",
@@ -4021,14 +4022,32 @@ func (resolver *emailResolver) Server(ctx context.Context) string {
 	return value
 }
 
-func (resolver *emailResolver) UseSTARTTLS(ctx context.Context) bool {
-	value := resolver.data.GetUseSTARTTLS()
-	return value
+func (resolver *emailResolver) StartTLSAuthMethod(ctx context.Context) string {
+	value := resolver.data.GetStartTLSAuthMethod()
+	return value.String()
 }
 
 func (resolver *emailResolver) Username(ctx context.Context) string {
 	value := resolver.data.GetUsername()
 	return value
+}
+
+func toEmail_AuthMethod(value *string) storage.Email_AuthMethod {
+	if value != nil {
+		return storage.Email_AuthMethod(storage.Email_AuthMethod_value[*value])
+	}
+	return storage.Email_AuthMethod(0)
+}
+
+func toEmail_AuthMethods(values *[]string) []storage.Email_AuthMethod {
+	if values == nil {
+		return nil
+	}
+	output := make([]storage.Email_AuthMethod, len(*values))
+	for i, v := range *values {
+		output[i] = toEmail_AuthMethod(&v)
+	}
+	return output
 }
 
 func toEmbeddedImageScanComponent_SourceType(value *string) storage.EmbeddedImageScanComponent_SourceType {
