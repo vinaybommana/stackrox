@@ -3,6 +3,7 @@ package listener
 import (
 	"github.com/openshift/client-go/apps/informers/externalversions"
 	"github.com/stackrox/rox/generated/internalapi/central"
+	"github.com/stackrox/rox/pkg/centralsensor"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/sensor/common/config"
 	"k8s.io/client-go/informers"
@@ -16,13 +17,13 @@ const (
 
 type listenerImpl struct {
 	clients *clientSet
-	eventsC chan *central.SensorEvent
+	eventsC chan *central.MsgFromSensor
 	stopSig concurrency.Signal
 
 	configHandler config.Handler
 }
 
-func (k *listenerImpl) Start() {
+func (k *listenerImpl) Start() error {
 	// Create informer factories for needed orchestrators.
 	var k8sFactory informers.SharedInformerFactory
 	var osFactory externalversions.SharedInformerFactory
@@ -35,13 +36,22 @@ func (k *listenerImpl) Start() {
 	patchNamespaces(k.clients.k8s, &k.stopSig)
 
 	// Start handling resource events.
-	handleAllEvents(k8sFactory, osFactory, k.eventsC, &k.stopSig, k.configHandler)
+	go handleAllEvents(k8sFactory, osFactory, k.eventsC, &k.stopSig, k.configHandler)
+	return nil
 }
 
-func (k *listenerImpl) Stop() {
+func (k *listenerImpl) Stop(err error) {
 	k.stopSig.Signal()
 }
 
-func (k *listenerImpl) Events() <-chan *central.SensorEvent {
+func (k *listenerImpl) Capabilities() []centralsensor.SensorCapability {
+	return nil
+}
+
+func (k *listenerImpl) ProcessMessage(msg *central.MsgToSensor) error {
+	return nil
+}
+
+func (k *listenerImpl) ResponsesC() <-chan *central.MsgFromSensor {
 	return k.eventsC
 }

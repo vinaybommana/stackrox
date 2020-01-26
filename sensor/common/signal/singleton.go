@@ -17,7 +17,7 @@ var (
 
 // newService creates a new streaming service with the collector. It should only be called once.
 func newService() Service {
-	indicators := make(chan *central.SensorEvent)
+	indicators := make(chan *central.MsgFromSensor)
 
 	return &serviceImpl{
 		queue:           make(chan *v1.Signal, maxBufferSize),

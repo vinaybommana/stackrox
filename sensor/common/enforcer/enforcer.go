@@ -1,11 +1,14 @@
-package enforcers
+package enforcer
 
 import (
 	"github.com/gogo/protobuf/proto"
+	"github.com/pkg/errors"
 	"github.com/stackrox/rox/generated/internalapi/central"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/centralsensor"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/logging"
+	"github.com/stackrox/rox/sensor/common"
 )
 
 var (
@@ -15,15 +18,8 @@ var (
 // EnforceFunc represents an enforcement function.
 type EnforceFunc func(*central.SensorEnforcement) error
 
-// Enforcer is an abstraction for taking enforcement actions on deployments.
-type Enforcer interface {
-	SendEnforcement(*central.SensorEnforcement) bool
-	Start()
-	Stop()
-}
-
 // CreateEnforcer creates a new enforcer that performs the given enforcement actions.
-func CreateEnforcer(enforcementMap map[storage.EnforcementAction]EnforceFunc) Enforcer {
+func CreateEnforcer(enforcementMap map[storage.EnforcementAction]EnforceFunc) common.SensorComponent {
 	return &enforcer{
 		enforcementMap: enforcementMap,
 		actionsC:       make(chan *central.SensorEnforcement, 10),
@@ -39,16 +35,33 @@ type enforcer struct {
 	stoppedC       concurrency.Signal
 }
 
-func (e *enforcer) SendEnforcement(enforcement *central.SensorEnforcement) bool {
+func (e *enforcer) Capabilities() []centralsensor.SensorCapability {
+	return nil
+}
+
+func (e *enforcer) ResponsesC() <-chan *central.MsgFromSensor {
+	return nil
+}
+
+func (e *enforcer) ProcessMessage(msg *central.MsgToSensor) error {
+	enforcement := msg.GetEnforcement()
+	if enforcement == nil {
+		return nil
+	}
+
+	if enforcement.GetEnforcement() == storage.EnforcementAction_UNSET_ENFORCEMENT {
+		return errors.Errorf("received enforcement with unset action: %s", proto.MarshalTextString(enforcement))
+	}
+
 	select {
 	case e.actionsC <- enforcement:
-		return true
+		return nil
 	case <-e.stoppedC.Done():
-		return false
+		return errors.Errorf("unable to send enforcement: %s", proto.MarshalTextString(enforcement))
 	}
 }
 
-func (e *enforcer) Start() {
+func (e *enforcer) start() {
 	defer e.stoppedC.Signal()
 
 	for {
@@ -72,7 +85,12 @@ func (e *enforcer) Start() {
 	}
 }
 
-func (e *enforcer) Stop() {
+func (e *enforcer) Start() error {
+	go e.start()
+	return nil
+}
+
+func (e *enforcer) Stop(_ error) {
 	e.stopC.Signal()
 	e.stoppedC.Wait()
 }

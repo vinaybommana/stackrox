@@ -7,6 +7,7 @@ import (
 	"github.com/stackrox/rox/generated/internalapi/central"
 	"github.com/stackrox/rox/generated/internalapi/sensor"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/centralsensor"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/env"
 	"github.com/stackrox/rox/pkg/net"
@@ -85,18 +86,27 @@ type networkFlowManager struct {
 	enrichedLastSentState map[networkConnIndicator]timestamp.MicroTS
 
 	done        concurrency.Signal
-	flowUpdates chan *central.NetworkFlowUpdate
+	flowUpdates chan *central.MsgFromSensor
 }
 
-func (m *networkFlowManager) Start() {
+func (m *networkFlowManager) ProcessMessage(msg *central.MsgToSensor) error {
+	return nil
+}
+
+func (m *networkFlowManager) Start() error {
 	go m.enrichConnections()
+	return nil
 }
 
-func (m *networkFlowManager) Stop() {
+func (m *networkFlowManager) Stop(_ error) {
 	m.done.Signal()
 }
 
-func (m *networkFlowManager) FlowUpdates() <-chan *central.NetworkFlowUpdate {
+func (m *networkFlowManager) Capabilities() []centralsensor.SensorCapability {
+	return nil
+}
+
+func (m *networkFlowManager) ResponsesC() <-chan *central.MsgFromSensor {
 	return m.flowUpdates
 }
 
@@ -128,7 +138,11 @@ func (m *networkFlowManager) enrichAndSend() {
 	select {
 	case <-m.done.Done():
 		return
-	case m.flowUpdates <- protoToSend:
+	case m.flowUpdates <- &central.MsgFromSensor{
+		Msg: &central.MsgFromSensor_NetworkFlowUpdate{
+			NetworkFlowUpdate: protoToSend,
+		},
+	}:
 		return
 	}
 }

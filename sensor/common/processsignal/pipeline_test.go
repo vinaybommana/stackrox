@@ -12,8 +12,8 @@ import (
 )
 
 func TestProcessPipeline(t *testing.T) {
-	sensorEvents := make(chan *central.SensorEvent)
-	actualEvents := make(chan *central.SensorEvent)
+	sensorEvents := make(chan *central.MsgFromSensor)
+	actualEvents := make(chan *central.MsgFromSensor)
 	mockStore := clusterentities.NewStore()
 	p := NewProcessPipeline(sensorEvents, mockStore, filter.NewFilter(5, []int{10, 10, 10}))
 	closeChan := make(chan bool)
@@ -34,9 +34,9 @@ func TestProcessPipeline(t *testing.T) {
 	}
 	p.Process(&signal)
 	time.Sleep(time.Second)
-	event := <-actualEvents
-	assert.NotNil(t, event)
-	assert.Equal(t, deploymentID, event.GetProcessIndicator().GetDeploymentId())
+	msg := <-actualEvents
+	assert.NotNil(t, msg)
+	assert.Equal(t, deploymentID, msg.GetEvent().GetProcessIndicator().GetDeploymentId())
 	deleteStore(deploymentID, mockStore)
 
 	// 2. Signal which does not have metadata.
@@ -45,9 +45,9 @@ func TestProcessPipeline(t *testing.T) {
 	}
 	p.Process(&signal)
 	updateStore(containerID, deploymentID, containerMetadata, mockStore)
-	event = <-actualEvents
-	assert.NotNil(t, event)
-	assert.Equal(t, deploymentID, event.GetProcessIndicator().GetDeploymentId())
+	msg = <-actualEvents
+	assert.NotNil(t, msg)
+	assert.Equal(t, deploymentID, msg.GetEvent().GetProcessIndicator().GetDeploymentId())
 	deleteStore(deploymentID, mockStore)
 
 	// 3. back to back signals
@@ -56,19 +56,19 @@ func TestProcessPipeline(t *testing.T) {
 	}
 	p.Process(&signal)
 	updateStore(containerID, deploymentID, containerMetadata, mockStore)
-	event = <-actualEvents
-	assert.NotNil(t, event)
-	assert.Equal(t, deploymentID, event.GetProcessIndicator().GetDeploymentId())
+	msg = <-actualEvents
+	assert.NotNil(t, msg)
+	assert.Equal(t, deploymentID, msg.GetEvent().GetProcessIndicator().GetDeploymentId())
 	p.Process(&signal)
-	event = <-actualEvents
-	assert.NotNil(t, event)
-	assert.Equal(t, deploymentID, event.GetProcessIndicator().GetDeploymentId())
+	msg = <-actualEvents
+	assert.NotNil(t, msg)
+	assert.Equal(t, deploymentID, msg.GetEvent().GetProcessIndicator().GetDeploymentId())
 	deleteStore(deploymentID, mockStore)
 
 	closeChan <- true
 }
 
-func consumeEnrichedSignals(sensorEvents chan *central.SensorEvent, results chan *central.SensorEvent, closeChan chan bool) {
+func consumeEnrichedSignals(sensorEvents chan *central.MsgFromSensor, results chan *central.MsgFromSensor, closeChan chan bool) {
 	for {
 		select {
 		case event := <-sensorEvents:

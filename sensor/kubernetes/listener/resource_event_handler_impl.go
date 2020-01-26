@@ -19,7 +19,7 @@ type resourceEventHandlerImpl struct {
 	eventLock  *sync.Mutex
 	dispatcher resources.Dispatcher
 
-	output                chan<- *central.SensorEvent
+	output                chan<- *central.MsgFromSensor
 	treatCreatesAsUpdates *concurrency.Flag
 
 	syncLock                   sync.Mutex
@@ -112,7 +112,11 @@ func (h *resourceEventHandlerImpl) sendResourceEvent(obj interface{}, action cen
 
 func (h *resourceEventHandlerImpl) sendEvents(evWraps ...*central.SensorEvent) {
 	for _, evWrap := range evWraps {
-		h.output <- protoutils.CloneCentralSensorEvent(evWrap)
+		h.output <- &central.MsgFromSensor{
+			Msg: &central.MsgFromSensor_Event{
+				Event: protoutils.CloneCentralSensorEvent(evWrap),
+			},
+		}
 	}
 }
 

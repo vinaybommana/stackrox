@@ -17,7 +17,7 @@ var (
 // Pipeline is the struct that handles a process signal
 type Pipeline struct {
 	clusterEntities    *clusterentities.Store
-	indicators         chan *central.SensorEvent
+	indicators         chan *central.MsgFromSensor
 	enrichedIndicators chan *storage.ProcessIndicator
 	deduper            *deduper
 	enricher           *enricher
@@ -25,7 +25,7 @@ type Pipeline struct {
 }
 
 // NewProcessPipeline defines how to process a ProcessIndicator
-func NewProcessPipeline(indicators chan *central.SensorEvent, clusterEntities *clusterentities.Store, processFilter filter.Filter) *Pipeline {
+func NewProcessPipeline(indicators chan *central.MsgFromSensor, clusterEntities *clusterentities.Store, processFilter filter.Filter) *Pipeline {
 	enrichedIndicators := make(chan *storage.ProcessIndicator)
 	p := &Pipeline{
 		clusterEntities:    clusterEntities,
@@ -75,12 +75,14 @@ func (p *Pipeline) sendIndicatorEvent() {
 		if !p.processFilter.Add(indicator) {
 			continue
 		}
-		p.indicators <- &central.SensorEvent{
+		p.indicators <- &central.MsgFromSensor{Msg: &central.MsgFromSensor_Event{Event: &central.SensorEvent{
 			Id:     indicator.GetId(),
 			Action: central.ResourceAction_CREATE_RESOURCE,
 			Resource: &central.SensorEvent_ProcessIndicator{
 				ProcessIndicator: indicator,
 			},
+		},
+		},
 		}
 	}
 }

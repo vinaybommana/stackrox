@@ -14,8 +14,7 @@ RUN echo http://${ALPINE_MIRROR}/alpine/v3.10/main > /etc/apk/repositories; \
 
 RUN apk update && \
     apk add --no-cache \
-        ca-certificates=20190108-r0 \
-        procps=3.3.15-r0 \
+        ca-certificates \
         su-exec=0.2-r0 \
         musl \
         && \

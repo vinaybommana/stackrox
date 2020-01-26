@@ -73,7 +73,7 @@ func (suite *ResourceEventHandlerImplTestSuite) newHandlerImpl() *resourceEventH
 	return &resourceEventHandlerImpl{
 		eventLock:             &eventLock,
 		dispatcher:            suite.dispatcher,
-		output:                make(chan *central.SensorEvent),
+		output:                make(chan *central.MsgFromSensor),
 		treatCreatesAsUpdates: &treatCreatesAsUpdates,
 
 		hasSeenAllInitialIDsSignal: concurrency.NewSignal(),

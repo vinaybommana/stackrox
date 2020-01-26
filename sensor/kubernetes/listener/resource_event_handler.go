@@ -15,7 +15,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-func handleAllEvents(sif informers.SharedInformerFactory, osf externalversions.SharedInformerFactory, output chan<- *central.SensorEvent, stopSignal *concurrency.Signal, config config.Handler) {
+func handleAllEvents(sif informers.SharedInformerFactory, osf externalversions.SharedInformerFactory, output chan<- *central.MsgFromSensor, stopSignal *concurrency.Signal, config config.Handler) {
 	// We want creates to be treated as updates while existing objects are loaded.
 	var treatCreatesAsUpdates concurrency.Flag
 	treatCreatesAsUpdates.Set(true)
@@ -121,16 +121,20 @@ func handleAllEvents(sif informers.SharedInformerFactory, osf externalversions.S
 	// Set the flag that all objects present at start up have been consumed.
 	treatCreatesAsUpdates.Set(false)
 
-	output <- &central.SensorEvent{
-		Resource: &central.SensorEvent_Synced{
-			Synced: &central.SensorEvent_ResourcesSynced{},
+	output <- &central.MsgFromSensor{
+		Msg: &central.MsgFromSensor_Event{
+			Event: &central.SensorEvent{
+				Resource: &central.SensorEvent_Synced{
+					Synced: &central.SensorEvent_ResourcesSynced{},
+				},
+			},
 		},
 	}
 }
 
 // Helper function that creates and adds a handler to an informer.
 //////////////////////////////////////////////////////////////////
-func handle(informer cache.SharedIndexInformer, dispatcher resources.Dispatcher, output chan<- *central.SensorEvent, treatCreatesAsUpdates *concurrency.Flag, wg *concurrency.WaitGroup, stopSignal *concurrency.Signal, eventLock *sync.Mutex) {
+func handle(informer cache.SharedIndexInformer, dispatcher resources.Dispatcher, output chan<- *central.MsgFromSensor, treatCreatesAsUpdates *concurrency.Flag, wg *concurrency.WaitGroup, stopSignal *concurrency.Signal, eventLock *sync.Mutex) {
 	handlerImpl := &resourceEventHandlerImpl{
 		eventLock:             eventLock,
 		dispatcher:            dispatcher,

@@ -14,9 +14,12 @@ import (
 	"github.com/stackrox/rox/pkg/utils"
 	"github.com/stackrox/rox/pkg/version"
 	"github.com/stackrox/rox/sensor/common"
+	"github.com/stackrox/rox/sensor/common/compliance"
 	"github.com/stackrox/rox/sensor/common/config"
 	"github.com/stackrox/rox/sensor/common/networkflow/manager"
+	"github.com/stackrox/rox/sensor/common/networkflow/service"
 	"github.com/stackrox/rox/sensor/common/sensor"
+	signalService "github.com/stackrox/rox/sensor/common/signal"
 	"github.com/stackrox/rox/sensor/kubernetes/clusterstatus"
 	"github.com/stackrox/rox/sensor/kubernetes/enforcer"
 	"github.com/stackrox/rox/sensor/kubernetes/listener"
@@ -51,22 +54,40 @@ func main() {
 
 	configHandler := config.NewCommandHandler()
 
-	var sensorComponents []common.SensorComponent
-	if features.DiagnosticBundle.Enabled() || features.Telemetry.Enabled() {
-		sensorComponents = append(sensorComponents, telemetry.NewCommandHandler())
-	}
+	listener := listener.New(configHandler)
 
-	s := sensor.NewSensor(
-		listener.New(configHandler),
+	o := orchestrator.New()
+	complianceService := compliance.NewService(o)
+	complianceCommandHandler := compliance.NewCommandHandler(complianceService)
+
+	processSignals := signalService.Singleton()
+
+	components := []common.SensorComponent{
+		listener,
 		enforcer.MustCreate(),
-		orchestrator.New(),
 		manager.Singleton(),
 		networkpolicies.NewCommandHandler(),
 		clusterstatus.NewUpdater(),
-		configHandler,
 		upgradeCmdHandler,
-		sensorComponents...,
+		complianceCommandHandler,
+		processSignals,
+	}
+
+	if features.DiagnosticBundle.Enabled() || features.Telemetry.Enabled() {
+		components = append(components, telemetry.NewCommandHandler())
+	}
+
+	s := sensor.NewSensor(
+		configHandler,
+		components...,
 	)
+
+	s.AddAPIServices(
+		service.Singleton(),
+		processSignals,
+		complianceService,
+	)
+
 	s.Start()
 
 	for {

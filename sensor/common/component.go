@@ -12,6 +12,6 @@ type SensorComponent interface {
 	Stop(err error)
 	Capabilities() []centralsensor.SensorCapability
 
-	ProcessMessage(msg *central.MsgToSensor) (bool, error)
+	ProcessMessage(msg *central.MsgToSensor) error
 	ResponsesC() <-chan *central.MsgFromSensor
 }

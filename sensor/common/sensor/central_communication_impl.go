@@ -15,13 +15,12 @@ import (
 // sensor implements the Sensor interface by sending inputs to central,
 // and providing the output from central asynchronously.
 type centralCommunicationImpl struct {
-	receiver CentralReceiver
-	sender   CentralSender
+	receiver   CentralReceiver
+	sender     CentralSender
+	components []common.SensorComponent
 
 	stopC    concurrency.ErrorSignal
 	stoppedC concurrency.ErrorSignal
-
-	components []common.SensorComponent
 }
 
 func (s *centralCommunicationImpl) Start(conn *grpc.ClientConn, centralReachable *concurrency.Flag, configHandler config.Handler) {
@@ -73,8 +72,16 @@ func (s *centralCommunicationImpl) sendEvents(client central.SensorServiceClient
 		return
 	}
 
+	if msg.GetClusterConfig() == nil {
+		s.stopC.SignalWithError(errors.Errorf("initial message received from Sensor was not a cluster config: %T", msg.Msg))
+		return
+	}
+
 	// Send the initial cluster config to the config handler
-	configHandler.SendCommand(msg.GetClusterConfig())
+	if err := configHandler.ProcessMessage(msg); err != nil {
+		s.stopC.SignalWithError(errors.Wrap(err, "processing initial cluster config"))
+		return
+	}
 
 	defer func() {
 		if err := stream.CloseSend(); err != nil {

@@ -44,12 +44,12 @@ func (h *commandHandler) Stop(err error) {
 	h.stopSig.SignalWithError(err)
 }
 
-func (h *commandHandler) ProcessMessage(msg *central.MsgToSensor) (bool, error) {
+func (h *commandHandler) ProcessMessage(msg *central.MsgToSensor) error {
 	telemetryReq := msg.GetTelemetryDataRequest()
 	if telemetryReq == nil {
-		return false, nil
+		return nil
 	}
-	return true, h.processRequest(telemetryReq)
+	return h.processRequest(telemetryReq)
 }
 
 func (h *commandHandler) processRequest(req *central.PullTelemetryDataRequest) error {
