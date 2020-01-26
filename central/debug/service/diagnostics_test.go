@@ -3,7 +3,7 @@ package service
 import (
 	"testing"
 
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSanitizeClusterName(t *testing.T) {

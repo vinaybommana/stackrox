@@ -179,7 +179,7 @@ func IssueNewCertFromCA(subj Subject, caCert, caKey []byte) (cert *IssuedCert, e
 		return returnErr(err, "serial generation")
 	}
 	csr := &cfcsr.CertificateRequest{
-		KeyRequest: cfcsr.NewBasicKeyRequest(),
+		KeyRequest: cfcsr.NewKeyRequest(),
 	}
 	csrBytes, keyBytes, err := cfcsr.ParseRequest(csr)
 	if err != nil {
@@ -238,7 +238,7 @@ func IssueNewCert(subj Subject) (cert *IssuedCert, err error) {
 		return returnErr(err, "serial generation")
 	}
 	csr := &cfcsr.CertificateRequest{
-		KeyRequest: cfcsr.NewBasicKeyRequest(),
+		KeyRequest: cfcsr.NewKeyRequest(),
 	}
 	csrBytes, keyBytes, err := cfcsr.ParseRequest(csr)
 	if err != nil {

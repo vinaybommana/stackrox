@@ -43,7 +43,7 @@ func generateMTLSFiles(fileMap map[string][]byte) (caCert, caKey []byte, err err
 	}
 	req := csr.CertificateRequest{
 		CN:           mtls.ServiceCACommonName,
-		KeyRequest:   csr.NewBasicKeyRequest(),
+		KeyRequest:   csr.NewKeyRequest(),
 		SerialNumber: serial.String(),
 	}
 	caCert, _, caKey, err = initca.New(&req)
