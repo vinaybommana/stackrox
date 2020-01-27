@@ -15,23 +15,23 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-func handleAllEvents(sif informers.SharedInformerFactory, osf externalversions.SharedInformerFactory, output chan<- *central.MsgFromSensor, stopSignal *concurrency.Signal, config config.Handler) {
+func handleAllEvents(sif, resyncingSif informers.SharedInformerFactory, osf externalversions.SharedInformerFactory, output chan<- *central.MsgFromSensor, stopSignal *concurrency.Signal, config config.Handler) {
 	// We want creates to be treated as updates while existing objects are loaded.
 	var treatCreatesAsUpdates concurrency.Flag
 	treatCreatesAsUpdates.Set(true)
 
 	// Create the dispatcher registry, which provides dispatchers to all of the handlers.
-	podInformer := sif.Core().V1().Pods()
+	podInformer := resyncingSif.Core().V1().Pods()
 	dispatchers := resources.NewDispatcherRegistry(podInformer.Lister(), clusterentities.StoreInstance(), processfilter.Singleton(), config)
 
 	namespaceInformer := sif.Core().V1().Namespaces().Informer()
 	secretInformer := sif.Core().V1().Secrets().Informer()
 	saInformer := sif.Core().V1().ServiceAccounts().Informer()
 
-	roleInformer := sif.Rbac().V1().Roles().Informer()
-	clusterRoleInformer := sif.Rbac().V1().ClusterRoles().Informer()
-	roleBindingInformer := sif.Rbac().V1().RoleBindings().Informer()
-	clusterRoleBindingInformer := sif.Rbac().V1().ClusterRoleBindings().Informer()
+	roleInformer := resyncingSif.Rbac().V1().Roles().Informer()
+	clusterRoleInformer := resyncingSif.Rbac().V1().ClusterRoles().Informer()
+	roleBindingInformer := resyncingSif.Rbac().V1().RoleBindings().Informer()
+	clusterRoleBindingInformer := resyncingSif.Rbac().V1().ClusterRoleBindings().Informer()
 
 	// prePodWaitGroup
 	prePodWaitGroup := &concurrency.WaitGroup{}
@@ -45,12 +45,13 @@ func handleAllEvents(sif informers.SharedInformerFactory, osf externalversions.S
 	handle(saInformer, dispatchers.ForServiceAccounts(), output, nil, prePodWaitGroup, stopSignal, &eventLock)
 
 	// RBAC dispatchers handles multiple sets of data
-	handle(roleInformer, dispatchers.ForRoles(), output, nil, prePodWaitGroup, stopSignal, &eventLock)
-	handle(clusterRoleInformer, dispatchers.ForClusterRoles(), output, nil, prePodWaitGroup, stopSignal, &eventLock)
-	handle(roleBindingInformer, dispatchers.ForRoleBindings(), output, nil, prePodWaitGroup, stopSignal, &eventLock)
-	handle(clusterRoleBindingInformer, dispatchers.ForClusterRoleBindings(), output, nil, prePodWaitGroup, stopSignal, &eventLock)
+	handle(roleInformer, dispatchers.ForRBAC(), output, nil, prePodWaitGroup, stopSignal, &eventLock)
+	handle(clusterRoleInformer, dispatchers.ForRBAC(), output, nil, prePodWaitGroup, stopSignal, &eventLock)
+	handle(roleBindingInformer, dispatchers.ForRBAC(), output, nil, prePodWaitGroup, stopSignal, &eventLock)
+	handle(clusterRoleBindingInformer, dispatchers.ForRBAC(), output, nil, prePodWaitGroup, stopSignal, &eventLock)
 
 	sif.Start(stopSignal.Done())
+	resyncingSif.Start(stopSignal.Done())
 
 	// Run the namespace and rbac object informers first since other handlers rely on their outputs.
 	informersToSync := []cache.SharedInformer{namespaceInformer, secretInformer,
@@ -83,11 +84,12 @@ func handleAllEvents(sif informers.SharedInformerFactory, osf externalversions.S
 	handle(sif.Core().V1().Services().Informer(), dispatchers.ForServices(), output, nil, preTopLevelDeploymentWaitGroup, stopSignal, &eventLock)
 
 	// Deployment subtypes (this ensures that the hierarchy maps are generated correctly)
-	handle(sif.Batch().V1().Jobs().Informer(), dispatchers.ForDeployments(kubernetes.Job), output, &treatCreatesAsUpdates, preTopLevelDeploymentWaitGroup, stopSignal, &eventLock)
-	handle(sif.Apps().V1().ReplicaSets().Informer(), dispatchers.ForDeployments(kubernetes.ReplicaSet), output, &treatCreatesAsUpdates, preTopLevelDeploymentWaitGroup, stopSignal, &eventLock)
-	handle(sif.Core().V1().ReplicationControllers().Informer(), dispatchers.ForDeployments(kubernetes.ReplicationController), output, &treatCreatesAsUpdates, preTopLevelDeploymentWaitGroup, stopSignal, &eventLock)
+	handle(resyncingSif.Batch().V1().Jobs().Informer(), dispatchers.ForDeployments(kubernetes.Job), output, &treatCreatesAsUpdates, preTopLevelDeploymentWaitGroup, stopSignal, &eventLock)
+	handle(resyncingSif.Apps().V1().ReplicaSets().Informer(), dispatchers.ForDeployments(kubernetes.ReplicaSet), output, &treatCreatesAsUpdates, preTopLevelDeploymentWaitGroup, stopSignal, &eventLock)
+	handle(resyncingSif.Core().V1().ReplicationControllers().Informer(), dispatchers.ForDeployments(kubernetes.ReplicationController), output, &treatCreatesAsUpdates, preTopLevelDeploymentWaitGroup, stopSignal, &eventLock)
 
 	sif.Start(stopSignal.Done())
+	resyncingSif.Start(stopSignal.Done())
 
 	if !concurrency.WaitInContext(preTopLevelDeploymentWaitGroup, stopSignal) {
 		return
@@ -96,10 +98,10 @@ func handleAllEvents(sif informers.SharedInformerFactory, osf externalversions.S
 	wg := &concurrency.WaitGroup{}
 
 	// Deployment types.
-	handle(sif.Apps().V1().DaemonSets().Informer(), dispatchers.ForDeployments(kubernetes.DaemonSet), output, &treatCreatesAsUpdates, wg, stopSignal, &eventLock)
-	handle(sif.Apps().V1().Deployments().Informer(), dispatchers.ForDeployments(kubernetes.Deployment), output, &treatCreatesAsUpdates, wg, stopSignal, &eventLock)
-	handle(sif.Apps().V1().StatefulSets().Informer(), dispatchers.ForDeployments(kubernetes.StatefulSet), output, &treatCreatesAsUpdates, wg, stopSignal, &eventLock)
-	handle(sif.Batch().V1beta1().CronJobs().Informer(), dispatchers.ForDeployments(kubernetes.CronJob), output, &treatCreatesAsUpdates, wg, stopSignal, &eventLock)
+	handle(resyncingSif.Apps().V1().DaemonSets().Informer(), dispatchers.ForDeployments(kubernetes.DaemonSet), output, &treatCreatesAsUpdates, wg, stopSignal, &eventLock)
+	handle(resyncingSif.Apps().V1().Deployments().Informer(), dispatchers.ForDeployments(kubernetes.Deployment), output, &treatCreatesAsUpdates, wg, stopSignal, &eventLock)
+	handle(resyncingSif.Apps().V1().StatefulSets().Informer(), dispatchers.ForDeployments(kubernetes.StatefulSet), output, &treatCreatesAsUpdates, wg, stopSignal, &eventLock)
+	handle(resyncingSif.Batch().V1beta1().CronJobs().Informer(), dispatchers.ForDeployments(kubernetes.CronJob), output, &treatCreatesAsUpdates, wg, stopSignal, &eventLock)
 
 	if osf != nil {
 		handle(osf.Apps().V1().DeploymentConfigs().Informer(), dispatchers.ForDeployments(kubernetes.DeploymentConfig), output, &treatCreatesAsUpdates, wg, stopSignal, &eventLock)
@@ -107,6 +109,7 @@ func handleAllEvents(sif informers.SharedInformerFactory, osf externalversions.S
 
 	// SharedInformerFactories can have Start called multiple times which will start the rest of the handlers
 	sif.Start(stopSignal.Done())
+	resyncingSif.Start(stopSignal.Done())
 	if osf != nil {
 		osf.Start(stopSignal.Done())
 	}

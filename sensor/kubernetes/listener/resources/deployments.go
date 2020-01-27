@@ -60,11 +60,12 @@ type deploymentHandler struct {
 	processFilter   filter.Filter
 	config          config.Handler
 	hierarchy       references.ParentHierarchy
+	rbac            rbacUpdater
 }
 
 // newDeploymentHandler creates and returns a new deployment handler.
 func newDeploymentHandler(serviceStore *serviceStore, deploymentStore *deploymentStore, endpointManager *endpointManager, namespaceStore *namespaceStore,
-	podLister v1listers.PodLister, processFilter filter.Filter, config config.Handler) *deploymentHandler {
+	rbac rbacUpdater, podLister v1listers.PodLister, processFilter filter.Filter, config config.Handler) *deploymentHandler {
 	return &deploymentHandler{
 		podLister:       podLister,
 		serviceStore:    serviceStore,
@@ -74,6 +75,7 @@ func newDeploymentHandler(serviceStore *serviceStore, deploymentStore *deploymen
 		processFilter:   processFilter,
 		config:          config,
 		hierarchy:       references.NewParentHierarchy(),
+		rbac:            rbac,
 	}
 }
 
@@ -87,6 +89,7 @@ func (d *deploymentHandler) processWithType(obj interface{}, action central.Reso
 		d.deploymentStore.addOrUpdateDeployment(wrap)
 		d.endpointManager.OnDeploymentCreateOrUpdate(wrap)
 		d.processFilter.Update(wrap.GetDeployment())
+		d.rbac.assignPermissionLevelToDeployment(wrap)
 	} else {
 		d.deploymentStore.removeDeployment(wrap)
 		d.endpointManager.OnDeploymentRemove(wrap)

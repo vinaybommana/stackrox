@@ -385,6 +385,7 @@ func registerGeneratedTypes(builder generator.SchemaBuilder) {
 		"priority: Int!",
 		"replicas: Int!",
 		"serviceAccount: String!",
+		"serviceAccountPermissionLevel: PermissionLevel!",
 		"stateTimestamp: Int!",
 		"tolerations: [Toleration]!",
 		"type: String!",
@@ -3888,6 +3889,12 @@ func (resolver *deploymentResolver) ServiceAccount(ctx context.Context) string {
 	resolver.ensureData(ctx)
 	value := resolver.data.GetServiceAccount()
 	return value
+}
+
+func (resolver *deploymentResolver) ServiceAccountPermissionLevel(ctx context.Context) string {
+	resolver.ensureData(ctx)
+	value := resolver.data.GetServiceAccountPermissionLevel()
+	return value.String()
 }
 
 func (resolver *deploymentResolver) StateTimestamp(ctx context.Context) int32 {
