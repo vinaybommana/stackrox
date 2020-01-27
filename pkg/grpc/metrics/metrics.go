@@ -1,23 +1,43 @@
 package metrics
 
 import (
-	"context"
-
-	lru "github.com/hashicorp/golang-lru"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
+	"fmt"
+	"runtime"
+	"strings"
 )
 
-// GRPCMetrics provides an grpc interceptor which monitors API calls and recovers from panics and provides a method to get the metrics
-//go:generate mockgen-wrapper
-type GRPCMetrics interface {
-	UnaryMonitorAndRecover(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error)
-	GetMetrics() (map[string]map[codes.Code]*Metric, map[string][]*Panic)
+const (
+	cacheSize = 10
+)
+
+func isRuntimeFunc(funcName string) bool {
+	parts := strings.Split(funcName, ".")
+	return len(parts) == 2 && parts[0] == "runtime"
 }
 
-func newGRPCMetrics() GRPCMetrics {
-	return &grpcMetricsImpl{
-		apiCalls:  make(map[string]map[codes.Code]*Metric),
-		apiPanics: make(map[string]*lru.Cache),
+func isStackRoxPackage(function string) bool {
+	// The frame function should be package-qualified
+	return strings.HasPrefix(function, "github.com/stackrox/rox/")
+}
+
+func getPanicLocation(skip int) string {
+	callerPCs := make([]uintptr, 20)
+	numCallers := runtime.Callers(skip+2, callerPCs)
+	callerPCs = callerPCs[:numCallers]
+	frames := runtime.CallersFrames(callerPCs)
+
+	inRuntime := false
+	for {
+		frame, more := frames.Next()
+		if isRuntimeFunc(frame.Function) {
+			inRuntime = true
+		} else if inRuntime && isStackRoxPackage(frame.Function) {
+			return fmt.Sprintf("%s:%d", frame.File, frame.Line)
+		}
+
+		if !more {
+			break
+		}
 	}
+	return "unknown"
 }

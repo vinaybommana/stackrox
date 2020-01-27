@@ -191,7 +191,6 @@ type apiImpl struct {
 	apiServices        []APIService
 	config             Config
 	requestInfoHandler *requestinfo.Handler
-	metrics            metrics.GRPCMetrics
 }
 
 // A Config configures the server.
@@ -212,6 +211,9 @@ type Config struct {
 	PublicEndpoint        string
 
 	PlaintextEndpoints EndpointsConfig
+
+	GRPCMetrics metrics.GRPCMetrics
+	HTTPMetrics metrics.HTTPMetrics
 }
 
 // NewAPI returns an API object.
@@ -219,7 +221,6 @@ func NewAPI(config Config) API {
 	return &apiImpl{
 		config:             config,
 		requestInfoHandler: requestinfo.NewDefaultRequestInfoHandler(),
-		metrics:            metrics.Singleton(),
 	}
 }
 
@@ -238,6 +239,10 @@ func (a *apiImpl) unaryInterceptors() []grpc.UnaryServerInterceptor {
 		contextutil.UnaryServerInterceptor(a.requestInfoHandler.UpdateContextForGRPC),
 		grpc_prometheus.UnaryServerInterceptor,
 		contextutil.UnaryServerInterceptor(authn.ContextUpdater(a.config.IdentityExtractors...)),
+	}
+
+	if a.config.GRPCMetrics != nil {
+		u = append(u, a.config.GRPCMetrics.UnaryMonitoringInterceptor)
 	}
 
 	if len(a.config.PreAuthContextEnrichers) > 0 {
@@ -260,8 +265,7 @@ func (a *apiImpl) unaryInterceptors() []grpc.UnaryServerInterceptor {
 	}
 
 	u = append(u, a.config.UnaryInterceptors...)
-	// Panic recovery interceptor must be last in the interceptor list
-	u = append(u, a.metrics.UnaryMonitorAndRecover)
+	u = append(u, a.unaryRecovery())
 	return u
 }
 
@@ -327,17 +331,20 @@ func (a *apiImpl) muxer(localConn *grpc.ClientConn) http.Handler {
 	postAuthHTTPInterceptor := contextutil.HTTPInterceptor(a.config.PostAuthContextEnrichers...)
 
 	mux := http.NewServeMux()
-	for _, route := range a.config.CustomRoutes {
-		mux.Handle(route.Route, httpInterceptors(route.Handler(postAuthHTTPInterceptor)))
-	}
+	allRoutes := a.config.CustomRoutes
 	for _, apiService := range a.apiServices {
 		srvWithRoutes, _ := apiService.(APIServiceWithCustomRoutes)
 		if srvWithRoutes == nil {
 			continue
 		}
-		for _, route := range srvWithRoutes.CustomRoutes() {
-			mux.Handle(route.Route, httpInterceptors(route.Handler(postAuthHTTPInterceptor)))
+		allRoutes = append(allRoutes, srvWithRoutes.CustomRoutes()...)
+	}
+	for _, route := range allRoutes {
+		handler := httpInterceptors(route.Handler(postAuthHTTPInterceptor))
+		if a.config.HTTPMetrics != nil {
+			handler = a.config.HTTPMetrics.WrapHandler(handler, route.Route)
 		}
+		mux.Handle(route.Route, handler)
 	}
 
 	if a.config.AuthProviders != nil {

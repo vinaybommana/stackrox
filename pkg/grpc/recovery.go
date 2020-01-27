@@ -31,6 +31,10 @@ func (a *apiImpl) recoveryOpts() []grpc_recovery.Option {
 	}
 }
 
+func (a *apiImpl) unaryRecovery() grpc.UnaryServerInterceptor {
+	return grpc_recovery.UnaryServerInterceptor(a.recoveryOpts()...)
+}
+
 func (a *apiImpl) streamRecovery() grpc.StreamServerInterceptor {
 	return grpc_recovery.StreamServerInterceptor(a.recoveryOpts()...)
 }

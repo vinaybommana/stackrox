@@ -26,18 +26,24 @@ type PanicStats struct {
 	Count     int64  `json:"count"`
 }
 
-// APIStat contains telemetry data about different kinds of API calls
-type APIStat struct {
-	MethodName string `json:"methodName"`
-
-	HTTP   []HTTPInvocationStats `json:"http,omitempty"`
-	GRPC   []GRPCInvocationStats `json:"grpc,omitempty"`
-	Panics []PanicStats          `json:"panics,omitempty"`
+// HTTPRoute represents a particular HTTP route with stats for normal invocations and invocations that panicked.
+type HTTPRoute struct {
+	Route             string                 `json:"route"`
+	NormalInvocations []*HTTPInvocationStats `json:"normalInvocations,omitempty"`
+	PanicInvocations  []*PanicStats          `json:"panicInvocations,omitempty"`
 }
 
-// APIInfo contains metrics about API calls and errors gathering those metrics
-type APIInfo struct {
-	APIStats []*APIStat `json:"apiStats,omitempty"`
+// GRPCMethod represents a particular GRPC method with stats for normal invocations and invocations that panicked.
+type GRPCMethod struct {
+	Method            string                 `json:"method"`
+	NormalInvocations []*GRPCInvocationStats `json:"normalInvocations,omitempty"`
+	PanicInvocations  []*PanicStats          `json:"panicInvocations,omitempty"`
+}
+
+// APIStats contains telemetry data about different kinds of API calls
+type APIStats struct {
+	HTTP []*HTTPRoute  `json:"http,omitempty"`
+	GRPC []*GRPCMethod `json:"grpc,omitempty"`
 }
 
 // BucketStats contains telemetry data about a DB bucket
@@ -88,7 +94,7 @@ type CentralInfo struct {
 
 	License      *LicenseJSON      `json:"license,omitempty"`
 	Storage      *StorageInfo      `json:"storage,omitempty"`
-	APIStats     *APIInfo          `json:"apiStats,omitempty"`
+	APIStats     *APIStats         `json:"apiStats,omitempty"`
 	Orchestrator *OrchestratorInfo `json:"orchestrator,omitempty"`
 
 	Errors []string `json:"errors,omitempty"`

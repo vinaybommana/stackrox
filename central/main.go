@@ -42,6 +42,7 @@ import (
 	backupRestoreService "github.com/stackrox/rox/central/globaldb/v2backuprestore/service"
 	graphqlHandler "github.com/stackrox/rox/central/graphql/handler"
 	groupService "github.com/stackrox/rox/central/group/service"
+	"github.com/stackrox/rox/central/grpc/metrics"
 	imageService "github.com/stackrox/rox/central/image/service"
 	"github.com/stackrox/rox/central/imageintegration"
 	iiDatastore "github.com/stackrox/rox/central/imageintegration/datastore"
@@ -406,6 +407,8 @@ func startGRPCServer(factory serviceFactory) {
 		InsecureLocalEndpoint: insecureLocalEndpoint,
 		PublicEndpoint:        publicAPIEndpoint,
 		Auditor:               audit.New(processor.Singleton()),
+		GRPCMetrics:           metrics.GRPCSingleton(),
+		HTTPMetrics:           metrics.HTTPSingleton(),
 	}
 
 	// This helps validate that SAC is being used correctly.

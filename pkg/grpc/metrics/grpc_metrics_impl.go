@@ -2,10 +2,7 @@ package metrics
 
 import (
 	"context"
-	"fmt"
-	"runtime"
 	"runtime/debug"
-	"strings"
 
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
@@ -17,10 +14,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const (
-	cacheSize = 10
-)
-
 var (
 	log = logging.LoggerForModule()
 )
@@ -28,19 +21,8 @@ var (
 type grpcMetricsImpl struct {
 	callsLock sync.Mutex
 	// Map of endpoint -> response code -> count & most recent panics
-	apiCalls  map[string]map[codes.Code]*Metric
+	apiCalls  map[string]map[codes.Code]int64
 	apiPanics map[string]*lru.Cache
-}
-
-// Metric contains a count of whatever the metric is counting
-type Metric struct {
-	Count int64
-}
-
-// Panic contains a panic string and a count of the number of times we have seen that panic
-type Panic struct {
-	PanicDesc string
-	Count     int64
 }
 
 func (g *grpcMetricsImpl) updateInternalMetric(path string, responseCode codes.Code) {
@@ -49,47 +31,10 @@ func (g *grpcMetricsImpl) updateInternalMetric(path string, responseCode codes.C
 
 	respCodes, ok := g.apiCalls[path]
 	if !ok {
-		respCodes = make(map[codes.Code]*Metric)
+		respCodes = make(map[codes.Code]int64)
 		g.apiCalls[path] = respCodes
 	}
-	internalMetric, ok := respCodes[responseCode]
-	if !ok {
-		internalMetric = &Metric{}
-		respCodes[responseCode] = internalMetric
-	}
-	internalMetric.Count++
-}
-
-func isRuntimeFunc(funcName string) bool {
-	parts := strings.Split(funcName, ".")
-	return len(parts) == 2 && parts[0] == "runtime"
-}
-
-func isStackRoxPackage(function string) bool {
-	// The frame function should be package-qualified
-	return strings.HasPrefix(function, "github.com/stackrox/rox/")
-}
-
-func getPanicLocation(skip int) string {
-	callerPCs := make([]uintptr, 20)
-	numCallers := runtime.Callers(skip+2, callerPCs)
-	callerPCs = callerPCs[:numCallers]
-	frames := runtime.CallersFrames(callerPCs)
-
-	inRuntime := false
-	for {
-		frame, more := frames.Next()
-		if isRuntimeFunc(frame.Function) {
-			inRuntime = true
-		} else if inRuntime && isStackRoxPackage(frame.Function) {
-			return fmt.Sprintf("%s:%d", frame.File, frame.Line)
-		}
-
-		if !more {
-			break
-		}
-	}
-	return "unknown"
+	respCodes[responseCode]++
 }
 
 func anyToError(x interface{}) error {
@@ -108,7 +53,7 @@ func (g *grpcMetricsImpl) convertPanicToError(p interface{}) error {
 	return err
 }
 
-func (g *grpcMetricsImpl) UnaryMonitorAndRecover(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+func (g *grpcMetricsImpl) UnaryMonitoringInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
 	panicked := true
 	defer func() {
 		r := recover()
@@ -130,19 +75,16 @@ func (g *grpcMetricsImpl) UnaryMonitorAndRecover(ctx context.Context, req interf
 			panicLRU, lruErr = lru.New(cacheSize)
 			if lruErr != nil {
 				// This should only happen if cacheSize < 0 and that should be impossible.
-				log.Infof("unable to create LRU in UnaryMonitorAndRecover for endpoint %s", path)
+				log.Infof("unable to create LRU in UnaryMonitoringInterceptor for endpoint %s", path)
 			}
 			g.apiPanics[path] = panicLRU
 		}
 		apiPanic, ok := panicLRU.Get(panicLocation)
 		if !ok {
-			apiPanic = &Panic{
-				PanicDesc: panicLocation,
-				Count:     0,
-			}
-			panicLRU.Add(panicLocation, apiPanic)
+			apiPanic = int64(0)
 		}
-		apiPanic.(*Panic).Count++
+		panicLRU.Add(panicLocation, apiPanic.(int64)+1)
+		panic(r)
 	}()
 	resp, err = handler(ctx, req)
 
@@ -154,24 +96,26 @@ func (g *grpcMetricsImpl) UnaryMonitorAndRecover(ctx context.Context, req interf
 	return
 }
 
-func (g *grpcMetricsImpl) GetMetrics() (map[string]map[codes.Code]*Metric, map[string][]*Panic) {
-	externalMetrics := make(map[string]map[codes.Code]*Metric, len(g.apiCalls))
+// GetMetrics returns copies of the internal metric maps
+func (g *grpcMetricsImpl) GetMetrics() (map[string]map[codes.Code]int64, map[string]map[string]int64) {
+	externalMetrics := make(map[string]map[codes.Code]int64, len(g.apiCalls))
 	g.callsLock.Lock()
 	defer g.callsLock.Unlock()
 	for path, codeMap := range g.apiCalls {
-		externalCodeMap := make(map[codes.Code]*Metric, len(codeMap))
+		externalCodeMap := make(map[codes.Code]int64, len(codeMap))
 		externalMetrics[path] = externalCodeMap
-		for responseCode, metric := range codeMap {
-			externalCodeMap[responseCode] = &Metric{Count: metric.Count}
+		for responseCode, count := range codeMap {
+			externalCodeMap[responseCode] = count
 		}
 	}
-	externalPanics := make(map[string][]*Panic, len(g.apiPanics))
+
+	externalPanics := make(map[string]map[string]int64, len(g.apiPanics))
 	for path, panics := range g.apiPanics {
 		panicLocations := panics.Keys()
-		panicList := make([]*Panic, 0, len(panicLocations))
+		panicList := make(map[string]int64, len(panicLocations))
 		for _, panicLocation := range panicLocations {
-			if apiPanic, ok := panics.Get(panicLocation); ok {
-				panicList = append(panicList, apiPanic.(*Panic))
+			if panicCount, ok := panics.Get(panicLocation); ok {
+				panicList[panicLocation.(string)] = panicCount.(int64)
 			}
 		}
 		externalPanics[path] = panicList
