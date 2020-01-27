@@ -35,7 +35,7 @@ const PercentageStackedPill = ({ data, tooltip }) => {
             placement="top"
             overlay={<TooltipOverlay title={tooltipTitle} body={tooltipBody} />}
             mouseLeaveDelay={0}
-            overlayClassName="opacity-100"
+            overlayClassName="opacity-100 p-0"
         >
             {content}
         </Tooltip>

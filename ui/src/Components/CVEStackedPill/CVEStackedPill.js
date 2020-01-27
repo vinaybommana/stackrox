@@ -41,7 +41,7 @@ const CVEStackedPill = ({ horizontal, vulnCounter, hideLink, url, fixableUrl, sh
                 high={high.total}
                 medium={medium.total}
                 low={low.total}
-                tooltip={showTooltip && tooltip}
+                tooltip={showTooltip ? tooltip : null}
             />
         </div>
     );
