@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/blevesearch/bleve/document"
-	"github.com/blevesearch/bleve/index/upsidedown"
 	"github.com/blevesearch/bleve/mapping"
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/central/metrics"
@@ -117,28 +116,12 @@ func (b *indexerImpl) optimizedMapDocument(wrapper *imageWrapper) (*document.Doc
 	return doc, nil
 }
 
-func (b *indexerImpl) memIndex(image *imageWrapper, udc *upsidedown.UpsideDownCouch) error {
-	doc, err := b.optimizedMapDocument(image)
-	if err != nil {
-		return err
-	}
-	return udc.UpdateWithAnalysis(doc, udc.Analyze(doc), nil)
-}
-
 func (b *indexerImpl) AddImage(image *storage.Image) error {
 	defer metrics.SetIndexOperationDurationTime(time.Now(), ops.Add, "Image")
 
 	wrapper := &imageWrapper{
 		Image: image,
 		Type:  v1.SearchCategory_IMAGES.String(),
-	}
-	bleveIndex, _, err := b.index.Advanced()
-	if err != nil {
-		return err
-	}
-	udc, ok := bleveIndex.(*upsidedown.UpsideDownCouch)
-	if ok {
-		return b.memIndex(wrapper, udc)
 	}
 	if err := b.index.Index.Index(image.GetId(), wrapper); err != nil {
 		return err

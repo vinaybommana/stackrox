@@ -3,8 +3,6 @@ package index
 import (
 	"time"
 
-	"github.com/blevesearch/bleve/document"
-	"github.com/blevesearch/bleve/index/upsidedown"
 	"github.com/stackrox/rox/central/metrics"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
@@ -29,29 +27,12 @@ type deploymentWrapper struct {
 	Type                string `json:"type"`
 }
 
-func (b *indexerImpl) memIndex(deployment *deploymentWrapper, udc *upsidedown.UpsideDownCouch) error {
-	doc := document.NewDocument(deployment.GetId())
-	err := b.index.Mapping().MapDocument(doc, deployment)
-	if err != nil {
-		return err
-	}
-	return udc.UpdateWithAnalysis(doc, udc.Analyze(doc), nil)
-}
-
 func (b *indexerImpl) AddDeployment(deployment *storage.Deployment) error {
 	defer metrics.SetIndexOperationDurationTime(time.Now(), ops.Add, "Deployment")
 
 	wrapper := &deploymentWrapper{
 		Deployment: deployment,
 		Type:       v1.SearchCategory_DEPLOYMENTS.String(),
-	}
-	bleveIndex, _, err := b.index.Advanced()
-	if err != nil {
-		return err
-	}
-	udc, ok := bleveIndex.(*upsidedown.UpsideDownCouch)
-	if ok {
-		return b.memIndex(wrapper, udc)
 	}
 	if err := b.index.Index.Index(deployment.GetId(), wrapper); err != nil {
 		return err
