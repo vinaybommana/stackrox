@@ -16,7 +16,6 @@ import (
 )
 
 type storeImpl struct {
-	counter      *crud.TxnCounter
 	dacky        *dackbox.DackBox
 	reader       crud.Reader
 	listReader   crud.Reader
@@ -29,12 +28,7 @@ type storeImpl struct {
 
 // New returns a new Store instance using the provided DackBox instance.
 func New(dacky *dackbox.DackBox, noUpdateTimestamps bool) (store.Store, error) {
-	counter, err := crud.NewTxnCounter(dacky, imageDackBox.Bucket)
-	if err != nil {
-		return nil, err
-	}
 	return &storeImpl{
-		counter:            counter,
 		dacky:              dacky,
 		noUpdateTimestamps: noUpdateTimestamps,
 		reader:             imageDackBox.Reader,
@@ -170,10 +164,7 @@ func (b *storeImpl) Upsert(image *storage.Image, listImage *storage.ListImage) e
 		return err
 	}
 
-	if err := dackTxn.Commit(); err != nil {
-		return err
-	}
-	return b.counter.IncTxnCount()
+	return dackTxn.Commit()
 }
 
 // DeleteImage deletes an image and all it's data.
@@ -192,17 +183,13 @@ func (b *storeImpl) Delete(id string) error {
 		return err
 	}
 
-	if err := dackTxn.Commit(); err != nil {
-		return err
-	}
-
-	return b.counter.IncTxnCount()
+	return dackTxn.Commit()
 }
 
 func (b *storeImpl) GetTxnCount() (txNum uint64, err error) {
-	return b.counter.GetTxnCount(), nil
+	return 0, nil
 }
 
 func (b *storeImpl) IncTxnCount() error {
-	return b.counter.IncTxnCount()
+	return nil
 }

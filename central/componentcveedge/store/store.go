@@ -16,7 +16,4 @@ type Store interface {
 
 	Upsert(cve ...*storage.ComponentCVEEdge) error
 	Delete(id ...string) error
-
-	GetTxnCount() (txNum uint64, err error)
-	IncTxnCount() error
 }

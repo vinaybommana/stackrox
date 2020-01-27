@@ -145,32 +145,3 @@ func (mr *MockStoreMockRecorder) Delete(ids ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockStore)(nil).Delete), ids...)
 }
-
-// GetTxnCount mocks base method
-func (m *MockStore) GetTxnCount() (uint64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTxnCount")
-	ret0, _ := ret[0].(uint64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetTxnCount indicates an expected call of GetTxnCount
-func (mr *MockStoreMockRecorder) GetTxnCount() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTxnCount", reflect.TypeOf((*MockStore)(nil).GetTxnCount))
-}
-
-// IncTxnCount mocks base method
-func (m *MockStore) IncTxnCount() error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IncTxnCount")
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// IncTxnCount indicates an expected call of IncTxnCount
-func (mr *MockStoreMockRecorder) IncTxnCount() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncTxnCount", reflect.TypeOf((*MockStore)(nil).IncTxnCount))
-}

@@ -26,22 +26,20 @@ type Acker func(keys ...[]byte) error
 type Lazy interface {
 	Mark([]byte, proto.Message)
 
+	Start()
 	Stop()
 }
 
 // NewLazy returns a new instance of a lazy indexer that reads in the values to index from the toIndex queue, indexes
 // them with the given indexer, then acks indexed values with the given acker.
 func NewLazy(toIndex queue.WaitableQueue, indexer Indexer, acker Acker) Lazy {
-	ret := &lazyImpl{
+	return &lazyImpl{
 		indexer:    indexer,
 		acker:      acker,
 		toIndex:    toIndex,
 		toAck:      queue.NewWaitableQueue(queue.NewQueue()),
 		stopSignal: concurrency.NewSignal(),
 	}
-	go ret.runIndexing()
-	go ret.runAcking()
-	return ret
 }
 
 type lazyImpl struct {
@@ -55,6 +53,11 @@ type lazyImpl struct {
 
 func (li *lazyImpl) Mark(key []byte, value proto.Message) {
 	li.toIndex.Push(key, value)
+}
+
+func (li *lazyImpl) Start() {
+	go li.runIndexing()
+	go li.runAcking()
 }
 
 func (li *lazyImpl) Stop() {
@@ -78,12 +81,12 @@ func (li *lazyImpl) runIndexing() {
 		if value == nil {
 			err := li.indexer.Delete(key)
 			if err != nil {
-				log.Errorf("unable to remove value from index: %s", string(key))
+				log.Errorf("unable to remove value from index: %s, %v", string(key), err)
 			}
 		} else {
 			err := li.indexer.Index(key, value)
 			if err != nil {
-				log.Errorf("unable to add key and value to index: %s, %s", string(key), proto.MarshalTextString(value.(proto.Message)))
+				log.Errorf("unable to add key and value to index: %s, %s, %v", string(key), proto.MarshalTextString(value.(proto.Message)), err)
 			}
 		}
 		li.toAck.Push(key, nil)
@@ -114,9 +117,6 @@ func (li *lazyImpl) runAcking() {
 }
 
 func (li *lazyImpl) ackKeys(keysToAck [][]byte) {
-	if len(keysToAck) == 0 {
-		return
-	}
 	err := li.acker(keysToAck...)
 	if err != nil {
 		log.Errorf("unable to ack keys: %s", printableKeys(keysToAck))

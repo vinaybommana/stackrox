@@ -52,7 +52,6 @@ func (ir *indexRegistryImpl) Matches(key []byte) bool {
 func (ir *indexRegistryImpl) Index(key []byte, msg proto.Message) error {
 	ir.lock.RLock()
 	defer ir.lock.RUnlock()
-
 	longestPrefix, longestMatch := ir.findLongestMatchNoLock(key)
 	if longestMatch != nil {
 		return longestMatch.Index(badgerhelper.StripBucket(longestPrefix, key), msg)

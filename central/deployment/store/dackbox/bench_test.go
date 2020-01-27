@@ -21,7 +21,7 @@ func getDeploymentStore(b *testing.B) *StoreImpl {
 	if err != nil {
 		b.Fatal(err)
 	}
-	dacky, err := dackbox.NewDackBox(db, []byte("map"))
+	dacky, err := dackbox.NewDackBox(db, nil, []byte("graph"), []byte("dirty"), []byte("valid"))
 	if err != nil {
 		b.Fatal(err)
 	}

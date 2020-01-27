@@ -32,7 +32,7 @@ func (suite *DeploymentStoreTestSuite) SetupSuite() {
 	if err != nil {
 		suite.FailNowf("failed to create DB: %+v", err.Error())
 	}
-	suite.dacky, err = dackbox.NewDackBox(suite.db, []byte("map"))
+	suite.dacky, err = dackbox.NewDackBox(suite.db, nil, []byte("graph"), []byte("dirty"), []byte("valid"))
 	if err != nil {
 		suite.FailNowf("failed to create dackbox: %+v", err.Error())
 	}

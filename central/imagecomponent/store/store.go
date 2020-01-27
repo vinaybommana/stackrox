@@ -16,7 +16,4 @@ type Store interface {
 
 	Upsert(component ...*storage.ImageComponent) error
 	Delete(ids ...string) error
-
-	GetTxnCount() (txNum uint64, err error)
-	IncTxnCount() error
 }

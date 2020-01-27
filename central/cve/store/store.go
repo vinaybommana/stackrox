@@ -16,7 +16,4 @@ type Store interface {
 
 	Upsert(cves ...*storage.CVE) error
 	Delete(ids ...string) error
-
-	GetTxnCount() (txNum uint64, err error)
-	IncTxnCount() error
 }

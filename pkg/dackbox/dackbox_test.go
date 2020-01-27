@@ -27,7 +27,7 @@ func (s *DackBoxTestSuite) SetupTest() {
 	if err != nil {
 		s.FailNowf("failed to create DB: %+v", err.Error())
 	}
-	s.sdb, err = NewDackBox(s.db, []byte{})
+	s.sdb, err = NewDackBox(s.db, nil, []byte{}, []byte{}, []byte{})
 	if err != nil {
 		s.FailNowf("failed to create counter: %+v", err.Error())
 	}

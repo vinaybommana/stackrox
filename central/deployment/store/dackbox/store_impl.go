@@ -15,7 +15,6 @@ import (
 
 // StoreImpl provides an implementation of the Store interface using dackbox.
 type StoreImpl struct {
-	counter      *crud.TxnCounter
 	dacky        *dackbox.DackBox
 	reader       crud.Reader
 	listReader   crud.Reader
@@ -26,12 +25,7 @@ type StoreImpl struct {
 
 // New returns a new instance of a deployment store using dackbox.
 func New(dacky *dackbox.DackBox) (*StoreImpl, error) {
-	counter, err := crud.NewTxnCounter(dacky, deploymentDackBox.Bucket)
-	if err != nil {
-		return nil, err
-	}
 	return &StoreImpl{
-		counter:      counter,
 		dacky:        dacky,
 		reader:       deploymentDackBox.Reader,
 		listReader:   deploymentDackBox.ListReader,
@@ -209,10 +203,7 @@ func (b *StoreImpl) UpsertDeployment(deployment *storage.Deployment) error {
 		return err
 	}
 
-	if err := txn.Commit(); err != nil {
-		return err
-	}
-	return b.counter.IncTxnCount()
+	return txn.Commit()
 }
 
 // RemoveDeployment deletes an deployment and it's list object counter-part.
@@ -231,20 +222,17 @@ func (b *StoreImpl) RemoveDeployment(id string) error {
 		return err
 	}
 
-	if err := txn.Commit(); err != nil {
-		return err
-	}
-	return b.counter.IncTxnCount()
+	return txn.Commit()
 }
 
 // GetTxnCount returns the transaction count.
 func (b *StoreImpl) GetTxnCount() (txNum uint64, err error) {
-	return b.counter.GetTxnCount(), nil
+	return 0, nil
 }
 
 // IncTxnCount increments the transaction count.
 func (b *StoreImpl) IncTxnCount() error {
-	return b.counter.IncTxnCount()
+	return nil
 }
 
 func convertDeploymentToListDeployment(d *storage.Deployment) *storage.ListDeployment {

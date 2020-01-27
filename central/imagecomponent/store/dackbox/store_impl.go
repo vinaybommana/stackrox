@@ -16,8 +16,7 @@ import (
 const batchSize = 100
 
 type storeImpl struct {
-	counter *crud.TxnCounter
-	dacky   *dackbox.DackBox
+	dacky *dackbox.DackBox
 
 	reader     crud.Reader
 	listReader crud.Reader
@@ -27,12 +26,7 @@ type storeImpl struct {
 
 // New returns a new Store instance.
 func New(dacky *dackbox.DackBox) (store.Store, error) {
-	counter, err := crud.NewTxnCounter(dacky, componentDackBox.Bucket)
-	if err != nil {
-		return nil, err
-	}
 	return &storeImpl{
-		counter:  counter,
 		dacky:    dacky,
 		reader:   componentDackBox.Reader,
 		upserter: componentDackBox.Upserter,
@@ -146,7 +140,7 @@ func (b *storeImpl) Upsert(components ...*storage.ImageComponent) error {
 			return err
 		}
 	}
-	return b.counter.IncTxnCount()
+	return nil
 }
 
 func (b *storeImpl) Delete(ids ...string) error {
@@ -167,13 +161,5 @@ func (b *storeImpl) Delete(ids ...string) error {
 			return err
 		}
 	}
-	return b.counter.IncTxnCount()
-}
-
-func (b *storeImpl) GetTxnCount() (txNum uint64, err error) {
-	return b.counter.GetTxnCount(), nil
-}
-
-func (b *storeImpl) IncTxnCount() error {
-	return b.counter.IncTxnCount()
+	return nil
 }
