@@ -28,13 +28,20 @@ func (p *setImpl) RemoveNotifier(notifierID string) error {
 	for _, compiled := range m {
 		policy := compiled.Policy()
 
-		filtered := policy.GetNotifiers()[:0]
-		for _, n := range policy.GetNotifiers() {
+		notifiers := policy.GetNotifiers()
+		outIdx := 0
+		for i, n := range policy.GetNotifiers() {
 			if n != notifierID {
-				filtered = append(filtered, n)
+				if i != outIdx {
+					notifiers[outIdx] = n
+				}
+				outIdx++
 			}
 		}
-		policy.Notifiers = filtered
+		if outIdx >= len(notifiers) { // no change
+			continue
+		}
+		policy.Notifiers = notifiers[:outIdx]
 
 		err := p.policyStore.UpdatePolicy(policyCtx, policy)
 		if err != nil {
