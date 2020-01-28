@@ -89,14 +89,14 @@ export function getDeploymentTableColumns(workflowState) {
             entityType: entityTypes.POLICY,
             headerClassName: `w-1/10 ${defaultHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
-            accessor: 'failingPolicyCount',
+            accessor: 'policyCount',
             Cell: ({ original, pdf }) => (
                 <TableCountLink
                     entityType={entityTypes.POLICY}
-                    count={original.failingPolicyCount}
+                    count={original.policyCount}
                     textOnly={inFindingsSection || pdf}
                     selectedRowId={original.id}
-                    entityTypeText="failing policy"
+                    entityTypeText="policy"
                 />
             ),
             sortField: deploymentSortFields.POLICIES

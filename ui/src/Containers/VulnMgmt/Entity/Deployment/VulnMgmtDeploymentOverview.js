@@ -205,7 +205,6 @@ const VulnMgmtDeploymentOverview = ({ data, entityContext }) => {
                 entityType={entityTypes.DEPLOYMENT}
                 entityContext={newEntityContext}
                 data={safeData}
-                altCountKeyMap={{ [entityTypes.POLICY]: 'failingPolicyCount' }}
             />
         </div>
     );

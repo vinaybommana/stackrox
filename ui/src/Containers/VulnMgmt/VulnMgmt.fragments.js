@@ -99,6 +99,7 @@ export const DEPLOYMENT_LIST_FRAGMENT = gql`
             }
             time
         }
+        policyCount(query: $policyQuery)
         failingPolicyCount(query: $policyQuery)
         policyStatus(query: $policyQuery)
         clusterName

@@ -22,7 +22,18 @@ const VulmMgmtDeployment = ({ entityId, entityListType, search, entityContext, s
                 id
                 priority
                 policyStatus(query: $policyQuery)
+
                 failingPolicies(query: $policyQuery) {
+                    id
+                    name
+                    description
+                    policyStatus
+                    latestViolation
+                    severity
+                    lifecycleStages
+                    enforcementActions
+                }
+                policies(query: $policyQuery) {
                     id
                     name
                     description
@@ -71,6 +82,7 @@ const VulmMgmtDeployment = ({ entityId, entityListType, search, entityContext, s
                         : 'serviceAccount serviceAccountID'
                 }
                 failingPolicyCount(query: $policyQuery)
+                policyCount(query: $policyQuery)
                 tolerations {
                     key
                     operator
