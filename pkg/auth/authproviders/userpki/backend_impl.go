@@ -80,36 +80,40 @@ func (p *backendImpl) RefreshURL() string {
 	return ""
 }
 
-func (p *backendImpl) ProcessHTTPRequest(w http.ResponseWriter, r *http.Request) (*tokens.ExternalUserClaim, []tokens.Option, string, error) {
+func (p *backendImpl) ProcessHTTPRequest(w http.ResponseWriter, r *http.Request) (*authproviders.AuthResponse, string, error) {
 	restPath := strings.TrimPrefix(r.URL.Path, p.pathPrefix)
 	if len(restPath) == len(r.URL.Path) {
 		log.Debugf("Invalid URL %q wrt %q", r.URL.Path, p.pathPrefix)
-		return nil, nil, "", httputil.NewError(http.StatusNotFound, "Not Found")
+		return nil, "", httputil.NewError(http.StatusNotFound, "Not Found")
 	}
 
 	if restPath != authenticateHandlerPath {
 		log.Debugf("Invalid REST path %q", restPath)
-		return nil, nil, "", httputil.NewError(http.StatusNotFound, "Not Found")
+		return nil, "", httputil.NewError(http.StatusNotFound, "Not Found")
 	}
 	if r.Method != http.MethodGet {
-		return nil, nil, "", httputil.NewError(http.StatusMethodNotAllowed, "Method Not Allowed")
+		return nil, "", httputil.NewError(http.StatusMethodNotAllowed, "Method Not Allowed")
 	}
 	ri := requestinfo.FromContext(r.Context())
 	if len(ri.VerifiedChains) != 1 {
-		return nil, nil, "", errNoCertificate
+		return nil, "", errNoCertificate
 	}
 	for _, ca := range ri.VerifiedChains[0] {
 		if p.fingerprints.Contains(ca.CertFingerprint) {
 			continue
 		}
 		userCert := ri.VerifiedChains[0][0]
-		return externalUser(userCert), options(userCert), "", nil
+		authResp := &authproviders.AuthResponse{
+			Claims:     externalUser(userCert),
+			Expiration: userCert.NotAfter,
+		}
+		return authResp, "", nil
 	}
-	return nil, nil, "", errInvalidCertificate
+	return nil, "", errInvalidCertificate
 }
 
-func (p *backendImpl) ExchangeToken(ctx context.Context, externalToken, state string) (*tokens.ExternalUserClaim, []tokens.Option, string, error) {
-	return nil, nil, "", status.Errorf(codes.Unimplemented, "ExchangeToken not implemented for provider type %q", TypeName)
+func (p *backendImpl) ExchangeToken(ctx context.Context, externalToken, state string) (*authproviders.AuthResponse, string, error) {
+	return nil, "", status.Errorf(codes.Unimplemented, "ExchangeToken not implemented for provider type %q", TypeName)
 }
 
 func (p *backendImpl) Validate(ctx context.Context, claims *tokens.Claims) error {
@@ -134,8 +138,4 @@ func externalUser(info requestinfo.CertInfo) *tokens.ExternalUserClaim {
 		FullName:   info.Subject.CommonName,
 		Attributes: attrs,
 	}
-}
-
-func options(info requestinfo.CertInfo) []tokens.Option {
-	return []tokens.Option{tokens.WithExpiry(info.NotAfter)}
 }

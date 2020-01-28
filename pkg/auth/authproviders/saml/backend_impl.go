@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/pkg/errors"
 	saml2 "github.com/russellhaering/gosaml2"
@@ -97,47 +98,50 @@ func newBackend(ctx context.Context, acsURLPath string, id string, uiEndpoints [
 	return p, effectiveConfig, nil
 }
 
-func (p *backendImpl) consumeSAMLResponse(samlResponse string) (*tokens.ExternalUserClaim, []tokens.Option, error) {
+func (p *backendImpl) consumeSAMLResponse(samlResponse string) (*authproviders.AuthResponse, error) {
 	ai, err := p.sp.RetrieveAssertionInfo(samlResponse)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	var opts []tokens.Option
+	var expiry time.Time
 	if ai.SessionNotOnOrAfter != nil {
-		opts = append(opts, tokens.WithExpiry(*ai.SessionNotOnOrAfter))
+		expiry = *ai.SessionNotOnOrAfter
 	}
 
 	claim := saml2AssertionInfoToExternalClaim(ai)
-	return claim, opts, nil
+	return &authproviders.AuthResponse{
+		Claims:     claim,
+		Expiration: expiry,
+	}, nil
 }
 
-func (p *backendImpl) ProcessHTTPRequest(w http.ResponseWriter, r *http.Request) (*tokens.ExternalUserClaim, []tokens.Option, string, error) {
+func (p *backendImpl) ProcessHTTPRequest(w http.ResponseWriter, r *http.Request) (*authproviders.AuthResponse, string, error) {
 	if r.URL.Path != p.acsURLPath {
-		return nil, nil, "", httputil.NewError(http.StatusNotFound, "Not Found")
+		return nil, "", httputil.NewError(http.StatusNotFound, "Not Found")
 	}
 	if r.Method != http.MethodPost {
-		return nil, nil, "", httputil.NewError(http.StatusMethodNotAllowed, "Method Not Allowed")
+		return nil, "", httputil.NewError(http.StatusMethodNotAllowed, "Method Not Allowed")
 	}
 
 	samlResponse := r.FormValue("SAMLResponse")
 	if samlResponse == "" {
-		return nil, nil, "", httputil.NewError(http.StatusBadRequest, "no SAML response transmitted")
+		return nil, "", httputil.NewError(http.StatusBadRequest, "no SAML response transmitted")
 	}
 
-	claims, opts, err := p.consumeSAMLResponse(samlResponse)
+	authResp, err := p.consumeSAMLResponse(samlResponse)
 	if err != nil {
-		return nil, nil, "", err
+		return nil, "", err
 	}
 
 	relayState := r.FormValue("RelayState")
 	_, clientState := idputil.SplitState(relayState)
 
-	return claims, opts, clientState, err
+	return authResp, clientState, err
 }
 
-func (p *backendImpl) ExchangeToken(ctx context.Context, externalToken, state string) (*tokens.ExternalUserClaim, []tokens.Option, string, error) {
-	return nil, nil, "", errors.New("not implemented")
+func (p *backendImpl) ExchangeToken(ctx context.Context, externalToken, state string) (*authproviders.AuthResponse, string, error) {
+	return nil, "", errors.New("not implemented")
 }
 
 func (p *backendImpl) RefreshURL() string {

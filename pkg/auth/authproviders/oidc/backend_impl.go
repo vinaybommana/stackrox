@@ -19,6 +19,7 @@ import (
 	"github.com/stackrox/rox/pkg/grpc/requestinfo"
 	"github.com/stackrox/rox/pkg/netutil"
 	"github.com/stackrox/rox/pkg/set"
+	"github.com/stackrox/rox/pkg/sliceutils"
 	"golang.org/x/oauth2"
 )
 
@@ -53,7 +54,7 @@ func (p *backendImpl) OnEnable(provider authproviders.Provider) {
 func (p *backendImpl) OnDisable(provider authproviders.Provider) {
 }
 
-func (p *backendImpl) ExchangeToken(ctx context.Context, token, state string) (*tokens.ExternalUserClaim, []tokens.Option, string, error) {
+func (p *backendImpl) ExchangeToken(ctx context.Context, token, state string) (*authproviders.AuthResponse, string, error) {
 	responseValues := make(url.Values, 2)
 	responseValues.Set("state", state)
 	responseValues.Set("id_token", token)
@@ -69,23 +70,26 @@ func (p *backendImpl) RefreshURL() string {
 	return ""
 }
 
-func (p *backendImpl) verifyIDToken(ctx context.Context, rawIDToken string) (*tokens.ExternalUserClaim, []tokens.Option, error) {
+func (p *backendImpl) verifyIDToken(ctx context.Context, rawIDToken string) (*authproviders.AuthResponse, error) {
 	idToken, err := p.idTokenVerifier.Verify(ctx, rawIDToken)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	if !p.noncePool.ConsumeNonce(idToken.Nonce) {
-		return nil, nil, errors.New("invalid token")
+		return nil, errors.New("invalid token")
 	}
 
 	var userInfo userInfoType
 	if err := idToken.Claims(&userInfo); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	claim := userInfoToExternalClaims(&userInfo)
-	return claim, []tokens.Option{tokens.WithExpiry(idToken.Expiry)}, nil
+	return &authproviders.AuthResponse{
+		Claims:     claim,
+		Expiration: idToken.Expiry,
+	}, nil
 }
 
 // The go-oidc library has two annoying characteristics when it comes to creating backendImpl instances:
@@ -157,6 +161,13 @@ func newBackend(ctx context.Context, id string, uiEndpoints []string, callbackUR
 		return nil, nil, err
 	}
 
+	var providerInfo struct {
+		ScopesSupported []string `json:"scopes_supported,omitempty"`
+	}
+	if err := oidcProvider.Claims(&providerInfo); err != nil {
+		log.Warnf("Failed to obtain OIDC provider claims: %v", err)
+	}
+
 	p := &backendImpl{
 		id: id,
 		noncePool: cryptoutils.NewThreadSafeNoncePool(
@@ -205,6 +216,9 @@ func newBackend(ctx context.Context, id string, uiEndpoints []string, callbackUR
 		ClientSecret: clientSecret,
 		Endpoint:     oidcProvider.Endpoint(),
 		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
+	}
+	if features.RefreshTokens.Enabled() && clientSecret != "" && sliceutils.StringFind(providerInfo.ScopesSupported, oidc.ScopeOfflineAccess) != -1 {
+		p.baseOauthConfig.Scopes = append(p.baseOauthConfig.Scopes, oidc.ScopeOfflineAccess)
 	}
 
 	effectiveConfig := map[string]string{
@@ -265,28 +279,28 @@ func (p *backendImpl) loginURL(clientState string, ri *requestinfo.RequestInfo) 
 	return p.oauthCfgForRequest(ri).AuthCodeURL(state, options...)
 }
 
-func (p *backendImpl) processIDPResponseForImplicitFlow(ctx context.Context, responseData url.Values) (*tokens.ExternalUserClaim, []tokens.Option, string, error) {
+func (p *backendImpl) processIDPResponseForImplicitFlow(ctx context.Context, responseData url.Values) (*authproviders.AuthResponse, string, error) {
 	_, clientState := idputil.SplitState(responseData.Get("state"))
 
 	rawIDToken := responseData.Get("id_token")
 	if rawIDToken == "" {
-		return nil, nil, clientState, errors.New("required form fields not found")
+		return nil, clientState, errors.New("required form fields not found")
 	}
 
-	userClaim, opts, err := p.verifyIDToken(ctx, rawIDToken)
+	authResp, err := p.verifyIDToken(ctx, rawIDToken)
 	if err != nil {
-		return nil, nil, clientState, errors.Wrap(err, "id token verification failed")
+		return nil, clientState, errors.Wrap(err, "id token verification failed")
 	}
 
-	return userClaim, opts, clientState, nil
+	return authResp, clientState, nil
 }
 
-func (p *backendImpl) processIDPResponseForCodeFlow(ctx context.Context, responseData url.Values) (*tokens.ExternalUserClaim, []tokens.Option, string, error) {
+func (p *backendImpl) processIDPResponseForCodeFlow(ctx context.Context, responseData url.Values) (*authproviders.AuthResponse, string, error) {
 	_, clientState := idputil.SplitState(responseData.Get("state"))
 
 	code := responseData.Get("code")
 	if code == "" {
-		return nil, nil, clientState, errors.New("required form fields not found")
+		return nil, clientState, errors.New("required form fields not found")
 	}
 
 	ri := requestinfo.FromContext(ctx)
@@ -294,30 +308,32 @@ func (p *backendImpl) processIDPResponseForCodeFlow(ctx context.Context, respons
 
 	token, err := oauthCfg.Exchange(ctx, code)
 	if err != nil {
-		return nil, nil, clientState, errors.Wrap(err, "failed to obtain ID token for code")
+		return nil, clientState, errors.Wrap(err, "failed to obtain ID token for code")
 	}
 
 	rawIDToken, _ := token.Extra("id_token").(string) // needs to be present thanks to `openid` scope
 	if rawIDToken == "" {
-		return nil, nil, clientState, errors.New("response from server did not contain ID token in violation of OIDC spec")
+		return nil, clientState, errors.New("response from server did not contain ID token in violation of OIDC spec")
 	}
 
-	userClaim, tokenOpts, err := p.verifyIDToken(ctx, rawIDToken)
+	authResp, err := p.verifyIDToken(ctx, rawIDToken)
 	if err != nil {
-		return nil, nil, clientState, errors.Wrap(err, "ID token verification failed")
+		return nil, clientState, errors.Wrap(err, "ID token verification failed")
 	}
 
-	return userClaim, tokenOpts, clientState, nil
+	authResp.RefreshToken = token.RefreshToken
+
+	return authResp, clientState, nil
 }
 
-func (p *backendImpl) processIDPResponse(ctx context.Context, responseData url.Values) (*tokens.ExternalUserClaim, []tokens.Option, string, error) {
+func (p *backendImpl) processIDPResponse(ctx context.Context, responseData url.Values) (*authproviders.AuthResponse, string, error) {
 	if p.useCodeFlow() {
 		return p.processIDPResponseForCodeFlow(ctx, responseData)
 	}
 	return p.processIDPResponseForImplicitFlow(ctx, responseData)
 }
 
-func (p *backendImpl) ProcessHTTPRequest(w http.ResponseWriter, r *http.Request) (*tokens.ExternalUserClaim, []tokens.Option, string, error) {
+func (p *backendImpl) ProcessHTTPRequest(w http.ResponseWriter, r *http.Request) (*authproviders.AuthResponse, string, error) {
 	// Form data is guaranteed to be parsed thanks to factory.ProcessHTTPRequest
 	return p.processIDPResponse(r.Context(), r.Form)
 }

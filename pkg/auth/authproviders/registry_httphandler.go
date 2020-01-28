@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/stackrox/rox/pkg/auth/tokens"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/grpc/requestinfo"
 	"github.com/stackrox/rox/pkg/httputil"
 )
@@ -133,11 +134,13 @@ func (r *registryImpl) providersHTTPHandler(w http.ResponseWriter, req *http.Req
 		return
 	}
 
-	claim, opts, clientState, err := provider.Backend().ProcessHTTPRequest(w, req)
+	authResp, clientState, err := provider.Backend().ProcessHTTPRequest(w, req)
 	var tokenInfo *tokens.TokenInfo
+	var refreshToken string
 
-	if err == nil && claim != nil {
-		tokenInfo, err = provider.Issuer().Issue(req.Context(), tokens.RoxClaims{ExternalUser: claim}, opts...)
+	if err == nil && authResp != nil {
+		tokenInfo, err = issueTokenForResponse(req.Context(), provider, authResp)
+		refreshToken = authResp.RefreshToken
 	}
 
 	if err != nil {
@@ -156,5 +159,22 @@ func (r *registryImpl) providersHTTPHandler(w http.ResponseWriter, req *http.Req
 	}
 
 	w.Header().Set("Location", r.tokenURL(tokenInfo.Token, typ, clientState).String())
+	if refreshToken != "" && features.RefreshTokens.Enabled() {
+		refreshTokenData := url.Values{
+			"providerType": []string{typ},
+			"providerId":   []string{providerID},
+			"refreshToken": []string{refreshToken},
+		}
+
+		refreshTokenCookie := &http.Cookie{
+			Name:     "RoxRefreshTokenInfo",
+			Value:    refreshTokenData.Encode(),
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteStrictMode,
+		}
+		http.SetCookie(w, refreshTokenCookie)
+	}
+
 	w.WriteHeader(http.StatusSeeOther)
 }

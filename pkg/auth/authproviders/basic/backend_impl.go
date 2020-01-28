@@ -29,12 +29,6 @@ const (
 	loginTimeLimit = 5 * time.Second
 )
 
-var (
-	tokenOptions = []tokens.Option{
-		tokens.WithDefaultTTL(defaultTTL),
-	}
-)
-
 type backendImpl struct {
 	urlPathPrefix string
 	monoClock     monoclock.MonoClock
@@ -46,8 +40,8 @@ func (p *backendImpl) OnEnable(provider authproviders.Provider) {
 func (p *backendImpl) OnDisable(provider authproviders.Provider) {
 }
 
-func (p *backendImpl) ExchangeToken(ctx context.Context, externalRawToken, state string) (*tokens.ExternalUserClaim, []tokens.Option, string, error) {
-	return nil, nil, "", status.Errorf(codes.Unimplemented, "basic auth provider does not implement ExchangeToken")
+func (p *backendImpl) ExchangeToken(ctx context.Context, externalRawToken, state string) (*authproviders.AuthResponse, string, error) {
+	return nil, "", status.Errorf(codes.Unimplemented, "basic auth provider does not implement ExchangeToken")
 }
 
 func (p *backendImpl) LoginURL(clientState string, _ *requestinfo.RequestInfo) string {
@@ -73,17 +67,17 @@ func newBackend(urlPathPrefix string) (*backendImpl, map[string]string, error) {
 	return backendImpl, nil, nil
 }
 
-func (p *backendImpl) ProcessHTTPRequest(w http.ResponseWriter, r *http.Request) (*tokens.ExternalUserClaim, []tokens.Option, string, error) {
+func (p *backendImpl) ProcessHTTPRequest(w http.ResponseWriter, r *http.Request) (*authproviders.AuthResponse, string, error) {
 	restPath := strings.TrimPrefix(r.URL.Path, p.urlPathPrefix)
 	if len(restPath) == len(r.URL.Path) {
-		return nil, nil, "", httputil.NewError(http.StatusNotFound, "Not Found")
+		return nil, "", httputil.NewError(http.StatusNotFound, "Not Found")
 	}
 
 	if restPath != challengeHandlerPath {
-		return nil, nil, "", httputil.NewError(http.StatusNotFound, "Not Found")
+		return nil, "", httputil.NewError(http.StatusNotFound, "Not Found")
 	}
 	if r.Method != http.MethodGet {
-		return nil, nil, "", httputil.NewError(http.StatusBadRequest, "Bad Request")
+		return nil, "", httputil.NewError(http.StatusBadRequest, "Bad Request")
 	}
 
 	// If logging in via basic auth, the identity extractor of the request pipeline should already have validated our
@@ -91,25 +85,29 @@ func (p *backendImpl) ProcessHTTPRequest(w http.ResponseWriter, r *http.Request)
 	identity := authn.IdentityFromContext(r.Context())
 	if identity != nil {
 		if basicAuthIdentity, ok := identity.(basic.Identity); ok {
-			return basicAuthIdentity.AsExternalUser(), tokenOptions, r.URL.Query().Get(clientStateQueryParamName), nil
+			authResp := &authproviders.AuthResponse{
+				Claims:     basicAuthIdentity.AsExternalUser(),
+				Expiration: time.Now().Add(defaultTTL),
+			}
+			return authResp, r.URL.Query().Get(clientStateQueryParamName), nil
 		}
 	}
 
 	// Otherwise, cause the browser to display the challenge dialog.
 	microTS, err := strconv.ParseInt(r.URL.Query().Get("micro_ts"), 10, 64)
 	if err != nil {
-		return nil, nil, "", httputil.NewError(http.StatusInternalServerError, "Unparseable microtimestamp")
+		return nil, "", httputil.NewError(http.StatusInternalServerError, "Unparseable microtimestamp")
 	}
 
 	age := p.monoClock.SinceEpoch() - time.Microsecond*time.Duration(microTS)
 
 	if age > loginTimeLimit {
-		return nil, nil, "", errors.New("invalid username or password")
+		return nil, "", errors.New("invalid username or password")
 	}
 
 	w.Header().Set("WWW-Authenticate", `Basic realm="StackRox" charset="UTF-8"`)
 	w.WriteHeader(http.StatusUnauthorized)
-	return nil, nil, "", nil
+	return nil, "", nil
 }
 
 func (p *backendImpl) Validate(ctx context.Context, claims *tokens.Claims) error {
