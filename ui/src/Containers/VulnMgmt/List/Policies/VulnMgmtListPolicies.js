@@ -96,7 +96,6 @@ export function getPolicyTableColumns(workflowState) {
             Header: `Policy Status`,
             headerClassName: `w-1/10 text-center ${defaultHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
-            // eslint-disable-next-line
             Cell: ({ original, pdf }) => (
                 <div className="flex justify-center w-full">
                     <StatusChip status={original.policyStatus} asString={pdf} />
@@ -125,7 +124,7 @@ export function getPolicyTableColumns(workflowState) {
                 const { latestViolation } = original;
                 return <DateTimeField date={latestViolation} asString={pdf} />;
             },
-            accessor: 'latestViolation', // ,
+            accessor: 'latestViolation',
             sortField: policySortFields.LATEST_VIOLATION
         },
         {
@@ -142,7 +141,6 @@ export function getPolicyTableColumns(workflowState) {
             entityType: entityTypes.DEPLOYMENT,
             headerClassName: `w-1/8 ${defaultHeaderClassName}`,
             className: `w-1/8 ${defaultColumnClassName}`,
-            // eslint-disable-next-line
             Cell: ({ original, pdf }) => (
                 <TableCountLink
                     entityType={entityTypes.DEPLOYMENT}
@@ -153,13 +151,13 @@ export function getPolicyTableColumns(workflowState) {
             ),
             accessor: 'deploymentCount',
             id: 'deploymentCount',
-            sortField: policySortFields.DEPLOYMENTS
+            sortField: policySortFields.DEPLOYMENTS,
+            sortable: false // not performant as of 2020-01-28
         },
         {
             Header: `Lifecyle`,
             headerClassName: `w-1/10 ${defaultHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
-            // eslint-disable-next-line
             Cell: ({ original }) => {
                 const { lifecycleStages } = original;
                 if (!lifecycleStages || !lifecycleStages.length) return 'No lifecycle stages';
@@ -177,7 +175,6 @@ export function getPolicyTableColumns(workflowState) {
             Header: `Enforcement`,
             headerClassName: `w-1/10 ${defaultHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
-            // eslint-disable-next-line
             Cell: ({ original }) => {
                 const { enforcementActions } = original;
                 return enforcementActions && enforcementActions.length ? 'Yes' : 'No';
