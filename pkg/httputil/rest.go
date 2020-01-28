@@ -1,0 +1,44 @@
+package httputil
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+
+	"github.com/gogo/protobuf/jsonpb"
+	"github.com/golang/protobuf/proto"
+	"github.com/stackrox/rox/pkg/logging"
+)
+
+var (
+	log = logging.LoggerForModule()
+)
+
+// RESTHandler wraps a function implementing a REST endpoint as an http.Handler. The function receives the incoming HTTP
+// request, and returns a response object or an error. In case of a non-nil error, this error is written in JSON/gRPC
+// style via `WriteError` (i.e., you can return a plain Golang error (equivalent to status code 500), a gRPC-style
+// status, or an `HTTPError`). Otherwise, the returned object is written as JSON (using `jsonpb` if it is a
+// `proto.Message`, and `encoding/json` otherwise).
+// Any errors that occur writing to the response body are simply logged.
+func RESTHandler(endpointFunc func(*http.Request) (interface{}, error)) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		resp, err := endpointFunc(req)
+		if err != nil {
+			WriteError(w, err)
+			return
+		}
+		if resp == nil {
+			_, err = fmt.Fprint(w, "{}")
+		} else if protoMsg, _ := resp.(proto.Message); protoMsg != nil {
+			err = (&jsonpb.Marshaler{}).Marshal(w, protoMsg)
+		} else {
+			err = json.NewEncoder(w).Encode(resp)
+		}
+
+		if err != nil {
+			log.Errorf("Failed to send response from REST handler: %v", err)
+		}
+	}
+}

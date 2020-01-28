@@ -35,6 +35,13 @@ const (
 	modeConfigKey         = "mode"
 )
 
+type nonceVerificationSetting int
+
+const (
+	verifyNonce nonceVerificationSetting = iota
+	dontVerifyNonce
+)
+
 type backendImpl struct {
 	id                 string
 	idTokenVerifier    *oidc.IDTokenVerifier
@@ -62,6 +69,22 @@ func (p *backendImpl) ExchangeToken(ctx context.Context, token, state string) (*
 	return p.processIDPResponse(ctx, responseValues)
 }
 
+func (p *backendImpl) RefreshAccessToken(ctx context.Context, refreshToken string) (*authproviders.AuthResponse, error) {
+	token, err := p.baseOauthConfig.TokenSource(ctx, &oauth2.Token{
+		RefreshToken: refreshToken,
+	}).Token()
+	if err != nil {
+		return nil, errors.Wrap(err, "refreshing access token")
+	}
+
+	rawIDToken, _ := token.Extra("id_token").(string)
+	if rawIDToken == "" {
+		return nil, errors.New("did not receive an identity token in exchange for the refresh token")
+	}
+
+	return p.verifyIDToken(ctx, rawIDToken, dontVerifyNonce)
+}
+
 func (p *backendImpl) LoginURL(clientState string, ri *requestinfo.RequestInfo) string {
 	return p.loginURL(clientState, ri)
 }
@@ -70,13 +93,13 @@ func (p *backendImpl) RefreshURL() string {
 	return ""
 }
 
-func (p *backendImpl) verifyIDToken(ctx context.Context, rawIDToken string) (*authproviders.AuthResponse, error) {
+func (p *backendImpl) verifyIDToken(ctx context.Context, rawIDToken string, nonceVerification nonceVerificationSetting) (*authproviders.AuthResponse, error) {
 	idToken, err := p.idTokenVerifier.Verify(ctx, rawIDToken)
 	if err != nil {
 		return nil, err
 	}
 
-	if !p.noncePool.ConsumeNonce(idToken.Nonce) {
+	if nonceVerification != dontVerifyNonce && !p.noncePool.ConsumeNonce(idToken.Nonce) {
 		return nil, errors.New("invalid token")
 	}
 
@@ -287,7 +310,7 @@ func (p *backendImpl) processIDPResponseForImplicitFlow(ctx context.Context, res
 		return nil, clientState, errors.New("required form fields not found")
 	}
 
-	authResp, err := p.verifyIDToken(ctx, rawIDToken)
+	authResp, err := p.verifyIDToken(ctx, rawIDToken, verifyNonce)
 	if err != nil {
 		return nil, clientState, errors.Wrap(err, "id token verification failed")
 	}
@@ -316,7 +339,7 @@ func (p *backendImpl) processIDPResponseForCodeFlow(ctx context.Context, respons
 		return nil, clientState, errors.New("response from server did not contain ID token in violation of OIDC spec")
 	}
 
-	authResp, err := p.verifyIDToken(ctx, rawIDToken)
+	authResp, err := p.verifyIDToken(ctx, rawIDToken, verifyNonce)
 	if err != nil {
 		return nil, clientState, errors.Wrap(err, "ID token verification failed")
 	}

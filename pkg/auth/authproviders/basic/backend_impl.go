@@ -41,7 +41,7 @@ func (p *backendImpl) OnDisable(provider authproviders.Provider) {
 }
 
 func (p *backendImpl) ExchangeToken(ctx context.Context, externalRawToken, state string) (*authproviders.AuthResponse, string, error) {
-	return nil, "", status.Errorf(codes.Unimplemented, "basic auth provider does not implement ExchangeToken")
+	return nil, "", status.Error(codes.Unimplemented, "basic auth provider does not implement ExchangeToken")
 }
 
 func (p *backendImpl) LoginURL(clientState string, _ *requestinfo.RequestInfo) string {

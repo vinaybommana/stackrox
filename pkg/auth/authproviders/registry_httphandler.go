@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/stackrox/rox/pkg/auth/tokens"
 	"github.com/stackrox/rox/pkg/features"
@@ -14,8 +15,9 @@ import (
 )
 
 const (
-	providersPath = "providers"
-	loginPath     = "login"
+	providersPath    = "providers"
+	loginPath        = "login"
+	tokenRefreshPath = "tokenrefresh"
 )
 
 func (r *registryImpl) URLPathPrefix() string {
@@ -52,9 +54,16 @@ func (r *registryImpl) loginURLPrefix() string {
 	return path.Join(r.urlPathPrefix, loginPath) + "/"
 }
 
+func (r *registryImpl) tokenRefreshPath() string {
+	return path.Join(r.urlPathPrefix, tokenRefreshPath)
+}
+
 func (r *registryImpl) initHTTPMux() {
 	r.HandleFunc(r.providersURLPrefix(), r.providersHTTPHandler)
 	r.HandleFunc(r.loginURLPrefix(), r.loginHTTPHandler)
+	if features.RefreshTokens.Enabled() {
+		r.HandleFunc(r.tokenRefreshPath(), httputil.RESTHandler(r.tokenRefreshEndpoint))
+	}
 }
 
 func (r *registryImpl) loginHTTPHandler(w http.ResponseWriter, req *http.Request) {
@@ -83,6 +92,57 @@ func (r *registryImpl) loginHTTPHandler(w http.ResponseWriter, req *http.Request
 
 	w.Header().Set("Location", loginURL)
 	w.WriteHeader(http.StatusSeeOther)
+}
+
+type tokenRefreshResponse struct {
+	Token  string    `json:"token,omitempty"`
+	Expiry time.Time `json:"expiry,omitempty"`
+}
+
+func (r *registryImpl) tokenRefreshEndpoint(req *http.Request) (interface{}, error) {
+	refreshTokenCookie, err := req.Cookie(refreshTokenCookieName)
+	if err != nil {
+		return nil, httputil.Errorf(http.StatusBadRequest, "could not obtain refresh token cookie: %v", err)
+	}
+
+	var cookieData refreshTokenCookieData
+	if err := cookieData.Decode(refreshTokenCookie.Value); err != nil {
+		return nil, httputil.Errorf(http.StatusBadRequest, "unparseable data in refresh token cookie: %v", err)
+	}
+
+	provider := r.getAuthProvider(cookieData.ProviderID)
+	if provider == nil {
+		return nil, httputil.Errorf(http.StatusBadRequest, "refresh token cookie references invalid auth provider %q", cookieData.ProviderID)
+	}
+
+	if provider.Type() != cookieData.ProviderType {
+		return nil, httputil.Errorf(http.StatusBadRequest, "refresh token cookie references auth provider %q of wrong type %q (expected: %q)", cookieData.ProviderID, provider.Type(), cookieData.ProviderType)
+	}
+
+	providerBackend := provider.Backend()
+	if !provider.Enabled() || providerBackend == nil {
+		return nil, httputil.Errorf(http.StatusInternalServerError, "auth provider %q is not currently active", provider.ID())
+	}
+
+	refreshTokenEnabledBackend, _ := providerBackend.(RefreshTokenEnabledBackend)
+	if refreshTokenEnabledBackend == nil {
+		return nil, httputil.Errorf(http.StatusBadRequest, "auth provider backend of type %q does not support refresh tokens", provider.Type())
+	}
+
+	authResp, err := refreshTokenEnabledBackend.RefreshAccessToken(req.Context(), cookieData.RefreshToken)
+	if err != nil {
+		return nil, httputil.Errorf(http.StatusInternalServerError, "failed to obtain new access token for refresh token: %v", err)
+	}
+
+	token, err := issueTokenForResponse(req.Context(), provider, authResp)
+	if err != nil {
+		return nil, httputil.Errorf(http.StatusInternalServerError, "failed to issue Rox token: %v", err)
+	}
+
+	return &tokenRefreshResponse{
+		Token:  token.Token,
+		Expiry: token.Expiry(),
+	}, nil
 }
 
 func (r *registryImpl) loginURL(providerID string) string {
@@ -160,20 +220,24 @@ func (r *registryImpl) providersHTTPHandler(w http.ResponseWriter, req *http.Req
 
 	w.Header().Set("Location", r.tokenURL(tokenInfo.Token, typ, clientState).String())
 	if refreshToken != "" && features.RefreshTokens.Enabled() {
-		refreshTokenData := url.Values{
-			"providerType": []string{typ},
-			"providerId":   []string{providerID},
-			"refreshToken": []string{refreshToken},
+		cookieData := refreshTokenCookieData{
+			ProviderType: typ,
+			ProviderID:   providerID,
+			RefreshToken: refreshToken,
 		}
-
-		refreshTokenCookie := &http.Cookie{
-			Name:     "RoxRefreshTokenInfo",
-			Value:    refreshTokenData.Encode(),
-			HttpOnly: true,
-			Secure:   true,
-			SameSite: http.SameSiteStrictMode,
+		if encodedData, err := cookieData.Encode(); err != nil {
+			log.Errorf("failed to encode refresh token cookie data: %v", err)
+		} else {
+			refreshTokenCookie := &http.Cookie{
+				Name:     refreshTokenCookieName,
+				Value:    encodedData,
+				Path:     r.tokenRefreshPath(),
+				HttpOnly: true,
+				Secure:   true,
+				SameSite: http.SameSiteStrictMode,
+			}
+			http.SetCookie(w, refreshTokenCookie)
 		}
-		http.SetCookie(w, refreshTokenCookie)
 	}
 
 	w.WriteHeader(http.StatusSeeOther)

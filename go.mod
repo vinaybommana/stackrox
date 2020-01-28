@@ -60,6 +60,7 @@ require (
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/monologue v0.0.0-20200117164337-ad3ddc05419e // indirect
 	github.com/googleapis/gnostic v0.4.0
+	github.com/gorilla/schema v1.1.0
 	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/gostaticanalysis/analysisutil v0.0.3 // indirect
 	github.com/graph-gophers/graphql-go v0.0.0-20191115155744-f33e81362277

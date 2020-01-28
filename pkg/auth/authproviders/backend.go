@@ -38,6 +38,15 @@ type Backend interface {
 	// ExchangeToken is called to exchange an external token, referring to the auth provider, against a Rox-issued
 	// token.
 	ExchangeToken(ctx context.Context, externalToken, state string) (*AuthResponse, string, error)
+
 	// Validate allows an auth provider backend to mark a token as invalid and require reauthentication
 	Validate(ctx context.Context, claims *tokens.Claims) error
+}
+
+// RefreshTokenEnabledBackend is an auth provider backend that supports refresh tokens.
+type RefreshTokenEnabledBackend interface {
+	Backend
+
+	// RefreshAccessToken issues a new access token, using the given refresh token.
+	RefreshAccessToken(ctx context.Context, refreshToken string) (*AuthResponse, error)
 }
