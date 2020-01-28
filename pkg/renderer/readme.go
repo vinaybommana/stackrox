@@ -33,11 +33,12 @@ the login page, and log in with username "admin" and the password found in the
   {{if not .K8sConfig.Monitoring.Type.None}}
   - Deploy Monitoring
     - Run monitoring/scripts/setup.sh
-    - Run helm install --name monitoring monitoring
+    - Run helm install --name monitoring ./monitoring
   {{- end}}
   - Deploy Central
     - Run central/scripts/setup.sh
-    - Run helm install --name central central
+    - If you are using Helm v2, run helm install --name central ./central
+    - If you are using Helm v3, run helm install central ./central
   - Deploy Scanner
     {{ $scannerName := "" -}}
     {{ if .K8sConfig.ScannerV2Config.Enable -}}
@@ -46,7 +47,7 @@ the login page, and log in with username "admin" and the password found in the
     {{ $scannerName = "scanner" }}
     {{ end -}}
     - Run {{ $scannerName }}/scripts/setup.sh
-    - If you want to run the StackRox scanner, run helm install --name {{ $scannerName }} {{ $scannerName }}
+    - If you want to run the StackRox Scanner, run helm install --name {{ $scannerName }} ./{{ $scannerName }}
 `
 
 	kubectlInstructionTemplate = `{{if not .K8sConfig.Monitoring.Type.None}}
@@ -67,7 +68,7 @@ the login page, and log in with username "admin" and the password found in the
   {{ $scannerName = "scanner" }}
   {{ end -}}
   - Deploy Scanner {{ if .K8sConfig.ScannerV2Config.Enable -}}V2{{ end }}
-     If you want to run the StackRox scanner:
+     If you want to run the StackRox Scanner:
      - Run {{$scannerName}}/scripts/setup.sh
      - Run {{.K8sConfig.Command}} create -R -f {{$scannerName}}
 `

@@ -75,7 +75,7 @@ func TestReadme(t *testing.T) {
 			deploymentFormat: v1.DeploymentFormat_HELM,
 			mode:             renderAll,
 
-			mustContain:                           []string{"helm install --name central central", "helm install --name monitoring monitoring", "helm install --name scanner scanner", "scanner/scripts/setup.sh"},
+			mustContain:                           []string{"helm install --name central ./central", "helm install --name monitoring ./monitoring", "helm install --name scanner ./scanner", "scanner/scripts/setup.sh"},
 			mustNotContain:                        []string{"kubectl create -R -f central", "kubectl create -R -f monitoring", "kubectl create -R -f scanner"},
 			mustContainInstructionSuffixAndPrefix: true,
 		},
@@ -104,7 +104,7 @@ func TestReadme(t *testing.T) {
 			mode:             renderAll,
 			enableScannerV2:  true,
 
-			mustContain:                           []string{"helm install --name scannerv2 scannerv2", "scannerv2/scripts/setup.sh"},
+			mustContain:                           []string{"helm install --name scannerv2 ./scannerv2", "scannerv2/scripts/setup.sh"},
 			mustNotContain:                        []string{"kubectl create -R -f scanner", "scanner/scripts/setup.sh"},
 			mustContainInstructionSuffixAndPrefix: true,
 		},
