@@ -22,7 +22,7 @@ const VulmMgmtEntityPolicy = ({
     setRefreshTrigger
 }) => {
     const overviewQuery = gql`
-        query getPolicy($id: ID!, $policyQuery: String, $query: String) {
+        query getPolicy($id: ID!, $policyQuery: String) {
             result: policy(id: $id) {
                 id
                 name
@@ -160,7 +160,7 @@ const VulmMgmtEntityPolicy = ({
                     name
                 }
                 deploymentCount
-                deployments(query: $query) {
+                deployments(query: $policyQuery) {
                     ...deploymentFields
                 }
             }
