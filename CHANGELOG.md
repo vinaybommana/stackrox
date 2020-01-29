@@ -2,6 +2,9 @@
 All notable changes to this project that require documentation updates will be documented in this file.
 
 ## [NEXT RELEASE]
+### Added
+- `roxctl central cert` can be used to download Central's TLS certificate, which is then passed to `roxctl --ca`.
+
 ### Changed
 - UseStartTLS field in the Email notifier configuration has been deprecated in lieu of an enum which supports several
 different authentication methods
