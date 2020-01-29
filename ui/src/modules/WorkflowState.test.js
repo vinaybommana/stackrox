@@ -544,4 +544,59 @@ describe('WorkflowState', () => {
             expect(workflowState.getCurrentEntityType()).toEqual(null);
         });
     });
+
+    describe('isBaseList', () => {
+        it('should return true when the top-level in the state stack is the entity list specified, with no child selected', () => {
+            const workflowState = new WorkflowState(useCase, [
+                new WorkflowEntity(entityTypes.COMPONENT)
+            ]);
+
+            const actual = workflowState.isBaseList(entityTypes.COMPONENT);
+
+            expect(actual).toEqual(true);
+        });
+
+        it('should return false when the top-level in the state stack is not the entity list specified', () => {
+            const workflowState = new WorkflowState(useCase, [new WorkflowEntity(entityTypes.CVE)]);
+
+            const actual = workflowState.isBaseList(entityTypes.COMPONENT);
+
+            expect(actual).toEqual(false);
+        });
+    });
+
+    describe('isChildOfEntity', () => {
+        it('should return true when the parent of leaf state is the given entity', () => {
+            const workflowState = new WorkflowState(useCase, [
+                new WorkflowEntity(entityTypes.CVE, 'abcd-ef09'),
+                new WorkflowEntity(entityTypes.COMPONENT)
+            ]);
+
+            const actual = workflowState.isChildOfEntity(entityTypes.CVE);
+
+            expect(actual).toEqual(true);
+        });
+
+        it('should return true when the parent of leaf state is given entity, alternate test', () => {
+            const workflowState = new WorkflowState(useCase, [
+                new WorkflowEntity(entityTypes.DEPLOYMENT, 'abcd-ef09'),
+                new WorkflowEntity(entityTypes.COMPONENT)
+            ]);
+
+            const actual = workflowState.isChildOfEntity(entityTypes.DEPLOYMENT);
+
+            expect(actual).toEqual(true);
+        });
+
+        it('should return false when the parent of leaf state is NOT the given entity', () => {
+            const workflowState = new WorkflowState(useCase, [
+                new WorkflowEntity(entityTypes.CLUSTER, '4321-dcba'),
+                new WorkflowEntity(entityTypes.DEPLOYMENT)
+            ]);
+
+            const actual = workflowState.isChildOfEntity(entityTypes.CVE);
+
+            expect(actual).toEqual(false);
+        });
+    });
 });

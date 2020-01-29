@@ -15,6 +15,8 @@ import { workflowListPropTypes, workflowListDefaultProps } from 'constants/entit
 import removeEntityContextColumns from 'utils/tableUtils';
 import { componentSortFields } from 'constants/sortFields';
 
+import { getFilteredComponentColumns } from './ListComponents.utils';
+
 export const defaultComponentSort = [
     // @TODO, uncomment the primary sort field for Components, after its available for backend pagination/sorting
     // {
@@ -147,7 +149,9 @@ export function getComponentTableColumns(workflowState) {
         }
     ];
 
-    return removeEntityContextColumns(tableColumns, workflowState);
+    const componentColumnsBasedOnContext = getFilteredComponentColumns(tableColumns, workflowState);
+
+    return removeEntityContextColumns(componentColumnsBasedOnContext, workflowState);
 }
 
 const VulnMgmtComponents = ({ selectedRowId, search, sort, page, data, totalResults }) => {

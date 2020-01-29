@@ -349,4 +349,34 @@ export class WorkflowState {
                 return { ...entityContext, [item.entityType]: item.entityId };
             }, {});
     }
+
+    // the following methods are helpers for very specific business logic
+    /**
+     * tests if the root of the state stack is the list of the entity type specified,
+     *   with no child selected
+     *
+     * @param   {string}  entityType  the entityType constant for the entity list to check
+     *
+     * @return  {boolean}              true if the base of state stack is that entity list, false otherwise
+     */
+    isBaseList(entityType) {
+        return this.stateStack[0] && this.stateStack[0].t === entityType && !this.stateStack[0].i;
+    }
+
+    /**
+     * tests if the next the last position on the state stack is a single of a given entity type
+     *   (the part of the leaf entity)
+     *
+     * @param   {string}  entityType  the entityType constant to check
+     *
+     * @return  {boolean}              true if the parent is a single of the given entity type, false otherwise
+     */
+    isChildOfEntity(entityType) {
+        return (
+            this.stateStack &&
+            this.stateStack.length > 1 &&
+            this.stateStack[this.stateStack.length - 2].t === entityType &&
+            !!this.stateStack[this.stateStack.length - 2].i
+        );
+    }
 }
