@@ -9,6 +9,8 @@ different authentication methods
 ## [38.0]
 ### Added
 - Added a REST endpoint `/v1/group` that can be used to retrieve a single group by exact property match (cf. ROX-3928).
+- Scanner version updated to 2.0.4
+- Collector version updated to 3.0.2
 
 ## [37.0]
 ### Changed
