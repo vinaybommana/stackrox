@@ -171,7 +171,8 @@ var (
 	// Following are helper fields used for sorting
 	// For example, "SORTPolicyName" field should be used to sort policies when the query sort field is "PolicyName"
 	SORTPolicyName     = newFieldLabel("SORT_Policy")
-	SORTLifecycleStage = newFieldLabel("SORT_PolicyLifecycleStage")
+	SORTLifecycleStage = newFieldLabel("SORT_Lifecycle Stage")
+	SORTEnforcement    = newFieldLabel("SORT_Enforcement")
 )
 
 func newFieldLabel(s string) FieldLabel {

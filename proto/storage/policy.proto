@@ -32,7 +32,8 @@ message Policy {
 
     // Following are helper fields used for sorting policies by name which is a multi-word field
     string SORT_name                               = 16 [(gogoproto.moretags) = "search:\"SORT_Policy,hidden,analyzer=keyword\""];
-    string SORT_lifecycleStage                     = 17 [(gogoproto.moretags) = "search:\"SORT_PolicyLifecycleStage,hidden\""];
+    string SORT_lifecycleStage                     = 17 [(gogoproto.moretags) = "search:\"SORT_Lifecycle Stage,hidden\""];
+    bool   SORT_enforcement                        = 18 [(gogoproto.moretags) = "search:\"SORT_Enforcement,hidden\""];
 }
 
 message ListPolicy {
