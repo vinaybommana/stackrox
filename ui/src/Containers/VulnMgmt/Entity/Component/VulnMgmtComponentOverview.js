@@ -91,7 +91,7 @@ function VulnMgmtComponentOverview({ data, entityContext }) {
                         </div>
                     </div>
                 </CollapsibleSection>
-                <CollapsibleSection title="Component Findings" headerComponents={cveActions}>
+                <CollapsibleSection title="Component Findings">
                     <div className="flex pdf-page pdf-stretch shadow rounded relative rounded bg-base-100 mb-4 ml-4 mr-4">
                         <TableWidget
                             header={`${fixableCVEs.length} fixable ${pluralize(

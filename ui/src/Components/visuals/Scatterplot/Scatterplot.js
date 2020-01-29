@@ -56,14 +56,6 @@ const Scatterplot = ({
             >
                 <VerticalGridLines />
                 <HorizontalGridLines />
-                <MarkSeries
-                    className="cursor-pointer"
-                    colorType="literal"
-                    data={data}
-                    onValueMouseOver={onValueMouseOver}
-                    onValueMouseOut={onValueMouseOut}
-                    onValueClick={onValueClickHandler}
-                />
                 <XAxis tickSize={0} />
                 <YAxis tickSize={0} />
                 <ChartLabel
@@ -80,7 +72,15 @@ const Scatterplot = ({
                     includeMargin={false}
                     xPercent={-0.01}
                     yPercent={0.5}
-                    style={{ transform: 'translate(-18, 0), rotate(-90)', textAnchor: 'middle' }}
+                    style={{ transform: 'translate(-12, 0), rotate(-90)', textAnchor: 'middle' }}
+                />
+                <MarkSeries
+                    className="cursor-pointer"
+                    colorType="literal"
+                    data={data}
+                    onValueMouseOver={onValueMouseOver}
+                    onValueMouseOut={onValueMouseOut}
+                    onValueClick={onValueClickHandler}
                 />
                 {legendData && (
                     <DiscreteColorLegend
