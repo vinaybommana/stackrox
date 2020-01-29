@@ -273,15 +273,10 @@ const VulnMgmtCves = ({
     const toggleCveSuppression = cveId => e => {
         e.stopPropagation();
 
-        const cveIdsToSuppress = cveId ? [cveId] : selectedCveIds;
+        const cveIdsToToggle = cveId ? [cveId] : selectedCveIds;
 
-        const promises = cveIdsToSuppress.map(id => {
-            // if not viewing suppress, the suppressed state will become true
-            // otherwise, it will become false
-            const suppressionState = !viewingSuppressed;
-            return updateCveSuppressedState(id, suppressionState);
-        });
-        Promise.all(promises)
+        const suppressionState = !viewingSuppressed;
+        updateCveSuppressedState(cveIdsToToggle, suppressionState)
             .then(() => {
                 setSelectedCveIds([]);
 
@@ -289,9 +284,9 @@ const VulnMgmtCves = ({
                 setRefreshTrigger(Math.random());
 
                 // can't use pluralize() because of this bug: https://github.com/blakeembrey/pluralize/issues/127
-                const pluralizedCVEs = promises.length === 1 ? 'CVE' : 'CVEs';
+                const pluralizedCVEs = cveIdsToToggle.length === 1 ? 'CVE' : 'CVEs';
 
-                addToast(`Successfully suppressed ${promises.length} ${pluralizedCVEs}`);
+                addToast(`Successfully suppressed ${cveIdsToToggle.length} ${pluralizedCVEs}`);
                 setTimeout(removeToast, 2000);
             })
             .catch(evt => {

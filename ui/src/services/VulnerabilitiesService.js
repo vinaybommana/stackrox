@@ -12,8 +12,8 @@ const csvUrl = '/api/vm/export/csv';
  * @param {!boolean} true if CVE should be suppressed, false for unsuppress
  * @returns {Promise<AxiosResponse, Error>} fulfilled in case of success or rejected with an error
  */
-export function updateCveSuppressedState(cve, suppressed = false) {
-    return axios.patch(`${baseUrl}/${cve}`, { suppressed });
+export function updateCveSuppressedState(cveIdsToToggle, suppressed = false) {
+    return axios.patch(`${baseUrl}/suppress`, { ids: cveIdsToToggle, suppressed });
 }
 
 export function getCvesInCsvFormat(fileName, searchParamsList) {
