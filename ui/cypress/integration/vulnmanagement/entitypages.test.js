@@ -20,7 +20,7 @@ describe('Entities single views', () => {
         cy.get(selectors.tableRows)
             .eq(0)
             .get(selectors.fixableCvesLink)
-            .click();
+            .click({ force: true });
 
         cy.get(selectors.backButton).click();
         cy.wait(1000);

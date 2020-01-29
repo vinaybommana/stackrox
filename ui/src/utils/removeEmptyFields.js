@@ -17,13 +17,8 @@ export default function removeEmptyFields(obj) {
     // The following fields are not used if they have falsy values,
     //   but those still returned from the API,
     //   so we have to filter them out separately
-    const exceptionFields = [
-        'imageAgeDays',
-        'scanAgeDays',
-        'noScanExists',
-        'readOnlyRootFs',
-        'whitelistEnabled'
-    ];
+    //   Note: `readOnlyRootFs` is not in this list, because its only allowed value is `false`
+    const exceptionFields = ['imageAgeDays', 'scanAgeDays', 'noScanExists', 'whitelistEnabled'];
     exceptionFields.forEach(fieldName => {
         if (!newObj[fieldName]) {
             delete newObj[fieldName];
