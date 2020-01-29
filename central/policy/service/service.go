@@ -17,7 +17,7 @@ import (
 	"github.com/stackrox/rox/pkg/searchbasedpolicies/matcher"
 )
 
-// Service provides the interface to the microservice that serves alert data.
+// Service provides the interface to the microservice that serves policy data.
 type Service interface {
 	grpc.APIService
 

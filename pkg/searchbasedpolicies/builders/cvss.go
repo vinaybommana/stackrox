@@ -41,14 +41,14 @@ func (c CVSSQueryBuilder) Query(fields *storage.PolicyFields, optionsMap map[sea
 		return
 	}
 
-	linkedFields := []search.FieldLabel{search.CVSS, search.CVE}
-	linkedValues := []string{search.NumericQueryString(cvss.GetOp(), cvss.GetValue()), search.WildcardString}
+	linkedFields := []search.FieldLabel{search.CVSS, search.CVE, search.CVESuppressed}
+	linkedValues := []interface{}{search.NumericQueryString(cvss.GetOp(), cvss.GetValue()), search.WildcardString, false}
 	if fixedBy != "" {
 		linkedFields = append(linkedFields, search.FixedBy)
 		linkedValues = append(linkedValues, search.RegexQueryString(fixedBy))
 	}
 
-	q = search.NewQueryBuilder().AddLinkedFieldsHighlighted(linkedFields, linkedValues).ProtoQuery()
+	q = search.NewQueryBuilder().AddGenericTypeLinkedFieldsHighligted(linkedFields, linkedValues).ProtoQuery()
 	v = func(_ context.Context, result search.Result) searchbasedpolicies.Violations {
 		cvssMatches := result.Matches[cvssSearchField.GetFieldPath()]
 		cveMatches := result.Matches[cveSearchField.GetFieldPath()]

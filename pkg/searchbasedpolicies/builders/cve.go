@@ -35,10 +35,11 @@ func (c CVEQueryBuilder) Query(fields *storage.PolicyFields, optionsMap map[sear
 		return
 	}
 
-	q = search.NewQueryBuilder().AddLinkedFieldsHighlighted(
-		[]search.FieldLabel{search.CVE},
-		[]string{search.RegexQueryString(cve)}).
-		ProtoQuery()
+	// Exclude suppressed cves for violation computation
+	fieldLabels := []search.FieldLabel{search.CVE, search.CVESuppressed}
+	queryStrings := []interface{}{search.RegexQueryString(cve), false}
+
+	q = search.NewQueryBuilder().AddGenericTypeLinkedFieldsHighligted(fieldLabels, queryStrings).ProtoQuery()
 	v = func(_ context.Context, result search.Result) searchbasedpolicies.Violations {
 		cveMatches := result.Matches[cveSearchField.GetFieldPath()]
 		if len(cveMatches) == 0 {

@@ -54,6 +54,7 @@ func init() {
 			"lastModified: Time",
 			"impactScore: Float!",
 			"vulnerabilityType: String!",
+			"suppressed: Boolean!",
 		}),
 		schema.AddQuery("vulnerability(id: ID): EmbeddedVulnerability"),
 		schema.AddQuery("vulnerabilities(query: String, pagination: Pagination): [EmbeddedVulnerability!]!"),
@@ -484,6 +485,11 @@ func (evr *EmbeddedVulnerabilityResolver) FixedByVersion(ctx context.Context) st
 // IsFixable returns whether or not a component with a fix exists.
 func (evr *EmbeddedVulnerabilityResolver) IsFixable(ctx context.Context) bool {
 	return evr.data.GetFixedBy() != ""
+}
+
+// Suppressed returns whether or not a CVE is suppressed.
+func (evr *EmbeddedVulnerabilityResolver) Suppressed(ctx context.Context) bool {
+	return evr.data.GetSuppressed()
 }
 
 // LastScanned is the last time the vulnerability was scanned in an image.

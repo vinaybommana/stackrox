@@ -75,6 +75,7 @@ func generateEmbeddedCVE(cp CVEParts) *storage.EmbeddedVulnerability {
 	if cp.cve == nil || cp.edge == nil {
 		return nil
 	}
+
 	ret := converter.ProtoCVEToEmbeddedCVE(cp.cve)
 	if cp.edge.IsFixable {
 		ret.SetFixedBy = &storage.EmbeddedVulnerability_FixedBy{

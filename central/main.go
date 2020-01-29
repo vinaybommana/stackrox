@@ -27,6 +27,7 @@ import (
 	configService "github.com/stackrox/rox/central/config/service"
 	"github.com/stackrox/rox/central/cve/fetcher"
 	"github.com/stackrox/rox/central/cve/handler"
+	cveService "github.com/stackrox/rox/central/cve/service"
 	debugService "github.com/stackrox/rox/central/debug/service"
 	deploymentService "github.com/stackrox/rox/central/deployment/service"
 	detectionService "github.com/stackrox/rox/central/detection/service"
@@ -312,6 +313,10 @@ func (f defaultFactory) ServicesToRegister(registry authproviders.Registry) []pk
 		sensorService.New(connection.ManagerSingleton(), all.Singleton(), clusterDataStore.Singleton()),
 		licenseService.New(false, licenseSingletons.ManagerSingleton()),
 		backupRestoreService.Singleton(),
+	}
+
+	if features.Dackbox.Enabled() {
+		servicesToRegister = append(servicesToRegister, cveService.Singleton())
 	}
 
 	if features.Telemetry.Enabled() {

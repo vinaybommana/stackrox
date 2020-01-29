@@ -107,6 +107,7 @@ func generateCVE(from *storage.EmbeddedVulnerability) *storage.CVE {
 		LastModified: from.GetLastModified(),
 		CvssV2:       from.GetCvssV2(),
 		CvssV3:       from.GetCvssV3(),
+		Suppressed:   from.GetSuppressed(),
 	}
 	if ret.CvssV3 != nil {
 		ret.ScoreVersion = storage.CVE_V3

@@ -186,6 +186,7 @@ func ProtoCVEToEmbeddedCVE(protoCVE *storage.CVE) *storage.EmbeddedVulnerability
 		CvssV3:       protoCVE.GetCvssV3(),
 		PublishedOn:  protoCVE.GetPublishedOn(),
 		LastModified: protoCVE.GetLastModified(),
+		Suppressed:   protoCVE.GetSuppressed(),
 	}
 	if protoCVE.CvssV3 != nil {
 		embeddedCVE.ScoreVersion = storage.EmbeddedVulnerability_V3
