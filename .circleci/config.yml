@@ -11,6 +11,15 @@ runOnAllTags: &runOnAllTags
     tags:
       only: /.*/
 
+# This runs a command only on rc builds,
+# which is a tagged build with a tag matching the below regex.
+runOnlyOnReleaseCandidateBuilds: &runOnlyOnReleaseCandidateBuilds
+  filters:
+    tags:
+      only: /^\d+\.\d+\.\d+\.\d+-rc\.\d$/
+    branches:
+      ignore: /.*/
+
 # This runs a command only on release builds,
 # which is a tagged build with a tag matching the below regex.
 runOnlyOnReleaseBuilds: &runOnlyOnReleaseBuilds
@@ -2715,6 +2724,23 @@ jobs:
               gsutil cp scripts/offline-bundle/image-collector-bundle-rhel.tgz gs://sr-roxc/${release}/image-collector-bundle-rhel.tgz
             done
 
+  scan-images-in-quay:
+      <<: *defaults
+      resource_class: small
+      steps:
+        - checkout
+        - setup_remote_docker
+        - attach_workspace:
+            at: /go/src/github.com/stackrox/rox
+
+        - run:
+            name: Push images into quay.io
+            command: |
+              docker login -u "$DOCKER_IO_PUSH_USERNAME" -p "$DOCKER_IO_PUSH_PASSWORD" docker.io
+              docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io
+              ./release/scripts/vuln_scan.sh
+
+
   retrigger-master-workflow:
     <<: *defaults
     resource_class: small
@@ -2986,6 +3012,13 @@ workflows:
             - build
             - build-deployer
             - unit-tests
+
+      - scan-images-in-quay:
+          <<: *runOnlyOnReleaseCandidateBuilds
+          context: docker-io-and-stackrox-io-push
+          requires:
+            - build
+            - build-rhel
 
       - retrigger-master-workflow:
           context: docker-io-pull
