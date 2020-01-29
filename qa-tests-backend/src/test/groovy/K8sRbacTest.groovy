@@ -153,56 +153,35 @@ class K8sRbacTest extends BaseSpecification {
     def "Verify scraped roles"() {
         expect:
         "SR should have the same roles"
-        Timer t = new Timer(45, 2)
-        def passed = false
-        while (t.IsValid() && !passed) {
+
+        withRetry(20, 5) {
             def stackroxRoles = RbacService.getRoles()
             def orchestratorRoles = orchestrator.getRoles() + orchestrator.getClusterRoles()
-            if (stackroxRoles.size() != orchestratorRoles.size()) {
-                continue
-            }
-            println "All roles scraped in ${t.SecondsSince()}s"
-            passed = true
-            for (Rbac.K8sRole r : stackroxRoles) {
+
+            stackroxRoles.size() == orchestratorRoles.size()
+            for (Rbac.K8sRole stackroxRole : stackroxRoles) {
+                println "Looking for SR Role: ${stackroxRole.name} (${stackroxRole.namespace})"
                 K8sRole role = orchestratorRoles.find {
-                    it.name == r.name &&
-                            it.clusterRole == r.clusterRole &&
-                            it.namespace == r.namespace
+                    it.name == stackroxRole.name &&
+                            it.clusterRole == stackroxRole.clusterRole &&
+                            it.namespace == stackroxRole.namespace
                 }
-                if (role == null || role.labels != r.labelsMap) {
-                    passed = false
-                    break
-                }
+                assert role
+                assert role.labels == stackroxRole.labelsMap
                 role.annotations.remove("kubectl.kubernetes.io/last-applied-configuration")
-                if (role.annotations != r.annotationsMap) {
-                    passed = false
-                    break
-                }
+                assert role.annotations == stackroxRole.annotationsMap
                 for (int i = 0; i < role.rules.size(); i++) {
                     def oRule = role.rules.get(i) as K8sPolicyRule
-                    def sRule = r.rulesList.get(i) as Rbac.PolicyRule
-                    if (!( oRule.verbs == sRule.verbsList &&
+                    def sRule = stackroxRole.rulesList.get(i) as Rbac.PolicyRule
+                    assert oRule.verbs == sRule.verbsList &&
                             oRule.apiGroups == sRule.apiGroupsList &&
                             oRule.resources == sRule.resourcesList &&
                             oRule.nonResourceUrls == sRule.nonResourceUrlsList &&
-                            oRule.resourceNames == sRule.resourceNamesList)) {
-                        passed = false
-                        break
-                    }
+                            oRule.resourceNames == sRule.resourceNamesList
                 }
-                if (!passed) {
-                    break
-                }
-                if (RbacService.getRole(r.id) != r) {
-                    passed = false
-                    break
-                }
+                assert RbacService.getRole(stackroxRole.id) == stackroxRole
             }
         }
-        if (!passed) {
-            println "Failed to find matching roles"
-        }
-        assert passed
     }
 
     def "Add Role and verify it gets scraped"() {
