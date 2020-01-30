@@ -99,7 +99,8 @@ export function getDeploymentTableColumns(workflowState) {
                     entityTypeText="policy"
                 />
             ),
-            sortField: deploymentSortFields.POLICIES
+            sortField: deploymentSortFields.POLICIES,
+            sortable: false
         },
         {
             Header: `Policy Status`,

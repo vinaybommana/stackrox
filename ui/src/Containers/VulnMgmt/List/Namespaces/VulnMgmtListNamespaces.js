@@ -134,7 +134,8 @@ export function getNamespaceTableColumns(workflowState) {
                 />
             ),
             accessor: 'policyCount',
-            sortField: namespaceSortFields.POLICIES
+            sortField: namespaceSortFields.POLICIES,
+            sortable: false
         },
         {
             Header: `Policy Status`,

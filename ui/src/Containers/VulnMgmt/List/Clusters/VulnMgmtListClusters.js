@@ -164,7 +164,8 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
                 ),
                 id: 'policyCount',
                 accessor: 'policyCount',
-                sortField: clusterSortFields.POLICIES
+                sortField: clusterSortFields.POLICIES,
+                sortable: false
             },
             {
                 Header: `Policy Status`,
