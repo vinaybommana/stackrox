@@ -8,7 +8,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	manager "github.com/stackrox/rox/central/license/manager"
 	v1 "github.com/stackrox/rox/generated/api/v1"
-	licenseproto "github.com/stackrox/rox/generated/shared/license"
+	license "github.com/stackrox/rox/generated/shared/license"
 	reflect "reflect"
 )
 
@@ -36,7 +36,7 @@ func (m *MockLicenseEventListener) EXPECT() *MockLicenseEventListenerMockRecorde
 }
 
 // OnInitialize mocks base method
-func (m *MockLicenseEventListener) OnInitialize(mgr manager.LicenseManager, initialLicense *licenseproto.License) {
+func (m *MockLicenseEventListener) OnInitialize(mgr manager.LicenseManager, initialLicense *license.License) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "OnInitialize", mgr, initialLicense)
 }

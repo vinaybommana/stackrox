@@ -99,6 +99,12 @@ func generateFilesForScannerV1(params *apiparams.Scanner, clusterType storage.Cl
 		return nil, errors.Wrap(err, "could not issue scanner cert")
 	}
 
+	scannerDBCert, err := mtls.IssueNewCert(mtls.ScannerDBSubject)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not issue scanner db cert")
+	}
+	dbPassword := []byte(renderer.CreatePassword())
+
 	config := renderer.Config{
 		ClusterType: clusterType,
 		K8sConfig: &renderer.K8sConfig{
@@ -112,6 +118,10 @@ func generateFilesForScannerV1(params *apiparams.Scanner, clusterType storage.Cl
 			"ca.pem":           centralCA,
 			"scanner-cert.pem": cert.CertPEM,
 			"scanner-key.pem":  cert.KeyPEM,
+
+			"scanner-db-cert.pem": scannerDBCert.CertPEM,
+			"scanner-db-key.pem":  scannerDBCert.KeyPEM,
+			"scanner-db-password": dbPassword,
 		},
 	}
 

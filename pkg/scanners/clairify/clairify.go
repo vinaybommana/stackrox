@@ -1,6 +1,7 @@
 package clairify
 
 import (
+	"math"
 	"net"
 	"net/http"
 	"time"
@@ -41,6 +42,8 @@ func Creator(set registries.Set) (string, func(integration *storage.ImageIntegra
 }
 
 type clairify struct {
+	scannerTypes.ScanSemaphore
+
 	client                *client.Clairify
 	conf                  *storage.ClairifyConfig
 	protoImageIntegration *storage.ImageIntegration
@@ -87,6 +90,8 @@ func newScanner(protoImageIntegration *storage.ImageIntegration, activeRegistrie
 		conf:                  conf,
 		protoImageIntegration: protoImageIntegration,
 		activeRegistries:      activeRegistries,
+
+		ScanSemaphore: scannerTypes.NewSemaphoreWithValue(math.MaxInt32),
 	}
 	return scanner, nil
 }

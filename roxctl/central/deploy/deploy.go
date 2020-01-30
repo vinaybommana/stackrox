@@ -43,7 +43,7 @@ func generateMTLSFiles(fileMap map[string][]byte) (caCert, caKey []byte, err err
 	}
 	req := csr.CertificateRequest{
 		CN:           mtls.ServiceCACommonName,
-		KeyRequest:   csr.NewKeyRequest(),
+		KeyRequest:   csr.NewBasicKeyRequest(),
 		SerialNumber: serial.String(),
 	}
 	caCert, _, caKey, err = initca.New(&req)
@@ -66,6 +66,15 @@ func generateMTLSFiles(fileMap map[string][]byte) (caCert, caKey []byte, err err
 	}
 	fileMap["scanner-cert.pem"] = scannerCert.CertPEM
 	fileMap["scanner-key.pem"] = scannerCert.KeyPEM
+
+	scannerDBCert, err := mtls.IssueNewCertFromCA(mtls.ScannerDBSubject, caCert, caKey)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "could not issue scanner db cert")
+	}
+	fileMap["scanner-db-cert.pem"] = scannerDBCert.CertPEM
+	fileMap["scanner-db-key.pem"] = scannerDBCert.KeyPEM
+
+	fileMap["scanner-db-password"] = []byte(renderer.CreatePassword())
 
 	return caCert, caKey, nil
 }

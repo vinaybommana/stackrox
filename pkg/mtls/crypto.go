@@ -67,6 +67,9 @@ var (
 	// ScannerSubject is the identity used in certificates for Scanner.
 	ScannerSubject = Subject{ServiceType: storage.ServiceType_SCANNER_SERVICE, Identifier: "Scanner"}
 
+	// ScannerDBSubject is the identity used in certificates for Scanners Postgres DB
+	ScannerDBSubject = Subject{ServiceType: storage.ServiceType_SCANNER_DB_SERVICE, Identifier: "Scanner DB"}
+
 	readCAOnce sync.Once
 	caCert     *x509.Certificate
 	caCertDER  []byte
@@ -179,7 +182,7 @@ func IssueNewCertFromCA(subj Subject, caCert, caKey []byte) (cert *IssuedCert, e
 		return returnErr(err, "serial generation")
 	}
 	csr := &cfcsr.CertificateRequest{
-		KeyRequest: cfcsr.NewKeyRequest(),
+		KeyRequest: cfcsr.NewBasicKeyRequest(),
 	}
 	csrBytes, keyBytes, err := cfcsr.ParseRequest(csr)
 	if err != nil {
@@ -238,7 +241,7 @@ func IssueNewCert(subj Subject) (cert *IssuedCert, err error) {
 		return returnErr(err, "serial generation")
 	}
 	csr := &cfcsr.CertificateRequest{
-		KeyRequest: cfcsr.NewKeyRequest(),
+		KeyRequest: cfcsr.NewBasicKeyRequest(),
 	}
 	csrBytes, keyBytes, err := cfcsr.ParseRequest(csr)
 	if err != nil {

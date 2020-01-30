@@ -12,7 +12,6 @@ import (
 	"github.com/stackrox/rox/pkg/images/integration"
 	registryTypes "github.com/stackrox/rox/pkg/registries/types"
 	scannerTypes "github.com/stackrox/rox/pkg/scanners/types"
-	"golang.org/x/sync/semaphore"
 	"golang.org/x/time/rate"
 )
 
@@ -22,7 +21,6 @@ type enricherImpl struct {
 	metadataLimiter *rate.Limiter
 	metadataCache   expiringcache.Cache
 
-	syncSemaphore    *semaphore.Weighted
 	asyncRateLimiter *rate.Limiter
 	scanCache        expiringcache.Cache
 
@@ -178,12 +176,13 @@ func (e *enricherImpl) enrichImageWithScanner(ctx EnrichmentContext, image *stor
 			return ScanTriggered, nil
 		}
 	} else {
-		_ = e.syncSemaphore.Acquire(context.Background(), 1)
-		defer e.syncSemaphore.Release(1)
-
 		if e.populateFromCache(ctx, image) {
 			return ScanSucceeded, nil
 		}
+
+		sema := scanner.MaxConcurrentScanSemaphore()
+		_ = sema.Acquire(context.Background(), 1)
+		defer sema.Release(1)
 
 		var err error
 		scanStartTime := time.Now()

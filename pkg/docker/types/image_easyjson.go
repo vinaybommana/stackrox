@@ -112,12 +112,22 @@ func easyjson220accf5EncodeGithubComStackroxRoxPkgDockerTypes(out *jwriter.Write
 	_ = first
 	{
 		const prefix string = ",\"Id\":"
-		out.RawString(prefix[1:])
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		out.String(string(in.ID))
 	}
 	if len(in.RepoTags) != 0 {
 		const prefix string = ",\"RepoTags\":"
-		out.RawString(prefix)
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		{
 			out.RawByte('[')
 			for v3, v4 := range in.RepoTags {
@@ -131,7 +141,12 @@ func easyjson220accf5EncodeGithubComStackroxRoxPkgDockerTypes(out *jwriter.Write
 	}
 	if len(in.RepoDigests) != 0 {
 		const prefix string = ",\"RepoDigests\":"
-		out.RawString(prefix)
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		{
 			out.RawByte('[')
 			for v5, v6 := range in.RepoDigests {
@@ -145,7 +160,12 @@ func easyjson220accf5EncodeGithubComStackroxRoxPkgDockerTypes(out *jwriter.Write
 	}
 	if in.Config != nil {
 		const prefix string = ",\"Config\":"
-		out.RawString(prefix)
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		easyjson220accf5EncodeGithubComStackroxRoxPkgDockerTypes1(out, *in.Config)
 	}
 	out.RawByte('}')
@@ -221,8 +241,12 @@ func easyjson220accf5EncodeGithubComStackroxRoxPkgDockerTypes1(out *jwriter.Writ
 	_ = first
 	if in.Healthcheck != nil {
 		const prefix string = ",\"Healthcheck\":"
-		first = false
-		out.RawString(prefix[1:])
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		easyjson220accf5EncodeGithubComDockerDockerApiTypesContainer(out, *in.Healthcheck)
 	}
 	if in.User != "" {
@@ -303,8 +327,12 @@ func easyjson220accf5EncodeGithubComDockerDockerApiTypesContainer(out *jwriter.W
 	_ = first
 	if len(in.Test) != 0 {
 		const prefix string = ",\"Test\":"
-		first = false
-		out.RawString(prefix[1:])
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		{
 			out.RawByte('[')
 			for v8, v9 := range in.Test {
