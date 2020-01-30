@@ -5,8 +5,8 @@ import (
 	cveDackBox "github.com/stackrox/rox/central/cve/dackbox"
 	globalDackBox "github.com/stackrox/rox/central/globaldb/dackbox"
 	"github.com/stackrox/rox/central/globalindex"
+	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
-	"github.com/stackrox/rox/pkg/dackbox/indexer"
 	"github.com/stackrox/rox/pkg/sync"
 )
 
@@ -18,7 +18,7 @@ var (
 
 func initialize() {
 	dx = New(globalindex.GetGlobalIndex())
-	globalDackBox.GetIndexerRegistry().RegisterIndex(cveDackBox.Bucket, wrapIndex(dx))
+	globalDackBox.GetWrapperRegistry().RegisterWrapper(cveDackBox.Bucket, wrapper{})
 }
 
 // Singleton returns a singleton instance of cve indexer
@@ -27,20 +27,15 @@ func Singleton() Indexer {
 	return dx
 }
 
-func wrapIndex(indexer Indexer) indexer.Indexer {
-	return indexWrap{
-		imageIndex: indexer,
+type wrapper struct{}
+
+func (ir wrapper) Wrap(key []byte, msg proto.Message) (string, interface{}) {
+	id := cveDackBox.GetID(key)
+	if msg == nil {
+		return id, nil
 	}
-}
-
-type indexWrap struct {
-	imageIndex Indexer
-}
-
-func (ir indexWrap) Index(_ []byte, msg proto.Message) error {
-	return ir.imageIndex.AddCVE(msg.(*storage.CVE))
-}
-
-func (ir indexWrap) Delete(key []byte) error {
-	return ir.imageIndex.DeleteCVE(string(key))
+	return id, &cVEWrapper{
+		CVE:  msg.(*storage.CVE),
+		Type: v1.SearchCategory_VULNERABILITIES.String(),
+	}
 }
