@@ -30,7 +30,7 @@ func Singleton() Indexer {
 type wrapper struct{}
 
 func (ir wrapper) Wrap(key []byte, msg proto.Message) (string, interface{}) {
-	id := edgeDackBox.GetID(key)
+	id := edgeDackBox.BucketHandler.GetID(key)
 	if msg == nil {
 		return id, nil
 	}

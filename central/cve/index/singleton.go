@@ -30,7 +30,7 @@ func Singleton() Indexer {
 type wrapper struct{}
 
 func (ir wrapper) Wrap(key []byte, msg proto.Message) (string, interface{}) {
-	id := cveDackBox.GetID(key)
+	id := cveDackBox.BucketHandler.GetID(key)
 	if msg == nil {
 		return id, nil
 	}
