@@ -8,6 +8,7 @@ import (
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/auth/permissions"
 	"github.com/stackrox/rox/pkg/badgerhelper"
+	"github.com/stackrox/rox/pkg/dackbox"
 	"github.com/stackrox/rox/pkg/dackbox/graph"
 	"github.com/stackrox/rox/pkg/dackbox/graph/mocks"
 	"github.com/stackrox/rox/pkg/sac"
@@ -21,26 +22,29 @@ var (
 	prefix3       = []byte("pre3")
 	clusterPrefix = []byte("cluster")
 
-	id1 = []byte("id1")
-	id2 = []byte("id2")
-	id3 = []byte("id3")
-	id4 = []byte("id4")
-	id5 = []byte("id5")
-	id6 = []byte("id6")
-	id7 = []byte("id7")
+	id1  = []byte("id1")
+	id2  = []byte("id2")
+	id3  = []byte("id3")
+	id4  = []byte("id4")
+	id5  = []byte("id5")
+	id6  = []byte("id6")
+	id7  = []byte("id7")
+	id11 = []byte("id11")
 
-	prefixedID1 = badgerhelper.GetBucketKey(prefix1, id1)
-	prefixedID2 = badgerhelper.GetBucketKey(prefix2, id2)
-	prefixedID3 = badgerhelper.GetBucketKey(prefix2, id3)
-	prefixedID4 = badgerhelper.GetBucketKey(prefix3, id4)
-	prefixedID5 = badgerhelper.GetBucketKey(prefix3, id5)
-	prefixedID6 = badgerhelper.GetBucketKey(clusterPrefix, id6)
-	prefixedID7 = badgerhelper.GetBucketKey(clusterPrefix, id7)
+	prefixedID1  = badgerhelper.GetBucketKey(prefix1, id1)
+	prefixedID2  = badgerhelper.GetBucketKey(prefix2, id2)
+	prefixedID3  = badgerhelper.GetBucketKey(prefix2, id3)
+	prefixedID4  = badgerhelper.GetBucketKey(prefix3, id4)
+	prefixedID5  = badgerhelper.GetBucketKey(prefix3, id5)
+	prefixedID6  = badgerhelper.GetBucketKey(clusterPrefix, id6)
+	prefixedID7  = badgerhelper.GetBucketKey(clusterPrefix, id7)
+	prefixedID11 = badgerhelper.GetBucketKey(prefix1, id11)
 
 	// Fake hierarchy for test, use prefixed values since that is what will be stored in the graph.
-	fromID1 = [][]byte{prefixedID2, prefixedID3}
-	fromID2 = [][]byte{prefixedID4}
-	fromID3 = [][]byte{prefixedID5}
+	fromID1  = [][]byte{prefixedID2, prefixedID3}
+	fromID2  = [][]byte{prefixedID4}
+	fromID3  = [][]byte{prefixedID5}
+	fromID11 = [][]byte{prefixedID2}
 
 	toID4 = [][]byte{prefixedID6}
 	toID5 = [][]byte{prefixedID7}
@@ -93,7 +97,8 @@ func (s *derivedFieldCounterTestSuite) TestCounterForward() {
 	)
 	s.NoError(err, "filter creation should have succeeded")
 
-	counter := NewGraphBasedDerivedFieldCounter(fakeGraphProvider{mg: s.mockRGraph}, [][]byte{prefix1, prefix2, prefix3}, filter, true)
+	prefixPath := dackbox.Path{Path: [][]byte{prefix1, prefix2, prefix3}, ForwardTraversal: true}
+	counter := NewGraphBasedDerivedFieldCounter(fakeGraphProvider{mg: s.mockRGraph}, prefixPath, filter)
 	count, _ := counter.Count(ctx, string(id1))
 	s.Equal(map[string]int32{string(id1): int32(2)}, count)
 }
@@ -114,7 +119,8 @@ func (s *derivedFieldCounterTestSuite) TestCounterForwardWithPartialPath() {
 	)
 	s.NoError(err, "filter creation should have succeeded")
 
-	counter := NewGraphBasedDerivedFieldCounter(fakeGraphProvider{mg: s.mockRGraph}, [][]byte{prefix1, prefix2, prefix3}, filter, true)
+	prefixPath := dackbox.Path{Path: [][]byte{prefix1, prefix2, prefix3}, ForwardTraversal: true}
+	counter := NewGraphBasedDerivedFieldCounter(fakeGraphProvider{mg: s.mockRGraph}, prefixPath, filter)
 	count, _ := counter.Count(ctx, string(id1))
 	s.Equal(map[string]int32{string(id1): int32(1)}, count)
 }
@@ -144,7 +150,8 @@ func (s *derivedFieldCounterTestSuite) TestCounterForwardWithSACFilter() {
 	)
 	s.NoError(err, "filter creation should have succeeded")
 
-	counter := NewGraphBasedDerivedFieldCounter(graphProvider, [][]byte{prefix1, prefix2, prefix3}, filter, true)
+	prefixPath := dackbox.Path{Path: [][]byte{prefix1, prefix2, prefix3}, ForwardTraversal: true}
+	counter := NewGraphBasedDerivedFieldCounter(graphProvider, prefixPath, filter)
 	count, _ := counter.Count(ctx, string(id1))
 	s.Equal(map[string]int32{string(id1): int32(1)}, count)
 }
@@ -165,7 +172,8 @@ func (s *derivedFieldCounterTestSuite) TestCounterForwardRepeated() {
 	)
 	s.NoError(err, "filter creation should have succeeded")
 
-	counter := NewGraphBasedDerivedFieldCounter(graphProvider, [][]byte{prefix1, prefix2, prefix3}, filter, true)
+	prefixPath := dackbox.Path{Path: [][]byte{prefix1, prefix2, prefix3}, ForwardTraversal: true}
+	counter := NewGraphBasedDerivedFieldCounter(graphProvider, prefixPath, filter)
 	count, _ := counter.Count(ctx, string(id1))
 	s.Equal(map[string]int32{string(id1): int32(1)}, count)
 }
@@ -174,11 +182,13 @@ func (s *derivedFieldCounterTestSuite) TestCounterForwardRepeated() {
 id1 -> id2 -> id4
 id1 -> id3 -> id5
 id1 -> id3 -> id6
+id11 -> id2 ->id4
 */
 func (s *derivedFieldCounterTestSuite) TestCounterForwardOneToMany() {
 	s.mockRGraph.EXPECT().GetRefsFrom(prefixedID1).Return(fromID1)
 	s.mockRGraph.EXPECT().GetRefsFrom(prefixedID2).Return(fromID2)
 	s.mockRGraph.EXPECT().GetRefsFrom(prefixedID3).Return([][]byte{prefixedID5, badgerhelper.GetBucketKey(prefix3, id6)})
+	s.mockRGraph.EXPECT().GetRefsFrom(prefixedID11).Return(fromID11)
 
 	graphProvider := fakeGraphProvider{mg: s.mockRGraph}
 	ctx := sac.WithGlobalAccessScopeChecker(context.Background(), sac.AllowAllAccessScopeChecker())
@@ -187,9 +197,10 @@ func (s *derivedFieldCounterTestSuite) TestCounterForwardOneToMany() {
 	)
 	s.NoError(err, "filter creation should have succeeded")
 
-	counter := NewGraphBasedDerivedFieldCounter(graphProvider, [][]byte{prefix1, prefix2, prefix3}, filter, true)
-	count, _ := counter.Count(ctx, string(id1))
-	s.Equal(map[string]int32{string(id1): int32(3)}, count)
+	prefixPath := dackbox.Path{Path: [][]byte{prefix1, prefix2, prefix3}, ForwardTraversal: true}
+	counter := NewGraphBasedDerivedFieldCounter(graphProvider, prefixPath, filter)
+	count, _ := counter.Count(ctx, string(id1), string(id11))
+	s.Equal(map[string]int32{string(id1): int32(3), string(id11): int32(1)}, count)
 }
 
 /*
@@ -209,7 +220,8 @@ func (s *derivedFieldCounterTestSuite) TestCounterForwardWithDiffPrefix() {
 	)
 	s.NoError(err, "filter creation should have succeeded")
 
-	counter := NewGraphBasedDerivedFieldCounter(graphProvider, [][]byte{prefix1, prefix2, prefix3}, filter, true)
+	prefixPath := dackbox.Path{Path: [][]byte{prefix1, prefix2, prefix3}, ForwardTraversal: true}
+	counter := NewGraphBasedDerivedFieldCounter(graphProvider, prefixPath, filter)
 	count, _ := counter.Count(ctx, string(id1))
 	s.Equal(map[string]int32{string(id1): int32(2)}, count)
 }

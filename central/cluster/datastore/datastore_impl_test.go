@@ -89,7 +89,7 @@ func (suite *ClusterDataStoreTestSuite) SetupTest() {
 		suite.nodeDataStore,
 		suite.secretDataStore,
 		suite.connMgr,
-		suite.notifierMock)
+		suite.notifierMock, nil)
 	suite.NoError(err)
 }
 

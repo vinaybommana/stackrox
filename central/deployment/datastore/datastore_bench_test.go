@@ -49,7 +49,7 @@ func BenchmarkSearchAllDeployments(b *testing.B) {
 	require.NoError(b, err)
 
 	deploymentsIndexer := index.New(bleveIndex)
-	deploymentsSearcher := search.New(deploymentsStore, deploymentsIndexer)
+	deploymentsSearcher := search.New(deploymentsStore, deploymentsIndexer, nil)
 
 	imageDS, err := imageDatastore.NewBadger(db, bleveIndex, false, nil)
 	require.NoError(b, err)

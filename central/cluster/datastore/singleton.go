@@ -6,6 +6,7 @@ import (
 	"github.com/stackrox/rox/central/cluster/store"
 	deploymentDataStore "github.com/stackrox/rox/central/deployment/datastore"
 	"github.com/stackrox/rox/central/globaldb"
+	dackbox "github.com/stackrox/rox/central/globaldb/dackbox"
 	"github.com/stackrox/rox/central/globalindex"
 	nodeDataStore "github.com/stackrox/rox/central/node/globaldatastore"
 	notifierProcessor "github.com/stackrox/rox/central/notifier/processor"
@@ -33,7 +34,8 @@ func initialize() {
 		nodeDataStore.Singleton(),
 		secretDataStore.Singleton(),
 		connection.ManagerSingleton(),
-		notifierProcessor.Singleton())
+		notifierProcessor.Singleton(),
+		dackbox.GetGlobalDackBox())
 	utils.Must(err)
 }
 

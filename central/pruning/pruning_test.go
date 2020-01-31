@@ -134,7 +134,7 @@ func generateImageDataStructures(ctx context.Context, t *testing.T) (alertDatast
 	mockFilter := filterMocks.NewMockFilter(ctrl)
 	mockFilter.EXPECT().Update(gomock.Any()).AnyTimes()
 
-	deployments, err := deploymentDatastore.NewBadger(db, bleveIndex, nil, mockProcessDataStore, mockWhitelistDataStore, nil, mockRiskDatastore, nil, mockFilter)
+	deployments, err := deploymentDatastore.NewBadger(db, nil, bleveIndex, nil, mockProcessDataStore, mockWhitelistDataStore, nil, mockRiskDatastore, nil, mockFilter)
 	require.NoError(t, err)
 
 	return mockAlertDatastore, mockConfigDatastore, images, deployments
@@ -165,7 +165,7 @@ func generateAlertDataStructures(ctx context.Context, t *testing.T) (alertDatast
 	mockFilter := filterMocks.NewMockFilter(ctrl)
 	mockFilter.EXPECT().Update(gomock.Any()).AnyTimes()
 
-	deployments, err := deploymentDatastore.NewBadger(db, bleveIndex, nil, mockProcessDataStore, mockWhitelistDataStore, nil, mockRiskDatastore, nil, mockFilter)
+	deployments, err := deploymentDatastore.NewBadger(db, nil, bleveIndex, nil, mockProcessDataStore, mockWhitelistDataStore, nil, mockRiskDatastore, nil, mockFilter)
 	require.NoError(t, err)
 
 	return alerts, mockConfigDatastore, mockImageDatastore, deployments

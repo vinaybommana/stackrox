@@ -56,6 +56,7 @@ func (suite *NamespaceDataStoreTestSuite) SetupTest() {
 
 	var err error
 	suite.nsDataStore, err = New(suite.ns,
+		nil,
 		suite.indexer,
 		suite.deploymentDataStore,
 	)

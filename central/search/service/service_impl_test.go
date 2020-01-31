@@ -105,7 +105,7 @@ func TestAutocomplete(t *testing.T) {
 
 	mockFilter := filterMocks.NewMockFilter(mockCtrl)
 	mockFilter.EXPECT().Update(gomock.Any()).AnyTimes()
-	deploymentDS, err := deploymentDatastore.NewBadger(testDB, idx, nil, mockIndicators, nil, nil, mockRiskDatastore, nil, mockFilter)
+	deploymentDS, err := deploymentDatastore.NewBadger(testDB, nil, idx, nil, mockIndicators, nil, nil, mockRiskDatastore, nil, mockFilter)
 	require.NoError(t, err)
 
 	allAccessCtx := sac.WithAllAccess(context.Background())

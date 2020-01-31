@@ -173,6 +173,11 @@ var (
 	SORTPolicyName     = newFieldLabel("SORT_Policy")
 	SORTLifecycleStage = newFieldLabel("SORT_Lifecycle Stage")
 	SORTEnforcement    = newFieldLabel("SORT_Enforcement")
+
+	// Following are derived fields
+	NamespaceCount  = newFieldLabel("Namespace Count")
+	DeploymentCount = newFieldLabel("Deployment Count")
+	ImageCount      = newFieldLabel("Image Count")
 )
 
 func newFieldLabel(s string) FieldLabel {

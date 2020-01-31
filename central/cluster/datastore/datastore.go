@@ -17,6 +17,7 @@ import (
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/concurrency"
+	"github.com/stackrox/rox/pkg/dackbox/graph"
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/sac"
 	pkgSearch "github.com/stackrox/rox/pkg/search"
@@ -63,11 +64,12 @@ func New(
 	ns nodeDataStore.GlobalDataStore,
 	ss secretDataStore.DataStore,
 	cm connection.Manager,
-	notifier notifierProcessor.Processor) (DataStore, error) {
+	notifier notifierProcessor.Processor,
+	graphProvider graph.Provider) (DataStore, error) {
 	ds := &datastoreImpl{
 		storage:  storage,
 		indexer:  indexer,
-		searcher: search.New(storage, indexer),
+		searcher: search.New(storage, indexer, graphProvider),
 		ads:      ads,
 		dds:      dds,
 		ns:       ns,

@@ -29,6 +29,7 @@ func getDeploymentStore(b *testing.B) *StoreImpl {
 	if err != nil {
 		b.Fatal(err)
 	}
+
 	return s
 }
 

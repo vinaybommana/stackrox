@@ -7,12 +7,20 @@ import (
 	"github.com/stackrox/rox/central/cluster/index"
 	"github.com/stackrox/rox/central/cluster/index/mappings"
 	"github.com/stackrox/rox/central/cluster/store"
+	cveSAC "github.com/stackrox/rox/central/cve/sac"
+	"github.com/stackrox/rox/central/dackbox"
+	deploymentSAC "github.com/stackrox/rox/central/deployment/sac"
+	nsSAC "github.com/stackrox/rox/central/namespace/sac"
 	"github.com/stackrox/rox/central/role/resources"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/dackbox/graph"
+	"github.com/stackrox/rox/pkg/derivedfields/counter"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/sac"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/blevesearch"
+	"github.com/stackrox/rox/pkg/search/derivedfields"
 	"github.com/stackrox/rox/pkg/search/paginated"
 )
 
@@ -80,10 +88,21 @@ func convertCluster(cluster *storage.Cluster, result search.Result) *v1.SearchRe
 // Helper functions which format our searching.
 ///////////////////////////////////////////////
 
-func formatSearcher(unsafeSearcher blevesearch.UnsafeSearcher) search.Searcher {
+func formatSearcher(unsafeSearcher blevesearch.UnsafeSearcher, graphProvider graph.Provider) search.Searcher {
 	filteredSearcher := clusterSearchHelper.FilteredSearcher(unsafeSearcher) // Make the UnsafeSearcher safe.
-
-	paginatedSearcher := paginated.Paginated(filteredSearcher)
+	derivedFieldSortedSearcher := wrapDerivedFieldSearcher(graphProvider, filteredSearcher)
+	paginatedSearcher := paginated.Paginated(derivedFieldSortedSearcher)
 	defaultSortedSearcher := paginated.WithDefaultSortOption(paginatedSearcher, defaultSortOption)
 	return defaultSortedSearcher
+}
+
+func wrapDerivedFieldSearcher(graphProvider graph.Provider, searcher search.Searcher) search.Searcher {
+	if !features.Dackbox.Enabled() {
+		return searcher
+	}
+	return derivedfields.CountSortedSearcher(searcher, map[string]counter.DerivedFieldCounter{
+		search.NamespaceCount.String():  counter.NewGraphBasedDerivedFieldCounter(graphProvider, dackbox.ClusterToNamespace, nsSAC.GetSACFilter()),
+		search.DeploymentCount.String(): counter.NewGraphBasedDerivedFieldCounter(graphProvider, dackbox.ClusterToDeployment, deploymentSAC.GetSACFilter()),
+		search.CVECount.String():        counter.NewGraphBasedDerivedFieldCounter(graphProvider, dackbox.ClusterToCVE, cveSAC.GetSACFilter()),
+	})
 }

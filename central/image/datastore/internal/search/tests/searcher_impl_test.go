@@ -88,7 +88,7 @@ func (s *searcherSuite) TestNoAccess() {
 	mockFilter := filterMocks.NewMockFilter(mockCtrl)
 	mockFilter.EXPECT().Update(gomock.Any()).AnyTimes()
 
-	deploymentDS, err := datastore.NewBadger(s.badgerDB, s.bleveIndex, nil, nil, nil, nil, mockRiskDatastore, nil, mockFilter)
+	deploymentDS, err := datastore.NewBadger(s.badgerDB, nil, s.bleveIndex, nil, nil, nil, nil, mockRiskDatastore, nil, mockFilter)
 	s.Require().NoError(err)
 
 	deployments := []*storage.Deployment{
@@ -163,7 +163,7 @@ func (s *searcherSuite) TestHasAccess() {
 	mockFilter := filterMocks.NewMockFilter(mockCtrl)
 	mockFilter.EXPECT().Update(gomock.Any()).AnyTimes()
 
-	deploymentDS, err := datastore.NewBadger(s.badgerDB, s.bleveIndex, nil, nil, nil, nil, mockRiskDatastore, nil, mockFilter)
+	deploymentDS, err := datastore.NewBadger(s.badgerDB, nil, s.bleveIndex, nil, nil, nil, nil, mockRiskDatastore, nil, mockFilter)
 	s.Require().NoError(err)
 
 	deployments := []*storage.Deployment{
@@ -226,7 +226,7 @@ func (s *searcherSuite) TestPagination() {
 	mockFilter := filterMocks.NewMockFilter(mockCtrl)
 	mockFilter.EXPECT().Update(gomock.Any()).AnyTimes()
 
-	deploymentDS, err := datastore.NewBadger(s.badgerDB, s.bleveIndex, nil, nil, nil, nil, mockRiskDatastore, nil, mockFilter)
+	deploymentDS, err := datastore.NewBadger(s.badgerDB, nil, s.bleveIndex, nil, nil, nil, nil, mockRiskDatastore, nil, mockFilter)
 	s.Require().NoError(err)
 
 	deployments := []*storage.Deployment{
@@ -425,7 +425,7 @@ func (s *searcherSuite) TestNoSharedImageLeak() {
 	mockFilter := filterMocks.NewMockFilter(ctrl)
 	mockFilter.EXPECT().Update(gomock.Any()).AnyTimes()
 
-	deploymentDS, err := datastore.NewBadger(s.badgerDB, s.bleveIndex, nil, nil, nil, nil, mockRiskDatastore, nil, mockFilter)
+	deploymentDS, err := datastore.NewBadger(s.badgerDB, nil, s.bleveIndex, nil, nil, nil, nil, mockRiskDatastore, nil, mockFilter)
 	s.Require().NoError(err)
 
 	for _, deployment := range deployments {

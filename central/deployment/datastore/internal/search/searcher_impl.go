@@ -4,14 +4,21 @@ import (
 	"context"
 	"fmt"
 
+	cveSAC "github.com/stackrox/rox/central/cve/sac"
+	"github.com/stackrox/rox/central/dackbox"
 	"github.com/stackrox/rox/central/deployment/index"
 	"github.com/stackrox/rox/central/deployment/store"
+	imageSAC "github.com/stackrox/rox/central/image/sac"
 	"github.com/stackrox/rox/central/role/resources"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/dackbox/graph"
+	"github.com/stackrox/rox/pkg/derivedfields/counter"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/sac"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/blevesearch"
+	"github.com/stackrox/rox/pkg/search/derivedfields"
 	"github.com/stackrox/rox/pkg/search/options/deployments"
 	"github.com/stackrox/rox/pkg/search/paginated"
 )
@@ -104,8 +111,19 @@ func convertDeployment(deployment *storage.ListDeployment, result search.Result)
 }
 
 // Format the search functionality of the indexer to be filtered (for sac) and paginated.
-func formatSearcher(unsafeSearcher blevesearch.UnsafeSearcher) search.Searcher {
+func formatSearcher(unsafeSearcher blevesearch.UnsafeSearcher, graphProvider graph.Provider) search.Searcher {
 	filteredSearcher := deploymentsSearchHelper.FilteredSearcher(unsafeSearcher) // Make the UnsafeSearcher safe.
-	paginatedSearcher := paginated.Paginated(filteredSearcher)
+	derivedFieldSortedSearcher := wrapDerivedFieldSearcher(graphProvider, filteredSearcher)
+	paginatedSearcher := paginated.Paginated(derivedFieldSortedSearcher)
 	return paginatedSearcher
+}
+
+func wrapDerivedFieldSearcher(graphProvider graph.Provider, searcher search.Searcher) search.Searcher {
+	if !features.Dackbox.Enabled() {
+		return searcher
+	}
+	return derivedfields.CountSortedSearcher(searcher, map[string]counter.DerivedFieldCounter{
+		search.ImageCount.String(): counter.NewGraphBasedDerivedFieldCounter(graphProvider, dackbox.DeploymentToImage, imageSAC.GetSACFilter()),
+		search.CVECount.String():   counter.NewGraphBasedDerivedFieldCounter(graphProvider, dackbox.DeploymentToCVE, cveSAC.GetSACFilter()),
+	})
 }

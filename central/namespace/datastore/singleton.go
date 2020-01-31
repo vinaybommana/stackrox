@@ -3,6 +3,7 @@ package datastore
 import (
 	deploymentDataStore "github.com/stackrox/rox/central/deployment/datastore"
 	"github.com/stackrox/rox/central/globaldb"
+	dackbox "github.com/stackrox/rox/central/globaldb/dackbox"
 	"github.com/stackrox/rox/central/globalindex"
 	"github.com/stackrox/rox/central/namespace/index"
 	"github.com/stackrox/rox/central/namespace/store"
@@ -21,7 +22,7 @@ func initialize() {
 	indexer := index.New(globalindex.GetGlobalIndex())
 
 	var err error
-	as, err = New(storage, indexer, deploymentDataStore.Singleton())
+	as, err = New(storage, dackbox.GetGlobalDackBox(), indexer, deploymentDataStore.Singleton())
 	utils.Must(err)
 }
 

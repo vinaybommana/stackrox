@@ -6,18 +6,26 @@ import (
 	componentCVEEdgeMappings "github.com/stackrox/rox/central/componentcveedge/mappings"
 	cveDackBox "github.com/stackrox/rox/central/cve/dackbox"
 	cveMappings "github.com/stackrox/rox/central/cve/mappings"
+	cveSAC "github.com/stackrox/rox/central/cve/sac"
+	"github.com/stackrox/rox/central/dackbox"
 	imageDackBox "github.com/stackrox/rox/central/image/dackbox"
+	deploymentSAC "github.com/stackrox/rox/central/image/sac"
+	imageSAC "github.com/stackrox/rox/central/image/sac"
 	componentDackBox "github.com/stackrox/rox/central/imagecomponent/dackbox"
 	"github.com/stackrox/rox/central/imagecomponent/index"
 	componentMappings "github.com/stackrox/rox/central/imagecomponent/mappings"
-	componentSac "github.com/stackrox/rox/central/imagecomponent/sac"
+	componentSAC "github.com/stackrox/rox/central/imagecomponent/sac"
 	"github.com/stackrox/rox/central/imagecomponent/store"
 	imageComponentEdgeMappings "github.com/stackrox/rox/central/imagecomponentedge/mappings"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/dackbox/graph"
+	"github.com/stackrox/rox/pkg/derivedfields/counter"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/blevesearch"
 	"github.com/stackrox/rox/pkg/search/compound"
+	"github.com/stackrox/rox/pkg/search/derivedfields"
 	"github.com/stackrox/rox/pkg/search/filtered"
 	"github.com/stackrox/rox/pkg/search/idspace"
 	imageMappings "github.com/stackrox/rox/pkg/search/options/images"
@@ -107,9 +115,10 @@ func formatSearcher(graphProvider idspace.GraphProvider,
 		componentSearcher,
 		imageComponentEdgeSearcher,
 		imageSearcher)
-	filteredSearcher := filtered.Searcher(compoundSearcher, componentSac.GetSACFilter())
+	filteredSearcher := filtered.Searcher(compoundSearcher, componentSAC.GetSACFilter())
 	transformedSortSearcher := sortfields.TransformSortFields(filteredSearcher)
-	paginatedSearcher := paginated.Paginated(transformedSortSearcher)
+	derivedFieldSortedSearcher := wrapDerivedFieldSearcher(graphProvider, transformedSortSearcher)
+	paginatedSearcher := paginated.Paginated(derivedFieldSortedSearcher)
 	defaultSortedSearcher := paginated.WithDefaultSortOption(paginatedSearcher, defaultSortOption)
 	return defaultSortedSearcher
 }
@@ -164,4 +173,15 @@ func getCompoundComponentSearcher(graphProvider idspace.GraphProvider,
 			Options: imageMappings.OptionsMap,
 		},
 	}...)
+}
+
+func wrapDerivedFieldSearcher(graphProvider graph.Provider, searcher search.Searcher) search.Searcher {
+	if !features.Dackbox.Enabled() {
+		return searcher
+	}
+	return derivedfields.CountSortedSearcher(searcher, map[string]counter.DerivedFieldCounter{
+		search.DeploymentCount.String(): counter.NewGraphBasedDerivedFieldCounter(graphProvider, dackbox.ComponentToDeploymentPath, deploymentSAC.GetSACFilter()),
+		search.ImageCount.String():      counter.NewGraphBasedDerivedFieldCounter(graphProvider, dackbox.ComponentToImagePath, imageSAC.GetSACFilter()),
+		search.CVECount.String():        counter.NewGraphBasedDerivedFieldCounter(graphProvider, dackbox.ComponentToCVEPath, cveSAC.GetSACFilter()),
+	})
 }
