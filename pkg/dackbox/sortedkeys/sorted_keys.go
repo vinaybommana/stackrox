@@ -12,12 +12,24 @@ type SortedKeys [][]byte
 // Sort sorts an input list of keys to create a sorted keys. If you know the keys are already sorted, you can simply
 // cast like SortedKeys(keys) instead of using Sort().
 func Sort(in [][]byte) SortedKeys {
+	if len(in) == 0 {
+		return in
+	}
 	ret := make([][]byte, len(in))
 	copy(ret, in)
 	sort.Slice(ret, func(i, j int) bool {
 		return bytes.Compare(ret[i], ret[j]) < 0
 	})
-	return ret
+	// dedupe values
+	deduped := ret[:1]
+	dedIdx := 0
+	for retIdx := 1; retIdx < len(ret); retIdx++ {
+		if !bytes.Equal(ret[retIdx], deduped[dedIdx]) {
+			deduped = append(deduped, ret[retIdx])
+			dedIdx++
+		}
+	}
+	return deduped
 }
 
 // Find returns the index of the input key, or -1 if it is not found.
