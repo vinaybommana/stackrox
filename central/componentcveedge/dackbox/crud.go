@@ -24,7 +24,7 @@ var (
 	Upserter = crud.NewUpserter(crud.WithKeyFunction(KeyFunc))
 
 	// Deleter deletes vulns from the store.
-	Deleter = crud.NewDeleter()
+	Deleter = crud.NewDeleter(crud.Shared())
 )
 
 func init() {

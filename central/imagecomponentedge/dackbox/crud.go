@@ -24,7 +24,7 @@ var (
 	Upserter = crud.NewUpserter(crud.WithKeyFunction(crud.PrefixKey(Bucket, keyFunc)))
 
 	// Deleter deletes the edges from the store.
-	Deleter = crud.NewDeleter()
+	Deleter = crud.NewDeleter(crud.Shared())
 )
 
 func init() {

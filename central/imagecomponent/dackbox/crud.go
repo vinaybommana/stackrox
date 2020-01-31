@@ -26,7 +26,7 @@ var (
 	)
 
 	// Deleter deletes components to the store.
-	Deleter = crud.NewDeleter()
+	Deleter = crud.NewDeleter(crud.Shared())
 )
 
 func init() {
