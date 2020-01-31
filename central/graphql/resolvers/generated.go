@@ -408,7 +408,6 @@ func registerGeneratedTypes(builder generator.SchemaBuilder) {
 		"username: String!",
 	}))
 	generator.RegisterProtoEnum(builder, reflect.TypeOf(storage.Email_AuthMethod(0)))
-	generator.RegisterProtoEnum(builder, reflect.TypeOf(storage.EmbeddedImageScanComponent_SourceType(0)))
 	utils.Must(builder.AddType("EmbeddedSecret", []string{
 		"name: String!",
 		"path: String!",
@@ -460,19 +459,12 @@ func registerGeneratedTypes(builder generator.SchemaBuilder) {
 	}))
 	utils.Must(builder.AddType("ImageComponent", []string{
 		"id: ID!",
-		"license: ImageComponent_License",
-		"location: String!",
+		"license: License",
 		"name: String!",
 		"priority: Int!",
-		"source: ImageComponent_SourceType!",
+		"source: SourceType!",
 		"version: String!",
 	}))
-	utils.Must(builder.AddType("ImageComponent_License", []string{
-		"name: String!",
-		"type: String!",
-		"url: String!",
-	}))
-	generator.RegisterProtoEnum(builder, reflect.TypeOf(storage.ImageComponent_SourceType(0)))
 	utils.Must(builder.AddType("ImageLayer", []string{
 		"author: String!",
 		"created: Time",
@@ -912,6 +904,7 @@ func registerGeneratedTypes(builder generator.SchemaBuilder) {
 		"secrets: [String!]!",
 	}))
 	generator.RegisterProtoEnum(builder, reflect.TypeOf(storage.Severity(0)))
+	generator.RegisterProtoEnum(builder, reflect.TypeOf(storage.SourceType(0)))
 	utils.Must(builder.AddType("Splunk", []string{
 		"auditLoggingEnabled: Boolean!",
 		"httpEndpoint: String!",
@@ -4058,24 +4051,6 @@ func toEmail_AuthMethods(values *[]string) []storage.Email_AuthMethod {
 	return output
 }
 
-func toEmbeddedImageScanComponent_SourceType(value *string) storage.EmbeddedImageScanComponent_SourceType {
-	if value != nil {
-		return storage.EmbeddedImageScanComponent_SourceType(storage.EmbeddedImageScanComponent_SourceType_value[*value])
-	}
-	return storage.EmbeddedImageScanComponent_SourceType(0)
-}
-
-func toEmbeddedImageScanComponent_SourceTypes(values *[]string) []storage.EmbeddedImageScanComponent_SourceType {
-	if values == nil {
-		return nil
-	}
-	output := make([]storage.EmbeddedImageScanComponent_SourceType, len(*values))
-	for i, v := range *values {
-		output[i] = toEmbeddedImageScanComponent_SourceType(&v)
-	}
-	return output
-}
-
 type embeddedSecretResolver struct {
 	root *Resolver
 	data *storage.EmbeddedSecret
@@ -4536,14 +4511,9 @@ func (resolver *imageComponentResolver) Id(ctx context.Context) graphql.ID {
 	return graphql.ID(value)
 }
 
-func (resolver *imageComponentResolver) License(ctx context.Context) (*imageComponent_LicenseResolver, error) {
+func (resolver *imageComponentResolver) License(ctx context.Context) (*licenseResolver, error) {
 	value := resolver.data.GetLicense()
-	return resolver.root.wrapImageComponent_License(value, true, nil)
-}
-
-func (resolver *imageComponentResolver) Location(ctx context.Context) string {
-	value := resolver.data.GetLocation()
-	return value
+	return resolver.root.wrapLicense(value, true, nil)
 }
 
 func (resolver *imageComponentResolver) Name(ctx context.Context) string {
@@ -4564,62 +4534,6 @@ func (resolver *imageComponentResolver) Source(ctx context.Context) string {
 func (resolver *imageComponentResolver) Version(ctx context.Context) string {
 	value := resolver.data.GetVersion()
 	return value
-}
-
-type imageComponent_LicenseResolver struct {
-	root *Resolver
-	data *storage.ImageComponent_License
-}
-
-func (resolver *Resolver) wrapImageComponent_License(value *storage.ImageComponent_License, ok bool, err error) (*imageComponent_LicenseResolver, error) {
-	if !ok || err != nil || value == nil {
-		return nil, err
-	}
-	return &imageComponent_LicenseResolver{resolver, value}, nil
-}
-
-func (resolver *Resolver) wrapImageComponent_Licenses(values []*storage.ImageComponent_License, err error) ([]*imageComponent_LicenseResolver, error) {
-	if err != nil || len(values) == 0 {
-		return nil, err
-	}
-	output := make([]*imageComponent_LicenseResolver, len(values))
-	for i, v := range values {
-		output[i] = &imageComponent_LicenseResolver{resolver, v}
-	}
-	return output, nil
-}
-
-func (resolver *imageComponent_LicenseResolver) Name(ctx context.Context) string {
-	value := resolver.data.GetName()
-	return value
-}
-
-func (resolver *imageComponent_LicenseResolver) Type(ctx context.Context) string {
-	value := resolver.data.GetType()
-	return value
-}
-
-func (resolver *imageComponent_LicenseResolver) Url(ctx context.Context) string {
-	value := resolver.data.GetUrl()
-	return value
-}
-
-func toImageComponent_SourceType(value *string) storage.ImageComponent_SourceType {
-	if value != nil {
-		return storage.ImageComponent_SourceType(storage.ImageComponent_SourceType_value[*value])
-	}
-	return storage.ImageComponent_SourceType(0)
-}
-
-func toImageComponent_SourceTypes(values *[]string) []storage.ImageComponent_SourceType {
-	if values == nil {
-		return nil
-	}
-	output := make([]storage.ImageComponent_SourceType, len(*values))
-	for i, v := range *values {
-		output[i] = toImageComponent_SourceType(&v)
-	}
-	return output
 }
 
 type imageLayerResolver struct {
@@ -7812,6 +7726,24 @@ func toSeverities(values *[]string) []storage.Severity {
 	output := make([]storage.Severity, len(*values))
 	for i, v := range *values {
 		output[i] = toSeverity(&v)
+	}
+	return output
+}
+
+func toSourceType(value *string) storage.SourceType {
+	if value != nil {
+		return storage.SourceType(storage.SourceType_value[*value])
+	}
+	return storage.SourceType(0)
+}
+
+func toSourceTypes(values *[]string) []storage.SourceType {
+	if values == nil {
+		return nil
+	}
+	output := make([]storage.SourceType, len(*values))
+	for i, v := range *values {
+		output[i] = toSourceType(&v)
 	}
 	return output
 }

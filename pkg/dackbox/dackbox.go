@@ -11,7 +11,7 @@ import (
 )
 
 // NewDackBox returns a new DackBox object using the given DB and prefix for storing data and ids.
-func NewDackBox(db *badger.DB, toIndex queue.WaitableQueue, graphPrefix, dirtyPrefix, validPrefix []byte) (*DackBox, error) {
+func NewDackBox(db *badger.DB, toIndex queue.Queue, graphPrefix, dirtyPrefix, validPrefix []byte) (*DackBox, error) {
 	initial, err := loadGraphIntoMem(db, graphPrefix)
 	if err != nil {
 		return nil, err
@@ -33,7 +33,7 @@ type DackBox struct {
 
 	history graph.History
 	db      *badger.DB
-	toIndex queue.WaitableQueue
+	toIndex queue.Queue
 
 	graphPrefix []byte
 	dirtyPrefix []byte

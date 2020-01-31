@@ -13,6 +13,8 @@ import (
 type KeyFence interface {
 	Lock(KeySet)
 	Unlock(KeySet)
+	DoWithLock(toLock KeySet, fn func())
+	DoStatusWithLock(toLock KeySet, fn func() error) error
 }
 
 // NewKeyFence returns a new instance of a KeyFence with no keys currently locked.
@@ -44,6 +46,20 @@ func (b *keyFenceImpl) Unlock(toUnlock KeySet) {
 	b.lock.Lock()
 	defer b.lock.Unlock()
 	b.removeNoLock(toUnlock)
+}
+
+func (b *keyFenceImpl) DoWithLock(toLock KeySet, fn func()) {
+	b.Lock(toLock)
+	defer b.Unlock(toLock)
+
+	fn()
+}
+
+func (b *keyFenceImpl) DoStatusWithLock(toLock KeySet, fn func() error) error {
+	b.Lock(toLock)
+	defer b.Unlock(toLock)
+
+	return fn()
 }
 
 // collidesNoLock returns if any active KeySets collide with the input KeySet.

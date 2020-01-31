@@ -7,7 +7,9 @@ import (
 	"github.com/stackrox/rox/central/image/datastore/internal/store"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/badgerhelper"
+	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/dackbox"
+	"github.com/stackrox/rox/pkg/dackbox/utils/queue"
 	"github.com/stackrox/rox/pkg/testutils"
 	"github.com/stretchr/testify/suite"
 )
@@ -22,6 +24,7 @@ type ImageStoreTestSuite struct {
 	db    *badger.DB
 	dir   string
 	dacky *dackbox.DackBox
+	dirty queue.Queue
 
 	store store.Store
 }
@@ -32,11 +35,13 @@ func (suite *ImageStoreTestSuite) SetupSuite() {
 	if err != nil {
 		suite.FailNowf("failed to create DB: %+v", err.Error())
 	}
-	suite.dacky, err = dackbox.NewDackBox(suite.db, nil, []byte("graph"), []byte("dirty"), []byte("valid"))
+
+	suite.dirty = queue.NewQueue()
+	suite.dacky, err = dackbox.NewDackBox(suite.db, suite.dirty, []byte("graph"), []byte("dirty"), []byte("valid"))
 	if err != nil {
 		suite.FailNowf("failed to create counter: %+v", err.Error())
 	}
-	suite.store, err = New(suite.dacky, false)
+	suite.store, err = New(suite.dacky, concurrency.NewKeyFence(), false)
 	if err != nil {
 		suite.FailNowf("failed to create counter: %+v", err.Error())
 	}
@@ -53,6 +58,58 @@ func (suite *ImageStoreTestSuite) TestImages() {
 			Name: &storage.ImageName{
 				FullName: "name1",
 			},
+			Scan: &storage.ImageScan{
+				Components: []*storage.EmbeddedImageScanComponent{
+					{
+						Name:    "comp1",
+						Version: "ver1",
+						HasLayerIndex: &storage.EmbeddedImageScanComponent_LayerIndex{
+							LayerIndex: 1,
+						},
+						Vulns: []*storage.EmbeddedVulnerability{},
+					},
+					{
+						Name:    "comp1",
+						Version: "ver2",
+						HasLayerIndex: &storage.EmbeddedImageScanComponent_LayerIndex{
+							LayerIndex: 3,
+						},
+						Vulns: []*storage.EmbeddedVulnerability{
+							{
+								Cve:               "cve1",
+								VulnerabilityType: storage.EmbeddedVulnerability_IMAGE_VULNERABILITY,
+							},
+							{
+								Cve:               "cve2",
+								VulnerabilityType: storage.EmbeddedVulnerability_IMAGE_VULNERABILITY,
+								SetFixedBy: &storage.EmbeddedVulnerability_FixedBy{
+									FixedBy: "ver3",
+								},
+							},
+						},
+					},
+					{
+						Name:    "comp2",
+						Version: "ver1",
+						HasLayerIndex: &storage.EmbeddedImageScanComponent_LayerIndex{
+							LayerIndex: 2,
+						},
+						Vulns: []*storage.EmbeddedVulnerability{
+							{
+								Cve:               "cve1",
+								VulnerabilityType: storage.EmbeddedVulnerability_IMAGE_VULNERABILITY,
+								SetFixedBy: &storage.EmbeddedVulnerability_FixedBy{
+									FixedBy: "ver2",
+								},
+							},
+							{
+								Cve:               "cve2",
+								VulnerabilityType: storage.EmbeddedVulnerability_IMAGE_VULNERABILITY,
+							},
+						},
+					},
+				},
+			},
 		},
 		{
 			Id: "sha256:sha2",
@@ -61,58 +118,57 @@ func (suite *ImageStoreTestSuite) TestImages() {
 			},
 		},
 	}
-	listImages := []*storage.ListImage{
-		{
-			Id:   "sha256:sha1",
-			Name: "name1",
-		},
-		{
-			Id:   "sha256:sha2",
-			Name: "name2",
-		},
-	}
 
 	// Test Add
-	for idx, d := range images {
-		suite.NoError(suite.store.Upsert(d, listImages[idx]))
+	for _, d := range images {
+		suite.NoError(suite.store.Upsert(d, nil))
 	}
 
 	for _, d := range images {
 		got, exists, err := suite.store.GetImage(d.GetId())
 		suite.NoError(err)
 		suite.True(exists)
-		suite.Equal(got, d)
+		suite.Equal(d, got)
 
 		listGot, exists, err := suite.store.ListImage(d.GetId())
 		suite.NoError(err)
 		suite.True(exists)
-		suite.Equal(listGot.GetName(), d.GetName().GetFullName())
+		suite.Equal(d.GetName().GetFullName(), listGot.GetName())
 	}
 
 	// Test Update
-	for idx, d := range images {
+	for _, d := range images {
 		d.Name.FullName += "1"
-		listImages[idx].Name += "1"
 	}
 
-	for idx, d := range images {
-		suite.NoError(suite.store.Upsert(d, listImages[idx]))
+	for _, d := range images {
+		suite.NoError(suite.store.Upsert(d, nil))
 	}
 
 	for _, d := range images {
 		got, exists, err := suite.store.GetImage(d.GetId())
 		suite.NoError(err)
 		suite.True(exists)
-		suite.Equal(got, d)
+		suite.Equal(d, got)
 
 		listGot, exists, err := suite.store.ListImage(d.GetId())
 		suite.NoError(err)
 		suite.True(exists)
-		suite.Equal(listGot.GetName(), d.GetName().GetFullName())
+		suite.Equal(d.GetName().GetFullName(), listGot.GetName())
 	}
 
 	// Test Count
 	count, err := suite.store.CountImages()
 	suite.NoError(err)
 	suite.Equal(len(images), count)
+
+	for _, d := range images {
+		err := suite.store.Delete(d.GetId())
+		suite.NoError(err)
+	}
+
+	// Test Count
+	count, err = suite.store.CountImages()
+	suite.NoError(err)
+	suite.Equal(0, count)
 }

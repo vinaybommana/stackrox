@@ -8,6 +8,7 @@ import (
 	"github.com/gogo/protobuf/types"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/badgerhelper"
+	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/dackbox"
 	"github.com/stackrox/rox/pkg/fixtures"
 	"github.com/stackrox/rox/pkg/uuid"
@@ -25,7 +26,7 @@ func getDeploymentStore(b *testing.B) *StoreImpl {
 	if err != nil {
 		b.Fatal(err)
 	}
-	s, err := New(dacky)
+	s, err := New(dacky, concurrency.NewKeyFence())
 	if err != nil {
 		b.Fatal(err)
 	}

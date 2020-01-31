@@ -58,6 +58,22 @@ func (rc *readerImpl) ReadAllIn(prefix []byte, dackTxn *dackbox.Transaction) ([]
 	return ret, err
 }
 
+var keysForeachOptions = badgerhelper.ForEachOptions{
+	IteratorOptions: &badger.IteratorOptions{
+		PrefetchValues: false,
+	},
+}
+
+// ReadAllIn returns all objects with the given prefix in the given transaction.
+func (rc *readerImpl) ReadKeysIn(prefix []byte, dackTxn *dackbox.Transaction) ([][]byte, error) {
+	var ret [][]byte
+	err := badgerhelper.BucketKeyForEach(dackTxn.BadgerTxn(), prefix, keysForeachOptions, func(k []byte) error {
+		ret = append(ret, k)
+		return nil
+	})
+	return ret, err
+}
+
 // ReadIn returns the object saved under the given key in the given transaction.
 func (rc *readerImpl) ReadIn(key []byte, dackTxn *dackbox.Transaction) (proto.Message, error) {
 	// Read the top level object from the DB.

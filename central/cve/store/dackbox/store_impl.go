@@ -37,7 +37,7 @@ func (b *storeImpl) Exists(id string) (bool, error) {
 	dackTxn := b.dacky.NewReadOnlyTransaction()
 	defer dackTxn.Discard()
 
-	exists, err := b.reader.ExistsIn(vulnDackBox.GetKey(id), dackTxn)
+	exists, err := b.reader.ExistsIn(vulnDackBox.BucketHandler.GetKey(id), dackTxn)
 	if err != nil {
 		return false, err
 	}
@@ -83,7 +83,7 @@ func (b *storeImpl) Get(id string) (cve *storage.CVE, exists bool, err error) {
 	dackTxn := b.dacky.NewReadOnlyTransaction()
 	defer dackTxn.Discard()
 
-	msg, err := b.reader.ReadIn(vulnDackBox.GetKey(id), dackTxn)
+	msg, err := b.reader.ReadIn(vulnDackBox.BucketHandler.GetKey(id), dackTxn)
 	if err != nil {
 		return nil, false, err
 	}
@@ -100,7 +100,7 @@ func (b *storeImpl) GetBatch(ids []string) ([]*storage.CVE, []int, error) {
 	msgs := make([]proto.Message, 0, len(ids)/2)
 	missing := make([]int, 0, len(ids)/2)
 	for idx, id := range ids {
-		msg, err := b.reader.ReadIn(vulnDackBox.GetKey(id), dackTxn)
+		msg, err := b.reader.ReadIn(vulnDackBox.BucketHandler.GetKey(id), dackTxn)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -148,7 +148,7 @@ func (b *storeImpl) Delete(ids ...string) error {
 		defer dackTxn.Discard()
 
 		for idx := batch; idx < len(ids) && idx < batch+batchSize; idx++ {
-			err := b.deleter.DeleteIn(vulnDackBox.GetKey(ids[idx]), dackTxn)
+			err := b.deleter.DeleteIn(vulnDackBox.BucketHandler.GetKey(ids[idx]), dackTxn)
 			if err != nil {
 				return err
 			}

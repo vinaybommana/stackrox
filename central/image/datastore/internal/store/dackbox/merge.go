@@ -43,9 +43,11 @@ func generateEmbeddedComponent(cp ComponentParts) *storage.EmbeddedImageScanComp
 		return nil
 	}
 	ret := &storage.EmbeddedImageScanComponent{
-		Name:    cp.component.GetName(),
-		Version: cp.component.GetVersion(),
-		License: convertEmbeddedLicense(cp.component.GetLicense()),
+		Name:     cp.component.GetName(),
+		Version:  cp.component.GetVersion(),
+		License:  proto.Clone(cp.component.GetLicense()).(*storage.License),
+		Source:   cp.component.GetSource(),
+		Location: cp.edge.GetLocation(),
 	}
 	if cp.edge.HasLayerIndex != nil {
 		ret.HasLayerIndex = &storage.EmbeddedImageScanComponent_LayerIndex{
@@ -58,17 +60,6 @@ func generateEmbeddedComponent(cp ComponentParts) *storage.EmbeddedImageScanComp
 		ret.Vulns = append(ret.Vulns, generateEmbeddedCVE(cve))
 	}
 	return ret
-}
-
-func convertEmbeddedLicense(input *storage.ImageComponent_License) *storage.License {
-	if input == nil {
-		return nil
-	}
-	return &storage.License{
-		Name: input.GetName(),
-		Type: input.GetType(),
-		Url:  input.GetUrl(),
-	}
 }
 
 func generateEmbeddedCVE(cp CVEParts) *storage.EmbeddedVulnerability {

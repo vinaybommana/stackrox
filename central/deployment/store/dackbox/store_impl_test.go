@@ -7,6 +7,7 @@ import (
 	ptypes "github.com/gogo/protobuf/types"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/badgerhelper"
+	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/dackbox"
 	"github.com/stackrox/rox/pkg/testutils"
 	"github.com/stretchr/testify/suite"
@@ -36,7 +37,7 @@ func (suite *DeploymentStoreTestSuite) SetupSuite() {
 	if err != nil {
 		suite.FailNowf("failed to create dackbox: %+v", err.Error())
 	}
-	suite.store, err = New(suite.dacky)
+	suite.store, err = New(suite.dacky, concurrency.NewKeyFence())
 	if err != nil {
 		suite.FailNowf("failed to create store: %+v", err.Error())
 	}
@@ -95,7 +96,7 @@ func (suite *DeploymentStoreTestSuite) TestDeployments() {
 	suite.verifyDeploymentsAre(suite.store, deployments...)
 
 	// This verifies that things work as expected on restarts.
-	newStore, err := New(suite.dacky)
+	newStore, err := New(suite.dacky, concurrency.NewKeyFence())
 	suite.NoError(err)
 
 	suite.verifyDeploymentsAre(newStore, deployments...)
@@ -107,7 +108,7 @@ func (suite *DeploymentStoreTestSuite) TestDeployments() {
 
 	suite.verifyDeploymentsAre(suite.store)
 
-	newStore, err = New(suite.dacky)
+	newStore, err = New(suite.dacky, concurrency.NewKeyFence())
 	suite.NoError(err)
 
 	suite.verifyDeploymentsAre(newStore)

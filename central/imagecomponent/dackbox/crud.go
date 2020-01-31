@@ -12,6 +12,9 @@ var (
 	// Bucket stores the child image components.
 	Bucket = []byte("image_component")
 
+	// BucketHandler is the bucket's handler.
+	BucketHandler = &badgerhelper.BucketHandler{BucketPrefix: Bucket}
+
 	// Reader reads storage.ImageComponents from the store.
 	Reader = crud.NewReader(
 		crud.WithAllocFunction(Alloc),
@@ -39,43 +42,4 @@ func KeyFunc(msg proto.Message) []byte {
 // Alloc allocates an ImageComponent.
 func Alloc() proto.Message {
 	return &storage.ImageComponent{}
-}
-
-// GetKey returns the prefixed key for the given id.
-func GetKey(id string) []byte {
-	return badgerhelper.GetBucketKey(Bucket, []byte(id))
-}
-
-// GetKeys returns the prefixed keys for the given ids.
-func GetKeys(ids ...string) [][]byte {
-	keys := make([][]byte, 0, len(ids))
-	for _, id := range ids {
-		keys = append(keys, GetKey(id))
-	}
-	return keys
-}
-
-// GetID returns the ID for the prefixed key.
-func GetID(key []byte) string {
-	return string(badgerhelper.StripBucket(Bucket, key))
-}
-
-// GetIDs returns the ids for the prefixed keys.
-func GetIDs(keys ...[]byte) []string {
-	ids := make([]string, 0, len(keys))
-	for _, key := range keys {
-		ids = append(ids, GetID(key))
-	}
-	return ids
-}
-
-// FilterKeys filters the image component keys out of a list of keys.
-func FilterKeys(keys [][]byte) [][]byte {
-	ret := make([][]byte, 0, len(keys))
-	for _, key := range keys {
-		if badgerhelper.HasPrefix(Bucket, key) {
-			ret = append(ret, key)
-		}
-	}
-	return ret
 }

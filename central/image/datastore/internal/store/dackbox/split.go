@@ -18,7 +18,9 @@ func Split(image *storage.Image) ImageParts {
 	parts.children = splitComponents(parts)
 
 	// Clear components in the top level image.
-	parts.image.Scan.Components = nil
+	if parts.image.GetScan() != nil {
+		parts.image.Scan.Components = nil
+	}
 
 	return parts
 }
@@ -68,20 +70,10 @@ func generateImageComponent(from *storage.EmbeddedImageScanComponent) *storage.I
 		Id:      imagecomponent.ComponentID{Name: from.GetName(), Version: from.GetVersion()}.ToString(),
 		Name:    from.GetName(),
 		Version: from.GetVersion(),
-		License: convertLicense(from.GetLicense()),
+		License: proto.Clone(from.GetLicense()).(*storage.License),
+		Source:  from.GetSource(),
 	}
 	return ret
-}
-
-func convertLicense(input *storage.License) *storage.ImageComponent_License {
-	if input == nil {
-		return nil
-	}
-	return &storage.ImageComponent_License{
-		Name: input.GetName(),
-		Type: input.GetType(),
-		Url:  input.GetUrl(),
-	}
 }
 
 func generateImageComponentEdge(image *storage.Image, converted *storage.ImageComponent, embedded *storage.EmbeddedImageScanComponent) *storage.ImageComponentEdge {
@@ -93,6 +85,7 @@ func generateImageComponentEdge(image *storage.Image, converted *storage.ImageCo
 			LayerIndex: embedded.GetLayerIndex(),
 		}
 	}
+	ret.Location = embedded.GetLocation()
 	return ret
 }
 

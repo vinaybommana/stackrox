@@ -38,7 +38,7 @@ func (b *storeImpl) Exists(id string) (bool, error) {
 	dackTxn := b.dacky.NewReadOnlyTransaction()
 	defer dackTxn.Discard()
 
-	exists, err := b.listReader.ExistsIn(componentDackBox.GetKey(id), dackTxn)
+	exists, err := b.listReader.ExistsIn(componentDackBox.BucketHandler.GetKey(id), dackTxn)
 	if err != nil {
 		return false, err
 	}
@@ -85,7 +85,7 @@ func (b *storeImpl) Get(id string) (image *storage.ImageComponent, exists bool, 
 	dackTxn := b.dacky.NewReadOnlyTransaction()
 	defer dackTxn.Discard()
 
-	msg, err := b.reader.ReadIn(componentDackBox.GetKey(id), dackTxn)
+	msg, err := b.reader.ReadIn(componentDackBox.BucketHandler.GetKey(id), dackTxn)
 	if err != nil {
 		return nil, false, err
 	}
@@ -103,7 +103,7 @@ func (b *storeImpl) GetBatch(ids []string) ([]*storage.ImageComponent, []int, er
 	msgs := make([]proto.Message, 0, len(ids)/2)
 	missing := make([]int, 0, len(ids)/2)
 	for idx, id := range ids {
-		msg, err := b.reader.ReadIn(componentDackBox.GetKey(id), dackTxn)
+		msg, err := b.reader.ReadIn(componentDackBox.BucketHandler.GetKey(id), dackTxn)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -151,7 +151,7 @@ func (b *storeImpl) Delete(ids ...string) error {
 		defer dackTxn.Discard()
 
 		for idx := batch; idx < len(ids) && idx < batch+batchSize; idx++ {
-			err := b.deleter.DeleteIn(componentDackBox.GetKey(ids[idx]), dackTxn)
+			err := b.deleter.DeleteIn(componentDackBox.BucketHandler.GetKey(ids[idx]), dackTxn)
 			if err != nil {
 				return err
 			}

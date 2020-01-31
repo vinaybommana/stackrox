@@ -15,6 +15,12 @@ var (
 	// ListBucket is the prefix for stored list deployments.
 	ListBucket = []byte("deployments_list")
 
+	// BucketHandler is the bucket's handler.
+	BucketHandler = &badgerhelper.BucketHandler{BucketPrefix: Bucket}
+
+	// ListBucketHandler is the list bucket's handler.
+	ListBucketHandler = &badgerhelper.BucketHandler{BucketPrefix: ListBucket}
+
 	// Reader reads storage.Deployments directly from the store.
 	Reader = crud.NewReader(
 		crud.WithAllocFunction(Alloc),
@@ -53,50 +59,6 @@ func ListAlloc() proto.Message {
 func init() {
 	globaldb.RegisterBucket(Bucket, "Deployment")
 	globaldb.RegisterBucket(ListBucket, "List Deployment")
-}
-
-// GetKey returns the prefixed key for the given id.
-func GetKey(id string) []byte {
-	return badgerhelper.GetBucketKey(Bucket, []byte(id))
-}
-
-// GetListKey returns the prefixed key for a list deployment.
-func GetListKey(id string) []byte {
-	return badgerhelper.GetBucketKey(ListBucket, []byte(id))
-}
-
-// GetKeys returns the prefixed keys for the given ids.
-func GetKeys(ids ...string) [][]byte {
-	keys := make([][]byte, 0, len(ids))
-	for _, id := range ids {
-		keys = append(keys, GetKey(id))
-	}
-	return keys
-}
-
-// GetID returns the ID for the prefixed key.
-func GetID(key []byte) string {
-	return string(badgerhelper.StripBucket(Bucket, key))
-}
-
-// GetIDs returns the ids for the prefixed keys.
-func GetIDs(keys ...[]byte) []string {
-	ids := make([]string, 0, len(keys))
-	for _, key := range keys {
-		ids = append(ids, GetID(key))
-	}
-	return ids
-}
-
-// FilterKeys filters the deployment keys out of a list of keys.
-func FilterKeys(keys [][]byte) [][]byte {
-	ret := make([][]byte, 0, len(keys))
-	for _, key := range keys {
-		if badgerhelper.HasPrefix(Bucket, key) {
-			ret = append(ret, key)
-		}
-	}
-	return ret
 }
 
 // KeyFunc returns the key for a deployment.
