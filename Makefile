@@ -3,7 +3,8 @@ ROX_PROJECT=apollo
 TESTFLAGS=-race -p 4
 BASE_DIR=$(CURDIR)
 TAG=$(shell git describe --tags --abbrev=10 --dirty --long)
-ALPINE_MIRROR ?= sjc.edge.kernel.org
+
+ALPINE_MIRROR_BUILD_ARG := $(ALPINE_MIRROR:%=--build-arg ALPINE_MIRROR=%)
 
 export CGO_ENABLED DEFAULT_GOOS GOARCH GOTAGS GO111MODULE GOPRIVATE
 CGO_ENABLED := 0
@@ -437,7 +438,7 @@ deployer-image: build-prep
 # declare its dependencies explicitly.
 .PHONY: docker-build-main-image
 docker-build-main-image: copy-binaries-to-image-dir docker-build-data-image
-	docker build -t stackrox/main:$(TAG) --build-arg DATA_IMAGE_TAG=$(TAG) --build-arg ALPINE_MIRROR=$(ALPINE_MIRROR) image/
+	docker build -t stackrox/main:$(TAG) --build-arg DATA_IMAGE_TAG=$(TAG) $(ALPINE_MIRROR_BUILD_ARG) image/
 	@echo "Built main image with tag: $(TAG)"
 	@echo "You may wish to:       export MAIN_IMAGE_TAG=$(TAG)"
 
@@ -451,7 +452,7 @@ docker-build-main-image-rhel: copy-binaries-to-image-dir docker-build-data-image
 docker-build-data-image:
 	test -f $(CURDIR)/image/keys/data-key
 	test -f $(CURDIR)/image/keys/data-iv
-	docker build -t stackrox-data:$(TAG) image/ --file image/stackrox-data.Dockerfile --build-arg ALPINE_MIRROR=$(ALPINE_MIRROR)
+	docker build -t stackrox-data:$(TAG) image/ --file image/stackrox-data.Dockerfile $(ALPINE_MIRROR_BUILD_ARG)
 
 .PHONY: docker-build-deployer-image
 docker-build-deployer-image:
