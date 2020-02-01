@@ -25,6 +25,8 @@ import (
 	serviceAccountMocks "github.com/stackrox/rox/central/serviceaccount/datastore/mocks"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/set"
+	"github.com/stackrox/rox/pkg/concurrency"
+	"github.com/stackrox/rox/pkg/dackbox"
 	"github.com/stackrox/rox/pkg/fixtures"
 	filterMocks "github.com/stackrox/rox/pkg/process/filter/mocks"
 	"github.com/stackrox/rox/pkg/sac"
@@ -95,6 +97,9 @@ func TestAutocomplete(t *testing.T) {
 	testDB := testutils.BadgerDBForT(t)
 	defer utils.IgnoreError(testDB.Close)
 
+	dacky, err := dackbox.NewDackBox(testDB, nil, []byte("graph"), []byte("dirty"), []byte("valid"))
+	require.NoError(t, err)
+
 	mockIndicators := mocks.NewMockDataStore(mockCtrl)
 	// This gets called as a side effect of `UpsertDeployment`.
 	mockIndicators.EXPECT().RemoveProcessIndicatorsOfStaleContainers(gomock.Any(), gomock.Any()).AnyTimes()
@@ -105,7 +110,7 @@ func TestAutocomplete(t *testing.T) {
 
 	mockFilter := filterMocks.NewMockFilter(mockCtrl)
 	mockFilter.EXPECT().Update(gomock.Any()).AnyTimes()
-	deploymentDS, err := deploymentDatastore.NewBadger(testDB, nil, idx, nil, mockIndicators, nil, nil, mockRiskDatastore, nil, mockFilter)
+	deploymentDS, err := deploymentDatastore.NewBadger(dacky, concurrency.NewKeyFence(), testDB, idx, nil, mockIndicators, nil, nil, mockRiskDatastore, nil, mockFilter)
 	require.NoError(t, err)
 
 	allAccessCtx := sac.WithAllAccess(context.Background())

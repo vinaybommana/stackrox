@@ -17,6 +17,8 @@ import (
 	"github.com/stackrox/rox/central/role/resources"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/badgerhelper"
+	"github.com/stackrox/rox/pkg/concurrency"
+	"github.com/stackrox/rox/pkg/dackbox"
 	"github.com/stackrox/rox/pkg/fixtures"
 	"github.com/stackrox/rox/pkg/sac"
 	search2 "github.com/stackrox/rox/pkg/search"
@@ -42,6 +44,9 @@ func BenchmarkSearchAllDeployments(b *testing.B) {
 	defer utils.IgnoreError(db.Close)
 	defer func() { _ = os.RemoveAll(dir) }()
 
+	dacky, err := dackbox.NewDackBox(db, nil, []byte("graph"), []byte("dirty"), []byte("valid"))
+	require.NoError(b, err)
+
 	bleveIndex, err := globalindex.InitializeIndices(blevePath)
 	require.NoError(b, err)
 
@@ -51,7 +56,7 @@ func BenchmarkSearchAllDeployments(b *testing.B) {
 	deploymentsIndexer := index.New(bleveIndex)
 	deploymentsSearcher := search.New(deploymentsStore, deploymentsIndexer, nil)
 
-	imageDS, err := imageDatastore.NewBadger(db, bleveIndex, false, nil)
+	imageDS, err := imageDatastore.NewBadger(dacky, concurrency.NewKeyFence(), db, bleveIndex, false, nil)
 	require.NoError(b, err)
 
 	deploymentsDatastore, err := newDatastoreImpl(deploymentsStore, deploymentsIndexer, deploymentsSearcher, imageDS, nil, nil, nil, nil, nil, nil)

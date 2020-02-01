@@ -10,6 +10,7 @@ import (
 	"github.com/stackrox/rox/central/deployment/index"
 	"github.com/stackrox/rox/central/deployment/store"
 	badgerStore "github.com/stackrox/rox/central/deployment/store/badger"
+	dackBoxStore "github.com/stackrox/rox/central/deployment/store/dackbox"
 	imageDS "github.com/stackrox/rox/central/image/datastore"
 	nfDS "github.com/stackrox/rox/central/networkflow/datastore"
 	piDS "github.com/stackrox/rox/central/processindicator/datastore"
@@ -17,8 +18,11 @@ import (
 	riskDS "github.com/stackrox/rox/central/risk/datastore"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/concurrency"
+	"github.com/stackrox/rox/pkg/dackbox"
 	"github.com/stackrox/rox/pkg/dackbox/graph"
 	"github.com/stackrox/rox/pkg/expiringcache"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/process/filter"
 	pkgSearch "github.com/stackrox/rox/pkg/search"
 )
@@ -78,10 +82,20 @@ func newDataStore(storage store.Store, graphProvider graph.Provider, bleveIndex 
 }
 
 // NewBadger creates a deployment datastore based on BadgerDB
-func NewBadger(db *badger.DB, graphProvider graph.Provider, bleveIndex bleve.Index, images imageDS.DataStore, indicators piDS.DataStore, whitelists pwDS.DataStore, networkFlows nfDS.ClusterDataStore, risks riskDS.DataStore, deletedDeploymentCache expiringcache.Cache, processFilter filter.Filter) (DataStore, error) {
-	store, err := badgerStore.New(db)
-	if err != nil {
-		return nil, err
+func NewBadger(dacky *dackbox.DackBox, keyFence concurrency.KeyFence, db *badger.DB, bleveIndex bleve.Index, images imageDS.DataStore, indicators piDS.DataStore, whitelists pwDS.DataStore, networkFlows nfDS.ClusterDataStore, risks riskDS.DataStore, deletedDeploymentCache expiringcache.Cache, processFilter filter.Filter) (DataStore, error) {
+	var err error
+	var storage store.Store
+	if features.Dackbox.Enabled() {
+		storage, err = dackBoxStore.New(dacky, keyFence)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		storage, err = badgerStore.New(db)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return newDataStore(store, graphProvider, bleveIndex, images, indicators, whitelists, networkFlows, risks, deletedDeploymentCache, processFilter)
+
+	return newDataStore(storage, dacky, bleveIndex, images, indicators, whitelists, networkFlows, risks, deletedDeploymentCache, processFilter)
 }

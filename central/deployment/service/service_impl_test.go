@@ -10,6 +10,8 @@ import (
 	riskDatastoreMocks "github.com/stackrox/rox/central/risk/datastore/mocks"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/concurrency"
+	"github.com/stackrox/rox/pkg/dackbox"
 	"github.com/stackrox/rox/pkg/grpc/testutils"
 	filterMocks "github.com/stackrox/rox/pkg/process/filter/mocks"
 	"github.com/stackrox/rox/pkg/sac"
@@ -116,7 +118,10 @@ func TestLabelsMap(t *testing.T) {
 			bleveIndex, err := globalindex.MemOnlyIndex()
 			require.NoError(t, err)
 
-			deploymentsDS, err := datastore.NewBadger(badgerDB, nil, bleveIndex, nil, nil, nil, nil, mockRiskDatastore, nil, mockFilter)
+			dacky, err := dackbox.NewDackBox(badgerDB, nil, []byte("graph"), []byte("dirty"), []byte("valid"))
+			require.NoError(t, err)
+
+			deploymentsDS, err := datastore.NewBadger(dacky, concurrency.NewKeyFence(), badgerDB, bleveIndex, nil, nil, nil, nil, mockRiskDatastore, nil, mockFilter)
 			require.NoError(t, err)
 
 			for _, deployment := range c.deployments {

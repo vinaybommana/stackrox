@@ -12,12 +12,15 @@ import (
 	"github.com/stackrox/rox/central/image/datastore/internal/search"
 	"github.com/stackrox/rox/central/image/datastore/internal/store"
 	badgerStore "github.com/stackrox/rox/central/image/datastore/internal/store/badger"
+	dackBoxStore "github.com/stackrox/rox/central/image/datastore/internal/store/dackbox"
 	imageIndexer "github.com/stackrox/rox/central/image/index"
 	componentIndexer "github.com/stackrox/rox/central/imagecomponent/index"
 	imageComponentEdgeIndexer "github.com/stackrox/rox/central/imagecomponentedge/index"
 	riskDS "github.com/stackrox/rox/central/risk/datastore"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/concurrency"
+	"github.com/stackrox/rox/pkg/dackbox"
 	"github.com/stackrox/rox/pkg/features"
 	searchPkg "github.com/stackrox/rox/pkg/search"
 )
@@ -72,7 +75,16 @@ func newDatastore(storage store.Store, bleveIndex bleve.Index, noUpdateTimestamp
 // NewBadger returns a new instance of DataStore using the input store, indexer, and searcher.
 // noUpdateTimestamps controls whether timestamps are automatically updated when upserting images.
 // This should be set to `false` except for some tests.
-func NewBadger(db *badger.DB, bleveIndex bleve.Index, noUpdateTimestamps bool, risks riskDS.DataStore) (DataStore, error) {
-	storage := badgerStore.New(db, noUpdateTimestamps)
+func NewBadger(dacky *dackbox.DackBox, keyFence concurrency.KeyFence, db *badger.DB, bleveIndex bleve.Index, noUpdateTimestamps bool, risks riskDS.DataStore) (DataStore, error) {
+	var storage store.Store
+	if features.Dackbox.Enabled() {
+		var err error
+		storage, err = dackBoxStore.New(dacky, keyFence, noUpdateTimestamps)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		storage = badgerStore.New(db, noUpdateTimestamps)
+	}
 	return newDatastore(storage, bleveIndex, noUpdateTimestamps, risks)
 }
