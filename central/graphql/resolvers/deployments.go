@@ -497,7 +497,7 @@ func (resolver *deploymentResolver) ImageCount(ctx context.Context, args RawQuer
 	return resolver.root.ImageCount(ctx, RawQuery{Query: &query})
 }
 
-func (resolver *deploymentResolver) Components(ctx context.Context, args PaginatedQuery) ([]*EmbeddedImageScanComponentResolver, error) {
+func (resolver *deploymentResolver) Components(ctx context.Context, args PaginatedQuery) ([]ComponentResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Deployments, "Components")
 
 	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getDeploymentRawQuery())
@@ -513,7 +513,7 @@ func (resolver *deploymentResolver) ComponentCount(ctx context.Context, args Raw
 	return resolver.root.ComponentCount(ctx, RawQuery{Query: &query})
 }
 
-func (resolver *deploymentResolver) Vulns(ctx context.Context, args PaginatedQuery) ([]*EmbeddedVulnerabilityResolver, error) {
+func (resolver *deploymentResolver) Vulns(ctx context.Context, args PaginatedQuery) ([]VulnerabilityResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Deployments, "Vulns")
 
 	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getDeploymentRawQuery())
@@ -531,21 +531,10 @@ func (resolver *deploymentResolver) VulnCount(ctx context.Context, args RawQuery
 
 func (resolver *deploymentResolver) VulnCounter(ctx context.Context, args RawQuery) (*VulnerabilityCounterResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Deployments, "VulnCounter")
-	if err := readImages(ctx); err != nil {
-		return nil, err
-	}
 
 	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getDeploymentRawQuery())
-	vulnResolvers, err := resolver.Vulns(ctx, PaginatedQuery{Query: &query})
-	if err != nil {
-		return nil, err
-	}
 
-	var vulns []*storage.EmbeddedVulnerability
-	for _, vulnsResolver := range vulnResolvers {
-		vulns = append(vulns, vulnsResolver.data)
-	}
-	return mapVulnsToVulnerabilityCounter(vulns), nil
+	return resolver.root.VulnCounter(ctx, RawQuery{Query: &query})
 }
 
 func (resolver *deploymentResolver) PolicyStatus(ctx context.Context, args RawQuery) (string, error) {

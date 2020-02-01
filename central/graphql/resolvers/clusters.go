@@ -530,11 +530,8 @@ func (resolver *clusterResolver) ImageCount(ctx context.Context, args RawQuery) 
 	return imageLoader.CountFromQuery(ctx, q)
 }
 
-func (resolver *clusterResolver) Components(ctx context.Context, args PaginatedQuery) ([]*EmbeddedImageScanComponentResolver, error) {
-	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "Comnponents")
-	if err := readImages(ctx); err != nil {
-		return nil, err
-	}
+func (resolver *clusterResolver) Components(ctx context.Context, args PaginatedQuery) ([]ComponentResolver, error) {
+	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "Components")
 
 	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getClusterRawQuery())
 
@@ -543,20 +540,14 @@ func (resolver *clusterResolver) Components(ctx context.Context, args PaginatedQ
 
 func (resolver *clusterResolver) ComponentCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "ComponentCount")
-	if err := readImages(ctx); err != nil {
-		return 0, err
-	}
 
 	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getClusterRawQuery())
 
 	return resolver.root.ComponentCount(ctx, RawQuery{Query: &query})
 }
 
-func (resolver *clusterResolver) Vulns(ctx context.Context, args PaginatedQuery) ([]*EmbeddedVulnerabilityResolver, error) {
+func (resolver *clusterResolver) Vulns(ctx context.Context, args PaginatedQuery) ([]VulnerabilityResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "Vulns")
-	if err := readImages(ctx); err != nil {
-		return nil, err
-	}
 
 	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getClusterRawQuery())
 
@@ -565,9 +556,6 @@ func (resolver *clusterResolver) Vulns(ctx context.Context, args PaginatedQuery)
 
 func (resolver *clusterResolver) VulnCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "VulnCount")
-	if err := readImages(ctx); err != nil {
-		return 0, err
-	}
 
 	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getClusterRawQuery())
 
@@ -576,21 +564,10 @@ func (resolver *clusterResolver) VulnCount(ctx context.Context, args RawQuery) (
 
 func (resolver *clusterResolver) VulnCounter(ctx context.Context, args RawQuery) (*VulnerabilityCounterResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "VulnCounter")
-	if err := readImages(ctx); err != nil {
-		return nil, err
-	}
 
 	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getClusterRawQuery())
-	vulnResolvers, err := resolver.Vulns(ctx, PaginatedQuery{Query: &query})
-	if err != nil {
-		return nil, err
-	}
 
-	var vulns []*storage.EmbeddedVulnerability
-	for _, vulnsResolver := range vulnResolvers {
-		vulns = append(vulns, vulnsResolver.data)
-	}
-	return mapVulnsToVulnerabilityCounter(vulns), nil
+	return resolver.root.VulnCounter(ctx, RawQuery{Query: &query})
 }
 
 func (resolver *clusterResolver) K8sVulns(ctx context.Context, args PaginatedQuery) ([]*EmbeddedVulnerabilityResolver, error) {

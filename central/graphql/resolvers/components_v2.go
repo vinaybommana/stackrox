@@ -2,111 +2,260 @@ package resolvers
 
 import (
 	"context"
-	"time"
 
 	protoTypes "github.com/gogo/protobuf/types"
 	"github.com/graph-gophers/graphql-go"
 	"github.com/stackrox/rox/central/graphql/resolvers/loaders"
-	"github.com/stackrox/rox/central/metrics"
 	v1 "github.com/stackrox/rox/generated/api/v1"
-	pkgMetrics "github.com/stackrox/rox/pkg/metrics"
+	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/search"
 )
 
-// ComponentV2 resolves a single vulnerability based on an id (the CVE value).
-func (resolver *Resolver) ComponentV2(ctx context.Context, args idQuery) (*imageComponentResolver, error) {
-	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "Component")
-	if err := readImageComponents(ctx); err != nil {
-		return nil, err
-	}
+// Top Level Resolvers.
+///////////////////////
+
+func (resolver *Resolver) componentV2(ctx context.Context, args idQuery) (ComponentResolver, error) {
 	return resolver.wrapImageComponent(resolver.ImageComponentDataStore.Get(ctx, string(*args.ID)))
 }
 
-// ComponentsV2 resolves a set of vulnerabilities based on a query.
-func (resolver *Resolver) ComponentsV2(ctx context.Context, args PaginatedQuery) ([]*imageComponentResolver, error) {
-	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "Components")
-	if err := readImageComponents(ctx); err != nil {
-		return nil, err
-	}
-
+func (resolver *Resolver) componentsV2(ctx context.Context, args PaginatedQuery) ([]ComponentResolver, error) {
 	query, err := args.AsV1QueryOrEmpty()
 	if err != nil {
 		return nil, err
 	}
-	return resolver.wrapImageComponents(resolver.ImageComponentDataStore.SearchRawImageComponents(ctx, query))
+	return resolver.componentsV2Query(ctx, query)
 }
 
-// ComponentCountV2 returns count of all vulnerabilities across infrastructure
-func (resolver *Resolver) ComponentCountV2(ctx context.Context, args RawQuery) (int32, error) {
-	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "ComponentCount")
-	if err := readImageComponents(ctx); err != nil {
-		return 0, err
+func (resolver *Resolver) componentsV2Query(ctx context.Context, query *v1.Query) ([]ComponentResolver, error) {
+	compRes, err := resolver.wrapImageComponents(resolver.ImageComponentDataStore.SearchRawImageComponents(ctx, query))
+	if err != nil {
+		return nil, err
 	}
 
+	ret := make([]ComponentResolver, 0, len(compRes))
+	for _, resolver := range compRes {
+		ret = append(ret, resolver)
+	}
+	return ret, err
+}
+
+func (resolver *Resolver) componentCountV2(ctx context.Context, args RawQuery) (int32, error) {
 	q, err := args.AsV1QueryOrEmpty()
 	if err != nil {
 		return 0, err
 	}
+	return resolver.componentCountV2Query(ctx, q)
+}
 
-	results, err := resolver.ImageComponentDataStore.Search(ctx, q)
+func (resolver *Resolver) componentCountV2Query(ctx context.Context, query *v1.Query) (int32, error) {
+	results, err := resolver.ImageComponentDataStore.Search(ctx, query)
 	if err != nil {
 		return 0, err
 	}
 	return int32(len(results)), nil
 }
 
+// Resolvers on Component Object.
+/////////////////////////////////
+
+// ID returns a unique identifier for the component. Need to implement this on top of 'Id' so that we can implement
+// the same interface as the non-generated embedded resolver used in v1.
+func (eicr *imageComponentResolver) ID(ctx context.Context) graphql.ID {
+	return graphql.ID(eicr.data.GetId())
+}
+
 // LastScanned is the last time the component was scanned in an image.
-func (icr *imageComponentResolver) LastScanned(ctx context.Context) (*graphql.Time, error) {
-	lastScanned, err := icr.getLastScannedTime(ctx)
+func (eicr *imageComponentResolver) LastScanned(ctx context.Context) (*graphql.Time, error) {
+	imageLoader, err := loaders.GetImageLoader(ctx)
 	if err != nil {
 		return nil, err
 	}
-
+	images, err := imageLoader.FromQuery(ctx, eicr.componentQuery())
+	if err != nil {
+		return nil, err
+	}
+	var lastScanned *protoTypes.Timestamp
+	for _, image := range images {
+		if image.GetScan() == nil {
+			continue
+		}
+		if lastScanned == nil || image.GetScan().GetScanTime().Compare(lastScanned) > 0 {
+			lastScanned = image.GetScan().GetScanTime()
+		}
+	}
 	return timestamp(lastScanned)
 }
 
-func (icr *imageComponentResolver) getLastScannedTime(ctx context.Context) (*protoTypes.Timestamp, error) {
-	imageResolver, err := icr.loadImages(ctx, search.EmptyQuery())
+// TopVuln returns the first vulnerability with the top CVSS score.
+func (eicr *imageComponentResolver) TopVuln(ctx context.Context) (VulnerabilityResolver, error) {
+	vulnLoader, err := loaders.GetCVELoader(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	var lastScanned *protoTypes.Timestamp
-	for _, resolver := range imageResolver {
-		if resolver.data.GetScan() == nil {
-			continue
-		}
-
-		if lastScanned == nil || resolver.data.GetScan().GetScanTime().Compare(lastScanned) > 0 {
-			lastScanned = resolver.data.GetScan().GetScanTime()
+	vulns, err := vulnLoader.FromQuery(ctx, eicr.componentQuery())
+	if err != nil {
+		return nil, err
+	}
+	var topVuln *storage.CVE
+	for _, vuln := range vulns {
+		if topVuln == nil || vuln.GetCvss() > topVuln.GetCvss() {
+			topVuln = vuln
 		}
 	}
-
-	return lastScanned, nil
+	if topVuln == nil {
+		return nil, err
+	}
+	return &cVEResolver{
+		root: eicr.root,
+		data: topVuln,
+	}, nil
 }
 
-func (icr *imageComponentResolver) loadImages(ctx context.Context, query *v1.Query) ([]*imageResolver, error) {
+// Vulns resolves the vulnerabilities contained in the image component.
+func (eicr *imageComponentResolver) Vulns(ctx context.Context, args PaginatedQuery) ([]VulnerabilityResolver, error) {
+	query, err := args.AsV1QueryOrEmpty()
+	if err != nil {
+		return nil, err
+	}
+	pagination := query.GetPagination()
+	query, err = search.AddAsConjunction(eicr.componentQuery(), query)
+	if err != nil {
+		return nil, err
+	}
+	query.Pagination = pagination
+	return eicr.root.vulnerabilitiesV2Query(ctx, query)
+}
+
+// VulnCount resolves the number of vulnerabilities contained in the image component.
+func (eicr *imageComponentResolver) VulnCount(ctx context.Context, args RawQuery) (int32, error) {
+	query, err := args.AsV1QueryOrEmpty()
+	if err != nil {
+		return 0, err
+	}
+	query, err = search.AddAsConjunction(eicr.componentQuery(), query)
+	if err != nil {
+		return 0, err
+	}
+	return eicr.root.vulnerabilityCountV2Query(ctx, query)
+}
+
+// VulnCounter resolves the number of different types of vulnerabilities contained in an image component.
+func (eicr *imageComponentResolver) VulnCounter(ctx context.Context, args RawQuery) (*VulnerabilityCounterResolver, error) {
+	vulnLoader, err := loaders.GetCVELoader(ctx)
+	if err != nil {
+		return nil, err
+	}
+	q1 := search.NewConjunctionQuery(eicr.componentQuery(), search.NewQueryBuilder().AddBools(search.Fixable, true).ProtoQuery())
+	fixableVulns, err := vulnLoader.FromQuery(ctx, q1)
+	if err != nil {
+		return nil, err
+	}
+	allVulns, err := vulnLoader.FromQuery(ctx, eicr.componentQuery())
+	if err != nil {
+		return nil, err
+	}
+	return mapVCEsToVulnerabilityCounter(fixableVulns, allVulns), nil
+}
+
+// Images are the images that contain the Component.
+func (eicr *imageComponentResolver) Images(ctx context.Context, args PaginatedQuery) ([]*imageResolver, error) {
 	imageLoader, err := loaders.GetImageLoader(ctx)
+	if err != nil {
+		return nil, err
+	}
+	query, err := args.AsV1QueryOrEmpty()
+	if err != nil {
+		return nil, err
+	}
+	pagination := query.GetPagination()
+	query, err = search.AddAsConjunction(eicr.componentQuery(), query)
+	if err != nil {
+		return nil, err
+	}
+	query.Pagination = pagination
+	return eicr.root.wrapImages(imageLoader.FromQuery(ctx, query))
+}
+
+// ImageCount is the number of images that contain the Component.
+func (eicr *imageComponentResolver) ImageCount(ctx context.Context, args RawQuery) (int32, error) {
+	imageLoader, err := loaders.GetImageLoader(ctx)
+	if err != nil {
+		return 0, err
+	}
+	query, err := args.AsV1QueryOrEmpty()
+	if err != nil {
+		return 0, err
+	}
+	query, err = search.AddAsConjunction(eicr.componentQuery(), query)
+	if err != nil {
+		return 0, err
+	}
+	return imageLoader.CountFromQuery(ctx, query)
+}
+
+// Deployments are the deployments that contain the Component.
+func (eicr *imageComponentResolver) Deployments(ctx context.Context, args PaginatedQuery) ([]*deploymentResolver, error) {
+	if err := readDeployments(ctx); err != nil {
+		return nil, err
+	}
+	query, err := args.AsV1QueryOrEmpty()
 	if err != nil {
 		return nil, err
 	}
 
 	pagination := query.GetPagination()
-	query.Pagination = nil
-
-	query, err = search.AddAsConjunction(icr.componentQuery(), query)
+	query, err = search.AddAsConjunction(eicr.componentQuery(), query)
 	if err != nil {
 		return nil, err
 	}
-
 	query.Pagination = pagination
 
-	return icr.root.wrapImages(imageLoader.FromQuery(ctx, query))
+	deploymentLoader, err := loaders.GetDeploymentLoader(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return eicr.root.wrapDeployments(deploymentLoader.FromQuery(ctx, query))
 }
 
-func (icr *imageComponentResolver) componentQuery() *v1.Query {
+// DeploymentCount is the number of deployments that contain the Component.
+func (eicr *imageComponentResolver) DeploymentCount(ctx context.Context, args RawQuery) (int32, error) {
+	if err := readDeployments(ctx); err != nil {
+		return 0, err
+	}
+	query, err := args.AsV1QueryOrEmpty()
+	if err != nil {
+		return 0, err
+	}
+	query, err = search.AddAsConjunction(eicr.componentQuery(), query)
+	if err != nil {
+		return 0, err
+	}
+	deploymentLoader, err := loaders.GetDeploymentLoader(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return deploymentLoader.CountFromQuery(ctx, query)
+}
+
+// Helper functions.
+////////////////////
+
+func (eicr *imageComponentResolver) componentQuery() *v1.Query {
 	return search.NewQueryBuilder().
-		AddExactMatches(search.Component, icr.data.GetName()).
-		AddExactMatches(search.ComponentVersion, icr.data.GetVersion()).
+		AddExactMatches(search.ComponentName, eicr.data.GetName()).
+		AddExactMatches(search.ComponentVersion, eicr.data.GetVersion()).
 		ProtoQuery()
+}
+
+// These return dummy values, as they should not be accessed from the top level component resolver, but the embedded
+// version instead.
+
+// Location returns the location of the component.
+func (eicr *imageComponentResolver) Location(ctx context.Context) string {
+	return ""
+}
+
+// LayerIndex is the index in the parent image.
+func (eicr *imageComponentResolver) LayerIndex() *int32 {
+	return nil
 }

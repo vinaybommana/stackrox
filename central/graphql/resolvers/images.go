@@ -8,7 +8,6 @@ import (
 	"github.com/stackrox/rox/central/graphql/resolvers/loaders"
 	"github.com/stackrox/rox/central/metrics"
 	"github.com/stackrox/rox/generated/storage"
-	"github.com/stackrox/rox/pkg/features"
 	pkgMetrics "github.com/stackrox/rox/pkg/metrics"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/utils"
@@ -90,23 +89,9 @@ func (resolver *imageResolver) Deployments(ctx context.Context, args PaginatedQu
 		return nil, err
 	}
 
-	q, err := args.AsV1QueryOrEmpty()
-	if err != nil {
-		return nil, err
-	}
+	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getImageRawQuery())
 
-	pagination := q.GetPagination()
-	q.Pagination = nil
-
-	imageIDQuery := search.NewQueryBuilder().AddExactMatches(search.ImageSHA, string(resolver.Id(ctx))).ProtoQuery()
-	q, err = search.AddAsConjunction(imageIDQuery, q)
-	if err != nil {
-		return nil, err
-	}
-
-	q.Pagination = pagination
-
-	return resolver.root.wrapDeployments(resolver.root.DeploymentDataStore.SearchRawDeployments(ctx, q))
+	return resolver.root.Deployments(ctx, PaginatedQuery{Pagination: args.Pagination, Query: &query})
 }
 
 // Deployments returns the deployments which use this image for the identified image, if it exists
@@ -115,12 +100,9 @@ func (resolver *imageResolver) DeploymentCount(ctx context.Context, args RawQuer
 		return 0, err
 	}
 
-	resolvers, err := resolver.Deployments(ctx, PaginatedQuery{Query: args.Query})
-	if err != nil {
-		return 0, err
-	}
+	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getImageRawQuery())
 
-	return int32(len(resolvers)), nil
+	return resolver.root.DeploymentCount(ctx, RawQuery{Query: &query})
 }
 
 // TopVuln returns the first vulnerability with the top CVSS score.
@@ -179,7 +161,12 @@ func (resolver *imageResolver) VulnCount(ctx context.Context, args RawQuery) (in
 		return 0, err
 	}
 
-	vulns, err := resolver.Vulns(ctx, PaginatedQuery{Query: args.Query})
+	q, err := args.AsV1QueryOrEmpty()
+	if err != nil {
+		return 0, err
+	}
+
+	vulns, err := mapImagesToVulnerabilityResolvers(resolver.root, []*storage.Image{resolver.data}, q)
 	if err != nil {
 		return 0, err
 	}
@@ -192,7 +179,12 @@ func (resolver *imageResolver) VulnCounter(ctx context.Context, args RawQuery) (
 		return nil, err
 	}
 
-	resolvers, err := resolver.Vulns(ctx, PaginatedQuery{Query: args.Query})
+	q, err := args.AsV1QueryOrEmpty()
+	if err != nil {
+		return nil, err
+	}
+
+	resolvers, err := mapImagesToVulnerabilityResolvers(resolver.root, []*storage.Image{resolver.data}, q)
 	if err != nil {
 		return nil, err
 	}
@@ -208,11 +200,6 @@ func (resolver *imageResolver) VulnCounter(ctx context.Context, args RawQuery) (
 func (resolver *imageResolver) Components(ctx context.Context, args PaginatedQuery) ([]*EmbeddedImageScanComponentResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Images, "ImageComponents")
 
-	if features.Dackbox.Enabled() {
-		query := search.AddRawQueriesAsConjunction(args.String(), resolver.getImageRawQuery())
-		return resolver.root.Components(ctx, PaginatedQuery{Query: &query, Pagination: args.Pagination})
-	}
-
 	q, err := args.AsV1QueryOrEmpty()
 	if err != nil {
 		return nil, err
@@ -224,7 +211,6 @@ func (resolver *imageResolver) Components(ctx context.Context, args PaginatedQue
 	resolvers, err := paginationWrapper{
 		pv: pagination,
 	}.paginate(mapImagesToComponentResolvers(resolver.root, []*storage.Image{resolver.data}, q))
-
 	return resolvers.([]*EmbeddedImageScanComponentResolver), err
 }
 
@@ -234,7 +220,12 @@ func (resolver *imageResolver) ComponentCount(ctx context.Context, args RawQuery
 		return 0, err
 	}
 
-	components, err := resolver.Components(ctx, PaginatedQuery{Query: args.Query})
+	q, err := args.AsV1QueryOrEmpty()
+	if err != nil {
+		return 0, err
+	}
+
+	components, err := mapImagesToComponentResolvers(resolver.root, []*storage.Image{resolver.data}, q)
 	if err != nil {
 		return 0, err
 	}
