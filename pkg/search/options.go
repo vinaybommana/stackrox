@@ -33,6 +33,7 @@ var (
 	CVEType                      = newFieldLabel("CVE Type")
 	ImpactScore                  = newFieldLabel("Impact Score")
 	CVEPublishedOn               = newFieldLabel("CVE Published On")
+	CVECreatedTime               = newFieldLabel("CVE Created Time")
 	CVESuppressed                = newFieldLabel("CVE Suppressed")
 	CVSS                         = newFieldLabel("CVSS")
 	Component                    = newFieldLabel("Component")

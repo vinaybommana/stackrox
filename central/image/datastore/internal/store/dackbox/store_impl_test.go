@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/dgraph-io/badger"
+	cveStore "github.com/stackrox/rox/central/cve/store"
+	cveDackBoxStore "github.com/stackrox/rox/central/cve/store/dackbox"
 	"github.com/stackrox/rox/central/image/datastore/internal/store"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/badgerhelper"
@@ -26,7 +28,8 @@ type ImageStoreTestSuite struct {
 	dacky *dackbox.DackBox
 	dirty queue.Queue
 
-	store store.Store
+	store      store.Store
+	cveStorage cveStore.Store
 }
 
 func (suite *ImageStoreTestSuite) SetupSuite() {
@@ -43,7 +46,11 @@ func (suite *ImageStoreTestSuite) SetupSuite() {
 	}
 	suite.store, err = New(suite.dacky, concurrency.NewKeyFence(), false)
 	if err != nil {
-		suite.FailNowf("failed to create counter: %+v", err.Error())
+		suite.FailNowf("failed to create key fence: %+v", err.Error())
+	}
+	suite.cveStorage, err = cveDackBoxStore.New(suite.dacky)
+	if err != nil {
+		suite.FailNowf("failed to create cve store: %+v", err.Error())
 	}
 }
 
@@ -135,6 +142,14 @@ func (suite *ImageStoreTestSuite) TestImages() {
 		suite.True(exists)
 		suite.Equal(d.GetName().GetFullName(), listGot.GetName())
 	}
+
+	// Check that the CVEs were written with the correct timestamp.
+	vuln, _, err := suite.cveStorage.Get("cve1")
+	suite.NoError(err)
+	suite.Equal(images[0].GetLastUpdated(), vuln.GetCreatedAt())
+	vuln, _, err = suite.cveStorage.Get("cve2")
+	suite.NoError(err)
+	suite.Equal(images[0].GetLastUpdated(), vuln.GetCreatedAt())
 
 	// Test Update
 	for _, d := range images {

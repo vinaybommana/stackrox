@@ -146,14 +146,15 @@ func (b *storeImpl) GetImagesBatch(digests []string) ([]*storage.Image, error) {
 func (b *storeImpl) Upsert(image *storage.Image, listImage *storage.ListImage) error {
 	defer metrics.SetBadgerOperationDurationTime(time.Now(), ops.Upsert, "Image")
 
+	iTime := protoTypes.TimestampNow()
 	if !b.noUpdateTimestamps {
-		image.LastUpdated = protoTypes.TimestampNow()
+		image.LastUpdated = iTime
 	}
 	parts := Split(image)
 
 	keysToUpdate := gatherKeysForImageParts(&parts)
 	return b.keyFence.DoStatusWithLock(concurrency.DiscreteKeySet(keysToUpdate...), func() error {
-		return b.writeImageParts(&parts)
+		return b.writeImageParts(&parts, iTime)
 	})
 }
 
@@ -197,7 +198,7 @@ func gatherKeysForImageParts(parts *ImageParts) [][]byte {
 	return allKeys
 }
 
-func (b *storeImpl) writeImageParts(parts *ImageParts) error {
+func (b *storeImpl) writeImageParts(parts *ImageParts, iTime *protoTypes.Timestamp) error {
 	dackTxn := b.dacky.NewTransaction()
 	defer dackTxn.Discard()
 
@@ -210,7 +211,7 @@ func (b *storeImpl) writeImageParts(parts *ImageParts) error {
 
 	var componentKeys [][]byte
 	for _, componentData := range parts.children {
-		componentKey, err := b.writeComponentParts(dackTxn, &componentData)
+		componentKey, err := b.writeComponentParts(dackTxn, &componentData, iTime)
 		if err != nil {
 			return err
 		}
@@ -223,7 +224,7 @@ func (b *storeImpl) writeImageParts(parts *ImageParts) error {
 	return dackTxn.Commit()
 }
 
-func (b *storeImpl) writeComponentParts(txn *dackbox.Transaction, parts *ComponentParts) ([]byte, error) {
+func (b *storeImpl) writeComponentParts(txn *dackbox.Transaction, parts *ComponentParts, iTime *protoTypes.Timestamp) ([]byte, error) {
 	componentKey := componentDackBox.KeyFunc(parts.component)
 	if err := imageComponentEdgeDackBox.Upserter.UpsertIn(nil, parts.edge, txn); err != nil {
 		return nil, err
@@ -234,7 +235,7 @@ func (b *storeImpl) writeComponentParts(txn *dackbox.Transaction, parts *Compone
 
 	var cveKeys [][]byte
 	for _, cveData := range parts.children {
-		cveKey, err := b.writeCVEParts(txn, &cveData)
+		cveKey, err := b.writeCVEParts(txn, &cveData, iTime)
 		if err != nil {
 			return nil, err
 		}
@@ -247,7 +248,7 @@ func (b *storeImpl) writeComponentParts(txn *dackbox.Transaction, parts *Compone
 	return componentKey, nil
 }
 
-func (b *storeImpl) writeCVEParts(txn *dackbox.Transaction, parts *CVEParts) ([]byte, error) {
+func (b *storeImpl) writeCVEParts(txn *dackbox.Transaction, parts *CVEParts, iTime *protoTypes.Timestamp) ([]byte, error) {
 	if err := componentCVEEdgeDackBox.Upserter.UpsertIn(nil, parts.edge, txn); err != nil {
 		return nil, err
 	}
@@ -259,8 +260,10 @@ func (b *storeImpl) writeCVEParts(txn *dackbox.Transaction, parts *CVEParts) ([]
 	if currCVEMsg != nil {
 		currCVE := currCVEMsg.(*storage.CVE)
 		parts.cve.Suppressed = currCVE.GetSuppressed()
+		parts.cve.CreatedAt = currCVE.GetCreatedAt()
+	} else {
+		parts.cve.CreatedAt = iTime
 	}
-
 	if err := cveDackBox.Upserter.UpsertIn(nil, parts.cve, txn); err != nil {
 		return nil, err
 	}
