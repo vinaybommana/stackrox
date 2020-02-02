@@ -138,7 +138,8 @@ export function getImageTableColumns(workflowState) {
                 />
             ),
             accessor: 'deploymentCount',
-            sortField: imageSortFields.DEPLOYMENTS
+            sortField: imageSortFields.DEPLOYMENT_COUNT,
+            sortable: false
         },
         {
             Header: `Components`,
@@ -159,7 +160,8 @@ export function getImageTableColumns(workflowState) {
                 );
             },
             accessor: 'scan.components',
-            sortField: imageSortFields.COMPONENT_COUNT
+            sortField: imageSortFields.COMPONENT_COUNT,
+            sortable: false
         },
         {
             Header: `Risk Priority`,

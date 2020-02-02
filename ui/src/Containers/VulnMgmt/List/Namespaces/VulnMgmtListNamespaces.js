@@ -68,7 +68,7 @@ export function getNamespaceTableColumns(workflowState) {
                 );
             },
             accessor: 'vulnCounter.all.total',
-            sortField: namespaceSortFields.CVES
+            sortField: namespaceSortFields.CVE_COUNT
         },
         {
             Header: `Cluster`,
@@ -102,7 +102,7 @@ export function getNamespaceTableColumns(workflowState) {
                 />
             ),
             accessor: 'deploymentCount',
-            sortField: namespaceSortFields.DEPLOYMENTS
+            sortField: namespaceSortFields.DEPLOYMENT_COUNT
         },
         {
             Header: `Images`,
@@ -134,7 +134,7 @@ export function getNamespaceTableColumns(workflowState) {
                 />
             ),
             accessor: 'policyCount',
-            sortField: namespaceSortFields.POLICIES,
+            sortField: namespaceSortFields.POLICY_COUNT,
             sortable: false
         },
         {

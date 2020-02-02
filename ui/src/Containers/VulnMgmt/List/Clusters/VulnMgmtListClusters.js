@@ -96,14 +96,15 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
                     );
                 },
                 accessor: 'vulnCounter.all.total',
-                sortField: clusterSortFields.CVES
+                sortField: clusterSortFields.CVE_COUNT
             },
             {
                 Header: `K8S Version`,
                 headerClassName: `w-1/10 ${defaultHeaderClassName}`,
                 className: `w-1/10 ${defaultColumnClassName}`,
                 accessor: 'status.orchestratorMetadata.version',
-                sortField: clusterSortFields.K8SVERSION
+                sortField: clusterSortFields.K8SVERSION,
+                sortable: false
             },
             // TODO: enable this column after data is available from the API
             // {
@@ -128,7 +129,8 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
                     />
                 ),
                 accessor: 'namespaceCount',
-                sortField: clusterSortFields.NAMESPACE
+                sortField: clusterSortFields.NAMESPACE,
+                sortable: false
             },
             {
                 Header: `Deployments`,
@@ -146,7 +148,8 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
                 ),
                 id: 'deploymentCount',
                 accessor: 'deploymentCount',
-                sortField: clusterSortFields.DEPLOYMENTS
+                sortField: clusterSortFields.DEPLOYMENTS,
+                sortable: false
             },
             {
                 Header: `Policies`,
@@ -164,7 +167,7 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
                 ),
                 id: 'policyCount',
                 accessor: 'policyCount',
-                sortField: clusterSortFields.POLICIES,
+                sortField: clusterSortFields.POLICY_COUNT,
                 sortable: false
             },
             {
@@ -182,7 +185,8 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
                 },
                 id: 'policyStatus',
                 accessor: 'policyStatus.status',
-                sortField: clusterSortFields.POLICY_STATUS
+                sortField: clusterSortFields.POLICY_STATUS,
+                sortable: false
             },
             {
                 Header: `Latest Violation`,

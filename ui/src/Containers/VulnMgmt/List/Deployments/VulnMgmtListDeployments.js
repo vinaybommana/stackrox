@@ -82,7 +82,8 @@ export function getDeploymentTableColumns(workflowState) {
                 return <DateTimeField date={latestViolation} asString={pdf} />;
             },
             accessor: 'latestViolation',
-            sortField: deploymentSortFields.LATEST_VIOLATION
+            sortField: deploymentSortFields.LATEST_VIOLATION,
+            sortable: false
         },
         {
             Header: `Policies`,
@@ -99,7 +100,7 @@ export function getDeploymentTableColumns(workflowState) {
                     entityTypeText="policy"
                 />
             ),
-            sortField: deploymentSortFields.POLICIES,
+            sortField: deploymentSortFields.POLICY_COUNT,
             sortable: false
         },
         {
@@ -114,7 +115,8 @@ export function getDeploymentTableColumns(workflowState) {
             },
             id: 'policyStatus',
             accessor: 'policyStatus',
-            sortField: deploymentSortFields.POLICY_STATUS
+            sortField: deploymentSortFields.POLICY_STATUS,
+            sortable: false
         },
         {
             Header: `Cluster`,
@@ -163,7 +165,8 @@ export function getDeploymentTableColumns(workflowState) {
                 />
             ),
             accessor: 'imageCount',
-            sortField: deploymentSortFields.IMAGES
+            sortField: deploymentSortFields.IMAGES,
+            sortable: false
         },
         {
             Header: `Risk Priority`,

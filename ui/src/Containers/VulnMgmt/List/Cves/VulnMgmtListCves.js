@@ -31,16 +31,10 @@ import { VULN_CVE_LIST_FRAGMENT } from 'Containers/VulnMgmt/VulnMgmt.fragments';
 import CveBulkActionDialogue from './CveBulkActionDialogue';
 
 export const defaultCveSort = [
-    // {
-    //     id: 'Fixed By',
-    //     desc: true
-    // }
-    // @TODO, remove the temp sort above
-    //        uncomment the sort fields below for CVEs, after they are available for backend pagination/sorting
-    // {
-    //     id: cveSortFields.CVSS_SCORE,
-    //     desc: true
-    // }
+    {
+        id: cveSortFields.CVSS_SCORE,
+        desc: true
+    },
     {
         id: cveSortFields.CVE,
         desc: false
@@ -110,7 +104,8 @@ export function getCveTableColumns(workflowState) {
                     : '-';
             },
             accessor: 'envImpact',
-            sortField: cveSortFields.ENV_IMPACT
+            sortField: cveSortFields.ENV_IMPACT,
+            sortable: false
         },
         {
             Header: `Impact Score`,
@@ -140,7 +135,8 @@ export function getCveTableColumns(workflowState) {
             ),
             accessor: 'deploymentCount',
             id: 'deploymentCount',
-            sortField: cveSortFields.DEPLOYMENTS
+            sortField: cveSortFields.DEPLOYMENTS,
+            sortable: false
         },
         {
             Header: `Images`,
@@ -158,7 +154,8 @@ export function getCveTableColumns(workflowState) {
             ),
             accessor: 'imageCount',
             id: 'imageCount',
-            sortField: cveSortFields.IMAGES
+            sortField: cveSortFields.IMAGES,
+            sortable: false
         },
         {
             Header: `Components`,
@@ -176,7 +173,8 @@ export function getCveTableColumns(workflowState) {
             ),
             accessor: 'componentCount',
             id: 'componentCount',
-            sortField: cveSortFields.COMPONENTS
+            sortField: cveSortFields.COMPONENTS,
+            sortable: false
         },
         {
             Header: `Scanned`,

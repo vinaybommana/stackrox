@@ -103,7 +103,8 @@ export function getPolicyTableColumns(workflowState) {
             ),
             id: 'policyStatus',
             accessor: 'policyStatus',
-            sortField: policySortFields.POLICY_STATUS
+            sortField: policySortFields.POLICY_STATUS,
+            sortable: false
         },
         {
             Header: `Last Updated`,
@@ -125,7 +126,8 @@ export function getPolicyTableColumns(workflowState) {
                 return <DateTimeField date={latestViolation} asString={pdf} />;
             },
             accessor: 'latestViolation',
-            sortField: policySortFields.LATEST_VIOLATION
+            sortField: policySortFields.LATEST_VIOLATION,
+            sortable: false
         },
         {
             Header: `Severity`,

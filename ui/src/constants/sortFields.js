@@ -1,7 +1,6 @@
 import entityTypes from 'constants/entityTypes';
 
 export const imageSortFields = {
-    CVE: 'CVE',
     CVE_COUNT: 'CVE Count',
     CVSS: 'CVSS',
     CLUSTER: 'Cluster',
@@ -43,7 +42,8 @@ export const componentSortFields = {
     COMPONENT: 'Component',
     CVE_COUNT: 'CVE Count',
     TOP_CVSS: 'CVSS',
-    SOURCE: 'Source',
+    SOURCE: '"Component Source"',
+    LOCATION: '"Component Location"',
     IMAGE_COUNT: 'Image Count',
     DEPLOYMENT_COUNT: 'Deployment Count',
     PRIORITY: 'Priority'
@@ -68,7 +68,7 @@ export const cveSortFields = {
     IMAGE_COUNT: 'Image Count',
     COMPONENT_COUNT: 'Component Count',
     SCANNED: 'Last Scanned',
-    PUBLISHED: 'Published'
+    PUBLISHED: 'CVE Published On'
 };
 
 /**
@@ -79,11 +79,11 @@ export const cveSortFields = {
  *   CVEs, K8sVersion, Namespaces, Deployments, Policies, Policy Status, Latest Violation, Risk Priority
  */
 export const clusterSortFields = {
-    CVES: 'CVE Count',
+    CVE_COUNT: 'CVE Count',
     CLUSTER: 'Cluster',
     DEPLOYMENT_COUNT: 'Deployment Count',
     K8SVERSION: 'K8S Version',
-    LATEST_VIOLATION: 'Latest Violation',
+    LATEST_VIOLATION: 'Violation Time',
     NAME: 'Cluster',
     NAMESPACE: 'Namespace',
     POLICY_COUNT: 'Policy Count',
@@ -99,11 +99,11 @@ export const clusterSortFields = {
  *   CVEs, Deployments, Images, Policies, Policy Status, Latest Violation, Priority
  */
 export const namespaceSortFields = {
-    CVES: 'CVE Count',
+    CVE_COUNT: 'CVE Count',
     CLUSTER: 'Cluster',
     DEPLOYMENT_COUNT: 'Deployment Count',
     IMAGES: 'Images',
-    LATEST_VIOLATION: 'Latest Violation',
+    LATEST_VIOLATION: 'Violation Time',
     NAMESPACE: 'Namespace',
     NAME: 'Namespace',
     POLICY_COUNT: 'Policy Count',
@@ -124,7 +124,7 @@ export const policySortFields = {
     DISABLED: 'Disabled',
     ENFORCEMENT: 'SORT_Enforcement',
     LAST_UPDATED: 'Policy Last Updated',
-    LATEST_VIOLATION: 'Latest Violation',
+    LATEST_VIOLATION: 'Violation Time',
     LIFECYCLE_STAGE: 'Lifecycle Stage',
     POLICY: 'Policy',
     POLICY_STATUS: 'Policy Status',
@@ -180,7 +180,7 @@ export const deploymentSortFields = {
     NAMESPACE: 'Namespace',
     NAMESPACE_ID: 'Namespace ID',
     POD_LABEL: 'Pod Label',
-    POLICIES: 'Policies',
+    POLICY_COUNT: 'Policies',
     POLICY_STATUS: 'Policy Status',
     PORT: 'Port',
     PORT_PROTOCOL: 'Port Protocol',

@@ -97,16 +97,15 @@ export function getComponentTableColumns(workflowState) {
             Header: `Source`,
             headerClassName: `w-1/8 ${defaultHeaderClassName}`,
             className: `w-1/8 ${defaultColumnClassName}`,
-            accessor: 'source'
-            // @TODO uncomment once source is sortable on backend
-            // sortField: componentSortFields.SOURCE
+            accessor: 'source',
+            sortField: componentSortFields.SOURCE
         },
         {
             Header: `Location`,
             headerClassName: `w-1/8 ${defaultHeaderClassName}`,
             className: `w-1/8 ${defaultColumnClassName}`,
             accessor: 'location',
-            sortable: false
+            sortField: componentSortFields.LOCATION
         },
         {
             Header: `Images`,
@@ -122,7 +121,8 @@ export function getComponentTableColumns(workflowState) {
                     selectedRowId={original.id}
                 />
             ),
-            sortField: componentSortFields.IMAGES
+            sortField: componentSortFields.IMAGE_COUNT,
+            sortable: false
         },
         {
             Header: `Deployments`,
@@ -138,7 +138,8 @@ export function getComponentTableColumns(workflowState) {
                     selectedRowId={original.id}
                 />
             ),
-            sortField: componentSortFields.DEPLOYMENTS
+            sortField: componentSortFields.DEPLOYMENT_COUNT,
+            sortable: false
         },
         {
             Header: `Risk Priority`,
