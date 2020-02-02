@@ -84,7 +84,7 @@ func (b *storeImpl) Get(id string) (edges *storage.ComponentCVEEdge, exists bool
 	defer dackTxn.Discard()
 
 	msg, err := b.reader.ReadIn(edgeDackBox.BucketHandler.GetKey(id), dackTxn)
-	if err != nil {
+	if err != nil || msg == nil {
 		return nil, false, err
 	}
 

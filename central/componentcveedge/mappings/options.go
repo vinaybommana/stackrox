@@ -7,4 +7,4 @@ import (
 )
 
 // OptionsMap defines the search options for Vulnerabilities stored in images.
-var OptionsMap = search.Walk(v1.SearchCategory_COMPONENT_VULN_EDGE, "componentcveedge", (*storage.ComponentCVEEdge)(nil))
+var OptionsMap = search.Walk(v1.SearchCategory_COMPONENT_VULN_EDGE, "component_c_v_e_edge", (*storage.ComponentCVEEdge)(nil))

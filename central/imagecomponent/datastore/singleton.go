@@ -29,7 +29,6 @@ func initialize() {
 	storage, err := dackbox.New(globaldb.GetGlobalDackBox())
 	utils.Must(err)
 
-	indexer := componentIndexer.New(globalindex.GetGlobalIndex())
 	searcher := search.New(storage, globaldb.GetGlobalDackBox(),
 		cveIndexer.Singleton(),
 		componentCVEEdgeIndexer.Singleton(),
@@ -37,7 +36,7 @@ func initialize() {
 		imageComponentEdgeIndexer.Singleton(),
 		imageIndexer.New(globalindex.GetGlobalIndex()))
 
-	ad, err = New(storage, indexer, searcher)
+	ad, err = New(storage, componentIndexer.Singleton(), searcher)
 	utils.Must(err)
 }
 

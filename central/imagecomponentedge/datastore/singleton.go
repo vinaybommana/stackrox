@@ -2,7 +2,6 @@ package datastore
 
 import (
 	globaldb "github.com/stackrox/rox/central/globaldb/dackbox"
-	"github.com/stackrox/rox/central/globalindex"
 	"github.com/stackrox/rox/central/imagecomponentedge/index"
 	"github.com/stackrox/rox/central/imagecomponentedge/search"
 	"github.com/stackrox/rox/central/imagecomponentedge/store/dackbox"
@@ -25,10 +24,9 @@ func initialize() {
 	storage, err := dackbox.New(globaldb.GetGlobalDackBox())
 	utils.Must(err)
 
-	indexer := index.New(globalindex.GetGlobalIndex())
-	searcher := search.New(storage, indexer)
+	searcher := search.New(storage, index.Singleton())
 
-	ad, err = New(storage, indexer, searcher)
+	ad, err = New(storage, index.Singleton(), searcher)
 	utils.Must(err)
 }
 

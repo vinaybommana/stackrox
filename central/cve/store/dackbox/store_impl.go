@@ -84,7 +84,7 @@ func (b *storeImpl) Get(id string) (cve *storage.CVE, exists bool, err error) {
 	defer dackTxn.Discard()
 
 	msg, err := b.reader.ReadIn(vulnDackBox.BucketHandler.GetKey(id), dackTxn)
-	if err != nil {
+	if err != nil || msg == nil {
 		return nil, false, err
 	}
 

@@ -32,7 +32,6 @@ func New(storage store.Store, graphProvider idspace.GraphProvider,
 	imageIndexer imageIndexer.Indexer) Searcher {
 	return &searcherImpl{
 		storage: storage,
-		indexer: componentIndexer,
 		searcher: formatSearcher(graphProvider,
 			cveIndexer,
 			componentCVEEdgeIndexer,

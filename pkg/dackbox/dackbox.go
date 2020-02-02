@@ -142,8 +142,10 @@ func (rc *DackBox) commit(openedAt uint64, txn *badger.Txn, modification graph.M
 	}
 
 	// We should only add to the dirty queue and add the graph modification if the transaction was submitted successfully.
-	for k, v := range dirtyMap {
-		rc.toIndex.Push([]byte(k), v)
+	if rc.toIndex != nil {
+		for k, v := range dirtyMap {
+			rc.toIndex.Push([]byte(k), v)
+		}
 	}
 	rc.history.Apply(modification)
 	return nil

@@ -21,10 +21,16 @@ var (
 	)
 
 	// Upserter writes storage.ImageComponentEdges directly to the store.
-	Upserter = crud.NewUpserter(crud.WithKeyFunction(crud.PrefixKey(Bucket, keyFunc)))
+	Upserter = crud.NewUpserter(
+		crud.WithKeyFunction(crud.PrefixKey(Bucket, keyFunc)),
+		crud.AddToIndex(),
+	)
 
 	// Deleter deletes the edges from the store.
-	Deleter = crud.NewDeleter(crud.Shared())
+	Deleter = crud.NewDeleter(
+		crud.Shared(),
+		crud.RemoveFromIndex(),
+	)
 )
 
 func init() {

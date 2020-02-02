@@ -21,10 +21,16 @@ var (
 	)
 
 	// Upserter writes storage.CVEs directly to the store.
-	Upserter = crud.NewUpserter(crud.WithKeyFunction(KeyFunc))
+	Upserter = crud.NewUpserter(
+		crud.WithKeyFunction(KeyFunc),
+		crud.AddToIndex(),
+	)
 
 	// Deleter deletes vulns from the store.
-	Deleter = crud.NewDeleter(crud.Shared())
+	Deleter = crud.NewDeleter(
+		crud.Shared(),
+		crud.RemoveFromIndex(),
+	)
 )
 
 func init() {

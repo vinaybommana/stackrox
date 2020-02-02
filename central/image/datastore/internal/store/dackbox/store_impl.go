@@ -317,7 +317,7 @@ func (b *storeImpl) readImage(txn *dackbox.Transaction, id string) (*storage.Ima
 	}
 
 	parts, err := b.readImageParts(txn, keys)
-	if err != nil {
+	if err != nil || parts == nil {
 		return nil, err
 	}
 

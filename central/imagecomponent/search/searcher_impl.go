@@ -12,7 +12,6 @@ import (
 	deploymentSAC "github.com/stackrox/rox/central/image/sac"
 	imageSAC "github.com/stackrox/rox/central/image/sac"
 	componentDackBox "github.com/stackrox/rox/central/imagecomponent/dackbox"
-	"github.com/stackrox/rox/central/imagecomponent/index"
 	componentMappings "github.com/stackrox/rox/central/imagecomponent/mappings"
 	componentSAC "github.com/stackrox/rox/central/imagecomponent/sac"
 	"github.com/stackrox/rox/central/imagecomponent/store"
@@ -41,7 +40,6 @@ var (
 
 type searcherImpl struct {
 	storage  store.Store
-	indexer  index.Indexer
 	searcher search.Searcher
 }
 
@@ -59,6 +57,20 @@ func (ds *searcherImpl) SearchImageComponents(ctx context.Context, q *v1.Query) 
 
 func (ds *searcherImpl) SearchRawImageComponents(ctx context.Context, q *v1.Query) ([]*storage.ImageComponent, error) {
 	return ds.searchImageComponents(ctx, q)
+}
+
+func (ds *searcherImpl) searchImageComponents(ctx context.Context, q *v1.Query) ([]*storage.ImageComponent, error) {
+	results, err := ds.getSearchResults(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+
+	ids := search.ResultsToIDs(results)
+	components, _, err := ds.storage.GetBatch(ids)
+	if err != nil {
+		return nil, err
+	}
+	return components, nil
 }
 
 func (ds *searcherImpl) getSearchResults(ctx context.Context, q *v1.Query) ([]search.Result, error) {
@@ -121,20 +133,6 @@ func formatSearcher(graphProvider idspace.GraphProvider,
 	paginatedSearcher := paginated.Paginated(derivedFieldSortedSearcher)
 	defaultSortedSearcher := paginated.WithDefaultSortOption(paginatedSearcher, defaultSortOption)
 	return defaultSortedSearcher
-}
-
-func (ds *searcherImpl) searchImageComponents(ctx context.Context, q *v1.Query) ([]*storage.ImageComponent, error) {
-	results, err := ds.Search(ctx, q)
-	if err != nil {
-		return nil, err
-	}
-
-	ids := search.ResultsToIDs(results)
-	components, _, err := ds.storage.GetBatch(ids)
-	if err != nil {
-		return nil, err
-	}
-	return components, nil
 }
 
 func getCompoundComponentSearcher(graphProvider idspace.GraphProvider,

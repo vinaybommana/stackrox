@@ -23,10 +23,14 @@ var (
 	// Upserter writes components to the store.
 	Upserter = crud.NewUpserter(
 		crud.WithKeyFunction(KeyFunc),
+		crud.AddToIndex(),
 	)
 
 	// Deleter deletes components to the store.
-	Deleter = crud.NewDeleter(crud.Shared())
+	Deleter = crud.NewDeleter(
+		crud.Shared(),
+		crud.RemoveFromIndex(),
+	)
 )
 
 func init() {
