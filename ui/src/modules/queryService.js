@@ -50,6 +50,8 @@ function entityContextToQueryObject(entityContext) {
         } else if (key === entityTypes.COMPONENT) {
             const parsedComponentID = entityContext[key].split(':').map(atob);
             [entityQueryObj[`${key} NAME`], entityQueryObj[`${key} VERSION`]] = parsedComponentID;
+        } else if (key === entityTypes.CVE) {
+            entityQueryObj[key] = entityContext[key];
         } else {
             entityQueryObj[`${key} ID`] = entityContext[key];
         }

@@ -362,7 +362,7 @@ describe.skip('Entities list Page', () => {
             'CVSS Score',
             'Env. Impact',
             'Impact Score',
-            'Scanned',
+            'Discovered Time',
             'Published',
             'Deployments'
         ]);

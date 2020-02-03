@@ -177,15 +177,13 @@ export function getCveTableColumns(workflowState) {
             sortable: false
         },
         {
-            Header: `Scanned`,
+            Header: `Discovered Time`,
             headerClassName: `w-1/10 text-left ${defaultHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
-            Cell: ({ original, pdf }) => (
-                <DateTimeField date={original.lastScanned} asString={pdf} />
-            ),
-            accessor: 'lastScanned',
-            id: 'lastScanned',
-            sortField: cveSortFields.SCANNED
+            Cell: ({ original, pdf }) => <DateTimeField date={original.createdAt} asString={pdf} />,
+            accessor: 'createdAt',
+            id: 'createdAt',
+            sortField: cveSortFields.CVE_CREATED_TIME
         },
         {
             Header: `Published`,

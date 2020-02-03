@@ -54,7 +54,7 @@ export const VULN_CVE_LIST_FRAGMENT = gql`
         summary
         fixedByVersion
         isFixable
-        lastScanned
+        createdAt
         publishedOn
         deploymentCount(query: $query)
         imageCount(query: $query)
