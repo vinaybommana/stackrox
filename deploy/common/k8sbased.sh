@@ -177,7 +177,6 @@ function launch_central {
 
         if [[ -n "$CI" ]]; then
           ${ORCH_CMD} -n stackrox patch deployment scanner --patch "$(cat $k8s_dir/scanner-patch.yaml)"
-           ${ORCH_CMD} -n stackrox scale deploy/scanner --replicas=1
         elif [[ "${is_local_dev}" == "true" ]]; then
           ${ORCH_CMD} -n stackrox patch deployment scanner --patch "$(cat $k8s_dir/scanner-local-patch.yaml)"
         fi
