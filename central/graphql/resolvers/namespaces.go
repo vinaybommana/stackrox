@@ -282,9 +282,6 @@ func (resolver *namespaceResolver) K8sRoles(ctx context.Context, args PaginatedQ
 
 func (resolver *namespaceResolver) Images(ctx context.Context, args PaginatedQuery) ([]*imageResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Namespaces, "Images")
-	if err := readImages(ctx); err != nil {
-		return nil, err
-	}
 
 	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getClusterNamespaceRawQuery())
 
@@ -293,25 +290,10 @@ func (resolver *namespaceResolver) Images(ctx context.Context, args PaginatedQue
 
 func (resolver *namespaceResolver) ImageCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Namespaces, "ImageCount")
-	if err := readNamespaces(ctx); err != nil {
-		return 0, err
-	}
-	imageLoader, err := loaders.GetImageLoader(ctx)
-	if err != nil {
-		return 0, err
-	}
 
-	q, err := args.AsV1QueryOrEmpty()
-	if err != nil {
-		return 0, err
-	}
+	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getClusterNamespaceRawQuery())
 
-	q, err = search.AddAsConjunction(resolver.getClusterNamespaceQuery(), q)
-	if err != nil {
-		return 0, err
-	}
-
-	return imageLoader.CountFromQuery(ctx, q)
+	return resolver.root.ImageCount(ctx, RawQuery{Query: &query})
 }
 
 func (resolver *namespaceResolver) getApplicablePolicies(ctx context.Context, q *v1.Query) ([]*storage.Policy, error) {

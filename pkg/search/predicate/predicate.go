@@ -74,7 +74,7 @@ func wrapInternal(ip internalPredicate) Predicate {
 }
 
 func (tb Factory) generatePredicateInternal(query *v1.Query) (internalPredicate, error) {
-	if query.GetQuery() == nil {
+	if query == nil || query.GetQuery() == nil {
 		return alwaysTrue, nil
 	}
 	switch query.GetQuery().(type) {

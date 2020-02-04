@@ -32,7 +32,11 @@ func (resolver *Resolver) vulnerabilitiesV2(ctx context.Context, args PaginatedQ
 }
 
 func (resolver *Resolver) vulnerabilitiesV2Query(ctx context.Context, query *v1.Query) ([]VulnerabilityResolver, error) {
-	vulns, err := resolver.wrapCVEs(resolver.CVEDataStore.SearchRawCVEs(ctx, query))
+	vulnLoader, err := loaders.GetCVELoader(ctx)
+	if err != nil {
+		return nil, err
+	}
+	vulns, err := resolver.wrapCVEs(vulnLoader.FromQuery(ctx, query))
 
 	ret := make([]VulnerabilityResolver, 0, len(vulns))
 	for _, resolver := range vulns {
@@ -50,11 +54,11 @@ func (resolver *Resolver) vulnerabilityCountV2(ctx context.Context, args RawQuer
 }
 
 func (resolver *Resolver) vulnerabilityCountV2Query(ctx context.Context, query *v1.Query) (int32, error) {
-	results, err := resolver.CVEDataStore.Search(ctx, query)
+	vulnLoader, err := loaders.GetCVELoader(ctx)
 	if err != nil {
 		return 0, err
 	}
-	return int32(len(results)), nil
+	return vulnLoader.CountFromQuery(ctx, query)
 }
 
 func (resolver *Resolver) vulnCounterV2(ctx context.Context, args RawQuery) (*VulnerabilityCounterResolver, error) {

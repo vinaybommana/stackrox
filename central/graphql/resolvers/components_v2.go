@@ -27,7 +27,12 @@ func (resolver *Resolver) componentsV2(ctx context.Context, args PaginatedQuery)
 }
 
 func (resolver *Resolver) componentsV2Query(ctx context.Context, query *v1.Query) ([]ComponentResolver, error) {
-	compRes, err := resolver.wrapImageComponents(resolver.ImageComponentDataStore.SearchRawImageComponents(ctx, query))
+	componentLoader, err := loaders.GetComponentLoader(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	compRes, err := resolver.wrapImageComponents(componentLoader.FromQuery(ctx, query))
 	if err != nil {
 		return nil, err
 	}
@@ -48,11 +53,12 @@ func (resolver *Resolver) componentCountV2(ctx context.Context, args RawQuery) (
 }
 
 func (resolver *Resolver) componentCountV2Query(ctx context.Context, query *v1.Query) (int32, error) {
-	results, err := resolver.ImageComponentDataStore.Search(ctx, query)
+	componentLoader, err := loaders.GetComponentLoader(ctx)
 	if err != nil {
 		return 0, err
 	}
-	return int32(len(results)), nil
+
+	return componentLoader.CountFromQuery(ctx, query)
 }
 
 // Resolvers on Component Object.

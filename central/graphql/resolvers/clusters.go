@@ -497,10 +497,6 @@ func (resolver *clusterResolver) Subject(ctx context.Context, args struct{ Name 
 func (resolver *clusterResolver) Images(ctx context.Context, args PaginatedQuery) ([]*imageResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "Images")
 
-	if err := readImages(ctx); err != nil {
-		return nil, err
-	}
-
 	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getClusterRawQuery())
 
 	return resolver.root.Images(ctx, PaginatedQuery{Query: &query, Pagination: args.Pagination})
@@ -508,26 +504,10 @@ func (resolver *clusterResolver) Images(ctx context.Context, args PaginatedQuery
 
 func (resolver *clusterResolver) ImageCount(ctx context.Context, args RawQuery) (int32, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "ImageCount")
-	if err := readImages(ctx); err != nil {
-		return 0, err
-	}
 
-	imageLoader, err := loaders.GetImageLoader(ctx)
-	if err != nil {
-		return 0, err
-	}
+	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getClusterRawQuery())
 
-	q, err := args.AsV1QueryOrEmpty()
-	if err != nil {
-		return 0, err
-	}
-
-	q, err = search.AddAsConjunction(resolver.getClusterQuery(), q)
-	if err != nil {
-		return 0, err
-	}
-
-	return imageLoader.CountFromQuery(ctx, q)
+	return resolver.root.ImageCount(ctx, RawQuery{Query: &query})
 }
 
 func (resolver *clusterResolver) Components(ctx context.Context, args PaginatedQuery) ([]ComponentResolver, error) {
