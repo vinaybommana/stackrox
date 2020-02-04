@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	protoTypes "github.com/gogo/protobuf/types"
 	"github.com/graph-gophers/graphql-go"
+	"github.com/pkg/errors"
 	"github.com/stackrox/rox/central/cve/converter"
 	"github.com/stackrox/rox/central/graphql/resolvers/loaders"
 	"github.com/stackrox/rox/central/metrics"
@@ -157,20 +157,29 @@ func (resolver *cVEResolver) LastScanned(ctx context.Context) (*graphql.Time, er
 	if err != nil {
 		return nil, err
 	}
-	images, err := imageLoader.FromQuery(ctx, resolver.cveQuery())
+
+	cveQuery := resolver.cveQuery()
+	cveQuery.Pagination = &v1.QueryPagination{
+		Limit:  1,
+		Offset: 0,
+		SortOptions: []*v1.QuerySortOption{
+			{
+				Field:    search.ImageScanTime.String(),
+				Reversed: true,
+			},
+		},
+	}
+
+	images, err := imageLoader.FromQuery(ctx, cveQuery)
 	if err != nil {
 		return nil, err
+	} else if len(images) == 0 {
+		return nil, nil
+	} else if len(images) > 1 {
+		return nil, errors.New("multiple images matched for last scanned vulnerability query")
 	}
-	var lastScanned *protoTypes.Timestamp
-	for _, image := range images {
-		if image.GetScan() == nil {
-			continue
-		}
-		if lastScanned == nil || image.GetScan().GetScanTime().Compare(lastScanned) > 0 {
-			lastScanned = image.GetScan().GetScanTime()
-		}
-	}
-	return timestamp(lastScanned)
+
+	return timestamp(images[0].GetScan().GetScanTime())
 }
 
 func (resolver *cVEResolver) Vectors() *EmbeddedVulnerabilityVectorsResolver {
