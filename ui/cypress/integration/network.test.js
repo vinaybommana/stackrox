@@ -1,5 +1,3 @@
-import 'cypress-file-upload';
-
 import { url as networkUrl, selectors as networkPageSelectors } from '../constants/NetworkPage';
 import { url as riskURL, selectors as RiskPageSelectors } from '../constants/RiskPage';
 import * as api from '../constants/apiEndpoints';
