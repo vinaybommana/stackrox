@@ -48,7 +48,7 @@ func (suite *ImageStoreTestSuite) SetupSuite() {
 	if err != nil {
 		suite.FailNowf("failed to create key fence: %+v", err.Error())
 	}
-	suite.cveStorage, err = cveDackBoxStore.New(suite.dacky)
+	suite.cveStorage, err = cveDackBoxStore.New(suite.dacky, concurrency.NewKeyFence())
 	if err != nil {
 		suite.FailNowf("failed to create cve store: %+v", err.Error())
 	}

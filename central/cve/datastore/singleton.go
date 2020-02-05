@@ -25,7 +25,7 @@ func initialize() {
 		ds = nil
 		return
 	}
-	storage, err := dackbox.New(globaldb.GetGlobalDackBox())
+	storage, err := dackbox.New(globaldb.GetGlobalDackBox(), globaldb.GetKeyFence())
 	utils.Must(err)
 
 	searcher := search.New(storage, globaldb.GetGlobalDackBox(),
