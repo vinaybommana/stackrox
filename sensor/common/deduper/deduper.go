@@ -55,7 +55,7 @@ func (d *deduper) Send(msg *central.MsgFromSensor) error {
 	}
 
 	d.hasher.Reset()
-	hashValue, err := hashstructure.Hash(event, &hashstructure.HashOptions{
+	hashValue, err := hashstructure.Hash(event.GetResource(), &hashstructure.HashOptions{
 		TagName: "sensorhash",
 		Hasher:  d.hasher,
 	})
@@ -68,14 +68,6 @@ func (d *deduper) Send(msg *central.MsgFromSensor) error {
 	if err := d.stream.Send(msg); err != nil {
 		return err
 	}
-	// Make the action an update so we can dedupe CREATE and UPDATE
-	event.Action = central.ResourceAction_UPDATE_RESOURCE
-	d.hasher.Reset()
-	hashValue, err = hashstructure.Hash(event, &hashstructure.HashOptions{
-		TagName: "sensorhash",
-		Hasher:  d.hasher,
-	})
-	utils.Should(err)
 	d.lastSent[key] = hashValue
 
 	return nil
