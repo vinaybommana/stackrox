@@ -2386,7 +2386,7 @@ jobs:
     environment:
       - LOCAL_PORT: 8000
       - RUNTIME_SUPPORT: ebpf
-      - MONITORING_SUPPORT: true
+      - MONITORING_SUPPORT: false
       - SCANNER_SUPPORT: true
       - INFLUXDB_URL: "https://influxdb.monitoring.ci.rox.systems"
       - ROX_WHITELIST_GENERATION_DURATION: 1m
