@@ -1,8 +1,10 @@
 import entityTypes from 'constants/entityTypes';
 
-export const overviewLimit = 5;
+export const WIDGET_PAGINATION_START_OFFSET = 0;
 
-export const dashboardLimit = 8;
+export const OVERVIEW_LIMIT = 5;
+
+export const DASHBOARD_LIMIT = 8;
 
 export const LIST_PAGE_SIZE = 50;
 

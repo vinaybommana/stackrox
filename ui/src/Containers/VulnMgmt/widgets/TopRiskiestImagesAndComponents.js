@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import workflowStateContext from 'Containers/workflowStateContext';
 import ViewAllButton from 'Components/ViewAllButton';
 import Loader from 'Components/Loader';
+import NoResultsMessage from 'Components/NoResultsMessage';
 import TextSelect from 'Components/TextSelect';
 import Widget from 'Components/Widget';
 import CVEStackedPill from 'Components/CVEStackedPill';
@@ -16,7 +17,7 @@ import NoComponentVulnMessage from 'Components/NoComponentVulnMessage';
 import queryService from 'modules/queryService';
 import dateTimeFormat from 'constants/dateTimeFormat';
 import entityTypes from 'constants/entityTypes';
-// @TODO to uncomment once priority is sortable for both image and components
+import { WIDGET_PAGINATION_START_OFFSET } from 'constants/workflowPages.constants';
 // import { entitySortFieldsMap } from 'constants/sortFields';
 
 const TOP_RISKIEST_IMAGES = gql`
@@ -57,8 +58,8 @@ const TOP_RISKIEST_IMAGES = gql`
 `;
 
 const TOP_RISKIEST_COMPONENTS = gql`
-    query topRiskiestComponents($query: String) {
-        results: components(query: $query) {
+    query topRiskiestComponents($query: String, $pagination: Pagination) {
+        ddd: components(query: $query, pagination: $pagination) {
             id
             name
             version
@@ -210,20 +211,17 @@ const TopRiskiestImagesAndComponents = ({ entityContext, limit }) => {
         setSelectedEntity(value);
     }
 
-    const { loading, data = {} } = useQuery(getQueryBySelectedEntity(selectedEntity), {
+    const { loading, data = {}, error } = useQuery(getQueryBySelectedEntity(selectedEntity), {
         variables: {
             query: queryService.entityContextToQueryString(entityContext),
-            pagination: {
-                /*
+            pagination: queryService.getPagination(
+                {
+                    id: 'Priority',
+                    desc: false
+                },
+                WIDGET_PAGINATION_START_OFFSET,
                 limit
-                @TODO: When priority is a sortable field, uncomment this
-
-                sortOption: {
-                    field: 'priority',
-                    reversed: true
-                }
-            } */
-            }
+            )
         }
     });
 
@@ -233,7 +231,16 @@ const TopRiskiestImagesAndComponents = ({ entityContext, limit }) => {
     const workflowState = useContext(workflowStateContext);
 
     if (!loading) {
-        if (!data || !data.results) {
+        if (error) {
+            const entityText = selectedEntity === entityTypes.COMPONENT ? 'components' : 'images';
+            content = (
+                <NoResultsMessage
+                    message={`An error occured in retrieving ${entityText}. Please refresh the page. If this problem continues, please contact support.`}
+                    className="p-6"
+                    icon="warn"
+                />
+            );
+        } else if (data && data.results && data.results === 0) {
             content = (
                 <div className="flex mx-auto items-center">No scanner setup for this registry.</div>
             );

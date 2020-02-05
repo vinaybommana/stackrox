@@ -7,7 +7,7 @@ import DashboardLayout from 'Components/DashboardLayout';
 import ExportButton from 'Components/ExportButton';
 import RadioButtonGroup from 'Components/RadioButtonGroup';
 import workflowStateContext from 'Containers/workflowStateContext';
-import { dashboardLimit } from 'constants/workflowPages.constants';
+import { DASHBOARD_LIMIT } from 'constants/workflowPages.constants';
 import TopRiskyEntitiesByVulnerabilities from '../widgets/TopRiskyEntitiesByVulnerabilities';
 import TopRiskiestImagesAndComponents from '../widgets/TopRiskiestImagesAndComponents';
 import FrequentlyViolatedPolicies from '../widgets/FrequentlyViolatedPolicies';
@@ -82,19 +82,19 @@ const VulnDashboardPage = ({ history }) => {
                 />
             </div>
             <div className="s-2">
-                <TopRiskiestImagesAndComponents limit={dashboardLimit} />
+                <TopRiskiestImagesAndComponents limit={DASHBOARD_LIMIT} />
             </div>
             <div className="s-2">
                 <FrequentlyViolatedPolicies />
             </div>
             <div className="s-2">
-                <RecentlyDetectedVulnerabilities search={searchState} limit={dashboardLimit} />
+                <RecentlyDetectedVulnerabilities search={searchState} limit={DASHBOARD_LIMIT} />
             </div>
             <div className="sx-2 sy-4">
                 <MostCommonVulnerabilities search={searchState} />
             </div>
             <div className="s-2">
-                <DeploymentsWithMostSeverePolicyViolations limit={dashboardLimit} />
+                <DeploymentsWithMostSeverePolicyViolations limit={DASHBOARD_LIMIT} />
             </div>
             <div className="s-2">
                 <ClustersWithMostK8sIstioVulnerabilities />

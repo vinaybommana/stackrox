@@ -12,7 +12,7 @@ import workflowStateContext from 'Containers/workflowStateContext';
 import { getPolicyTableColumns } from 'Containers/VulnMgmt/List/Policies/VulnMgmtListPolicies';
 import { getCveTableColumns } from 'Containers/VulnMgmt/List/Cves/VulnMgmtListCves';
 import entityTypes from 'constants/entityTypes';
-import { overviewLimit } from 'constants/workflowPages.constants';
+import { OVERVIEW_LIMIT } from 'constants/workflowPages.constants';
 import { entityGridContainerClassName } from 'Containers/Workflow/WorkflowEntityPage';
 import { exportCvesAsCsv } from 'services/VulnerabilitiesService';
 import { getCveExportName } from 'utils/vulnerabilityUtils';
@@ -127,7 +127,7 @@ const VulnMgmtClusterOverview = ({ data, entityContext }) => {
                         <div className="sx-1 lg:sx-2 sy-1 h-55">
                             <TopRiskyEntitiesByVulnerabilities
                                 defaultSelection={entityTypes.NAMESPACE}
-                                limit={overviewLimit}
+                                limit={OVERVIEW_LIMIT}
                                 riskEntityTypes={[
                                     entityTypes.NAMESPACE,
                                     entityTypes.DEPLOYMENT,
@@ -139,19 +139,19 @@ const VulnMgmtClusterOverview = ({ data, entityContext }) => {
                         </div>
                         <div className="s-1">
                             <RecentlyDetectedVulnerabilities
-                                limit={overviewLimit}
+                                limit={OVERVIEW_LIMIT}
                                 entityContext={newEntityContext}
                             />
                         </div>
                         <div className="s-1">
                             <TopRiskiestImagesAndComponents
-                                limit={overviewLimit}
+                                limit={OVERVIEW_LIMIT}
                                 entityContext={newEntityContext}
                             />
                         </div>
                         <div className="s-1">
                             <DeploymentsWithMostSeverePolicyViolations
-                                limit={overviewLimit}
+                                limit={OVERVIEW_LIMIT}
                                 entityContext={newEntityContext}
                             />
                         </div>

@@ -13,7 +13,7 @@ import Widget from 'Components/Widget';
 import NumberedList from 'Components/NumberedList';
 import { getVulnerabilityChips, parseCVESearch } from 'utils/vulnerabilityUtils';
 import NoResultsMessage from 'Components/NoResultsMessage';
-// import { cveSortFields } from 'constants/sortFields';
+import { cveSortFields } from 'constants/sortFields';
 
 export const RECENTLY_DETECTED_VULNERABILITIES = gql`
     query recentlyDetectedVulnerabilities($query: String, $pagination: Pagination) {
@@ -55,7 +55,7 @@ const RecentlyDetectedVulnerabilities = ({ entityContext, search, limit }) => {
             query,
             pagination: queryService.getPagination(
                 {
-                    id: 'Image Scan Time',
+                    id: cveSortFields.IMAGE_SCAN_TIME,
                     desc: true
                 },
                 0,

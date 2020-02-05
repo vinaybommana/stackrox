@@ -16,15 +16,15 @@ import dateTimeFormat from 'constants/dateTimeFormat';
 import entityTypes from 'constants/entityTypes';
 import { parseCVESearch } from 'utils/vulnerabilityUtils';
 // import { cveSortFields } from 'constants/sortFields';
+// import { WIDGET_PAGINATION_START_OFFSET } from 'constants/workflowPages.constants';
 
 const MOST_COMMON_VULNERABILITIES = gql`
-    query mostCommonVulnerabilities($query: String) {
-        results: vulnerabilities(query: $query) {
-            id: cve
+    query mostCommonVulnerabilities($query: String, $vulnPagination: Pagination) {
+        results: vulnerabilities(query: $query, pagination: $vulnPagination) {
+            id
             cve
             cvss
             scoreVersion
-            imageCount
             isFixable
             deploymentCount
             summary
@@ -35,7 +35,7 @@ const MOST_COMMON_VULNERABILITIES = gql`
 `;
 
 const processData = (data, workflowState, limit) => {
-    const results = sortBy(data.results, ['deploymentCount', 'cvss', 'envImpact']).slice(-limit); // @TODO: Remove when we have pagination on Vulnerabilities
+    const results = sortBy(data.results, ['deploymentCount', 'cvss']).slice(-limit); // @TODO: Remove when we have pagination on Vulnerabilities
     return results.map(
         ({
             id,
@@ -90,7 +90,16 @@ const MostCommonVulnerabilities = ({ entityContext, search, limit }) => {
 
     const { loading, data = {} } = useQuery(MOST_COMMON_VULNERABILITIES, {
         variables: {
-            query
+            query,
+            vulnPagination: {} // @TODO: remove this line, and uncomment the block below, after "Deployment Count" available for sorting
+            // vulnPagination: queryService.getPagination(
+            //     {
+            //         id: cveSortFields.DEPLOYMENT_COUNT,
+            //         desc: true
+            //     },
+            //     WIDGET_PAGINATION_START_OFFSET,
+            //     limit
+            // )
         }
     });
 
@@ -110,7 +119,7 @@ const MostCommonVulnerabilities = ({ entityContext, search, limit }) => {
 
     const viewAllURL = workflowState
         .pushList(entityTypes.CVE)
-        // @TODO to uncomment once these sorts are supported by backend on CVE list
+        // @TODO uncomment once these sorts are supported by backend on CVE list
         // .setSort([
         //     { id: cveSortFields.DEPLOYMENT_COUNT, desc: true },
         //     { id: cveSortFields.CVSS_SCORE, desc: true },
