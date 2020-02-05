@@ -92,7 +92,7 @@ func (b *storeImpl) GetBatch(ids []string) ([]*storage.CVE, []int, error) {
 	dackTxn := b.dacky.NewReadOnlyTransaction()
 	defer dackTxn.Discard()
 
-	msgs := make([]proto.Message, 0, len(ids)/2)
+	msgs := make([]proto.Message, 0, len(ids))
 	missing := make([]int, 0, len(ids)/2)
 	for idx, id := range ids {
 		msg, err := vulnDackBox.Reader.ReadIn(vulnDackBox.BucketHandler.GetKey(id), dackTxn)

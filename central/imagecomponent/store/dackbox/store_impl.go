@@ -94,7 +94,7 @@ func (b *storeImpl) GetBatch(ids []string) ([]*storage.ImageComponent, []int, er
 	dackTxn := b.dacky.NewReadOnlyTransaction()
 	defer dackTxn.Discard()
 
-	msgs := make([]proto.Message, 0, len(ids)/2)
+	msgs := make([]proto.Message, 0, len(ids))
 	missing := make([]int, 0, len(ids)/2)
 	for idx, id := range ids {
 		msg, err := componentDackBox.Reader.ReadIn(componentDackBox.BucketHandler.GetKey(id), dackTxn)

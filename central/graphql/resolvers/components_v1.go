@@ -2,14 +2,13 @@ package resolvers
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
-	"strings"
 
 	protoTypes "github.com/gogo/protobuf/types"
 	"github.com/graph-gophers/graphql-go"
 	"github.com/stackrox/rox/central/graphql/resolvers/loaders"
 	"github.com/stackrox/rox/central/image/mappings"
+	"github.com/stackrox/rox/central/imagecomponent"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/search"
@@ -17,7 +16,7 @@ import (
 
 // Component returns an image scan component based on an input id (name:version)
 func (resolver *Resolver) componentV1(ctx context.Context, args idQuery) (*EmbeddedImageScanComponentResolver, error) {
-	cID, err := componentIDFromString(string(*args.ID))
+	cID, err := imagecomponent.FromString(string(*args.ID))
 	if err != nil {
 		return nil, err
 	}
@@ -133,11 +132,11 @@ func (eicr *EmbeddedImageScanComponentResolver) License(ctx context.Context) (*l
 
 // ID returns a unique identifier for the component.
 func (eicr *EmbeddedImageScanComponentResolver) ID(ctx context.Context) graphql.ID {
-	cID := &componentID{
+	cID := &imagecomponent.ComponentID{
 		Name:    eicr.data.GetName(),
 		Version: eicr.data.GetVersion(),
 	}
-	return graphql.ID(cID.toString())
+	return graphql.ID(cID.ToString())
 }
 
 // Name returns the name of the component.
@@ -376,34 +375,6 @@ func (eicr *EmbeddedImageScanComponentResolver) componentQuery() *v1.Query {
 // Static helpers.
 //////////////////
 
-// Synthetic ID for component objects composed of the name and version of the component.
-type componentID struct {
-	Name    string
-	Version string
-}
-
-func componentIDFromString(str string) (*componentID, error) {
-	nameAndVersionEncoded := strings.Split(str, ":")
-	if len(nameAndVersionEncoded) != 2 {
-		return nil, fmt.Errorf("invalid id: %s", str)
-	}
-	name, err := base64.URLEncoding.DecodeString(nameAndVersionEncoded[0])
-	if err != nil {
-		return nil, err
-	}
-	version, err := base64.URLEncoding.DecodeString(nameAndVersionEncoded[1])
-	if err != nil {
-		return nil, err
-	}
-	return &componentID{Name: string(name), Version: string(version)}, nil
-}
-
-func (cID *componentID) toString() string {
-	nameEncoded := base64.URLEncoding.EncodeToString([]byte(cID.Name))
-	versionEncoded := base64.URLEncoding.EncodeToString([]byte(cID.Version))
-	return fmt.Sprintf("%s:%s", nameEncoded, versionEncoded)
-}
-
 // Map the images that matched a query to the image components it contains.
 func mapImagesToComponentResolvers(root *Resolver, images []*storage.Image, query *v1.Query) ([]*EmbeddedImageScanComponentResolver, error) {
 	query, _ = search.FilterQueryWithMap(query, mappings.ComponentOptionsMap)
@@ -413,13 +384,13 @@ func mapImagesToComponentResolvers(root *Resolver, images []*storage.Image, quer
 	}
 
 	// Use the images to map CVEs to the images and components.
-	idToComponent := make(map[componentID]*EmbeddedImageScanComponentResolver)
+	idToComponent := make(map[imagecomponent.ComponentID]*EmbeddedImageScanComponentResolver)
 	for _, image := range images {
 		for _, component := range image.GetScan().GetComponents() {
 			if !componentPred.Matches(component) {
 				continue
 			}
-			thisComponentID := componentID{Name: component.GetName(), Version: component.GetVersion()}
+			thisComponentID := imagecomponent.ComponentID{Name: component.GetName(), Version: component.GetVersion()}
 			if _, exists := idToComponent[thisComponentID]; !exists {
 				idToComponent[thisComponentID] = &EmbeddedImageScanComponentResolver{
 					root: root,

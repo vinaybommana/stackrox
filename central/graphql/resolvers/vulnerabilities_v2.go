@@ -20,7 +20,13 @@ import (
 //////////////////////////
 
 func (resolver *Resolver) vulnerabilityV2(ctx context.Context, args idQuery) (VulnerabilityResolver, error) {
-	return resolver.wrapCVE(resolver.CVEDataStore.Get(ctx, string(*args.ID)))
+	vuln, exists, err := resolver.CVEDataStore.Get(ctx, string(*args.ID))
+	if err != nil {
+		return nil, err
+	} else if !exists {
+		return nil, errors.Errorf("cve not found: %s", string(*args.ID))
+	}
+	return resolver.wrapCVE(vuln, true, nil)
 }
 
 func (resolver *Resolver) vulnerabilitiesV2(ctx context.Context, args PaginatedQuery) ([]VulnerabilityResolver, error) {

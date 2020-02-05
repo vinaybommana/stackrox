@@ -15,7 +15,13 @@ import (
 ///////////////////////
 
 func (resolver *Resolver) componentV2(ctx context.Context, args idQuery) (ComponentResolver, error) {
-	return resolver.wrapImageComponent(resolver.ImageComponentDataStore.Get(ctx, string(*args.ID)))
+	component, exists, err := resolver.ImageComponentDataStore.Get(ctx, string(*args.ID))
+	if err != nil {
+		return nil, err
+	} else if !exists {
+		return nil, errors.Errorf("component not found: %s", string(*args.ID))
+	}
+	return resolver.wrapImageComponent(component, true, nil)
 }
 
 func (resolver *Resolver) componentsV2(ctx context.Context, args PaginatedQuery) ([]ComponentResolver, error) {
