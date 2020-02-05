@@ -225,10 +225,17 @@ const TopRiskiestImagesAndComponents = ({ entityContext, limit }) => {
         }
     });
 
-    let content = <Loader />;
-    let headerComponents = null;
-
     const workflowState = useContext(workflowStateContext);
+
+    const viewAllURL = workflowState
+        .pushList(selectedEntity)
+        // @TODO to uncomment once priority is sortable for both image and components
+        // .setSort([{ id: entitySortFieldsMap[selectedEntity].PRIORITY, desc: false }])
+        .toUrl();
+
+    const headerComponents = <ViewAllButton url={viewAllURL} />;
+
+    let content = <Loader />;
 
     if (!loading) {
         if (error) {
@@ -253,14 +260,6 @@ const TopRiskiestImagesAndComponents = ({ entityContext, limit }) => {
                         <NumberedList data={processedData} linkLeftOnly />
                     </div>
                 );
-
-                const viewAllURL = workflowState
-                    .pushList(selectedEntity)
-                    // @TODO to uncomment once priority is sortable for both image and components
-                    // .setSort([{ id: entitySortFieldsMap[selectedEntity].PRIORITY, desc: false }])
-                    .toUrl();
-
-                headerComponents = <ViewAllButton url={viewAllURL} />;
             } else {
                 content = <NoComponentVulnMessage />;
             }
