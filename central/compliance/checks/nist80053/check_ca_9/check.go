@@ -3,6 +3,7 @@ package checkca9
 import (
 	"github.com/stackrox/rox/central/compliance/checks/common"
 	"github.com/stackrox/rox/central/compliance/framework"
+	"github.com/stackrox/rox/pkg/features"
 )
 
 const (
@@ -14,7 +15,7 @@ and egress network policies.`
 )
 
 func init() {
-	framework.MustRegisterNewCheck(
+	framework.MustRegisterNewCheckIfFlagEnabled(
 		framework.CheckMetadata{
 			ID:                 controlID,
 			Scope:              framework.DeploymentKind,
@@ -23,5 +24,5 @@ func init() {
 		},
 		func(ctx framework.ComplianceContext) {
 			common.CheckNetworkPoliciesByDeployment(ctx)
-		})
+		}, features.NistSP800_53)
 }

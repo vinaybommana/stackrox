@@ -2,6 +2,7 @@ package nist80053
 
 import (
 	// Register checks.
+	_ "github.com/stackrox/rox/central/compliance/checks/nist80053/check_ac_14"
 	_ "github.com/stackrox/rox/central/compliance/checks/nist80053/check_ac_24"
 	_ "github.com/stackrox/rox/central/compliance/checks/nist80053/check_ac_3_7"
 	_ "github.com/stackrox/rox/central/compliance/checks/nist80053/check_ca_9"

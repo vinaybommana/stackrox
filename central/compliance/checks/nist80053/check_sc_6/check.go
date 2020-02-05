@@ -3,6 +3,7 @@ package checksc6
 import (
 	"github.com/stackrox/rox/central/compliance/checks/common"
 	"github.com/stackrox/rox/central/compliance/framework"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/stringutils"
 )
 
@@ -13,7 +14,7 @@ const (
 )
 
 func init() {
-	framework.MustRegisterNewCheck(
+	framework.MustRegisterNewCheckIfFlagEnabled(
 		framework.CheckMetadata{
 			ID:                 controlID,
 			Scope:              framework.ClusterKind,
@@ -39,5 +40,5 @@ func init() {
 				return
 			}
 			framework.Fail(ctx, "Required, but could not find, implementation and enforcement of at least one policy required each of CPU resource limit and memory resource limit")
-		})
+		}, features.NistSP800_53)
 }

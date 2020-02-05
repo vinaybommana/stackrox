@@ -3,6 +3,7 @@ package checkac37
 import (
 	"github.com/stackrox/rox/central/compliance/checks/common"
 	"github.com/stackrox/rox/central/compliance/framework"
+	"github.com/stackrox/rox/pkg/features"
 )
 
 const (
@@ -13,7 +14,7 @@ cluster. This data can indicate whether the cluster has been properly set up to 
 )
 
 func init() {
-	framework.MustRegisterNewCheck(
+	framework.MustRegisterNewCheckIfFlagEnabled(
 		framework.CheckMetadata{
 			ID:                 controlID,
 			Scope:              framework.ClusterKind,
@@ -22,5 +23,5 @@ func init() {
 		},
 		func(ctx framework.ComplianceContext) {
 			common.IsRBACConfiguredCorrectly(ctx)
-		})
+		}, features.NistSP800_53)
 }

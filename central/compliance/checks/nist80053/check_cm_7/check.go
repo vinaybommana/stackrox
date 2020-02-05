@@ -4,6 +4,7 @@ import (
 	"github.com/stackrox/rox/central/compliance/checks/common"
 	"github.com/stackrox/rox/central/compliance/framework"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/stringutils"
 )
 
@@ -25,7 +26,7 @@ func isPortExposeOrExposureLevelPolicy(p *storage.Policy) bool {
 }
 
 func init() {
-	framework.MustRegisterNewCheck(
+	framework.MustRegisterNewCheckIfFlagEnabled(
 		framework.CheckMetadata{
 			ID:                 controlID,
 			Scope:              framework.ClusterKind,
@@ -51,5 +52,5 @@ func init() {
 				return
 			}
 			framework.Fail(ctx, "Required, but could not find, implementation and enforcement of at least one policy regarding port exposure and at least one runtime policy")
-		})
+		}, features.NistSP800_53)
 }
