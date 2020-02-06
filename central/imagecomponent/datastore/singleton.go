@@ -3,6 +3,7 @@ package datastore
 import (
 	componentCVEEdgeIndexer "github.com/stackrox/rox/central/componentcveedge/index"
 	cveIndexer "github.com/stackrox/rox/central/cve/index"
+	deploymentIndexer "github.com/stackrox/rox/central/deployment/index"
 	globaldb "github.com/stackrox/rox/central/globaldb/dackbox"
 	"github.com/stackrox/rox/central/globalindex"
 	imageIndexer "github.com/stackrox/rox/central/image/index"
@@ -34,7 +35,8 @@ func initialize() {
 		componentCVEEdgeIndexer.Singleton(),
 		componentIndexer.Singleton(),
 		imageComponentEdgeIndexer.Singleton(),
-		imageIndexer.New(globalindex.GetGlobalIndex()))
+		imageIndexer.New(globalindex.GetGlobalIndex()),
+		deploymentIndexer.Singleton())
 
 	ad, err = New(storage, componentIndexer.Singleton(), searcher)
 	utils.Must(err)

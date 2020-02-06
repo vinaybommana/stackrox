@@ -6,12 +6,17 @@ import (
 	"github.com/blevesearch/bleve"
 	"github.com/dgraph-io/badger"
 	"github.com/pkg/errors"
+	componentCVEEdgeIndexer "github.com/stackrox/rox/central/componentcveedge/index"
+	cveIndexer "github.com/stackrox/rox/central/cve/index"
 	"github.com/stackrox/rox/central/deployment/datastore/internal/search"
 	"github.com/stackrox/rox/central/deployment/index"
 	"github.com/stackrox/rox/central/deployment/store"
 	badgerStore "github.com/stackrox/rox/central/deployment/store/badger"
 	dackBoxStore "github.com/stackrox/rox/central/deployment/store/dackbox"
 	imageDS "github.com/stackrox/rox/central/image/datastore"
+	imageIndexer "github.com/stackrox/rox/central/image/index"
+	componentIndexer "github.com/stackrox/rox/central/imagecomponent/index"
+	imageComponentEdgeIndexer "github.com/stackrox/rox/central/imagecomponentedge/index"
 	nfDS "github.com/stackrox/rox/central/networkflow/datastore"
 	piDS "github.com/stackrox/rox/central/processindicator/datastore"
 	pwDS "github.com/stackrox/rox/central/processwhitelist/datastore"
@@ -55,8 +60,20 @@ type DataStore interface {
 }
 
 func newDataStore(storage store.Store, graphProvider graph.Provider, bleveIndex bleve.Index, images imageDS.DataStore, indicators piDS.DataStore, whitelists pwDS.DataStore, networkFlows nfDS.ClusterDataStore, risks riskDS.DataStore, deletedDeploymentCache expiringcache.Cache, processFilter filter.Filter) (DataStore, error) {
+	var searcher search.Searcher
 	indexer := index.New(bleveIndex)
-	searcher := search.New(storage, indexer, graphProvider)
+	if features.Dackbox.Enabled() {
+		searcher = search.New(storage,
+			graphProvider,
+			cveIndexer.Singleton(),
+			componentCVEEdgeIndexer.Singleton(),
+			componentIndexer.Singleton(),
+			imageComponentEdgeIndexer.Singleton(),
+			imageIndexer.New(bleveIndex),
+			indexer)
+	} else {
+		searcher = search.New(storage, nil, nil, nil, nil, nil, nil, indexer)
+	}
 
 	ds, err := newDatastoreImpl(
 		storage,

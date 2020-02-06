@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	deploymentSAC = sac.ForResource(resources.Image)
+	deploymentSAC = sac.ForResource(resources.Deployment)
 
 	deploymentClusterPath = [][]byte{
 		deploymentDackBox.Bucket,

@@ -5,6 +5,7 @@ import (
 
 	componentCVEEdgeIndexer "github.com/stackrox/rox/central/componentcveedge/index"
 	cveIndexer "github.com/stackrox/rox/central/cve/index"
+	deploymentIndexer "github.com/stackrox/rox/central/deployment/index"
 	imageIndexer "github.com/stackrox/rox/central/image/index"
 	componentIndexer "github.com/stackrox/rox/central/imagecomponent/index"
 	"github.com/stackrox/rox/central/imagecomponent/store"
@@ -29,7 +30,8 @@ func New(storage store.Store, graphProvider idspace.GraphProvider,
 	componentCVEEdgeIndexer componentCVEEdgeIndexer.Indexer,
 	componentIndexer componentIndexer.Indexer,
 	imageComponentEdgeIndexer imageComponentEdgeIndexer.Indexer,
-	imageIndexer imageIndexer.Indexer) Searcher {
+	imageIndexer imageIndexer.Indexer,
+	deploymentIndexer deploymentIndexer.Indexer) Searcher {
 	return &searcherImpl{
 		storage: storage,
 		searcher: formatSearcher(graphProvider,
@@ -37,6 +39,7 @@ func New(storage store.Store, graphProvider idspace.GraphProvider,
 			componentCVEEdgeIndexer,
 			componentIndexer,
 			imageComponentEdgeIndexer,
-			imageIndexer),
+			imageIndexer,
+			deploymentIndexer),
 	}
 }

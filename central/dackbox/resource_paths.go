@@ -83,6 +83,16 @@ var (
 		ForwardTraversal: true,
 	}
 
+	// DeploymentToImageComponent defines prefix path to from deployments to components in dackbox
+	DeploymentToImageComponent = dackbox.Path{
+		Path: [][]byte{
+			deploymentDackBox.Bucket,
+			imageDackBox.Bucket,
+			componentDackBox.Bucket,
+		},
+		ForwardTraversal: true,
+	}
+
 	// DeploymentToCVE defines prefix path to from deployments to cves in dackbox
 	DeploymentToCVE = dackbox.Path{
 		Path: [][]byte{
@@ -101,6 +111,16 @@ var (
 			deploymentDackBox.Bucket,
 		},
 		ForwardTraversal: false,
+	}
+
+	// ImageToCVEPath defines prefix path to go from images to cves in dackbox
+	ImageToCVEPath = dackbox.Path{
+		Path: [][]byte{
+			imageDackBox.Bucket,
+			componentDackBox.Bucket,
+			cveDackBox.Bucket,
+		},
+		ForwardTraversal: true,
 	}
 
 	// ComponentToDeploymentPath defines prefix path to traverse from components to deployments in dackbox

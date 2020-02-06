@@ -4,11 +4,16 @@ import (
 	"context"
 	"fmt"
 
+	componentCVEEdgeMappings "github.com/stackrox/rox/central/componentcveedge/mappings"
+	cveMappings "github.com/stackrox/rox/central/cve/mappings"
 	cveSAC "github.com/stackrox/rox/central/cve/sac"
 	"github.com/stackrox/rox/central/dackbox"
 	"github.com/stackrox/rox/central/deployment/index"
+	deploymentSAC "github.com/stackrox/rox/central/deployment/sac"
 	"github.com/stackrox/rox/central/deployment/store"
 	imageSAC "github.com/stackrox/rox/central/image/sac"
+	componentMappings "github.com/stackrox/rox/central/imagecomponent/mappings"
+	imageComponentEdgeMappings "github.com/stackrox/rox/central/imagecomponentedge/mappings"
 	"github.com/stackrox/rox/central/role/resources"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
@@ -18,8 +23,13 @@ import (
 	"github.com/stackrox/rox/pkg/sac"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/blevesearch"
+	"github.com/stackrox/rox/pkg/search/compound"
 	"github.com/stackrox/rox/pkg/search/derivedfields"
+	"github.com/stackrox/rox/pkg/search/filtered"
+	"github.com/stackrox/rox/pkg/search/idspace"
 	"github.com/stackrox/rox/pkg/search/options/deployments"
+	deploymentMappings "github.com/stackrox/rox/pkg/search/options/deployments"
+	imageMappings "github.com/stackrox/rox/pkg/search/options/images"
 	"github.com/stackrox/rox/pkg/search/paginated"
 )
 
@@ -111,11 +121,76 @@ func convertDeployment(deployment *storage.ListDeployment, result search.Result)
 }
 
 // Format the search functionality of the indexer to be filtered (for sac) and paginated.
-func formatSearcher(unsafeSearcher blevesearch.UnsafeSearcher, graphProvider graph.Provider) search.Searcher {
-	filteredSearcher := deploymentsSearchHelper.FilteredSearcher(unsafeSearcher) // Make the UnsafeSearcher safe.
+func formatSearcher(graphProvider idspace.GraphProvider,
+	cveIndexer blevesearch.UnsafeSearcher,
+	componentCVEEdgeIndexer blevesearch.UnsafeSearcher,
+	componentIndexer blevesearch.UnsafeSearcher,
+	imageComponentEdgeIndexer blevesearch.UnsafeSearcher,
+	imageIndexer blevesearch.UnsafeSearcher,
+	deploymentIndexer blevesearch.UnsafeSearcher) search.Searcher {
+
+	cveSearcher := blevesearch.WrapUnsafeSearcherAsSearcher(cveIndexer)
+	componentCVEEdgeSearcher := blevesearch.WrapUnsafeSearcherAsSearcher(componentCVEEdgeIndexer)
+	componentSearcher := blevesearch.WrapUnsafeSearcherAsSearcher(componentIndexer)
+	imageComponentEdgeSearcher := blevesearch.WrapUnsafeSearcherAsSearcher(imageComponentEdgeIndexer)
+	imageSearcher := blevesearch.WrapUnsafeSearcherAsSearcher(imageIndexer)
+	deploymentSearcher := blevesearch.WrapUnsafeSearcherAsSearcher(deploymentIndexer)
+
+	var filteredSearcher search.Searcher
+	if features.Dackbox.Enabled() {
+		compoundSearcher := getDeploymentCompoundSearcher(graphProvider,
+			cveSearcher,
+			componentCVEEdgeSearcher,
+			componentSearcher,
+			imageComponentEdgeSearcher,
+			imageSearcher,
+			deploymentSearcher)
+		filteredSearcher = filtered.Searcher(compoundSearcher, deploymentSAC.GetSACFilter()) // Make the UnsafeSearcher safe.
+	} else {
+		filteredSearcher = deploymentsSearchHelper.FilteredSearcher(deploymentIndexer) // Make the UnsafeSearcher safe.
+	}
+
 	derivedFieldSortedSearcher := wrapDerivedFieldSearcher(graphProvider, filteredSearcher)
 	paginatedSearcher := paginated.Paginated(derivedFieldSortedSearcher)
 	return paginatedSearcher
+}
+
+func getDeploymentCompoundSearcher(graphProvider idspace.GraphProvider,
+	cveSearcher search.Searcher,
+	componentCVEEdgeSearcher search.Searcher,
+	componentSearcher search.Searcher,
+	imageComponentEdgeSearcher search.Searcher,
+	imageSearcher search.Searcher,
+	deploymentSearcher search.Searcher) search.Searcher {
+	cveEdgeToComponentSearcher := idspace.TransformIDs(componentCVEEdgeSearcher, idspace.NewEdgeToParentTransformer())
+	imageComponentEdgeToImageSearcher := idspace.TransformIDs(imageComponentEdgeSearcher, idspace.NewEdgeToParentTransformer())
+	return compound.NewSearcher([]compound.SearcherSpec{
+		{
+			Searcher: idspace.TransformIDs(cveSearcher, idspace.NewBackwardGraphTransformer(graphProvider, dackbox.CVEToDeploymentPath.Path)),
+			Options:  cveMappings.OptionsMap,
+		},
+		{
+			Searcher: idspace.TransformIDs(cveEdgeToComponentSearcher, idspace.NewBackwardGraphTransformer(graphProvider, dackbox.ComponentToDeploymentPath.Path)),
+			Options:  componentCVEEdgeMappings.OptionsMap,
+		},
+		{
+			Searcher: idspace.TransformIDs(componentSearcher, idspace.NewBackwardGraphTransformer(graphProvider, dackbox.ComponentToDeploymentPath.Path)),
+			Options:  componentMappings.OptionsMap,
+		},
+		{
+			Searcher: idspace.TransformIDs(imageComponentEdgeToImageSearcher, idspace.NewBackwardGraphTransformer(graphProvider, dackbox.ImageToDeploymentPath.Path)),
+			Options:  imageComponentEdgeMappings.OptionsMap,
+		},
+		{
+			Searcher: idspace.TransformIDs(imageSearcher, idspace.NewBackwardGraphTransformer(graphProvider, dackbox.ImageToDeploymentPath.Path)),
+			Options:  imageMappings.OptionsMap,
+		},
+		{
+			IsDefault: true,
+			Searcher:  deploymentSearcher,
+			Options:   deploymentMappings.OptionsMap,
+		},
+	}...)
 }
 
 func wrapDerivedFieldSearcher(graphProvider graph.Provider, searcher search.Searcher) search.Searcher {
