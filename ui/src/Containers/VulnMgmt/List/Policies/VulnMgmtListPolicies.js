@@ -263,7 +263,7 @@ const VulnMgmtPolicies = ({
                 hideDialog();
             })
             .catch(evt => {
-                addToast(`Could not suppress all of the selected policies: ${evt.message}`);
+                addToast(`Could not delete all of the selected policies: ${evt.message}`);
                 setTimeout(removeToast, 3000);
             });
     }
