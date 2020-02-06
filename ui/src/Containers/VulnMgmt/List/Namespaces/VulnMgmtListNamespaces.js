@@ -7,7 +7,11 @@ import TableCountLink from 'Components/workflow/TableCountLink';
 import CVEStackedPill from 'Components/CVEStackedPill';
 import StatusChip from 'Components/StatusChip';
 import DateTimeField from 'Components/DateTimeField';
-import { defaultHeaderClassName, defaultColumnClassName } from 'Components/Table';
+import {
+    defaultHeaderClassName,
+    nonSortableHeaderClassName,
+    defaultColumnClassName
+} from 'Components/Table';
 import entityTypes from 'constants/entityTypes';
 import { LIST_PAGE_SIZE } from 'constants/workflowPages.constants';
 import WorkflowListPage from 'Containers/Workflow/WorkflowListPage';
@@ -156,14 +160,15 @@ export function getNamespaceTableColumns(workflowState) {
         },
         {
             Header: `Latest Violation`,
-            headerClassName: `w-1/8 ${defaultHeaderClassName}`,
+            headerClassName: `w-1/8 ${nonSortableHeaderClassName}`,
             className: `w-1/8 ${defaultColumnClassName}`,
             Cell: ({ original, pdf }) => {
                 const { latestViolation } = original;
                 return <DateTimeField date={latestViolation} asString={pdf} />;
             },
             accessor: 'latestViolation',
-            sortField: namespaceSortFields.LATEST_VIOLATION
+            sortField: namespaceSortFields.LATEST_VIOLATION,
+            sortable: false
         },
         {
             Header: `Risk Priority`,
