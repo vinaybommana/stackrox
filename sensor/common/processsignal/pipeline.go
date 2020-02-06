@@ -19,7 +19,6 @@ type Pipeline struct {
 	clusterEntities    *clusterentities.Store
 	indicators         chan *central.MsgFromSensor
 	enrichedIndicators chan *storage.ProcessIndicator
-	deduper            *deduper
 	enricher           *enricher
 	processFilter      filter.Filter
 }
@@ -30,7 +29,6 @@ func NewProcessPipeline(indicators chan *central.MsgFromSensor, clusterEntities 
 	p := &Pipeline{
 		clusterEntities:    clusterEntities,
 		indicators:         indicators,
-		deduper:            newDeduper(),
 		enricher:           newEnricher(clusterEntities, enrichedIndicators),
 		enrichedIndicators: enrichedIndicators,
 		processFilter:      processFilter,
@@ -68,10 +66,6 @@ func (p *Pipeline) Process(signal *storage.ProcessSignal) {
 
 func (p *Pipeline) sendIndicatorEvent() {
 	for indicator := range p.enrichedIndicators {
-		// determine whether or not we should send the event
-		if !p.deduper.Allow(indicator) {
-			continue
-		}
 		if !p.processFilter.Add(indicator) {
 			continue
 		}
