@@ -57,7 +57,7 @@ const RecentlyDetectedVulnerabilities = ({ entityContext, search, limit }) => {
             query,
             pagination: queryService.getPagination(
                 {
-                    id: cveSortFields.IMAGE_SCAN_TIME,
+                    id: cveSortFields.CVE_CREATED_TIME,
                     desc: true
                 },
                 0,

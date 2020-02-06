@@ -1,7 +1,11 @@
 import React from 'react';
 import gql from 'graphql-tag';
 
-import { defaultHeaderClassName, defaultColumnClassName } from 'Components/Table';
+import {
+    defaultHeaderClassName,
+    nonSortableHeaderClassName,
+    defaultColumnClassName
+} from 'Components/Table';
 import TopCvssLabel from 'Components/TopCvssLabel';
 import WorkflowListPage from 'Containers/Workflow/WorkflowListPage';
 import entityTypes from 'constants/entityTypes';
@@ -110,7 +114,7 @@ export function getComponentTableColumns(workflowState) {
         {
             Header: `Images`,
             entityType: entityTypes.IMAGE,
-            headerClassName: `w-1/8 ${defaultHeaderClassName}`,
+            headerClassName: `w-1/8 ${nonSortableHeaderClassName}`,
             className: `w-1/8 ${defaultColumnClassName}`,
             accessor: 'imageCount',
             Cell: ({ original, pdf }) => (
@@ -127,7 +131,7 @@ export function getComponentTableColumns(workflowState) {
         {
             Header: `Deployments`,
             entityType: entityTypes.DEPLOYMENT,
-            headerClassName: `w-1/8 ${defaultHeaderClassName}`,
+            headerClassName: `w-1/8 ${nonSortableHeaderClassName}`,
             className: `w-1/8 ${defaultColumnClassName}`,
             accessor: 'deploymentCount',
             Cell: ({ original, pdf }) => (

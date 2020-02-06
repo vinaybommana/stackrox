@@ -7,7 +7,11 @@ import StatusChip from 'Components/StatusChip';
 import CVEStackedPill from 'Components/CVEStackedPill';
 import TableCellLink from 'Components/TableCellLink';
 import TableCountLink from 'Components/workflow/TableCountLink';
-import { defaultHeaderClassName, defaultColumnClassName } from 'Components/Table';
+import {
+    defaultHeaderClassName,
+    nonSortableHeaderClassName,
+    defaultColumnClassName
+} from 'Components/Table';
 import entityTypes from 'constants/entityTypes';
 import { LIST_PAGE_SIZE } from 'constants/workflowPages.constants';
 import { DEPLOYMENT_LIST_FRAGMENT } from 'Containers/VulnMgmt/VulnMgmt.fragments';
@@ -75,7 +79,7 @@ export function getDeploymentTableColumns(workflowState) {
         },
         {
             Header: `Latest Violation`,
-            headerClassName: `w-1/8 ${defaultHeaderClassName}`,
+            headerClassName: `w-1/8 ${nonSortableHeaderClassName}`,
             className: `w-1/8 ${defaultColumnClassName}`,
             Cell: ({ original, pdf }) => {
                 const { latestViolation } = original;
@@ -88,7 +92,7 @@ export function getDeploymentTableColumns(workflowState) {
         {
             Header: `Policies`,
             entityType: entityTypes.POLICY,
-            headerClassName: `w-1/10 ${defaultHeaderClassName}`,
+            headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
             accessor: 'policyCount',
             Cell: ({ original, pdf }) => (
@@ -105,7 +109,7 @@ export function getDeploymentTableColumns(workflowState) {
         },
         {
             Header: `Policy Status`,
-            headerClassName: `w-1/10 ${defaultHeaderClassName}`,
+            headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
             Cell: ({ original, pdf }) => {
                 const { policyStatus } = original;
@@ -154,7 +158,7 @@ export function getDeploymentTableColumns(workflowState) {
         },
         {
             Header: `Images`,
-            headerClassName: `w-1/10 ${defaultHeaderClassName}`,
+            headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
             Cell: ({ original, pdf }) => (
                 <TableCountLink

@@ -94,7 +94,7 @@ export function getPolicyTableColumns(workflowState) {
         },
         {
             Header: `Policy Status`,
-            headerClassName: `w-1/10 text-center ${defaultHeaderClassName}`,
+            headerClassName: `w-1/10 text-center ${nonSortableHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
             Cell: ({ original, pdf }) => (
                 <div className="flex justify-center w-full">
@@ -119,7 +119,7 @@ export function getPolicyTableColumns(workflowState) {
         },
         {
             Header: `Latest Violation`,
-            headerClassName: `w-1/10 ${defaultHeaderClassName}`,
+            headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
             Cell: ({ original, pdf }) => {
                 const { latestViolation } = original;
@@ -141,7 +141,7 @@ export function getPolicyTableColumns(workflowState) {
         {
             Header: `Deployments`,
             entityType: entityTypes.DEPLOYMENT,
-            headerClassName: `w-1/8 ${defaultHeaderClassName}`,
+            headerClassName: `w-1/8 ${nonSortableHeaderClassName}`,
             className: `w-1/8 ${defaultColumnClassName}`,
             Cell: ({ original, pdf }) => (
                 <TableCountLink

@@ -2,7 +2,11 @@ import React from 'react';
 import gql from 'graphql-tag';
 
 import queryService from 'modules/queryService';
-import { defaultHeaderClassName, defaultColumnClassName } from 'Components/Table';
+import {
+    defaultHeaderClassName,
+    nonSortableHeaderClassName,
+    defaultColumnClassName
+} from 'Components/Table';
 import DateTimeField from 'Components/DateTimeField';
 import StatusChip from 'Components/StatusChip';
 import TableCountLink from 'Components/workflow/TableCountLink';
@@ -100,7 +104,7 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
             },
             {
                 Header: `K8S Version`,
-                headerClassName: `w-1/10 ${defaultHeaderClassName}`,
+                headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
                 className: `w-1/10 ${defaultColumnClassName}`,
                 accessor: 'status.orchestratorMetadata.version',
                 sortField: clusterSortFields.K8SVERSION,
@@ -117,7 +121,7 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
             {
                 Header: `Namespaces`,
                 entityType: entityTypes.NAMESPACE,
-                headerClassName: `w-1/10 ${defaultHeaderClassName}`,
+                headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
                 className: `w-1/10 ${defaultColumnClassName}`,
                 // eslint-disable-next-line
                 Cell: ({ original, pdf }) => (
@@ -135,7 +139,7 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
             {
                 Header: `Deployments`,
                 entityType: entityTypes.DEPLOYMENT,
-                headerClassName: `w-1/10 ${defaultHeaderClassName}`,
+                headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
                 className: `w-1/10 ${defaultColumnClassName}`,
                 // eslint-disable-next-line
                 Cell: ({ original, pdf }) => (
@@ -154,7 +158,7 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
             {
                 Header: `Policies`,
                 entityType: entityTypes.POLICY,
-                headerClassName: `w-1/10 ${defaultHeaderClassName}`,
+                headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
                 className: `w-1/10 ${defaultColumnClassName}`,
                 // eslint-disable-next-line
                 Cell: ({ original, pdf }) => (
@@ -172,7 +176,7 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
             },
             {
                 Header: `Policy Status`,
-                headerClassName: `w-1/10 ${defaultHeaderClassName}`,
+                headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
                 className: `w-1/10 ${defaultColumnClassName}`,
                 // eslint-disable-next-line
                 Cell: ({ original, pdf }) => {

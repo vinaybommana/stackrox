@@ -127,7 +127,7 @@ export function getNamespaceTableColumns(workflowState) {
         {
             Header: `Policies`,
             entityType: entityTypes.POLICY,
-            headerClassName: `w-1/8 ${defaultHeaderClassName}`,
+            headerClassName: `w-1/8 ${nonSortableHeaderClassName}`,
             className: `w-1/8 ${defaultColumnClassName}`,
             Cell: ({ original, pdf }) => (
                 <TableCountLink

@@ -6,7 +6,11 @@ import * as Icon from 'react-feather';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 
-import { defaultHeaderClassName, defaultColumnClassName } from 'Components/Table';
+import {
+    defaultHeaderClassName,
+    nonSortableHeaderClassName,
+    defaultColumnClassName
+} from 'Components/Table';
 import RowActionButton from 'Components/RowActionButton';
 import DateTimeField from 'Components/DateTimeField';
 import LabelChip from 'Components/LabelChip';
@@ -94,7 +98,7 @@ export function getCveTableColumns(workflowState) {
         },
         {
             Header: `Env. Impact`,
-            headerClassName: `w-1/10 ${defaultHeaderClassName}`,
+            headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
             Cell: ({ original }) => {
                 const { envImpact } = original;
@@ -122,7 +126,7 @@ export function getCveTableColumns(workflowState) {
         {
             Header: `Deployments`,
             entityType: entityTypes.DEPLOYMENT,
-            headerClassName: `w-1/10 ${defaultHeaderClassName}`,
+            headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
             // eslint-disable-next-line
             Cell: ({ original, pdf }) => (
@@ -141,7 +145,7 @@ export function getCveTableColumns(workflowState) {
         {
             Header: `Images`,
             entityType: entityTypes.IMAGE,
-            headerClassName: `w-1/10 ${defaultHeaderClassName}`,
+            headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
             // eslint-disable-next-line
             Cell: ({ original, pdf }) => (
@@ -160,7 +164,7 @@ export function getCveTableColumns(workflowState) {
         {
             Header: `Components`,
             entityType: entityTypes.COMPONENT,
-            headerClassName: `w-1/10 ${defaultHeaderClassName}`,
+            headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
             // eslint-disable-next-line
             Cell: ({ original, pdf }) => (
