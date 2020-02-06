@@ -22,7 +22,7 @@ const emptyCve = {
     imageCount: 0,
     isFixable: false,
     lastModified: '',
-    lastScanned: '',
+    createdAt: '',
     link: '',
     publishedOn: '',
     scoreVersion: '',
@@ -42,7 +42,7 @@ const VulnMgmtCveOverview = ({ data, entityContext }) => {
         isFixable,
         summary,
         link,
-        lastScanned,
+        createdAt,
         publishedOn,
         lastModified,
         scoreVersion
@@ -82,8 +82,8 @@ const VulnMgmtCveOverview = ({ data, entityContext }) => {
 
     const scanningDetails = [
         {
-            key: 'Scanned',
-            value: lastScanned ? format(lastScanned, dateTimeFormat) : 'N/A'
+            key: 'Discovered Time',
+            value: createdAt ? format(createdAt, dateTimeFormat) : 'N/A'
         },
         {
             key: 'Published',

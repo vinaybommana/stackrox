@@ -41,7 +41,7 @@ const VulmMgmtCve = ({ entityId, entityListType, search, entityContext, sort, pa
                 summary
                 fixedByVersion
                 isFixable
-                lastScanned
+                createdAt
                 componentCount(query: $query)
                 imageCount(query: $query)
                 deploymentCount(query: $query)
