@@ -102,7 +102,7 @@ const VulnMgmtDeploymentOverview = ({ data, entityContext }) => {
     const deploymentStats = [
         <RiskScore key="risk-score" score={priority} />,
         <React.Fragment key="policy-status">
-            <span className="pr-1">Policy status:</span>
+            <span className="pb-2">Policy status:</span>
             <StatusChip status={policyStatus} />
         </React.Fragment>
     ];
