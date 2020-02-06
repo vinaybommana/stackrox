@@ -10,6 +10,8 @@ All notable changes to this project that require documentation updates will be d
 ### Changed
 - UseStartTLS field in the Email notifier configuration has been deprecated in lieu of an enum which supports several
 different authentication methods
+- `roxctl central generate k8s` and `roxctl central generate openshift` no longer contain prompts for the monitoring stack because
+  it is now deprecated
 
 ## [38.0]
 ### Added
