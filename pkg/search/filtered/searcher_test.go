@@ -310,6 +310,94 @@ func (s *filteredSearcherTestSuite) TestNamespaceScopedMultiCluster() {
 	}, results)
 }
 
+func (s *filteredSearcherTestSuite) TestMutipleSACFiltersFail() {
+	// Expect graph and search interactions.
+	s.mockRGraph.EXPECT().GetRefsTo(prefixedID1).Return(toID1)
+	s.mockRGraph.EXPECT().GetRefsTo(prefixedID2).Return(toID2)
+	s.mockRGraph.EXPECT().GetRefsTo(prefixedID3).Return(toID3)
+	s.mockRGraph.EXPECT().GetRefsTo(prefixedID4).Return(toID4)
+
+	s.mockUnsafeSearcher.EXPECT().Search(gomock.Any()).Return([]search.Result{
+		{
+			ID: string(id1),
+		},
+		{
+			ID: string(id2),
+		},
+	}, nil)
+
+	ctx := sac.WithGlobalAccessScopeChecker(context.Background(), sac.AllowFixedScopes(
+		sac.AccessModeScopeKeys(storage.Access_READ_ACCESS),
+		sac.ResourceScopeKeys(clusterResource),
+		sac.ClusterScopeKeys("id7")))
+
+	filter1, err := NewSACFilter(
+		WithResourceHelper(sac.ForResource(clusterResource)),
+		WithGraphProvider(fakeGraphProvider{mg: s.mockRGraph}),
+		WithClusterPath(prefix1, prefix2, prefix3),
+	)
+	s.NoError(err, "filter creation should have succeeded")
+
+	searcher := UnsafeSearcher(s.mockUnsafeSearcher, filter1)
+	results, err := searcher.Search(ctx, &v1.Query{})
+	s.Nil(err, "filtered searcher should have succeeded")
+	s.Len(results, 0, "filtered results should have been empty")
+}
+
+func (s *filteredSearcherTestSuite) TestMutipleSACFiltersPass() {
+	// Expect graph and search interactions.
+	s.mockRGraph.EXPECT().GetRefsTo(prefixedID1).Return(toID1)
+	s.mockRGraph.EXPECT().GetRefsTo(prefixedID2).Return(toID2)
+	s.mockRGraph.EXPECT().GetRefsTo(prefixedID3).Return(toID3)
+	s.mockRGraph.EXPECT().GetRefsTo(prefixedID4).Return(toID4)
+
+	s.mockRGraph.EXPECT().GetRefsTo(prefixedID1).Return(toID1)
+	s.mockRGraph.EXPECT().GetRefsTo(prefixedID2).Return(toID2)
+	s.mockRGraph.EXPECT().GetRefsTo(prefixedID3).Return(toID3)
+	s.mockRGraph.EXPECT().GetRefsTo(prefixedID4).Return(toID4)
+	s.mockRGraph.EXPECT().GetRefsTo(prefixedID5).Return(toID5)
+	s.mockRGraph.EXPECT().GetRefsTo(prefixedID6).Return(toID6)
+	s.mockUnsafeSearcher.EXPECT().Search(gomock.Any()).Return([]search.Result{
+		{
+			ID: string(id1),
+		},
+		{
+			ID: string(id2),
+		},
+	}, nil)
+
+	ctx := sac.WithGlobalAccessScopeChecker(context.Background(), sac.AllowFixedScopes(
+		sac.AccessModeScopeKeys(storage.Access_READ_ACCESS),
+		sac.ResourceScopeKeys(clusterResource),
+		sac.ClusterScopeKeys("id7")))
+
+	filter1, err := NewSACFilter(
+		WithResourceHelper(sac.ForResource(clusterResource)),
+		WithGraphProvider(fakeGraphProvider{mg: s.mockRGraph}),
+		WithClusterPath(prefix1, prefix2, prefix3),
+	)
+	s.NoError(err, "filter creation should have succeeded")
+
+	filter2, err := NewSACFilter(
+		WithResourceHelper(sac.ForResource(clusterResource)),
+		WithGraphProvider(fakeGraphProvider{mg: s.mockRGraph}),
+		WithClusterPath(prefix1, prefix2, prefix3, prefix4),
+	)
+	s.NoError(err, "filter creation should have succeeded")
+
+	searcher := UnsafeSearcher(s.mockUnsafeSearcher, []Filter{filter1, filter2}...)
+	results, err := searcher.Search(ctx, &v1.Query{})
+	s.NoError(err, "search should have succeeded")
+	s.Equal([]search.Result{
+		{
+			ID: string(id1),
+		},
+		{
+			ID: string(id2),
+		},
+	}, results)
+}
+
 type fakeGraphProvider struct {
 	mg *mocks.MockRGraph
 }

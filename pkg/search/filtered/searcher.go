@@ -15,14 +15,23 @@ type Filter interface {
 }
 
 // UnsafeSearcher generates a Searcher from an UnsafeSearcher by filtering its outputs with the input filter.
-func UnsafeSearcher(searcher blevesearch.UnsafeSearcher, filter Filter) search.Searcher {
+func UnsafeSearcher(searcher blevesearch.UnsafeSearcher, filters ...Filter) search.Searcher {
 	return search.Func(func(ctx context.Context, q *v1.Query) ([]search.Result, error) {
 		results, err := searcher.Search(q)
 		if err != nil {
 			return results, err
 		}
 
-		filtered, err := filter.Apply(ctx, search.ResultsToIDs(results)...)
+		var filtered []string
+		for _, filter := range filters {
+			filtered, err = filter.Apply(ctx, search.ResultsToIDs(results)...)
+
+			// If there is no error and if result is non-empty we assume that we evaluated on correct sac filter.
+			// If we have receive error or if the length of result is 0, we try another filter.
+			if err == nil && len(filtered) > 0 {
+				break
+			}
+		}
 		if err != nil {
 			return results, err
 		}
@@ -39,14 +48,24 @@ func UnsafeSearcher(searcher blevesearch.UnsafeSearcher, filter Filter) search.S
 }
 
 // Searcher returns a new searcher based on the filtered output from the input Searcher.
-func Searcher(searcher search.Searcher, filter Filter) search.Searcher {
+func Searcher(searcher search.Searcher, filters ...Filter) search.Searcher {
 	return search.Func(func(ctx context.Context, q *v1.Query) ([]search.Result, error) {
+		var err error
 		results, err := searcher.Search(ctx, q)
 		if err != nil {
 			return results, err
 		}
 
-		filtered, err := filter.Apply(ctx, search.ResultsToIDs(results)...)
+		var filtered []string
+		for _, filter := range filters {
+			filtered, err = filter.Apply(ctx, search.ResultsToIDs(results)...)
+
+			// If there is no error and if result is non-empty we assume that we evaluated on correct sac filter.
+			// If we have receive error or if the length of result is 0, we try another filter.
+			if err == nil && len(filtered) > 0 {
+				break
+			}
+		}
 		if err != nil {
 			return results, err
 		}
