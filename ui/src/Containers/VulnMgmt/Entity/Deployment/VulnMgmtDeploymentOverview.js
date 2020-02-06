@@ -168,12 +168,13 @@ const VulnMgmtDeploymentOverview = ({ data, entityContext }) => {
                     <div className={entityGridContainerClassName}>
                         <div className="s-1">
                             <Metadata
-                                className="h-full min-w-48 bg-base-100 bg-counts-widget pdf-page"
+                                className="h-full min-w-48 bg-base-100 pdf-page"
                                 keyValuePairs={metadataKeyValuePairs}
                                 statTiles={deploymentStats}
                                 title="Details & Metadata"
                                 labels={labels}
                                 annotations={annotations}
+                                bgClass
                             />
                         </div>
                         <div className="s-1">

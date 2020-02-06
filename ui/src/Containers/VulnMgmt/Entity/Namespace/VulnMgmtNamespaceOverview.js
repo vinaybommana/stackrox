@@ -100,11 +100,12 @@ const VulnMgmtNamespaceOverview = ({ data, entityContext }) => {
                     <div className={entityGridContainerClassName}>
                         <div className="s-1">
                             <Metadata
-                                className="h-full min-w-48 bg-base-100 bg-counts-widget"
+                                className="h-full min-w-48 bg-base-100"
                                 keyValuePairs={metadataKeyValuePairs}
                                 statTiles={namespaceStats}
                                 labels={labels}
                                 title="Details & Metadata"
+                                bgClass
                             />
                         </div>
                         <div className="sx-1 lg:sx-2 sy-1 h-55">
