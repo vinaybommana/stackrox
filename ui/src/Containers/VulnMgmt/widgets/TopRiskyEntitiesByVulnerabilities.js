@@ -336,7 +336,7 @@ const TopRiskyEntitiesByVulnerabilities = ({
         if (error) {
             content = (
                 <NoResultsMessage
-                    message={`An error occured in retrieving ${pluralize(
+                    message={`An error occurred in retrieving ${pluralize(
                         selectedEntityType.toLowerCase()
                     )}. Please refresh the page. If this problem continues, please contact support.`}
                     className="p-6"

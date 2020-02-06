@@ -242,7 +242,7 @@ const TopRiskiestImagesAndComponents = ({ entityContext, limit }) => {
             const entityText = selectedEntity === entityTypes.COMPONENT ? 'components' : 'images';
             content = (
                 <NoResultsMessage
-                    message={`An error occured in retrieving ${entityText}. Please refresh the page. If this problem continues, please contact support.`}
+                    message={`An error occurred in retrieving ${entityText}. Please refresh the page. If this problem continues, please contact support.`}
                     className="p-6"
                     icon="warn"
                 />
