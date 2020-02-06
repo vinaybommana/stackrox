@@ -40,12 +40,12 @@ const VulnDashboardPage = ({ history }) => {
         if (newValue === 'Fixable') {
             targetUrl = workflowState
                 .setSearch({
-                    IsFixable: 'true'
+                    Fixable: 'true'
                 })
                 .toUrl();
         } else {
             const allSearch = { ...searchState };
-            delete allSearch.IsFixable;
+            delete allSearch.Fixable;
 
             targetUrl = workflowState.setSearch(allSearch).toUrl();
         }
@@ -53,7 +53,7 @@ const VulnDashboardPage = ({ history }) => {
         history.push(targetUrl);
     }
 
-    const cveFilter = searchState.IsFixable ? 'Fixable' : 'All';
+    const cveFilter = searchState.Fixable ? 'Fixable' : 'All';
 
     const headerComponents = (
         <>

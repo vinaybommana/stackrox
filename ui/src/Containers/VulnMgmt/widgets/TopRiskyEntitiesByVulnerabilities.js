@@ -306,7 +306,7 @@ const TopRiskyEntitiesByVulnerabilities = ({
     }
     let results = [];
 
-    const vulnQuery = cveFilter === 'Fixable' ? { 'Fixed By': 'r/.*' } : '';
+    const vulnQuery = cveFilter === 'Fixable' ? { Fixable: true } : '';
     const variables = {
         query: queryService.entityContextToQueryString(entityContext),
         vulnQuery: queryService.objectToWhereClause(vulnQuery),

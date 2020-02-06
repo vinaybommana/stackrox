@@ -11,7 +11,7 @@ import ViewAllButton from 'Components/ViewAllButton';
 import Loader from 'Components/Loader';
 import Widget from 'Components/Widget';
 import NumberedList from 'Components/NumberedList';
-import { getVulnerabilityChips, parseCVESearch } from 'utils/vulnerabilityUtils';
+import { getVulnerabilityChips } from 'utils/vulnerabilityUtils';
 import NoResultsMessage from 'Components/NoResultsMessage';
 import { cveSortFields } from 'constants/sortFields';
 
@@ -45,9 +45,11 @@ const processData = (data, workflowState, limit) => {
 const RecentlyDetectedVulnerabilities = ({ entityContext, search, limit }) => {
     const entityContextObject = queryService.entityContextToQueryObject(entityContext); // deals with BE inconsistency
 
-    const parsedSearch = parseCVESearch(search); // hack until isFixable is allowed in search
-
-    const queryObject = { ...entityContextObject, ...parsedSearch }; // Combine entity context and search
+    const queryObject = {
+        ...entityContextObject,
+        ...search,
+        [cveSortFields.CVE_TYPE]: 'IMAGE_CVE'
+    }; // Combine entity context and search
     const query = queryService.objectToWhereClause(queryObject); // get final gql query string
 
     const { loading, data = {} } = useQuery(RECENTLY_DETECTED_VULNERABILITIES, {

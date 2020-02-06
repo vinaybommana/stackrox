@@ -70,6 +70,7 @@ export const cveSortFields = {
     SCANNED: 'Last Scanned',
     CVE_CREATED_TIME: 'CVE Created Time',
     IMAGE_SCAN_TIME: 'Image Scan Time',
+    CVE_TYPE: 'CVE Type',
     PUBLISHED: 'CVE Published On'
 };
 
