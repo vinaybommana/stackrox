@@ -20,7 +20,7 @@ func init() {
 		runningContainerCheck("CIS_Docker_v1_2_0:5_3", capabilities, "has extra capabilities enabled"),
 		runningContainerCheck("CIS_Docker_v1_2_0:5_4", privileged, "is not running in privileged mode"),
 		runningContainerCheck("CIS_Docker_v1_2_0:5_5", sensitiveHostMounts, "does not mount any sensitive host directories"),
-		common.PerNodeNoteCheck("CIS_Docker_v1_2_0:5_6", "Check containers to ensure SSH is not running within them"),
+		runningContainerCheck("CIS_Docker_v1_2_0:5_6", ssh, "does not have ssh process running"),
 		runningContainerCheck("CIS_Docker_v1_2_0:5_7", privilegedPorts, "does not bind to a privileged host port"),
 		runningContainerCheck("CIS_Docker_v1_2_0:5_8", necessaryPorts, "does not bind to any host ports"),
 		runningContainerCheck("CIS_Docker_v1_2_0:5_9", sharedNetwork, "does not use the 'host' network mode"),
@@ -355,6 +355,24 @@ func sharedNetwork(ctx framework.ComplianceContext, container types.ContainerJSO
 		framework.Failf(ctx, "Container %q has network mode set to 'host'", container.Name)
 	} else {
 		framework.Passf(ctx, "Container %q has network mode set to %q", container.Name, container.HostConfig.NetworkMode)
+	}
+}
+
+func ssh(ctx framework.ComplianceContext, container types.ContainerJSON) {
+	var fail bool
+	for _, indicator := range ctx.Data().ProcessIndicators() {
+		if strings.HasPrefix(container.ID, indicator.GetSignal().GetContainerId()) {
+			process := indicator.GetSignal().GetExecFilePath()
+			if strings.Contains(process, "ssh") {
+				fail = true
+				processWithArgs := fmt.Sprintf("%s %s", process, indicator.GetSignal().GetArgs())
+				framework.Failf(ctx, "Container %q has ssh process running: %q", container.Name, processWithArgs)
+			}
+		}
+	}
+
+	if !fail {
+		framework.Passf(ctx, "Container %q has no ssh process running", container.Name)
 	}
 }
 
