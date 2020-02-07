@@ -17,8 +17,8 @@ const (
 	timeFormat = "2006-01-02T15:04Z"
 )
 
-// CveType is the type of a CVE fetched by fetcher
-type CveType int32
+// CVEType is the type of a CVE fetched by fetcher
+type CVEType int32
 
 // K8s is type for k8s CVEs, Istio is type for istio CVEs
 const (
@@ -27,7 +27,7 @@ const (
 )
 
 // NvdCveToProtoCVE converts a nvd.CVEEntry object to an proto CVE
-func NvdCveToProtoCVE(nvdCVE *schema.NVDCVEFeedJSON10DefCVEItem, ct CveType) (*storage.CVE, error) {
+func NvdCveToProtoCVE(nvdCVE *schema.NVDCVEFeedJSON10DefCVEItem, ct CVEType) (*storage.CVE, error) {
 	protoCVE := &storage.CVE{
 		Id: nvdCVE.CVE.CVEDataMeta.ID,
 	}
@@ -149,7 +149,7 @@ func nvdCvssv3ToProtoCvssv3(baseMetricV3 *schema.NVDCVEFeedJSON10DefImpactBaseMe
 }
 
 // NvdCVEsToProtoCVEs converts  NVD CVEs to Proto CVEs
-func NvdCVEsToProtoCVEs(cves []*schema.NVDCVEFeedJSON10DefCVEItem, ct CveType) ([]*storage.CVE, error) {
+func NvdCVEsToProtoCVEs(cves []*schema.NVDCVEFeedJSON10DefCVEItem, ct CVEType) ([]*storage.CVE, error) {
 	protoCVEs := make([]*storage.CVE, 0, len(cves))
 	for _, cve := range cves {
 		ev, err := NvdCveToProtoCVE(cve, ct)

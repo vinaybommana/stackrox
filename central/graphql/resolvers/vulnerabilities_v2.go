@@ -145,7 +145,7 @@ func (resolver *cVEResolver) EnvImpact(ctx context.Context) (float64, error) {
 	return float64(float64(withThisCVECount) / float64(allDepsCount)), nil
 }
 
-func (resolver *cVEResolver) getEnvImpactForK8sIstioVuln(ctx context.Context, ct converter.CveType) (float64, error) {
+func (resolver *cVEResolver) getEnvImpactForK8sIstioVuln(ctx context.Context, ct converter.CVEType) (float64, error) {
 	cve := resolver.root.getNvdCVE(resolver.data.GetId())
 	if cve == nil {
 		return 0.0, fmt.Errorf("cve: %q not found", resolver.data.GetId())

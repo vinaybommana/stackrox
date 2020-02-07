@@ -135,7 +135,7 @@ func vulnerabilities(ctx context.Context, root *Resolver, query *v1.Query) ([]*E
 }
 
 // k8sIstioVulnerabilities returns the k8s/istio vulnerabilities that match the input query.
-func k8sIstioVulnerabilities(ctx context.Context, root *Resolver, query *v1.Query, ct converter.CveType) ([]*EmbeddedVulnerabilityResolver, error) {
+func k8sIstioVulnerabilities(ctx context.Context, root *Resolver, query *v1.Query, ct converter.CVEType) ([]*EmbeddedVulnerabilityResolver, error) {
 	var cves []*storage.CVE
 	_, containsUnmatchableFields := search.FilterQueryWithMap(query, search.CombineOptionsMaps(clusterMappings.OptionsMap, mappings.VulnerabilityOptionsMap))
 	if containsUnmatchableFields {
@@ -157,7 +157,7 @@ func k8sIstioVulnerabilities(ctx context.Context, root *Resolver, query *v1.Quer
 	var checkImpact func(context.Context, *storage.Cluster, *schema.NVDCVEFeedJSON10DefCVEItem) (bool, error)
 
 	if ct == converter.K8s {
-		cves, err = root.k8sIstioCVEManager.GetK8sProtoCVEs(ctx, vulnQuery)
+		cves, err = root.k8sIstioCVEManager.GetK8sCVEs(ctx, vulnQuery)
 		if err != nil {
 			return nil, err
 		}
@@ -166,7 +166,7 @@ func k8sIstioVulnerabilities(ctx context.Context, root *Resolver, query *v1.Quer
 			return ok, nil
 		}
 	} else if ct == converter.Istio {
-		cves, err = root.k8sIstioCVEManager.GetIstioProtoCVEs(ctx, vulnQuery)
+		cves, err = root.k8sIstioCVEManager.GetIstioCVEs(ctx, vulnQuery)
 		if err != nil {
 			return nil, err
 		}
@@ -379,7 +379,7 @@ func (resolver *Resolver) getNvdCVE(id string) *schema.NVDCVEFeedJSON10DefCVEIte
 	return nil
 }
 
-func (resolver *Resolver) getAffectedClusterPercentage(ctx context.Context, cve *schema.NVDCVEFeedJSON10DefCVEItem, ct converter.CveType) (float64, error) {
+func (resolver *Resolver) getAffectedClusterPercentage(ctx context.Context, cve *schema.NVDCVEFeedJSON10DefCVEItem, ct converter.CVEType) (float64, error) {
 	clusters, err := resolver.ClusterDataStore.GetClusters(ctx)
 	if err != nil {
 		return 0, err
@@ -413,7 +413,7 @@ func (resolver *Resolver) getAffectedClusterPercentage(ctx context.Context, cve 
 	return float64(affectedClusterCount) / float64(len(clusters)), nil
 }
 
-func (evr *EmbeddedVulnerabilityResolver) getEnvImpactForK8sIstioVuln(ctx context.Context, ct converter.CveType) (float64, error) {
+func (evr *EmbeddedVulnerabilityResolver) getEnvImpactForK8sIstioVuln(ctx context.Context, ct converter.CVEType) (float64, error) {
 	cve := evr.root.getNvdCVE(evr.data.Cve)
 	if cve == nil {
 		return 0.0, fmt.Errorf("cve: %q not found", evr.data.Cve)

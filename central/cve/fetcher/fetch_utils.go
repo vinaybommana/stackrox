@@ -44,7 +44,7 @@ var (
 	preloadedIstioCVEsChecksumFilePath  = path.Join(preloadedCVEsBasePath, commonCveDir, nvd.Feeds[nvd.Istio].ChecksumFilename)
 	log                                 = logging.LoggerForModule()
 
-	cveTypeToString = map[converter.CveType]string{
+	cveTypeToString = map[converter.CVEType]string{
 		converter.K8s:   "k8s",
 		converter.Istio: "istio",
 	}
@@ -155,7 +155,7 @@ func overwriteCVEs(cveFile, cveChecksumFile, checksum, CVEs string) error {
 	return nil
 }
 
-func copyCVEsFromPreloadedToPersistentDirIfAbsent(ct converter.CveType) error {
+func copyCVEsFromPreloadedToPersistentDirIfAbsent(ct converter.CVEType) error {
 	paths, err := getPaths(ct)
 	if err != nil {
 		return err
@@ -221,7 +221,7 @@ type cvePaths struct {
 	persistentCveChecksumFile string
 }
 
-func getPaths(ct converter.CveType) (*cvePaths, error) {
+func getPaths(ct converter.CVEType) (*cvePaths, error) {
 	if ct == converter.K8s {
 		return &cvePaths{
 			preloadedCveDirPath:       path.Join(preloadedCVEsBasePath, commonCveDir, k8sCVEsDir),
@@ -250,7 +250,7 @@ type cveURLs struct {
 	cveChecksumURL string
 }
 
-func getUrls(ct converter.CveType) (*cveURLs, error) {
+func getUrls(ct converter.CVEType) (*cveURLs, error) {
 	if ct == converter.K8s {
 		return &cveURLs{
 			cveURL:         k8sCVEsURL,

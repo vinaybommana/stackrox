@@ -201,7 +201,7 @@ func (resolver *Resolver) AllK8sVulnerabilities(ctx context.Context, q Paginated
 
 	protoCVEs, err := paginationWrapper{
 		pv: query.Pagination,
-	}.paginate(resolver.k8sIstioCVEManager.GetK8sProtoCVEs(ctx, query))
+	}.paginate(resolver.k8sIstioCVEManager.GetK8sCVEs(ctx, query))
 	if err != nil {
 		return nil, err
 	}
@@ -270,7 +270,7 @@ func (resolver *Resolver) AllIstioVulnerabilities(ctx context.Context, q Paginat
 	}
 	protoCVEs, err := paginationWrapper{
 		pv: query.Pagination,
-	}.paginate(resolver.k8sIstioCVEManager.GetIstioProtoCVEs(ctx, query))
+	}.paginate(resolver.k8sIstioCVEManager.GetIstioCVEs(ctx, query))
 	if err != nil {
 		return nil, err
 	}
