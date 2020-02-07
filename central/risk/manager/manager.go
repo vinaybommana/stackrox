@@ -50,6 +50,8 @@ type managerImpl struct {
 	imageScorer          imageScorer.Scorer
 	imageComponentScorer imageComponentScorer.Scorer
 
+	clusterRanker        *ranking.Ranker
+	nsRanker             *ranking.Ranker
 	deploymentRanker     *ranking.Ranker
 	imageRanker          *ranking.Ranker
 	imageComponentRanker *ranking.Ranker
@@ -63,6 +65,8 @@ func New(deploymentStorage deploymentDS.DataStore,
 	deploymentScorer deploymentScorer.Scorer,
 	imageScorer imageScorer.Scorer,
 	imageComponentScorer imageComponentScorer.Scorer,
+	clusterRanker *ranking.Ranker,
+	nsRanker *ranking.Ranker,
 	deploymentRanker *ranking.Ranker,
 	imageRanker *ranking.Ranker,
 	imageComponentRanker *ranking.Ranker) (Manager, error) {
@@ -71,12 +75,16 @@ func New(deploymentStorage deploymentDS.DataStore,
 		imageStorage:          imageStorage,
 		imageComponentStorage: imageComponentStorage,
 		riskStorage:           riskStorage,
-		deploymentScorer:      deploymentScorer,
-		imageScorer:           imageScorer,
-		imageComponentScorer:  imageComponentScorer,
-		deploymentRanker:      deploymentRanker,
-		imageRanker:           imageRanker,
-		imageComponentRanker:  imageComponentRanker,
+
+		deploymentScorer:     deploymentScorer,
+		imageScorer:          imageScorer,
+		imageComponentScorer: imageComponentScorer,
+
+		clusterRanker:        clusterRanker,
+		nsRanker:             nsRanker,
+		deploymentRanker:     deploymentRanker,
+		imageRanker:          imageRanker,
+		imageComponentRanker: imageComponentRanker,
 	}
 	return m, nil
 }
@@ -88,26 +96,32 @@ func (e *managerImpl) ReprocessDeploymentRisk(deployment *storage.Deployment) {
 		log.Errorf("error fetching images for deployment %s: %v", deployment.GetName(), err)
 		return
 	}
-	e.ReprocessDeploymentRiskWithImages(deployment, images)
 
-	// We want to compute and store risk for images when deployment risk is reprocessed.
-	for _, image := range images {
-		e.ReprocessImageRisk(image)
-	}
+	e.ReprocessDeploymentRiskWithImages(deployment, images)
 }
 
 // ReprocessDeploymentRiskWithImages will reprocess the passed deployments risk and save the results
 func (e *managerImpl) ReprocessDeploymentRiskWithImages(deployment *storage.Deployment, images []*storage.Image) {
 	defer metrics.ObserveRiskProcessingDuration(time.Now(), "Deployment")
 
+	oldScore := e.deploymentRanker.GetScoreForID(deployment.GetId())
 	risk := e.deploymentScorer.Score(allAccessCtx, deployment, images)
 	if risk == nil {
 		return
 	}
 
-	oldScore := e.deploymentRanker.GetScoreForID(deployment.GetId())
 	if err := e.riskStorage.UpsertRisk(riskReprocessorCtx, risk); err != nil {
 		log.Errorf("Error reprocessing risk for deployment %s: %v", deployment.GetName(), err)
+	}
+
+	if oldScore != risk.GetScore() {
+		e.updateNamespaceRisk(deployment.GetNamespaceId(), oldScore, risk.GetScore())
+		e.updateClusterRisk(deployment.GetClusterId(), oldScore, risk.GetScore())
+	}
+
+	// We want to compute and store risk for images when deployment risk is reprocessed.
+	for _, image := range images {
+		e.ReprocessImageRisk(image)
 	}
 
 	if oldScore == risk.GetScore() {
@@ -185,4 +199,14 @@ func (e *managerImpl) ReprocessImageComponentRisk(imageComponent *storage.Embedd
 	if err := e.imageComponentStorage.Upsert(riskReprocessorCtx, imageComponentV2); err != nil {
 		log.Error(err)
 	}
+}
+
+func (e *managerImpl) updateNamespaceRisk(nsID string, oldDeploymentScore float32, newDeploymentScore float32) {
+	oldNSRiskScore := e.nsRanker.GetScoreForID(nsID)
+	e.nsRanker.Add(nsID, oldNSRiskScore-oldDeploymentScore+newDeploymentScore)
+}
+
+func (e *managerImpl) updateClusterRisk(clusterID string, oldDeploymentScore float32, newDeploymentScore float32) {
+	oldClusterRiskScore := e.nsRanker.GetScoreForID(clusterID)
+	e.clusterRanker.Add(clusterID, oldClusterRiskScore-oldDeploymentScore+newDeploymentScore)
 }

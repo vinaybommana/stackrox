@@ -23,9 +23,13 @@ func initialize() {
 		imageDS.Singleton(),
 		imageComponentDS.Singleton(),
 		riskDS.Singleton(),
+
 		deploymentScorer.GetScorer(),
 		imageScorer.GetScorer(),
 		imageComponentScorer.GetScorer(),
+
+		ranking.ClusterRanker(),
+		ranking.NamespaceRanker(),
 		ranking.DeploymentRanker(),
 		ranking.ImageRanker(),
 		ranking.ImageComponentRanker())

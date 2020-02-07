@@ -13,17 +13,14 @@ import (
 	deploymentMocks "github.com/stackrox/rox/central/deployment/datastore/mocks"
 	nodeMocks "github.com/stackrox/rox/central/node/globaldatastore/mocks"
 	notifierMocks "github.com/stackrox/rox/central/notifier/processor/mocks"
-	"github.com/stackrox/rox/central/ranking"
 	riskMocks "github.com/stackrox/rox/central/risk/datastore/mocks"
 	"github.com/stackrox/rox/central/role/resources"
 	secretMocks "github.com/stackrox/rox/central/secret/datastore/mocks"
 	connectionMocks "github.com/stackrox/rox/central/sensor/service/connection/mocks"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/concurrency"
-	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/sac"
 	"github.com/stackrox/rox/pkg/search"
-	"github.com/stackrox/rox/pkg/testutils"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -320,91 +317,4 @@ func (suite *ClusterDataStoreTestSuite) TestAllowsSearch() {
 
 	_, err = suite.clusterDataStore.Search(suite.hasWriteCtx, search.EmptyQuery())
 	suite.NoError(err, "expected no error trying to read with permissions")
-}
-
-func (suite *ClusterDataStoreTestSuite) TestClusterPriority() {
-	envIsolator := testutils.NewEnvIsolator(suite.T())
-	defer envIsolator.RestoreAll()
-
-	envIsolator.Setenv(features.VulnMgmtUI.EnvVar(), "true")
-
-	ranker := ranking.DeploymentRanker()
-	ranker.Add("dep1", 1.0)
-	ranker.Add("dep2", 2.0)
-
-	ranker.Add("dep3", 3.0)
-	ranker.Add("dep4", 4.0)
-
-	ranker.Add("dep5", 10.0)
-
-	cases := []struct {
-		cluster          *storage.Cluster
-		deployments      []search.Result
-		expectedPriority int64
-	}{
-		{
-			cluster: &storage.Cluster{
-				Id: "test1",
-			},
-			deployments: []search.Result{
-				{
-					ID: "dep1",
-				},
-				{
-					ID: "dep2",
-				},
-			},
-			expectedPriority: 3,
-		},
-		{
-			cluster: &storage.Cluster{
-				Id: "test2",
-			},
-			deployments: []search.Result{
-				{
-					ID: "dep3",
-				},
-				{
-					ID: "dep4",
-				},
-			},
-			expectedPriority: 2,
-		},
-		{
-			cluster: &storage.Cluster{
-				Id: "test3",
-			},
-			deployments: []search.Result{
-				{
-					ID: "dep5",
-				},
-			},
-			expectedPriority: 1,
-		},
-	}
-
-	deploymentReadCtx := sac.WithGlobalAccessScopeChecker(context.Background(),
-		sac.AllowFixedScopes(
-			sac.AccessModeScopeKeys(storage.Access_READ_ACCESS),
-			sac.ResourceScopeKeys(resources.Deployment),
-		))
-
-	var expectedClusters []*storage.Cluster
-	for _, c := range cases {
-		expectedClusters = append(expectedClusters, c.cluster)
-	}
-
-	suite.clusters.EXPECT().GetClusters().Return(expectedClusters, nil)
-	for _, c := range cases {
-		suite.deploymentDataStore.EXPECT().Search(deploymentReadCtx,
-			search.NewQueryBuilder().AddExactMatches(search.ClusterID, c.cluster.GetId()).ProtoQuery()).
-			Return(c.deployments, nil)
-	}
-
-	actualClusters, err := suite.clusterDataStore.GetClusters(suite.hasReadCtx)
-	suite.Nil(err)
-
-	for i, c := range cases {
-		suite.Equal(c.expectedPriority, actualClusters[i].GetPriority())
-	}
 }

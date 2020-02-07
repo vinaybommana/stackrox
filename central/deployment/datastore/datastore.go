@@ -92,7 +92,7 @@ func newDataStore(storage store.Store, graphProvider graph.Provider, bleveIndex 
 	}
 
 	if err := ds.initializeRanker(); err != nil {
-		return nil, errors.Wrap(err, "failed to initialize ranker")
+		return nil, errors.Wrap(err, "failed to initialize deployment ranker")
 	}
 
 	return ds, nil

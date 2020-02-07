@@ -2,6 +2,7 @@ package datastore
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
@@ -49,7 +50,9 @@ type datastoreImpl struct {
 
 	keyedMutex *concurrency.KeyedMutex
 
-	ranker *ranking.Ranker
+	clusterRanker    *ranking.Ranker
+	nsRanker         *ranking.Ranker
+	deploymentRanker *ranking.Ranker
 }
 
 func newDatastoreImpl(storage deploymentStore.Store, indexer deploymentIndex.Indexer, searcher deploymentSearch.Searcher, images imageDS.DataStore, indicators piDS.DataStore, whitelists pwDS.DataStore, networkFlows nfDS.ClusterDataStore, risks riskDS.DataStore, deletedDeploymentCache expiringcache.Cache, processFilter filter.Filter) (*datastoreImpl, error) {
@@ -73,7 +76,9 @@ func newDatastoreImpl(storage deploymentStore.Store, indexer deploymentIndex.Ind
 }
 
 func (ds *datastoreImpl) initializeRanker() error {
-	ds.ranker = ranking.DeploymentRanker()
+	ds.clusterRanker = ranking.ClusterRanker()
+	ds.nsRanker = ranking.NamespaceRanker()
+	ds.deploymentRanker = ranking.DeploymentRanker()
 
 	riskElevatedCtx := sac.WithGlobalAccessScopeChecker(context.Background(),
 		sac.AllowFixedScopes(
@@ -87,8 +92,42 @@ func (ds *datastoreImpl) initializeRanker() error {
 		return err
 	}
 
+	clusterScores := make(map[string]float32)
+	nsScores := make(map[string]float32)
+	nsIDs := make(map[string]string)
 	for _, risk := range risks {
-		ds.ranker.Add(risk.GetSubject().GetId(), risk.GetScore())
+		score := risk.GetScore()
+		ds.deploymentRanker.Add(risk.GetSubject().GetId(), score)
+
+		// aggregate deployment risk scores to get cluster risk score
+		clusterScores[risk.GetSubject().GetClusterId()] += score
+
+		// aggregate deployment risk scores to obtain namespace risk score
+		nsKey := fmt.Sprintf("%s:%s", risk.GetSubject().GetClusterId(), risk.GetSubject().GetNamespace())
+		nsID, ok := nsIDs[nsKey]
+		if ok {
+			nsScores[nsID] += score
+			continue
+		}
+
+		deployment, found, err := ds.deploymentStore.GetDeployment(risk.GetSubject().GetId())
+		if err != nil {
+			return err
+		} else if !found {
+			return errors.New("unexpected number of namespaces found")
+		}
+		nsIDs[nsKey] = deployment.GetNamespaceId()
+		nsScores[nsIDs[nsKey]] += score
+	}
+
+	// update namespace risk scores
+	for id, score := range nsScores {
+		ds.nsRanker.Add(id, score)
+	}
+
+	// update cluster risk scores
+	for id, score := range clusterScores {
+		ds.clusterRanker.Add(id, score)
 	}
 	return nil
 }
@@ -367,13 +406,13 @@ func (ds *datastoreImpl) buildIndex() error {
 
 func (ds *datastoreImpl) updateListDeploymentPriority(deployments ...*storage.ListDeployment) {
 	for _, deployment := range deployments {
-		deployment.Priority = ds.ranker.GetRankForID(deployment.GetId())
+		deployment.Priority = ds.deploymentRanker.GetRankForID(deployment.GetId())
 	}
 }
 
 func (ds *datastoreImpl) updateDeploymentPriority(deployments ...*storage.Deployment) {
 	for _, deployment := range deployments {
-		deployment.Priority = ds.ranker.GetRankForID(deployment.GetId())
+		deployment.Priority = ds.deploymentRanker.GetRankForID(deployment.GetId())
 	}
 }
 

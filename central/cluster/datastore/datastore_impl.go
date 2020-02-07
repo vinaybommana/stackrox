@@ -49,16 +49,13 @@ type datastoreImpl struct {
 	ss  secretDataStore.DataStore
 	cm  connection.Manager
 
-	clusterRanker    *ranking.Ranker
-	deploymentRanker *ranking.Ranker
+	clusterRanker *ranking.Ranker
 
 	cache simplecache.Cache
 }
 
 func (ds *datastoreImpl) initializeRanker() error {
 	ds.clusterRanker = ranking.ClusterRanker()
-	ds.deploymentRanker = ranking.DeploymentRanker()
-
 	return nil
 }
 
@@ -395,31 +392,6 @@ func (ds *datastoreImpl) doCleanUpNodeStore(ctx context.Context) error {
 
 func (ds *datastoreImpl) updateClusterPriority(clusters ...*storage.Cluster) {
 	for _, cluster := range clusters {
-		ds.aggregateDeploymentScores(cluster.GetId())
-	}
-	for _, cluster := range clusters {
 		cluster.Priority = ds.clusterRanker.GetRankForID(cluster.GetId())
 	}
-}
-
-func (ds *datastoreImpl) aggregateDeploymentScores(clusterID string) {
-	aggregateScore := float32(0.0)
-	deploymentReadCtx := sac.WithGlobalAccessScopeChecker(context.Background(),
-		sac.AllowFixedScopes(
-			sac.AccessModeScopeKeys(storage.Access_READ_ACCESS),
-			sac.ResourceScopeKeys(resources.Deployment),
-		))
-
-	searchResults, err := ds.dds.Search(deploymentReadCtx,
-		pkgSearch.NewQueryBuilder().AddExactMatches(pkgSearch.ClusterID, clusterID).ProtoQuery())
-	if err != nil {
-		log.Error("deployment search for cluster risk calculation failed")
-		return
-	}
-
-	for _, r := range searchResults {
-		aggregateScore += ds.deploymentRanker.GetScoreForID(r.ID)
-	}
-
-	ds.clusterRanker.Add(clusterID, aggregateScore)
 }

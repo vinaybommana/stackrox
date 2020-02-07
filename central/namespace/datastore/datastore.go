@@ -77,15 +77,12 @@ type datastoreImpl struct {
 	indexer           index.Indexer
 	formattedSearcher search.Searcher
 	namespaceRanker   *ranking.Ranker
-	deploymentRanker  *ranking.Ranker
 
 	deployments deploymentDataStore.DataStore
 }
 
 func (b *datastoreImpl) initializeRanker() error {
 	b.namespaceRanker = ranking.NamespaceRanker()
-	b.deploymentRanker = ranking.DeploymentRanker()
-
 	return nil
 }
 
@@ -238,33 +235,8 @@ func (b *datastoreImpl) SearchNamespaces(ctx context.Context, q *v1.Query) ([]*s
 
 func (b *datastoreImpl) updateNamespacePriority(nss ...*storage.NamespaceMetadata) {
 	for _, ns := range nss {
-		b.aggregateDeploymentScores(ns.GetId())
-	}
-	for _, ns := range nss {
 		ns.Priority = b.namespaceRanker.GetRankForID(ns.GetId())
 	}
-}
-
-func (b *datastoreImpl) aggregateDeploymentScores(namespaceID string) {
-	aggregateScore := float32(0.0)
-	deploymentReadCtx := sac.WithGlobalAccessScopeChecker(context.Background(),
-		sac.AllowFixedScopes(
-			sac.AccessModeScopeKeys(storage.Access_READ_ACCESS),
-			sac.ResourceScopeKeys(resources.Deployment),
-		))
-
-	searchResults, err := b.deployments.Search(deploymentReadCtx,
-		search.NewQueryBuilder().
-			AddExactMatches(search.NamespaceID, namespaceID).ProtoQuery())
-	if err != nil {
-		log.Error("deployment search for namespace risk calculation failed")
-		return
-	}
-
-	for _, r := range searchResults {
-		aggregateScore += b.deploymentRanker.GetScoreForID(r.ID)
-	}
-	b.namespaceRanker.Add(namespaceID, aggregateScore)
 }
 
 // Helper functions which format our searching.
