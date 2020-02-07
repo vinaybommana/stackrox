@@ -385,6 +385,7 @@ func registerGeneratedTypes(builder generator.SchemaBuilder) {
 		"ports: [PortConfig]!",
 		"priority: Int!",
 		"replicas: Int!",
+		"riskScore: Float!",
 		"serviceAccount: String!",
 		"serviceAccountPermissionLevel: PermissionLevel!",
 		"stateTimestamp: Int!",
@@ -456,6 +457,7 @@ func registerGeneratedTypes(builder generator.SchemaBuilder) {
 		"name: ImageName",
 		"notPullable: Boolean!",
 		"priority: Int!",
+		"riskScore: Float!",
 		"scan: ImageScan",
 	}))
 	utils.Must(builder.AddType("ImageComponent", []string{
@@ -463,6 +465,7 @@ func registerGeneratedTypes(builder generator.SchemaBuilder) {
 		"license: License",
 		"name: String!",
 		"priority: Int!",
+		"riskScore: Float!",
 		"source: SourceType!",
 		"version: String!",
 	}))
@@ -3885,6 +3888,12 @@ func (resolver *deploymentResolver) Replicas(ctx context.Context) int32 {
 	return int32(value)
 }
 
+func (resolver *deploymentResolver) RiskScore(ctx context.Context) float64 {
+	resolver.ensureData(ctx)
+	value := resolver.data.GetRiskScore()
+	return float64(value)
+}
+
 func (resolver *deploymentResolver) ServiceAccount(ctx context.Context) string {
 	resolver.ensureData(ctx)
 	value := resolver.data.GetServiceAccount()
@@ -4483,6 +4492,12 @@ func (resolver *imageResolver) Priority(ctx context.Context) int32 {
 	return int32(value)
 }
 
+func (resolver *imageResolver) RiskScore(ctx context.Context) float64 {
+	resolver.ensureData(ctx)
+	value := resolver.data.GetRiskScore()
+	return float64(value)
+}
+
 func (resolver *imageResolver) Scan(ctx context.Context) (*imageScanResolver, error) {
 	resolver.ensureData(ctx)
 	value := resolver.data.GetScan()
@@ -4530,6 +4545,11 @@ func (resolver *imageComponentResolver) Name(ctx context.Context) string {
 func (resolver *imageComponentResolver) Priority(ctx context.Context) int32 {
 	value := resolver.data.GetPriority()
 	return int32(value)
+}
+
+func (resolver *imageComponentResolver) RiskScore(ctx context.Context) float64 {
+	value := resolver.data.GetRiskScore()
+	return float64(value)
 }
 
 func (resolver *imageComponentResolver) Source(ctx context.Context) string {

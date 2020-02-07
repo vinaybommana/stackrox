@@ -43,5 +43,13 @@ var (
 				},
 			}
 		},
+		search.Priority: func(option *v1.QuerySortOption) []*v1.QuerySortOption {
+			return []*v1.QuerySortOption{
+				{
+					Field:    search.RiskScore.String(),
+					Reversed: !option.GetReversed(),
+				},
+			}
+		},
 	}
 )

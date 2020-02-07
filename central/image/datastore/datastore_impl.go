@@ -2,13 +2,13 @@ package datastore
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/central/image/datastore/internal/search"
 	"github.com/stackrox/rox/central/image/datastore/internal/store"
 	"github.com/stackrox/rox/central/image/index"
+	imageComponentDS "github.com/stackrox/rox/central/imagecomponent/datastore"
 	"github.com/stackrox/rox/central/metrics"
 	"github.com/stackrox/rox/central/ranking"
 	riskDS "github.com/stackrox/rox/central/risk/datastore"
@@ -21,6 +21,7 @@ import (
 	"github.com/stackrox/rox/pkg/images/enricher"
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/sac"
+	pkgSearch "github.com/stackrox/rox/pkg/search"
 	searchPkg "github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/txn"
 )
@@ -38,18 +39,20 @@ type datastoreImpl struct {
 	indexer  index.Indexer
 	searcher search.Searcher
 
-	risks riskDS.DataStore
+	components imageComponentDS.DataStore
+	risks      riskDS.DataStore
 
-	imageRanker          *ranking.Ranker
-	imageComponentRanker *ranking.Ranker
+	imageRanker *ranking.Ranker
 }
 
-func newDatastoreImpl(storage store.Store, indexer index.Indexer, searcher search.Searcher, risks riskDS.DataStore) (*datastoreImpl, error) {
+func newDatastoreImpl(storage store.Store, indexer index.Indexer, searcher search.Searcher, imageComponents imageComponentDS.DataStore, risks riskDS.DataStore) (*datastoreImpl, error) {
 	ds := &datastoreImpl{
 		storage:  storage,
 		indexer:  indexer,
 		searcher: searcher,
-		risks:    risks,
+
+		components: imageComponents,
+		risks:      risks,
 
 		keyedMutex: concurrency.NewKeyedMutex(16),
 	}
@@ -234,6 +237,11 @@ func (ds *datastoreImpl) DeleteImages(ctx context.Context, ids ...string) error 
 			sac.ResourceScopeKeys(resources.Risk),
 		))
 
+	components, err := ds.components.Search(ctx, pkgSearch.NewQueryBuilder().AddExactMatches(pkgSearch.ImageSHA, ids...).ProtoQuery())
+	if err != nil {
+		return err
+	}
+
 	for _, id := range ids {
 		if err := ds.storage.Delete(id); err != nil {
 			errorList.AddError(err)
@@ -244,6 +252,18 @@ func (ds *datastoreImpl) DeleteImages(ctx context.Context, ids ...string) error 
 		}
 
 		if err := ds.risks.RemoveRisk(deleteRiskCtx, id, storage.RiskSubjectType_IMAGE); err != nil {
+			return err
+		}
+	}
+
+	remainingComponents, err := ds.components.Search(ctx, pkgSearch.NewQueryBuilder().AddExactMatches(pkgSearch.ImageSHA, ids...).ProtoQuery())
+	if err != nil {
+		return err
+	}
+
+	deletedComponents := pkgSearch.ResultsToIDSet(components).Difference(pkgSearch.ResultsToIDSet(remainingComponents))
+	for _, deletedComponent := range deletedComponents.AsSlice() {
+		if err := ds.risks.RemoveRisk(deleteRiskCtx, deletedComponent, storage.RiskSubjectType_IMAGE_COMPONENT); err != nil {
 			return err
 		}
 	}
@@ -262,6 +282,9 @@ func (ds *datastoreImpl) Exists(ctx context.Context, id string) (bool, error) {
 // merge adds the most up to date data from the two inputs to the first input.
 func merge(mergeTo *storage.Image, mergeWith *storage.Image) (updated bool) {
 	// If the image currently in the DB has more up to date info, swap it out.
+	if mergeWith.GetRiskScore() != mergeTo.GetRiskScore() {
+		updated = true
+	}
 	if mergeWith.GetMetadata().GetV1().GetCreated().Compare(mergeTo.GetMetadata().GetV1().GetCreated()) >= 0 {
 		mergeTo.Metadata = mergeWith.GetMetadata()
 	} else {
@@ -317,7 +340,6 @@ func (ds *datastoreImpl) buildIndex() error {
 
 func (ds *datastoreImpl) initializeRankers() error {
 	ds.imageRanker = ranking.ImageRanker()
-	ds.imageComponentRanker = ranking.ImageComponentRanker()
 
 	riskElevatedCtx := sac.WithGlobalAccessScopeChecker(context.Background(),
 		sac.AllowFixedScopes(
@@ -333,15 +355,6 @@ func (ds *datastoreImpl) initializeRankers() error {
 	for _, risk := range imageRisks {
 		ds.imageRanker.Add(risk.GetSubject().GetId(), risk.GetScore())
 	}
-
-	imageComponentRisks, err := ds.risks.SearchRawRisks(riskElevatedCtx, searchPkg.NewQueryBuilder().AddStrings(
-		searchPkg.RiskSubjectType, storage.RiskSubjectType_IMAGE_COMPONENT.String()).ProtoQuery())
-	if err != nil {
-		return err
-	}
-	for _, risk := range imageComponentRisks {
-		ds.imageComponentRanker.Add(risk.GetSubject().GetId(), risk.GetScore())
-	}
 	return nil
 }
 
@@ -353,13 +366,6 @@ func (ds *datastoreImpl) updateListImagePriority(images ...*storage.ListImage) {
 
 func (ds *datastoreImpl) updateImagePriority(images ...*storage.Image) {
 	for _, image := range images {
-		for _, imageComponent := range image.GetScan().GetComponents() {
-			imageComponent.Priority = ds.imageComponentRanker.GetRankForID(getImageComponentKey(imageComponent))
-		}
 		image.Priority = ds.imageRanker.GetRankForID(image.GetId())
 	}
-}
-
-func getImageComponentKey(imageComponent *storage.EmbeddedImageScanComponent) string {
-	return fmt.Sprintf("%s:%s", imageComponent.GetName(), imageComponent.GetVersion())
 }

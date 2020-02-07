@@ -8,6 +8,7 @@ import (
 	searchMock "github.com/stackrox/rox/central/image/datastore/internal/search/mocks"
 	storeMock "github.com/stackrox/rox/central/image/datastore/internal/store/mocks"
 	indexMock "github.com/stackrox/rox/central/image/index/mocks"
+	componentDatastoreMocks "github.com/stackrox/rox/central/imagecomponent/datastore/mocks"
 	riskDatastoreMocks "github.com/stackrox/rox/central/risk/datastore/mocks"
 	"github.com/stackrox/rox/central/role/resources"
 	"github.com/stackrox/rox/generated/storage"
@@ -29,8 +30,9 @@ type ImageDataStoreTestSuite struct {
 	mockSearcher *searchMock.MockSearcher
 	mockStore    *storeMock.MockStore
 
-	datastore DataStore
-	mockRisks *riskDatastoreMocks.MockDataStore
+	datastore      DataStore
+	mockComponents *componentDatastoreMocks.MockDataStore
+	mockRisks      *riskDatastoreMocks.MockDataStore
 
 	mockCtrl *gomock.Controller
 }
@@ -51,10 +53,11 @@ func (suite *ImageDataStoreTestSuite) SetupTest() {
 	suite.mockSearcher = searchMock.NewMockSearcher(suite.mockCtrl)
 	suite.mockStore = storeMock.NewMockStore(suite.mockCtrl)
 	suite.mockStore.EXPECT().GetTxnCount().Return(uint64(1), nil)
+	suite.mockComponents = componentDatastoreMocks.NewMockDataStore(suite.mockCtrl)
 	suite.mockRisks = riskDatastoreMocks.NewMockDataStore(suite.mockCtrl)
 
 	var err error
-	suite.datastore, err = newDatastoreImpl(suite.mockStore, suite.mockIndexer, suite.mockSearcher, suite.mockRisks)
+	suite.datastore, err = newDatastoreImpl(suite.mockStore, suite.mockIndexer, suite.mockSearcher, suite.mockComponents, suite.mockRisks)
 	suite.Require().NoError(err)
 }
 

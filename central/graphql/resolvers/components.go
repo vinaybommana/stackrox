@@ -37,6 +37,7 @@ func init() {
 			"priority: Int!",
 			"source: String!",
 			"location: String!",
+			"riskScore: Float!",
 		}),
 		schema.AddExtraResolver("ImageScan", `components(query: String, pagination: Pagination): [EmbeddedImageScanComponent!]!`),
 		schema.AddExtraResolver("ImageScan", `componentCount(query: String): Int!`),
@@ -58,6 +59,7 @@ type ComponentResolver interface {
 	LayerIndex() *int32
 	LastScanned(ctx context.Context) (*graphql.Time, error)
 	License(ctx context.Context) (*licenseResolver, error)
+	RiskScore(ctx context.Context) float64
 
 	TopVuln(ctx context.Context) (VulnerabilityResolver, error)
 	Vulns(ctx context.Context, args PaginatedQuery) ([]VulnerabilityResolver, error)

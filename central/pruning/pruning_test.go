@@ -16,6 +16,7 @@ import (
 	"github.com/stackrox/rox/central/globalindex"
 	imageDatastore "github.com/stackrox/rox/central/image/datastore"
 	imageDatastoreMocks "github.com/stackrox/rox/central/image/datastore/mocks"
+	componentsMocks "github.com/stackrox/rox/central/imagecomponent/datastore/mocks"
 	networkFlowDatastoreMocks "github.com/stackrox/rox/central/networkflow/datastore/mocks"
 	processIndicatorDatastoreMocks "github.com/stackrox/rox/central/processindicator/datastore/mocks"
 	processWhitelistDatastoreMocks "github.com/stackrox/rox/central/processwhitelist/datastore/mocks"
@@ -115,6 +116,8 @@ func generateImageDataStructures(ctx context.Context, t *testing.T) (alertDatast
 	require.NoError(t, err)
 
 	ctrl := gomock.NewController(t)
+	mockComponentDatastore := componentsMocks.NewMockDataStore(ctrl)
+	mockComponentDatastore.EXPECT().Search(gomock.Any(), gomock.Any()).AnyTimes()
 	mockRiskDatastore := riskDatastoreMocks.NewMockDataStore(ctrl)
 	mockRiskDatastore.EXPECT().SearchRawRisks(gomock.Any(), gomock.Any()).AnyTimes()
 	mockRiskDatastore.EXPECT().RemoveRisk(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
@@ -123,7 +126,7 @@ func generateImageDataStructures(ctx context.Context, t *testing.T) (alertDatast
 	require.NoError(t, err)
 
 	// Initialize real datastore
-	images, err := imageDatastore.NewBadger(dacky, concurrency.NewKeyFence(), db, bleveIndex, true, mockRiskDatastore)
+	images, err := imageDatastore.NewBadger(dacky, concurrency.NewKeyFence(), db, bleveIndex, true, mockComponentDatastore, mockRiskDatastore)
 	require.NoError(t, err)
 
 	mockProcessDataStore := processIndicatorDatastoreMocks.NewMockDataStore(ctrl)

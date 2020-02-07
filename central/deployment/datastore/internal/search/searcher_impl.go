@@ -31,6 +31,7 @@ import (
 	deploymentMappings "github.com/stackrox/rox/pkg/search/options/deployments"
 	imageMappings "github.com/stackrox/rox/pkg/search/options/images"
 	"github.com/stackrox/rox/pkg/search/paginated"
+	"github.com/stackrox/rox/pkg/search/sortfields"
 )
 
 var (
@@ -150,7 +151,8 @@ func formatSearcher(graphProvider idspace.GraphProvider,
 		filteredSearcher = deploymentsSearchHelper.FilteredSearcher(deploymentIndexer) // Make the UnsafeSearcher safe.
 	}
 
-	derivedFieldSortedSearcher := wrapDerivedFieldSearcher(graphProvider, filteredSearcher)
+	transformedSortFieldSearcher := sortfields.TransformSortFields(filteredSearcher)
+	derivedFieldSortedSearcher := wrapDerivedFieldSearcher(graphProvider, transformedSortFieldSearcher)
 	paginatedSearcher := paginated.Paginated(derivedFieldSortedSearcher)
 	return paginatedSearcher
 }

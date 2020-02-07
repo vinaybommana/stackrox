@@ -164,6 +164,11 @@ func (eicr *EmbeddedImageScanComponentResolver) Location(ctx context.Context) st
 	return eicr.data.GetLocation()
 }
 
+// RiskScore returns the risk score of the component.
+func (eicr *EmbeddedImageScanComponentResolver) RiskScore(ctx context.Context) float64 {
+	return float64(0.0)
+}
+
 // LayerIndex is the index in the parent image.
 func (eicr *EmbeddedImageScanComponentResolver) LayerIndex() *int32 {
 	w, ok := eicr.data.GetHasLayerIndex().(*storage.EmbeddedImageScanComponent_LayerIndex)

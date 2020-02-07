@@ -15,6 +15,7 @@ message ImageComponent {
     License                        license      = 4;
     int64                          priority     = 5;
     SourceType                     source       = 6 [(gogoproto.moretags) = "search:\"Component Source,store\""];
+    float                          risk_score   = 7 [(gogoproto.moretags) = "search:\"Risk Score,hidden\""];
 }
 
 message ComponentCVEEdge {

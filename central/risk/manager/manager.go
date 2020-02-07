@@ -5,7 +5,11 @@ import (
 	"time"
 
 	deploymentDS "github.com/stackrox/rox/central/deployment/datastore"
+	imageDS "github.com/stackrox/rox/central/image/datastore"
+	"github.com/stackrox/rox/central/imagecomponent/converter"
+	imageComponentDS "github.com/stackrox/rox/central/imagecomponent/datastore"
 	"github.com/stackrox/rox/central/metrics"
+	"github.com/stackrox/rox/central/ranking"
 	riskDS "github.com/stackrox/rox/central/risk/datastore"
 	deploymentScorer "github.com/stackrox/rox/central/risk/scorer/deployment"
 	imageScorer "github.com/stackrox/rox/central/risk/scorer/image"
@@ -37,25 +41,42 @@ type Manager interface {
 }
 
 type managerImpl struct {
-	deploymentStorage    deploymentDS.DataStore
-	riskStorage          riskDS.DataStore
+	deploymentStorage     deploymentDS.DataStore
+	imageStorage          imageDS.DataStore
+	imageComponentStorage imageComponentDS.DataStore
+	riskStorage           riskDS.DataStore
+
 	deploymentScorer     deploymentScorer.Scorer
 	imageScorer          imageScorer.Scorer
 	imageComponentScorer imageComponentScorer.Scorer
+
+	deploymentRanker     *ranking.Ranker
+	imageRanker          *ranking.Ranker
+	imageComponentRanker *ranking.Ranker
 }
 
 // New returns a new manager
 func New(deploymentStorage deploymentDS.DataStore,
+	imageStorage imageDS.DataStore,
+	imageComponentStorage imageComponentDS.DataStore,
 	riskStorage riskDS.DataStore,
 	deploymentScorer deploymentScorer.Scorer,
 	imageScorer imageScorer.Scorer,
-	imageComponentScorer imageComponentScorer.Scorer) (Manager, error) {
+	imageComponentScorer imageComponentScorer.Scorer,
+	deploymentRanker *ranking.Ranker,
+	imageRanker *ranking.Ranker,
+	imageComponentRanker *ranking.Ranker) (Manager, error) {
 	m := &managerImpl{
-		deploymentStorage:    deploymentStorage,
-		riskStorage:          riskStorage,
-		deploymentScorer:     deploymentScorer,
-		imageScorer:          imageScorer,
-		imageComponentScorer: imageComponentScorer,
+		deploymentStorage:     deploymentStorage,
+		imageStorage:          imageStorage,
+		imageComponentStorage: imageComponentStorage,
+		riskStorage:           riskStorage,
+		deploymentScorer:      deploymentScorer,
+		imageScorer:           imageScorer,
+		imageComponentScorer:  imageComponentScorer,
+		deploymentRanker:      deploymentRanker,
+		imageRanker:           imageRanker,
+		imageComponentRanker:  imageComponentRanker,
 	}
 	return m, nil
 }
@@ -84,8 +105,18 @@ func (e *managerImpl) ReprocessDeploymentRiskWithImages(deployment *storage.Depl
 		return
 	}
 
+	oldScore := e.deploymentRanker.GetScoreForID(deployment.GetId())
 	if err := e.riskStorage.UpsertRisk(riskReprocessorCtx, risk); err != nil {
 		log.Errorf("Error reprocessing risk for deployment %s: %v", deployment.GetName(), err)
+	}
+
+	if oldScore == risk.GetScore() {
+		return
+	}
+
+	deployment.RiskScore = risk.Score
+	if err := e.deploymentStorage.UpsertDeployment(riskReprocessorCtx, deployment); err != nil {
+		log.Error(err)
 	}
 }
 
@@ -102,6 +133,7 @@ func (e *managerImpl) ReprocessImageRisk(image *storage.Image) {
 		return
 	}
 
+	oldScore := e.imageRanker.GetScoreForID(image.GetId())
 	if err := e.riskStorage.UpsertRisk(riskReprocessorCtx, risk); err != nil {
 		log.Errorf("Error reprocessing risk for image %s: %v", image.GetName(), err)
 	}
@@ -109,6 +141,15 @@ func (e *managerImpl) ReprocessImageRisk(image *storage.Image) {
 	// We want to compute and store risk for image components when image risk is reprocessed.
 	for _, component := range image.GetScan().GetComponents() {
 		e.ReprocessImageComponentRisk(component)
+	}
+
+	if oldScore == risk.GetScore() {
+		return
+	}
+
+	image.RiskScore = risk.Score
+	if err := e.imageStorage.UpsertImage(riskReprocessorCtx, image); err != nil {
+		log.Error(err)
 	}
 }
 
@@ -126,7 +167,22 @@ func (e *managerImpl) ReprocessImageComponentRisk(imageComponent *storage.Embedd
 		return
 	}
 
+	imageComponentV2 := converter.EmbeddedImageScanComponentToProtoImageComponent(imageComponent)
+	oldScore := e.imageComponentRanker.GetScoreForID(imageComponentV2.GetId())
 	if err := e.riskStorage.UpsertRisk(riskReprocessorCtx, risk); err != nil {
 		log.Errorf("Error reprocessing risk for image component %s v%s: %v", imageComponent.GetName(), imageComponent.GetVersion(), err)
+	}
+
+	if !features.Dackbox.Enabled() {
+		return
+	}
+
+	if oldScore == risk.GetScore() {
+		return
+	}
+
+	imageComponentV2.RiskScore = risk.Score
+	if err := e.imageComponentStorage.Upsert(riskReprocessorCtx, imageComponentV2); err != nil {
+		log.Error(err)
 	}
 }

@@ -41,7 +41,6 @@ var (
 	ComponentName                = newFieldLabel("Component Name")
 	ComponentCount               = newFieldLabel("Component Count")
 	ComponentVersion             = newFieldLabel("Component Version")
-	ComponentPriority            = newFieldLabel("Component Priority")
 	ComponentSource              = newFieldLabel("Component Source")
 	ComponentLocation            = newFieldLabel("Component Location")
 	DockerfileInstructionKeyword = newFieldLabel("Dockerfile Instruction Keyword")

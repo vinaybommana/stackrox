@@ -7,6 +7,7 @@ import (
 	componentDackBox "github.com/stackrox/rox/central/imagecomponent/dackbox"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/sync"
 )
 
@@ -18,7 +19,9 @@ var (
 
 func initialize() {
 	dx = New(globalindex.GetGlobalIndex())
-	globalDackBox.GetWrapperRegistry().RegisterWrapper(componentDackBox.Bucket, wrapper{})
+	if features.Dackbox.Enabled() {
+		globalDackBox.GetWrapperRegistry().RegisterWrapper(componentDackBox.Bucket, wrapper{})
+	}
 }
 
 // Singleton returns a singleton instance of cve indexer
