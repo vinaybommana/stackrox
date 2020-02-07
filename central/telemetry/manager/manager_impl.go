@@ -11,11 +11,13 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
+	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	licenseMgr "github.com/stackrox/rox/central/license/manager"
 	"github.com/stackrox/rox/central/role/resources"
 	"github.com/stackrox/rox/central/telemetry/gatherers"
 	"github.com/stackrox/rox/central/telemetry/manager/internal/store"
+	v1 "github.com/stackrox/rox/generated/api/v1"
 	licenseproto "github.com/stackrox/rox/generated/shared/license"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/buildinfo"
@@ -47,8 +49,13 @@ var (
 )
 
 type configUpdate struct {
+	config *v1.ConfigureTelemetryRequest
+	retC   chan<- *updateResult
+}
+
+type updateResult struct {
 	config *storage.TelemetryConfiguration
-	retC   chan<- error
+	err    error
 }
 
 type sendResult struct {
@@ -103,14 +110,14 @@ func (m *manager) getActiveConfig() *storage.TelemetryConfiguration {
 	return proto.Clone(cfg).(*storage.TelemetryConfiguration)
 }
 
-func (m *manager) UpdateTelemetryConfig(ctx context.Context, config *storage.TelemetryConfiguration) error {
+func (m *manager) UpdateTelemetryConfig(ctx context.Context, config *v1.ConfigureTelemetryRequest) (*storage.TelemetryConfiguration, error) {
 	if ok, err := telemetrySAC.WriteAllowed(ctx); err != nil {
-		return err
+		return nil, err
 	} else if !ok {
-		return errors.New("permission denied")
+		return nil, errors.New("permission denied")
 	}
 
-	retC := make(chan error, 1)
+	retC := make(chan *updateResult, 1)
 	update := configUpdate{
 		config: config,
 		retC:   retC,
@@ -118,19 +125,19 @@ func (m *manager) UpdateTelemetryConfig(ctx context.Context, config *storage.Tel
 
 	select {
 	case <-ctx.Done():
-		return ctx.Err()
+		return nil, ctx.Err()
 	case <-m.ctx.Done():
-		return m.ctx.Err()
+		return nil, m.ctx.Err()
 	case m.configUpdateC <- update:
 	}
 
 	select {
 	case <-ctx.Done():
-		return ctx.Err()
+		return nil, ctx.Err()
 	case <-m.ctx.Done():
-		return m.ctx.Err()
-	case err := <-retC:
-		return err
+		return nil, m.ctx.Err()
+	case result := <-retC:
+		return result.config, result.err
 	}
 }
 
@@ -275,7 +282,8 @@ func (m *manager) Init() {
 		}
 	} else if initConfig == nil {
 		initConfig = &storage.TelemetryConfiguration{
-			Enabled: env.InitialTelemetryEnabledEnv.BooleanSetting(),
+			Enabled:     env.InitialTelemetryEnabledEnv.BooleanSetting(),
+			LastSetTime: types.TimestampNow(),
 		}
 		if err := m.store.SetTelemetryConfig(initConfig); err != nil {
 			log.Errorf("Could not persist initial telemetry config to the DB: %v", err)
@@ -372,13 +380,29 @@ func (m *manager) Run() {
 				log.Info("Disabling telemetry data collection.")
 			}
 
-			if err := m.store.SetTelemetryConfig(configUpdate.config); err != nil {
-				configUpdate.retC <- err // safe - buffered chan
+			oldCfg := m.getActiveConfig()
+			if oldCfg.GetEnabled() == configUpdate.config.GetEnabled() {
+				configUpdate.retC <- &updateResult{
+					config: oldCfg,
+					err:    nil,
+				}
+				continue
+			}
+			newCfg := &storage.TelemetryConfiguration{
+				Enabled:     configUpdate.config.GetEnabled(),
+				LastSetTime: types.TimestampNow(),
+			}
+			if err := m.store.SetTelemetryConfig(newCfg); err != nil {
+				configUpdate.retC <- &updateResult{
+					err: err,
+				} // safe - buffered chan
 				continue
 			}
 
-			m.setActiveConfig(configUpdate.config)
-			close(configUpdate.retC) // safe - one-time use chan
+			m.setActiveConfig(newCfg)
+			configUpdate.retC <- &updateResult{
+				config: newCfg,
+			}
 
 			nextSend = m.nextSendTimer()
 		}

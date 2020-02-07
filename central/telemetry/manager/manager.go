@@ -8,13 +8,14 @@ import (
 	licenseManager "github.com/stackrox/rox/central/license/manager"
 	"github.com/stackrox/rox/central/telemetry/gatherers"
 	"github.com/stackrox/rox/central/telemetry/manager/internal/store"
+	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
 )
 
 // Manager manages telemetry configuration, collection, and sending.
 type Manager interface {
 	GetTelemetryConfig(ctx context.Context) (*storage.TelemetryConfiguration, error)
-	UpdateTelemetryConfig(ctx context.Context, config *storage.TelemetryConfiguration) error
+	UpdateTelemetryConfig(ctx context.Context, config *v1.ConfigureTelemetryRequest) (*storage.TelemetryConfiguration, error)
 }
 
 // NewManager creates a new telemetry manager. The manager starts running immediately, and keeps running until the

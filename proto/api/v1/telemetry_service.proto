@@ -9,6 +9,10 @@ import "api/v1/empty.proto";
 
 package v1;
 
+message ConfigureTelemetryRequest {
+    bool enabled = 1;
+}
+
 service TelemetryService {
     rpc GetTelemetryConfiguration (Empty) returns (storage.TelemetryConfiguration) {
         option (google.api.http) = {
@@ -16,7 +20,7 @@ service TelemetryService {
         };
     }
 
-    rpc ConfigureTelemetry (storage.TelemetryConfiguration) returns (storage.TelemetryConfiguration) {
+    rpc ConfigureTelemetry (ConfigureTelemetryRequest) returns (storage.TelemetryConfiguration) {
         option (google.api.http) = {
             put: "/v1/telemetry/configure"
             body: "*"

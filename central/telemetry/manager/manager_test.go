@@ -7,6 +7,7 @@ import (
 
 	"github.com/etcd-io/bbolt"
 	"github.com/stackrox/rox/central/telemetry/manager/internal/store"
+	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/env"
 	"github.com/stackrox/rox/pkg/sac"
@@ -57,6 +58,12 @@ func (s *managerSuite) TearDownTest() {
 	s.envIsolator.RestoreAll()
 }
 
+func getCfgInputFromCfg(cfg *storage.TelemetryConfiguration) *v1.ConfigureTelemetryRequest {
+	return &v1.ConfigureTelemetryRequest{
+		Enabled: cfg.Enabled,
+	}
+}
+
 func (s *managerSuite) TestInitConfig_Unset() {
 	s.envIsolator.Unsetenv(env.InitialTelemetryEnabledEnv.EnvVar())
 
@@ -102,10 +109,11 @@ func (s *managerSuite) TestUpdateConfig_WithAccess() {
 
 	cfg.Enabled = !cfg.GetEnabled()
 
-	err = mgr.UpdateTelemetryConfig(withAccessCtx, cfg)
+	updatedCfg, err := mgr.UpdateTelemetryConfig(withAccessCtx, getCfgInputFromCfg(cfg))
 	s.NoError(err)
+	s.Equal(cfg.GetEnabled(), updatedCfg.GetEnabled())
 
-	updatedCfg, err := mgr.GetTelemetryConfig(withAccessCtx)
+	updatedCfg, err = mgr.GetTelemetryConfig(withAccessCtx)
 	s.NoError(err)
 
 	s.Equal(cfg.GetEnabled(), updatedCfg.GetEnabled())
@@ -114,10 +122,11 @@ func (s *managerSuite) TestUpdateConfig_WithAccess() {
 func (s *managerSuite) TestUpdateConfig_WithoutAccess() {
 	mgr := s.createManager(context.Background())
 
-	cfg := &storage.TelemetryConfiguration{}
+	cfg := &v1.ConfigureTelemetryRequest{}
 
-	err := mgr.UpdateTelemetryConfig(context.Background(), cfg)
+	newCfg, err := mgr.UpdateTelemetryConfig(context.Background(), cfg)
 	s.Error(err)
+	s.Nil(newCfg)
 }
 
 func (s *managerSuite) TestUpdateConfig_AfterCancel() {
@@ -126,8 +135,9 @@ func (s *managerSuite) TestUpdateConfig_AfterCancel() {
 	cancel()
 	time.Sleep(100 * time.Millisecond)
 
-	cfg := &storage.TelemetryConfiguration{}
+	cfg := &v1.ConfigureTelemetryRequest{}
 
-	err := mgr.UpdateTelemetryConfig(withAccessCtx, cfg)
+	newCfg, err := mgr.UpdateTelemetryConfig(withAccessCtx, cfg)
 	s.Error(err)
+	s.Nil(newCfg)
 }

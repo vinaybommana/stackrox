@@ -46,9 +46,10 @@ func (s *serviceImpl) GetTelemetryConfiguration(ctx context.Context, _ *v1.Empty
 	return s.manager.GetTelemetryConfig(ctx)
 }
 
-func (s *serviceImpl) ConfigureTelemetry(ctx context.Context, config *storage.TelemetryConfiguration) (*storage.TelemetryConfiguration, error) {
-	if err := s.manager.UpdateTelemetryConfig(ctx, config); err != nil {
+func (s *serviceImpl) ConfigureTelemetry(ctx context.Context, config *v1.ConfigureTelemetryRequest) (*storage.TelemetryConfiguration, error) {
+	newConfig, err := s.manager.UpdateTelemetryConfig(ctx, config)
+	if err != nil {
 		return nil, err
 	}
-	return config, nil
+	return newConfig, nil
 }
