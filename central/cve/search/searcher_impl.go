@@ -178,7 +178,7 @@ func getCompoundCVESearcher(graphProvider idspace.GraphProvider,
 			Options:  imageMappings.OptionsMap,
 		},
 		{
-			Searcher: idspace.TransformIDs(deploymentSearcher, idspace.NewForwardGraphTransformer(graphProvider, dackbox.CVEToDeploymentPath.Path)),
+			Searcher: idspace.TransformIDs(deploymentSearcher, idspace.NewForwardGraphTransformer(graphProvider, dackbox.DeploymentToCVE.Path)),
 			Options:  deploymentMappings.OptionsMap,
 		},
 	}...)

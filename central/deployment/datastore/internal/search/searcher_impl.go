@@ -168,6 +168,11 @@ func getDeploymentCompoundSearcher(graphProvider idspace.GraphProvider,
 	imageComponentEdgeToImageSearcher := idspace.TransformIDs(imageComponentEdgeSearcher, idspace.NewEdgeToParentTransformer())
 	return compound.NewSearcher([]compound.SearcherSpec{
 		{
+			IsDefault: true,
+			Searcher:  deploymentSearcher,
+			Options:   deploymentMappings.OptionsMap,
+		},
+		{
 			Searcher: idspace.TransformIDs(cveSearcher, idspace.NewBackwardGraphTransformer(graphProvider, dackbox.CVEToDeploymentPath.Path)),
 			Options:  cveMappings.OptionsMap,
 		},
@@ -186,11 +191,6 @@ func getDeploymentCompoundSearcher(graphProvider idspace.GraphProvider,
 		{
 			Searcher: idspace.TransformIDs(imageSearcher, idspace.NewBackwardGraphTransformer(graphProvider, dackbox.ImageToDeploymentPath.Path)),
 			Options:  imageMappings.OptionsMap,
-		},
-		{
-			IsDefault: true,
-			Searcher:  deploymentSearcher,
-			Options:   deploymentMappings.OptionsMap,
 		},
 	}...)
 }
