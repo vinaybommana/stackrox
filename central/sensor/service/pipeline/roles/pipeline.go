@@ -58,7 +58,6 @@ func (s *pipelineImpl) Reconcile(ctx context.Context, clusterID string, storeMap
 	if err != nil {
 		return err
 	}
-	s.riskReprocessor.ReprocessRisk()
 	return nil
 }
 

@@ -105,7 +105,7 @@ func (suite *AlertManagerTestSuite) TestGetAlertsByPolicy() {
 	suite.alertsMock.EXPECT().SearchRawAlerts(suite.ctx, testutils.PredMatcher("query for violation state, policy", queryHasFields(search.ViolationState, search.PolicyID))).Return(([]*storage.Alert)(nil), nil)
 
 	modified, err := suite.alertManager.AlertAndNotify(suite.ctx, nil, WithPolicyID("pid"))
-	suite.False(modified)
+	suite.False(modified.Cardinality() > 0)
 	suite.NoError(err, "update should succeed")
 }
 
@@ -113,7 +113,7 @@ func (suite *AlertManagerTestSuite) TestGetAlertsByDeployment() {
 	suite.alertsMock.EXPECT().SearchRawAlerts(suite.ctx, testutils.PredMatcher("query for violation state, deployment", queryHasFields(search.ViolationState, search.DeploymentID))).Return(([]*storage.Alert)(nil), nil)
 
 	modified, err := suite.alertManager.AlertAndNotify(suite.ctx, nil, WithDeploymentIDs("did"))
-	suite.False(modified)
+	suite.False(modified.Cardinality() > 0)
 	suite.NoError(err, "update should succeed")
 }
 
@@ -124,7 +124,7 @@ func (suite *AlertManagerTestSuite) TestOnUpdatesWhenAlertsDoNotChange() {
 	// No updates should be attempted
 
 	modified, err := suite.alertManager.AlertAndNotify(suite.ctx, alerts)
-	suite.False(modified)
+	suite.False(modified.Cardinality() > 0)
 	suite.NoError(err, "update should succeed")
 }
 
@@ -141,7 +141,7 @@ func (suite *AlertManagerTestSuite) TestMarksOldAlertsStale() {
 
 	// Make one of the alerts not appear in the current alerts.
 	modified, err := suite.alertManager.AlertAndNotify(suite.ctx, alerts[1:])
-	suite.True(modified)
+	suite.True(modified.Cardinality() > 0)
 	suite.NoError(err, "update should succeed")
 }
 
@@ -158,7 +158,7 @@ func (suite *AlertManagerTestSuite) TestSendsNotificationsForNewAlerts() {
 	suite.alertsMock.EXPECT().SearchRawAlerts(suite.ctx, gomock.Any()).Return(alerts[1:], nil)
 
 	modified, err := suite.alertManager.AlertAndNotify(suite.ctx, alerts)
-	suite.True(modified)
+	suite.True(modified.Cardinality() > 0)
 	suite.NoError(err, "update should succeed")
 }
 

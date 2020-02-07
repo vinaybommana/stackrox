@@ -26,7 +26,6 @@ import (
 	"github.com/stackrox/rox/pkg/concurrency"
 	deployTimePkg "github.com/stackrox/rox/pkg/detection/deploytime"
 	"github.com/stackrox/rox/pkg/enforcers"
-	"github.com/stackrox/rox/pkg/env"
 	"github.com/stackrox/rox/pkg/expiringcache"
 	"github.com/stackrox/rox/pkg/images/enricher"
 	"github.com/stackrox/rox/pkg/policies"
@@ -159,11 +158,11 @@ func (m *managerImpl) generateProcessAlertsAndEnforcement(indicators map[string]
 		newAlerts = append(newAlerts, whitelistAlerts...)
 	}
 
-	modified, err := m.alertManager.AlertAndNotify(lifecycleMgrCtx, newAlerts, alertmanager.WithLifecycleStage(storage.LifecycleStage_RUNTIME), alertmanager.WithDeploymentIDs(deploymentIDs...))
+	modifiedDeployments, err := m.alertManager.AlertAndNotify(lifecycleMgrCtx, newAlerts, alertmanager.WithLifecycleStage(storage.LifecycleStage_RUNTIME), alertmanager.WithDeploymentIDs(deploymentIDs...))
 	if err != nil {
 		log.Errorf("Couldn't alert and notify: %s", err)
-	} else if modified {
-		defer m.reprocessor.ReprocessRiskForDeployments(deploymentIDs...)
+	} else if modifiedDeployments.Cardinality() > 0 {
+		defer m.reprocessor.ReprocessRiskForDeployments(modifiedDeployments.AsSlice()...)
 	}
 
 	// Create enforcement actions for the new alerts and send them with the stored injectors.
@@ -230,9 +229,6 @@ const (
 )
 
 func (m *managerImpl) checkWhitelist(indicator *storage.ProcessIndicator) (userWhitelist bool, roxWhitelist bool, err error) {
-	// Always reprocess risk for the deployment, since that's needed to update its process-related information.
-	defer m.reprocessor.ReprocessRiskForDeployments(indicator.GetDeploymentId())
-
 	key := &storage.ProcessWhitelistKey{
 		DeploymentId:  indicator.DeploymentId,
 		ContainerName: indicator.ContainerName,
@@ -249,14 +245,6 @@ func (m *managerImpl) checkWhitelist(indicator *storage.ProcessIndicator) (userW
 	insertableElement := &storage.WhitelistItem{Item: &storage.WhitelistItem_ProcessName{ProcessName: processwhitelist.WhitelistItemFromProcess(indicator)}}
 	if !exists {
 		_, err = m.whitelists.UpsertProcessWhitelist(lifecycleMgrCtx, key, []*storage.WhitelistItem{insertableElement}, true)
-		if err == nil {
-			// This updates the risk for deployments after the whitelist gets locked.
-			// This isn't super pretty, but otherwise, our whitelistStatus for the deployment can become stale
-			// since we don't explicit lock a whitelist -- we just set a locked time which is in the future.
-			time.AfterFunc(env.WhitelistGenerationDuration.DurationSetting()+whitelistLockingGracePeriod, func() {
-				m.reprocessor.ReprocessRiskForDeployments(indicator.GetDeploymentId())
-			})
-		}
 		return
 	}
 
@@ -269,12 +257,11 @@ func (m *managerImpl) checkWhitelist(indicator *storage.ProcessIndicator) (userW
 	userWhitelist = processwhitelist.IsUserLocked(whitelist)
 	roxWhitelist = processwhitelist.IsRoxLocked(whitelist) && !processwhitelist.IsStartupProcess(indicator)
 	if userWhitelist || roxWhitelist {
+		// We already checked if it's in the whitelist and it is not, so reprocess risk to mark the results are suspicious if necessary
+		m.reprocessor.ReprocessRiskForDeployments(indicator.GetDeploymentId())
 		return
 	}
 	_, err = m.whitelists.UpdateProcessWhitelistElements(lifecycleMgrCtx, key, []*storage.WhitelistItem{insertableElement}, nil, true)
-	if err != nil {
-		return
-	}
 	return
 }
 
@@ -404,9 +391,6 @@ func (m *managerImpl) maybeInjectEnforcement(presentAlerts []*storage.Alert, dep
 }
 
 func (m *managerImpl) UpsertPolicy(policy *storage.Policy) error {
-	// Asynchronously update all deployments' risk after processing.
-	defer m.reprocessor.ReprocessRisk()
-
 	var presentAlerts []*storage.Alert
 
 	m.policyAlertsLock.Lock(policy.GetId())
@@ -445,8 +429,14 @@ func (m *managerImpl) UpsertPolicy(policy *storage.Policy) error {
 	}
 
 	// Perform notifications and update DB.
-	_, err := m.alertManager.AlertAndNotify(lifecycleMgrCtx, presentAlerts, alertmanager.WithPolicyID(policy.GetId()))
-	return err
+	modifiedDeployments, err := m.alertManager.AlertAndNotify(lifecycleMgrCtx, presentAlerts, alertmanager.WithPolicyID(policy.GetId()))
+	if err != nil {
+		return err
+	}
+	if modifiedDeployments.Cardinality() > 0 {
+		defer m.reprocessor.ReprocessRiskForDeployments(modifiedDeployments.AsSlice()...)
+	}
+	return nil
 }
 
 func (m *managerImpl) DeploymentRemoved(deployment *storage.Deployment) error {
@@ -456,9 +446,6 @@ func (m *managerImpl) DeploymentRemoved(deployment *storage.Deployment) error {
 }
 
 func (m *managerImpl) RemovePolicy(policyID string) error {
-	// Asynchronously update all deployments' risk after processing.
-	defer m.reprocessor.ReprocessRisk()
-
 	m.policyAlertsLock.Lock(policyID)
 	defer m.policyAlertsLock.Unlock(policyID)
 	if err := m.deploytimeDetector.PolicySet().RemovePolicy(policyID); err != nil {
@@ -467,8 +454,14 @@ func (m *managerImpl) RemovePolicy(policyID string) error {
 	if err := m.runtimeDetector.PolicySet().RemovePolicy(policyID); err != nil {
 		return err
 	}
-	_, err := m.alertManager.AlertAndNotify(lifecycleMgrCtx, nil, alertmanager.WithPolicyID(policyID))
-	return err
+	modifiedDeployments, err := m.alertManager.AlertAndNotify(lifecycleMgrCtx, nil, alertmanager.WithPolicyID(policyID))
+	if err != nil {
+		return err
+	}
+	if modifiedDeployments.Cardinality() > 0 {
+		m.reprocessor.ReprocessRiskForDeployments(modifiedDeployments.AsSlice()...)
+	}
+	return nil
 }
 
 func deploymentAndAlertToEnforcementProto(deployment *storage.Deployment, alert *storage.Alert) *central.SensorEnforcement {
