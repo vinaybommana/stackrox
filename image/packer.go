@@ -78,11 +78,6 @@ func GetScannerChart() *chart.Chart {
 	return mustGetChart(K8sBox, "helm/scannerchart/")
 }
 
-// GetScannerV2Chart returns the Helm chart for ScannerV2
-func GetScannerV2Chart() *chart.Chart {
-	return mustGetChart(K8sBox, "helm/scannerv2chart/")
-}
-
 // GetMonitoringChart returns the Helm chart for Monitoring
 func GetMonitoringChart() *chart.Chart {
 	return mustGetChart(K8sBox, "helm/monitoringchart/")

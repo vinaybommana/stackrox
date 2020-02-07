@@ -37,7 +37,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search_index:\\\"Policy ID,Policy,Category,Severity\\\""
+                    "value": "search_index:\\\"Policy ID,Policy,Category,Severity\\"
                   }
                 ]
               },
@@ -48,7 +48,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Lifecycle Stage,store\\\""
+                    "value": "search:\\\"Lifecycle Stage,store\\"
                   }
                 ]
               },
@@ -80,7 +80,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Violation Time\\\""
+                    "value": "search:\\\"Violation Time\\"
                   }
                 ]
               },
@@ -96,7 +96,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Violation State,store\\\""
+                    "value": "search:\\\"Violation State,store\\"
                   }
                 ]
               },
@@ -117,7 +117,7 @@
                     "options": [
                       {
                         "name": "(gogoproto.moretags)",
-                        "value": "search:\\\"Deployment ID,store,hidden\\\""
+                        "value": "search:\\\"Deployment ID,store,hidden\\"
                       }
                     ]
                   },
@@ -128,7 +128,7 @@
                     "options": [
                       {
                         "name": "(gogoproto.moretags)",
-                        "value": "search:\\\"Deployment,store\\\""
+                        "value": "search:\\\"Deployment,store\\"
                       }
                     ]
                   },
@@ -144,7 +144,7 @@
                     "options": [
                       {
                         "name": "(gogoproto.moretags)",
-                        "value": "search:\\\"Namespace,store\\\""
+                        "value": "search:\\\"Namespace,store\\"
                       }
                     ]
                   },
@@ -155,7 +155,7 @@
                     "options": [
                       {
                         "name": "(gogoproto.moretags)",
-                        "value": "search:\\\"Cluster ID,store\\\""
+                        "value": "search:\\\"Cluster ID,store\\"
                       }
                     ]
                   },
@@ -166,7 +166,7 @@
                     "options": [
                       {
                         "name": "(gogoproto.moretags)",
-                        "value": "search:\\\"Cluster,store\\\""
+                        "value": "search:\\\"Cluster,store\\"
                       }
                     ]
                   },
@@ -183,7 +183,7 @@
                     "options": [
                       {
                         "name": "(gogoproto.moretags)",
-                        "value": "search:\\\"Inactive Deployment,store\\\""
+                        "value": "search:\\\"Inactive Deployment,store\\"
                       }
                     ]
                   }
@@ -217,7 +217,7 @@
                         "options": [
                           {
                             "name": "(gogoproto.moretags)",
-                            "value": "search:\\\"-\\\""
+                            "value": "search:\\\"-\\"
                           }
                         ]
                       },
@@ -258,7 +258,7 @@
                     "options": [
                       {
                         "name": "(gogoproto.moretags)",
-                        "value": "search:\\\"-\\\""
+                        "value": "search:\\\"-\\"
                       }
                     ]
                   }
@@ -283,7 +283,7 @@
                     "options": [
                       {
                         "name": "(gogoproto.moretags)",
-                        "value": "search:\\\"-\\\""
+                        "value": "search:\\\"-\\"
                       }
                     ]
                   }
@@ -321,7 +321,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Lifecycle Stage,store\\\""
+                    "value": "search:\\\"Lifecycle Stage,store\\"
                   }
                 ]
               },
@@ -332,7 +332,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Violation Time\\\""
+                    "value": "search:\\\"Violation Time\\"
                   }
                 ]
               },
@@ -353,7 +353,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Violation State,store\\\""
+                    "value": "search:\\\"Violation State,store\\"
                   }
                 ]
               },
@@ -374,7 +374,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Policy ID,store,hidden\\\""
+                    "value": "search:\\\"Policy ID,store,hidden\\"
                   }
                 ]
               },
@@ -385,7 +385,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Policy,store\\\""
+                    "value": "search:\\\"Policy,store\\"
                   }
                 ]
               },
@@ -396,7 +396,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Severity,store\\\""
+                    "value": "search:\\\"Severity,store\\"
                   }
                 ]
               },
@@ -413,7 +413,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Category,store\\\""
+                    "value": "search:\\\"Category,store\\"
                   }
                 ]
               }
@@ -429,7 +429,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Deployment ID,store,hidden\\\""
+                    "value": "search:\\\"Deployment ID,store,hidden\\"
                   }
                 ]
               },
@@ -440,7 +440,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Deployment,store\\\""
+                    "value": "search:\\\"Deployment,store\\"
                   }
                 ]
               },
@@ -451,7 +451,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Cluster,store\\\""
+                    "value": "search:\\\"Cluster,store\\"
                   }
                 ]
               },
@@ -462,7 +462,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Namespace,store\\\""
+                    "value": "search:\\\"Namespace,store\\"
                   }
                 ]
               },
@@ -473,7 +473,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Cluster ID,store\\\""
+                    "value": "search:\\\"Cluster ID,store\\"
                   }
                 ]
               },
@@ -484,7 +484,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Inactive Deployment,store\\\""
+                    "value": "search:\\\"Inactive Deployment,store\\"
                   }
                 ]
               }
@@ -960,7 +960,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Cluster ID,hidden,store\\\""
+                    "value": "search:\\\"Cluster ID,hidden,store\\"
                   }
                 ]
               },
@@ -971,7 +971,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Cluster,store\\\""
+                    "value": "search:\\\"Cluster,store\\"
                   }
                 ]
               },
@@ -2031,7 +2031,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"CVE,store\\\""
+                    "value": "search:\\\"CVE,store\\"
                   }
                 ]
               },
@@ -2042,7 +2042,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"CVSS,store\\\""
+                    "value": "search:\\\"CVSS,store\\"
                   }
                 ]
               },
@@ -2053,7 +2053,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Impact Score,store\\\""
+                    "value": "search:\\\"Impact Score,store\\"
                   }
                 ]
               },
@@ -2064,7 +2064,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"CVE Type,store\\\""
+                    "value": "search:\\\"CVE Type,store\\"
                   }
                 ]
               },
@@ -2085,7 +2085,18 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"CVE Published On,store\\\""
+                    "value": "search:\\\"CVE Published On,store\\"
+                  }
+                ]
+              },
+              {
+                "id": 15,
+                "name": "created_at",
+                "type": "google.protobuf.Timestamp",
+                "options": [
+                  {
+                    "name": "(gogoproto.moretags)",
+                    "value": "search:\\\"CVE Created Time,store\\"
                   }
                 ]
               },
@@ -2122,7 +2133,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"CVE Suppressed,store\\\""
+                    "value": "search:\\\"CVE Suppressed,store\\"
                   }
                 ]
               },
@@ -2133,7 +2144,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Fixed By,store\\\""
+                    "value": "search:\\\"Fixed By,store\\"
                   }
                 ]
               }
@@ -2373,7 +2384,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Deployment ID,store,hidden\\\""
+                    "value": "search:\\\"Deployment ID,store,hidden\\"
                   }
                 ]
               },
@@ -2384,7 +2395,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Deployment,store\\\""
+                    "value": "search:\\\"Deployment,store\\"
                   }
                 ]
               },
@@ -2395,7 +2406,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "hash:\\\"ignore\\\""
+                    "value": "hash:\\\"ignore\\"
                   }
                 ]
               },
@@ -2406,7 +2417,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Deployment Type\\\""
+                    "value": "search:\\\"Deployment Type\\"
                   }
                 ]
               },
@@ -2417,7 +2428,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Namespace,store\\\""
+                    "value": "search:\\\"Namespace,store\\"
                   }
                 ]
               },
@@ -2428,7 +2439,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Namespace ID\\\""
+                    "value": "search:\\\"Namespace ID\\"
                   }
                 ]
               },
@@ -2449,7 +2460,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Created,store,hidden\\\" hash:\\\"ignore\\\""
+                    "value": "search:\\\"Created,store,hidden\\\" hash:\\\"ignore\\"
                   }
                 ]
               },
@@ -2460,7 +2471,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Cluster ID,store,hidden\\\""
+                    "value": "search:\\\"Cluster ID,store,hidden\\"
                   }
                 ]
               },
@@ -2471,7 +2482,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Cluster,store\\\""
+                    "value": "search:\\\"Cluster,store\\"
                   }
                 ]
               },
@@ -2488,7 +2499,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Priority\\\" hash:\\\"ignore\\\""
+                    "value": "search:\\\"Priority\\\" hash:\\\"ignore\\"
                   }
                 ]
               },
@@ -2505,7 +2516,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Image Pull Secret\\\""
+                    "value": "search:\\\"Image Pull Secret\\"
                   }
                 ]
               },
@@ -2516,7 +2527,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Service Account\\\""
+                    "value": "search:\\\"Service Account\\"
                   }
                 ]
               },
@@ -2527,7 +2538,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Service Account Permission Level,store\\\""
+                    "value": "search:\\\"Service Account Permission Level,store\\"
                   }
                 ]
               },
@@ -2560,7 +2571,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "hash:\\\"ignore\\\" sensorhash:\\\"ignore\\\""
+                    "value": "hash:\\\"ignore\\\" sensorhash:\\\"ignore\\"
                   }
                 ]
               }
@@ -2575,7 +2586,7 @@
                   "options": [
                     {
                       "name": "(gogoproto.moretags)",
-                      "value": "search:\\\"Label,store\\\""
+                      "value": "search:\\\"Label,store\\"
                     }
                   ]
                 }
@@ -2589,7 +2600,7 @@
                   "options": [
                     {
                       "name": "(gogoproto.moretags)",
-                      "value": "search:\\\"Pod Label,store\\\""
+                      "value": "search:\\\"Pod Label,store\\"
                     }
                   ]
                 }
@@ -2603,7 +2614,7 @@
                   "options": [
                     {
                       "name": "(gogoproto.moretags)",
-                      "value": "search:\\\"Annotation\\\""
+                      "value": "search:\\\"Annotation\\"
                     }
                   ]
                 }
@@ -2624,7 +2635,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Image Sha,store,hidden\\\""
+                    "value": "search:\\\"Image Sha,store,hidden\\"
                   }
                 ]
               },
@@ -2666,7 +2677,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search_index:\\\"Image Sha\\\" search_xref:\\\"all\\\""
+                    "value": "search_index:\\\"Image Sha\\\" search_xref:\\\"all\\"
                   }
                 ]
               },
@@ -2706,7 +2717,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "hash:\\\"ignore\\\""
+                    "value": "hash:\\\"ignore\\"
                   }
                 ]
               },
@@ -2727,7 +2738,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"CPU Cores Request,store\\\""
+                    "value": "search:\\\"CPU Cores Request,store\\"
                   }
                 ]
               },
@@ -2738,7 +2749,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"CPU Cores Limit,store\\\""
+                    "value": "search:\\\"CPU Cores Limit,store\\"
                   }
                 ]
               },
@@ -2749,7 +2760,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Memory Request (MB),store\\\""
+                    "value": "search:\\\"Memory Request (MB),store\\"
                   }
                 ]
               },
@@ -2760,7 +2771,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Memory Limit (MB),store\\\""
+                    "value": "search:\\\"Memory Limit (MB),store\\"
                   }
                 ]
               }
@@ -2776,7 +2787,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Volume Name,store\\\""
+                    "value": "search:\\\"Volume Name,store\\"
                   }
                 ]
               },
@@ -2787,7 +2798,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Volume Source,store\\\""
+                    "value": "search:\\\"Volume Source,store\\"
                   }
                 ]
               },
@@ -2798,7 +2809,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Volume Destination,store\\\""
+                    "value": "search:\\\"Volume Destination,store\\"
                   }
                 ]
               },
@@ -2809,7 +2820,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Volume ReadOnly,store\\\""
+                    "value": "search:\\\"Volume ReadOnly,store\\"
                   }
                 ]
               },
@@ -2820,7 +2831,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Volume Type,store\\\""
+                    "value": "search:\\\"Volume Type,store\\"
                   }
                 ]
               }
@@ -2857,7 +2868,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Container Image Digest,hidden\\\""
+                    "value": "search:\\\"Container Image Digest,hidden\\"
                   }
                 ]
               }
@@ -2893,7 +2904,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Secret\\\""
+                    "value": "search:\\\"Secret\\"
                   }
                 ]
               },
@@ -2904,7 +2915,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Secret Path\\\""
+                    "value": "search:\\\"Secret Path\\"
                   }
                 ]
               }
@@ -2925,7 +2936,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Port,store\\\""
+                    "value": "search:\\\"Port,store\\"
                   }
                 ]
               },
@@ -2936,7 +2947,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Port Protocol,store\\\""
+                    "value": "search:\\\"Port Protocol,store\\"
                   }
                 ]
               },
@@ -2947,7 +2958,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Max Exposure Level,store\\\""
+                    "value": "search:\\\"Max Exposure Level,store\\"
                   }
                 ]
               },
@@ -2980,7 +2991,7 @@
                     "options": [
                       {
                         "name": "(gogoproto.moretags)",
-                        "value": "search:\\\"Exposure Level,store\\\""
+                        "value": "search:\\\"Exposure Level,store\\"
                       }
                     ]
                   },
@@ -2991,7 +3002,7 @@
                     "options": [
                       {
                         "name": "(gogoproto.moretags)",
-                        "value": "search:\\\"Exposing Service,store\\\""
+                        "value": "search:\\\"Exposing Service,store\\"
                       }
                     ]
                   },
@@ -3012,7 +3023,7 @@
                     "options": [
                       {
                         "name": "(gogoproto.moretags)",
-                        "value": "search:\\\"Exposing Service Port,store\\\""
+                        "value": "search:\\\"Exposing Service Port,store\\"
                       }
                     ]
                   },
@@ -3023,7 +3034,7 @@
                     "options": [
                       {
                         "name": "(gogoproto.moretags)",
-                        "value": "search:\\\"Exposed Node Port,store\\\""
+                        "value": "search:\\\"Exposed Node Port,store\\"
                       }
                     ]
                   },
@@ -3035,7 +3046,7 @@
                     "options": [
                       {
                         "name": "(gogoproto.moretags)",
-                        "value": "search:\\\"External IP,store\\\""
+                        "value": "search:\\\"External IP,store\\"
                       }
                     ]
                   },
@@ -3047,7 +3058,7 @@
                     "options": [
                       {
                         "name": "(gogoproto.moretags)",
-                        "value": "search:\\\"External Hostname,store\\\""
+                        "value": "search:\\\"External Hostname,store\\"
                       }
                     ]
                   }
@@ -3103,7 +3114,7 @@
                     "options": [
                       {
                         "name": "(gogoproto.moretags)",
-                        "value": "search:\\\"Environment Key,store\\\""
+                        "value": "search:\\\"Environment Key,store\\"
                       }
                     ]
                   },
@@ -3114,7 +3125,7 @@
                     "options": [
                       {
                         "name": "(gogoproto.moretags)",
-                        "value": "search:\\\"Environment Value,store\\\""
+                        "value": "search:\\\"Environment Value,store\\"
                       }
                     ]
                   },
@@ -3125,7 +3136,7 @@
                     "options": [
                       {
                         "name": "(gogoproto.moretags)",
-                        "value": "search:\\\"Environment Variable Source,store\\\""
+                        "value": "search:\\\"Environment Variable Source,store\\"
                       }
                     ]
                   }
@@ -3143,7 +3154,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Privileged,store\\\""
+                    "value": "search:\\\"Privileged,store\\"
                   }
                 ]
               },
@@ -3160,7 +3171,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Drop Capabilities,store\\\""
+                    "value": "search:\\\"Drop Capabilities,store\\"
                   }
                 ]
               },
@@ -3172,7 +3183,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Add Capabilities,store\\\""
+                    "value": "search:\\\"Add Capabilities,store\\"
                   }
                 ]
               },
@@ -3183,7 +3194,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Read Only Root Filesystem,store\\\""
+                    "value": "search:\\\"Read Only Root Filesystem,store\\"
                   }
                 ]
               }
@@ -3354,7 +3365,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "scrub:\\\"always\\\""
+                    "value": "scrub:\\\"always\\"
                   }
                 ]
               },
@@ -3463,7 +3474,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "scrub:\\\"always\\\""
+                    "value": "scrub:\\\"always\\"
                   }
                 ]
               },
@@ -3485,7 +3496,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "scrub:\\\"always\\\""
+                    "value": "scrub:\\\"always\\"
                   }
                 ]
               }
@@ -3577,7 +3588,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Image Sha,store,hidden\\\""
+                    "value": "search:\\\"Image Sha,store,hidden\\"
                   }
                 ]
               },
@@ -3603,7 +3614,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Component Count,store\\\""
+                    "value": "search:\\\"Component Count,store\\"
                   }
                 ]
               },
@@ -3614,7 +3625,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"CVE Count,store\\\""
+                    "value": "search:\\\"CVE Count,store\\"
                   }
                 ]
               },
@@ -3625,7 +3636,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Fixable CVE Count,store\\\""
+                    "value": "search:\\\"Fixable CVE Count,store\\"
                   }
                 ]
               },
@@ -3636,7 +3647,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Last Updated,hidden\\\""
+                    "value": "search:\\\"Last Updated,hidden\\"
                   }
                 ]
               },
@@ -3665,7 +3676,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Image Scan Time,store\\\""
+                    "value": "search:\\\"Image Scan Time,store\\"
                   }
                 ]
               },
@@ -3687,7 +3698,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Component,store\\\""
+                    "value": "search:\\\"Component,store\\"
                   }
                 ]
               },
@@ -3698,7 +3709,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Component Version,store\\\""
+                    "value": "search:\\\"Component Version,store\\"
                   }
                 ]
               },
@@ -3765,7 +3776,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"CVE,store\\\""
+                    "value": "search:\\\"CVE,store\\"
                   }
                 ]
               },
@@ -3776,7 +3787,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"CVSS,store\\\""
+                    "value": "search:\\\"CVSS,store\\"
                   }
                 ]
               },
@@ -3797,7 +3808,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Fixed By,store\\\""
+                    "value": "search:\\\"Fixed By,store\\"
                   }
                 ]
               },
@@ -3823,7 +3834,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"CVE Published On,store\\\""
+                    "value": "search:\\\"CVE Published On,store\\"
                   }
                 ]
               },
@@ -3836,6 +3847,17 @@
                 "id": 11,
                 "name": "vulnerability_type",
                 "type": "VulnerabilityType"
+              },
+              {
+                "id": 12,
+                "name": "suppressed",
+                "type": "bool",
+                "options": [
+                  {
+                    "name": "(gogoproto.moretags)",
+                    "value": "search:\\\"CVE Suppressed,store\\"
+                  }
+                ]
               }
             ]
           },
@@ -3885,7 +3907,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Image Created Time,store\\\""
+                    "value": "search:\\\"Image Created Time,store\\"
                   }
                 ]
               },
@@ -3907,7 +3929,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Image User\\\""
+                    "value": "search:\\\"Image User\\"
                   }
                 ]
               },
@@ -3919,7 +3941,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Image Command\\\""
+                    "value": "search:\\\"Image Command\\"
                   }
                 ]
               },
@@ -3931,7 +3953,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Image Entrypoint\\\""
+                    "value": "search:\\\"Image Entrypoint\\"
                   }
                 ]
               },
@@ -3943,7 +3965,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Image Volumes\\\""
+                    "value": "search:\\\"Image Volumes\\"
                   }
                 ]
               }
@@ -3959,7 +3981,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Dockerfile Instruction Keyword,store\\\""
+                    "value": "search:\\\"Dockerfile Instruction Keyword,store\\"
                   }
                 ]
               },
@@ -3970,7 +3992,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Dockerfile Instruction Value,store\\\""
+                    "value": "search:\\\"Dockerfile Instruction Value,store\\"
                   }
                 ]
               },
@@ -4007,7 +4029,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Image Registry,store\\\""
+                    "value": "search:\\\"Image Registry,store\\"
                   }
                 ]
               },
@@ -4018,7 +4040,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Image Remote,store\\\""
+                    "value": "search:\\\"Image Remote,store\\"
                   }
                 ]
               },
@@ -4029,7 +4051,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Image Tag,store\\\""
+                    "value": "search:\\\"Image Tag,store\\"
                   }
                 ]
               },
@@ -4040,7 +4062,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Image,store,analyzer=standard\\\""
+                    "value": "search:\\\"Image,store,analyzer=standard\\"
                   }
                 ]
               }
@@ -4114,7 +4136,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Component Location,store\\\""
+                    "value": "search:\\\"Component Location,store\\"
                   }
                 ]
               }
@@ -4154,7 +4176,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Component ID,store\\\""
+                    "value": "search:\\\"Component ID,store\\"
                   }
                 ]
               },
@@ -4165,7 +4187,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Component Name,store\\\""
+                    "value": "search:\\\"Component Name,store\\"
                   }
                 ]
               },
@@ -4176,7 +4198,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Component Version,store\\\""
+                    "value": "search:\\\"Component Version,store\\"
                   }
                 ]
               },
@@ -4197,7 +4219,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Component Source,store\\\""
+                    "value": "search:\\\"Component Source,store\\"
                   }
                 ]
               }
@@ -4218,7 +4240,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Fixable,store\\\""
+                    "value": "search:\\\"Fixable,store\\"
                   }
                 ]
               },
@@ -4229,7 +4251,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Fixed By,store\\\""
+                    "value": "search:\\\"Fixed By,store\\"
                   }
                 ]
               }
@@ -4343,11 +4365,6 @@
                 "type": "AnchoreConfig"
               },
               {
-                "id": 19,
-                "name": "scannerv2",
-                "type": "ScannerV2Config"
-              },
-              {
                 "id": 20,
                 "name": "ibm",
                 "type": "IBMRegistryConfig"
@@ -4367,6 +4384,9 @@
                 "name": "skip_test_integration",
                 "type": "bool"
               }
+            ],
+            "reserved_ids": [
+              19
             ]
           },
           {
@@ -4384,7 +4404,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "scrub:\\\"always\\\""
+                    "value": "scrub:\\\"always\\"
                   }
                 ]
               }
@@ -4405,7 +4425,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "scrub:\\\"always\\\""
+                    "value": "scrub:\\\"always\\"
                   }
                 ]
               }
@@ -4413,16 +4433,6 @@
           },
           {
             "name": "ClairConfig",
-            "fields": [
-              {
-                "id": 1,
-                "name": "endpoint",
-                "type": "string"
-              }
-            ]
-          },
-          {
-            "name": "ScannerV2Config",
             "fields": [
               {
                 "id": 1,
@@ -4461,7 +4471,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "scrub:\\\"always\\\""
+                    "value": "scrub:\\\"always\\"
                   }
                 ]
               },
@@ -4492,7 +4502,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "scrub:\\\"always\\\""
+                    "value": "scrub:\\\"always\\"
                   }
                 ]
               },
@@ -4523,7 +4533,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "scrub:\\\"always\\\""
+                    "value": "scrub:\\\"always\\"
                   }
                 ]
               },
@@ -4554,7 +4564,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "scrub:\\\"always\\\""
+                    "value": "scrub:\\\"always\\"
                   }
                 ]
               },
@@ -4575,7 +4585,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "scrub:\\\"always\\\""
+                    "value": "scrub:\\\"always\\"
                   }
                 ]
               },
@@ -4586,7 +4596,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "scrub:\\\"always\\\""
+                    "value": "scrub:\\\"always\\"
                   }
                 ]
               }
@@ -4752,7 +4762,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Namespace ID\\\""
+                    "value": "search:\\\"Namespace ID\\"
                   }
                 ]
               },
@@ -4763,7 +4773,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Namespace,store\\\""
+                    "value": "search:\\\"Namespace,store\\"
                   }
                 ]
               },
@@ -4774,7 +4784,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Cluster ID,hidden,store\\\""
+                    "value": "search:\\\"Cluster ID,hidden,store\\"
                   }
                 ]
               },
@@ -4785,7 +4795,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Cluster\\\""
+                    "value": "search:\\\"Cluster\\"
                   }
                 ]
               },
@@ -4810,7 +4820,7 @@
                   "options": [
                     {
                       "name": "(gogoproto.moretags)",
-                      "value": "search:\\\"Label\\\""
+                      "value": "search:\\\"Label\\"
                     }
                   ]
                 }
@@ -5279,7 +5289,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Node ID,store\\\""
+                    "value": "search:\\\"Node ID,store\\"
                   }
                 ]
               },
@@ -5290,7 +5300,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Node,store\\\""
+                    "value": "search:\\\"Node,store\\"
                   }
                 ]
               },
@@ -5307,7 +5317,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Cluster ID,store\\\""
+                    "value": "search:\\\"Cluster ID,store\\"
                   }
                 ]
               },
@@ -5318,7 +5328,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Cluster,store\\\""
+                    "value": "search:\\\"Cluster,store\\"
                   }
                 ]
               },
@@ -5381,7 +5391,7 @@
                   "options": [
                     {
                       "name": "(gogoproto.moretags)",
-                      "value": "search:\\\"Label\\\""
+                      "value": "search:\\\"Label\\"
                     }
                   ]
                 }
@@ -5395,7 +5405,7 @@
                   "options": [
                     {
                       "name": "(gogoproto.moretags)",
-                      "value": "search:\\\"Annotation\\\""
+                      "value": "search:\\\"Annotation\\"
                     }
                   ]
                 }
@@ -5529,7 +5539,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "scrub:\\\"always\\\""
+                    "value": "scrub:\\\"always\\"
                   }
                 ]
               },
@@ -5564,7 +5574,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "scrub:\\\"always\\\""
+                    "value": "scrub:\\\"always\\"
                   }
                 ]
               },
@@ -5628,7 +5638,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "scrub:\\\"always\\\""
+                    "value": "scrub:\\\"always\\"
                   }
                 ]
               },
@@ -5664,7 +5674,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "scrub:\\\"always\\\""
+                    "value": "scrub:\\\"always\\"
                   }
                 ]
               },
@@ -5700,7 +5710,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "scrub:\\\"always\\\""
+                    "value": "scrub:\\\"always\\"
                   }
                 ]
               }
@@ -5736,7 +5746,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "scrub:\\\"always\\\""
+                    "value": "scrub:\\\"always\\"
                   }
                 ]
               },
@@ -5895,7 +5905,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Policy ID,store,hidden\\\""
+                    "value": "search:\\\"Policy ID,store,hidden\\"
                   }
                 ]
               },
@@ -5906,7 +5916,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Policy,store\\\""
+                    "value": "search:\\\"Policy,store\\"
                   }
                 ]
               },
@@ -5917,7 +5927,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Description\\\""
+                    "value": "search:\\\"Description\\"
                   }
                 ]
               },
@@ -5938,7 +5948,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Disabled\\\""
+                    "value": "search:\\\"Disabled\\"
                   }
                 ]
               },
@@ -5950,7 +5960,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Category,store\\\""
+                    "value": "search:\\\"Category,store\\"
                   }
                 ]
               },
@@ -5967,7 +5977,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Lifecycle Stage,store\\\""
+                    "value": "search:\\\"Lifecycle Stage,store\\"
                   }
                 ]
               },
@@ -5990,7 +6000,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Severity,store\\\""
+                    "value": "search:\\\"Severity,store\\"
                   }
                 ]
               },
@@ -6002,7 +6012,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Enforcement\\\""
+                    "value": "search:\\\"Enforcement\\"
                   }
                 ]
               },
@@ -6019,7 +6029,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Policy Last Updated\\\""
+                    "value": "search:\\\"Policy Last Updated\\"
                   }
                 ]
               },
@@ -6030,7 +6040,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"SORT_Policy,hidden,analyzer=keyword\\\""
+                    "value": "search:\\\"SORT_Policy,hidden,analyzer=keyword\\"
                   }
                 ]
               },
@@ -6041,7 +6051,18 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"SORT_PolicyLifecycleStage,hidden\\\""
+                    "value": "search:\\\"SORT_Lifecycle Stage,hidden\\"
+                  }
+                ]
+              },
+              {
+                "id": 18,
+                "name": "SORT_enforcement",
+                "type": "bool",
+                "options": [
+                  {
+                    "name": "(gogoproto.moretags)",
+                    "value": "search:\\\"SORT_Enforcement,hidden\\"
                   }
                 ]
               }
@@ -6498,7 +6519,7 @@
                     "options": [
                       {
                         "name": "(gogoproto.moretags)",
-                        "value": "search:\\\"-\\\""
+                        "value": "search:\\\"-\\"
                       }
                     ]
                   }
@@ -6571,7 +6592,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Process ID,store,hidden\\\""
+                    "value": "search:\\\"Process ID,store,hidden\\"
                   }
                 ]
               },
@@ -6582,7 +6603,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Deployment ID,store,hidden\\\""
+                    "value": "search:\\\"Deployment ID,store,hidden\\"
                   }
                 ]
               },
@@ -6593,7 +6614,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Deployment State TS,hidden\\\""
+                    "value": "search:\\\"Deployment State TS,hidden\\"
                   }
                 ]
               },
@@ -6619,7 +6640,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Cluster ID,store,hidden\\\""
+                    "value": "search:\\\"Cluster ID,store,hidden\\"
                   }
                 ]
               },
@@ -6630,7 +6651,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Namespace,store,hidden\\\""
+                    "value": "search:\\\"Namespace,store,hidden\\"
                   }
                 ]
               },
@@ -6689,7 +6710,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Container ID,hidden\\\""
+                    "value": "search:\\\"Container ID,hidden\\"
                   }
                 ]
               },
@@ -6705,7 +6726,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Process Name\\\""
+                    "value": "search:\\\"Process Name\\"
                   }
                 ]
               },
@@ -6716,7 +6737,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Process Arguments\\\""
+                    "value": "search:\\\"Process Arguments\\"
                   }
                 ]
               },
@@ -6727,7 +6748,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Process Path\\\""
+                    "value": "search:\\\"Process Path\\"
                   }
                 ]
               },
@@ -6743,7 +6764,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Process UID\\\""
+                    "value": "search:\\\"Process UID\\"
                   }
                 ]
               },
@@ -6760,7 +6781,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Process Ancestor\\\""
+                    "value": "search:\\\"Process Ancestor\\"
                   }
                 ]
               }
@@ -6816,7 +6837,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Deployment ID,hidden\\\""
+                    "value": "search:\\\"Deployment ID,hidden\\"
                   }
                 ]
               },
@@ -6832,7 +6853,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Cluster ID,hidden,store\\\""
+                    "value": "search:\\\"Cluster ID,hidden,store\\"
                   }
                 ]
               },
@@ -6843,7 +6864,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Namespace,hidden,store\\\""
+                    "value": "search:\\\"Namespace,hidden,store\\"
                   }
                 ]
               }
@@ -6876,7 +6897,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"-\\\""
+                    "value": "search:\\\"-\\"
                   }
                 ]
               },
@@ -6927,7 +6948,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Process Name\\\""
+                    "value": "search:\\\"Process Name\\"
                   }
                 ]
               }
@@ -7057,7 +7078,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Role ID,hidden\\\""
+                    "value": "search:\\\"Role ID,hidden\\"
                   }
                 ]
               },
@@ -7068,7 +7089,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Role\\\""
+                    "value": "search:\\\"Role\\"
                   }
                 ]
               },
@@ -7079,7 +7100,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Namespace,store\\\""
+                    "value": "search:\\\"Namespace,store\\"
                   }
                 ]
               },
@@ -7090,7 +7111,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Cluster ID,store,hidden\\\""
+                    "value": "search:\\\"Cluster ID,store,hidden\\"
                   }
                 ]
               },
@@ -7101,7 +7122,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Cluster\\\""
+                    "value": "search:\\\"Cluster\\"
                   }
                 ]
               },
@@ -7112,7 +7133,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Cluster Role\\\""
+                    "value": "search:\\\"Cluster Role\\"
                   }
                 ]
               },
@@ -7138,7 +7159,7 @@
                   "options": [
                     {
                       "name": "(gogoproto.moretags)",
-                      "value": "search:\\\"Label\\\""
+                      "value": "search:\\\"Label\\"
                     }
                   ]
                 }
@@ -7152,7 +7173,7 @@
                   "options": [
                     {
                       "name": "(gogoproto.moretags)",
-                      "value": "search:\\\"Annotation\\\""
+                      "value": "search:\\\"Annotation\\"
                     }
                   ]
                 }
@@ -7204,7 +7225,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Role Binding ID,hidden\\\""
+                    "value": "search:\\\"Role Binding ID,hidden\\"
                   }
                 ]
               },
@@ -7215,7 +7236,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Role Binding\\\""
+                    "value": "search:\\\"Role Binding\\"
                   }
                 ]
               },
@@ -7226,7 +7247,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Namespace,store\\\""
+                    "value": "search:\\\"Namespace,store\\"
                   }
                 ]
               },
@@ -7237,7 +7258,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Cluster ID,store,hidden\\\""
+                    "value": "search:\\\"Cluster ID,store,hidden\\"
                   }
                 ]
               },
@@ -7248,7 +7269,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Cluster\\\""
+                    "value": "search:\\\"Cluster\\"
                   }
                 ]
               },
@@ -7259,7 +7280,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Cluster Role\\\""
+                    "value": "search:\\\"Cluster Role\\"
                   }
                 ]
               },
@@ -7281,7 +7302,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Role ID\\\""
+                    "value": "search:\\\"Role ID\\"
                   }
                 ]
               }
@@ -7296,7 +7317,7 @@
                   "options": [
                     {
                       "name": "(gogoproto.moretags)",
-                      "value": "search:\\\"Label\\\""
+                      "value": "search:\\\"Label\\"
                     }
                   ]
                 }
@@ -7310,7 +7331,7 @@
                   "options": [
                     {
                       "name": "(gogoproto.moretags)",
-                      "value": "search:\\\"Annotation\\\""
+                      "value": "search:\\\"Annotation\\"
                     }
                   ]
                 }
@@ -7327,7 +7348,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Subject Kind\\\""
+                    "value": "search:\\\"Subject Kind\\"
                   }
                 ]
               },
@@ -7338,7 +7359,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Subject\\\""
+                    "value": "search:\\\"Subject\\"
                   }
                 ]
               },
@@ -7421,7 +7442,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Risk Score,store,hidden\\\""
+                    "value": "search:\\\"Risk Score,store,hidden\\"
                   }
                 ]
               },
@@ -7443,7 +7464,7 @@
                     "options": [
                       {
                         "name": "(gogoproto.moretags)",
-                        "value": "search:\\\"Risk Indicator,store,hidden\\\""
+                        "value": "search:\\\"Risk Indicator,store,hidden\\"
                       }
                     ]
                   },
@@ -7494,7 +7515,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Namespace,store\\\""
+                    "value": "search:\\\"Namespace,store\\"
                   }
                 ]
               },
@@ -7505,7 +7526,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Cluster ID,store,hidden\\\""
+                    "value": "search:\\\"Cluster ID,store,hidden\\"
                   }
                 ]
               },
@@ -7516,7 +7537,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Risk Subject Type,store,hidden\\\""
+                    "value": "search:\\\"Risk Subject Type,store,hidden\\"
                   }
                 ]
               }
@@ -7766,7 +7787,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Secret ID,store,hidden\\\""
+                    "value": "search:\\\"Secret ID,store,hidden\\"
                   }
                 ]
               },
@@ -7777,7 +7798,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Secret,store\\\""
+                    "value": "search:\\\"Secret,store\\"
                   }
                 ]
               },
@@ -7788,7 +7809,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Cluster ID,store,hidden\\\""
+                    "value": "search:\\\"Cluster ID,store,hidden\\"
                   }
                 ]
               },
@@ -7799,7 +7820,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Cluster,store\\\""
+                    "value": "search:\\\"Cluster,store\\"
                   }
                 ]
               },
@@ -7810,7 +7831,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Namespace,store\\\""
+                    "value": "search:\\\"Namespace,store\\"
                   }
                 ]
               },
@@ -7826,7 +7847,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Created Time\\\""
+                    "value": "search:\\\"Created Time\\"
                   }
                 ]
               },
@@ -7970,7 +7991,7 @@
                     "options": [
                       {
                         "name": "(gogoproto.moretags)",
-                        "value": "search:\\\"Image Pull Secret Registry,store\\\""
+                        "value": "search:\\\"Image Pull Secret Registry,store\\"
                       }
                     ]
                   },
@@ -7998,7 +8019,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Secret Type\\\""
+                    "value": "search:\\\"Secret Type\\"
                   }
                 ]
               },
@@ -8045,7 +8066,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Cert Expiration\\\""
+                    "value": "search:\\\"Cert Expiration\\"
                   }
                 ]
               },
@@ -8160,7 +8181,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Service Account,store\\\""
+                    "value": "search:\\\"Service Account,store\\"
                   }
                 ]
               },
@@ -8171,7 +8192,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Namespace,store\\\""
+                    "value": "search:\\\"Namespace,store\\"
                   }
                 ]
               },
@@ -8182,7 +8203,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Cluster,store\\\""
+                    "value": "search:\\\"Cluster,store\\"
                   }
                 ]
               },
@@ -8193,7 +8214,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Cluster ID,store,hidden\\\""
+                    "value": "search:\\\"Cluster ID,store,hidden\\"
                   }
                 ]
               },
@@ -8230,7 +8251,7 @@
                   "options": [
                     {
                       "name": "(gogoproto.moretags)",
-                      "value": "search:\\\"Label\\\""
+                      "value": "search:\\\"Label\\"
                     }
                   ]
                 }
@@ -8244,7 +8265,7 @@
                   "options": [
                     {
                       "name": "(gogoproto.moretags)",
-                      "value": "search:\\\"Annotation\\\""
+                      "value": "search:\\\"Annotation\\"
                     }
                   ]
                 }
@@ -8310,6 +8331,10 @@
               {
                 "name": "SCANNER_SERVICE",
                 "integer": 9
+              },
+              {
+                "name": "SCANNER_DB_SERVICE",
+                "integer": 10
               }
             ]
           }
@@ -8404,7 +8429,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Taint Key\\\""
+                    "value": "search:\\\"Taint Key\\"
                   }
                 ]
               },
@@ -8415,7 +8440,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Taint Value\\\""
+                    "value": "search:\\\"Taint Value\\"
                   }
                 ]
               },
@@ -8426,7 +8451,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Taint Effect\\\""
+                    "value": "search:\\\"Taint Effect\\"
                   }
                 ]
               }
@@ -8442,7 +8467,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Toleration Key\\\""
+                    "value": "search:\\\"Toleration Key\\"
                   }
                 ]
               },
@@ -8458,7 +8483,7 @@
                 "options": [
                   {
                     "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Toleration Value\\\""
+                    "value": "search:\\\"Toleration Value\\"
                   }
                 ]
               },

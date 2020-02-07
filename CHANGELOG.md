@@ -12,6 +12,7 @@ All notable changes to this project that require documentation updates will be d
 different authentication methods
 - `roxctl central generate k8s` and `roxctl central generate openshift` no longer contain prompts for the monitoring stack because
   it is now deprecated
+- The scanner v2 preview is now removed
 
 ## [38.0]
 ### Added

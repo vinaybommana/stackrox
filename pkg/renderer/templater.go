@@ -47,12 +47,10 @@ func (h *HostPathPersistence) WithNodeSelector() bool {
 // Image is an example as it can be parameterized per orchestrator with different defaults so it cannot be placed
 // at the top level
 type CommonConfig struct {
-	MainImage        string
-	ScannerImage     string
-	ScannerDBImage   string
-	ScannerV2Image   string
-	ScannerV2DBImage string
-	MonitoringImage  string
+	MainImage       string
+	ScannerImage    string
+	ScannerDBImage  string
+	MonitoringImage string
 }
 
 // MonitoringType is the enum for the place monitoring is hosted
@@ -131,15 +129,6 @@ type MonitoringConfig struct {
 	HostPath        *HostPathPersistence
 }
 
-// ScannerV2Config encapsulates the scanner v2 configuration.
-type ScannerV2Config struct {
-	Enable bool `json:"enable"`
-
-	PersistenceType PersistenceType     `json:"persistenceType"`
-	External        ExternalPersistence `json:"externalPersistence,omitempty"`
-	HostPath        HostPathPersistence `json:"hostPathPersistence,omitempty"`
-}
-
 // K8sConfig contains k8s fields
 type K8sConfig struct {
 	CommonConfig
@@ -154,8 +143,6 @@ type K8sConfig struct {
 	ScannerRegistry string
 	// If the scanner registry is different from the central registry get a separate secret
 	ScannerSecretName string
-
-	ScannerV2Config ScannerV2Config
 
 	// These variables are not prompted for by Cobra, but are set based on
 	// provided inputs for use in templating.

@@ -4,7 +4,6 @@ import (
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/scanners"
 	"github.com/stackrox/rox/pkg/scanners/clairify"
-	"github.com/stackrox/rox/pkg/scanners/scannerv2"
 )
 
 // DefaultImageIntegrations are the default public registries
@@ -88,26 +87,10 @@ var (
 		},
 	}
 
-	defaultScannerV2 = &storage.ImageIntegration{
-		Id:         "2dbc2f90-9829-4b79-a329-d7d4bd579014",
-		Name:       "StackRox Scanner V2",
-		Type:       "scanner",
-		Categories: []storage.ImageIntegrationCategory{storage.ImageIntegrationCategory_SCANNER},
-		IntegrationConfig: &storage.ImageIntegration_Scannerv2{
-			Scannerv2: &storage.ScannerV2Config{
-				Endpoint: "http://scanner-v2.stackrox:8228",
-			},
-		},
-	}
-
 	// DelayedIntegrations are default integrations to be added only when the trigger function returns true
 	DelayedIntegrations = []DelayedIntegration{
 		makeDelayedIntegration(defaultScanner, func() scanners.Creator {
 			_, creator := clairify.Creator(nil)
-			return creator
-		}),
-		makeDelayedIntegration(defaultScannerV2, func() scanners.Creator {
-			_, creator := scannerv2.Creator(nil)
 			return creator
 		}),
 	}

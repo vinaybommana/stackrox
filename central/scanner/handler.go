@@ -29,19 +29,6 @@ func validateImageName(imageName, whichImage string) error {
 	return nil
 }
 
-func validateParamsForScannerV2(p *apiparams.Scanner) (errs []error) {
-	if p.OfflineMode {
-		errs = append(errs, errors.New("offline mode is currently not supported for scanner V2"))
-	}
-	if err := validateImageName(p.ScannerV2Image, "scanner-v2"); err != nil {
-		errs = append(errs, err)
-	}
-	if err := validateImageName(p.ScannerV2DBImage, "scanner-v2 DB"); err != nil {
-		errs = append(errs, err)
-	}
-	return
-}
-
 func validateParamsForScannerV1(p *apiparams.Scanner) (errs []error) {
 	if err := validateImageName(p.ScannerImage, "scanner"); err != nil {
 		errs = append(errs, err)
@@ -65,27 +52,9 @@ func validateParamsAndNormalizeClusterType(p *apiparams.Scanner) (storage.Cluste
 		errorList.AddStringf("invalid cluster type: %q; valid options are %+v", p.ClusterType, validClusterTypes)
 	}
 
-	if p.ScannerV2Config.Enable {
-		errorList.AddErrors(validateParamsForScannerV2(p)...)
-	} else {
-		errorList.AddErrors(validateParamsForScannerV1(p)...)
-	}
+	errorList.AddErrors(validateParamsForScannerV1(p)...)
 
 	return clusterType, errorList.ToError()
-}
-
-func generateFilesForScannerV2(params *apiparams.Scanner, clusterType storage.ClusterType) ([]*zip.File, error) {
-	config := renderer.Config{
-		ClusterType: clusterType,
-		K8sConfig: &renderer.K8sConfig{
-			CommonConfig: renderer.CommonConfig{
-				ScannerV2Image:   stringutils.OrDefault(params.ScannerV2Image, defaults.ScannerV2Image()),
-				ScannerV2DBImage: stringutils.OrDefault(params.ScannerV2DBImage, defaults.ScannerV2DBImage()),
-			},
-			ScannerV2Config: params.ScannerV2Config,
-		},
-	}
-	return renderer.RenderScannerOnly(config)
 }
 
 func generateFilesForScannerV1(params *apiparams.Scanner, clusterType storage.ClusterType) ([]*zip.File, error) {
@@ -153,12 +122,7 @@ func serveHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var files []*zip.File
-	if params.ScannerV2Config.Enable {
-		files, err = generateFilesForScannerV2(&params, clusterType)
-	} else {
-		files, err = generateFilesForScannerV1(&params, clusterType)
-	}
+	files, err := generateFilesForScannerV1(&params, clusterType)
 	if err != nil {
 		httputil.WriteGRPCStyleError(w, codes.Internal, err)
 		return

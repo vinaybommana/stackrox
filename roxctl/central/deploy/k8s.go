@@ -125,9 +125,6 @@ func k8sBasedOrchestrator(k8sConfig *renderer.K8sConfig, shortName, longName str
 
 func newK8sConfig() *renderer.K8sConfig {
 	return &renderer.K8sConfig{
-		ScannerV2Config: renderer.ScannerV2Config{
-			PersistenceType: renderer.PersistencePVC,
-		},
 		Monitoring: renderer.MonitoringConfig{
 			HostPath: &renderer.HostPathPersistence{},
 			External: &renderer.ExternalPersistence{},
