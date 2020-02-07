@@ -6,7 +6,7 @@ export const OVERVIEW_LIMIT = 5;
 
 export const DASHBOARD_LIMIT = 8;
 
-export const LIST_PAGE_SIZE = 50;
+export const LIST_PAGE_SIZE = 25;
 
 export const defaultCountKeyMap = {
     [entityTypes.COMPONENT]: 'componentCount',
