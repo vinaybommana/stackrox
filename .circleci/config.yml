@@ -2060,7 +2060,11 @@ jobs:
       - run:
           name: Do the upgrade
           command: |
-            new_image="stackrox/main:$(make --quiet tag)"
+            if .circleci/pr_has_label.sh ci-run-against-rhel; then
+              new_image="stackrox/main-rhel:$(make --quiet tag)"
+            else
+              new_image="stackrox/main:$(make --quiet tag)"
+            fi
 
             kubectl -n stackrox set image deploy/central central=${new_image}
             kubectl -n stackrox describe deploy/central
