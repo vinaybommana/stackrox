@@ -111,6 +111,11 @@ func (ds *datastoreImpl) Upsert(ctx context.Context, imagecomponents ...*storage
 		return errors.New("permission denied")
 	}
 
+	// Update image components with latest risk score
+	for _, component := range imagecomponents {
+		component.RiskScore = ds.imageComponentRanker.GetScoreForID(component.GetId())
+	}
+
 	return ds.storage.Upsert(imagecomponents...)
 }
 

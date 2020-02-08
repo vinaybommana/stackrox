@@ -14,6 +14,7 @@ import (
 	badgerStore "github.com/stackrox/rox/central/deployment/store/badger"
 	"github.com/stackrox/rox/central/globalindex"
 	imageDatastore "github.com/stackrox/rox/central/image/datastore"
+	"github.com/stackrox/rox/central/ranking"
 	"github.com/stackrox/rox/central/role/resources"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/badgerhelper"
@@ -56,7 +57,7 @@ func BenchmarkSearchAllDeployments(b *testing.B) {
 	deploymentsIndexer := index.New(bleveIndex)
 	deploymentsSearcher := search.New(deploymentsStore, dacky, nil, nil, nil, nil, nil, deploymentsIndexer)
 
-	imageDS, err := imageDatastore.NewBadger(dacky, concurrency.NewKeyFence(), db, bleveIndex, false, nil, nil)
+	imageDS, err := imageDatastore.NewBadger(dacky, concurrency.NewKeyFence(), db, bleveIndex, false, nil, nil, ranking.NewRanker())
 	require.NoError(b, err)
 
 	deploymentsDatastore, err := newDatastoreImpl(deploymentsStore, deploymentsIndexer, deploymentsSearcher, imageDS, nil, nil, nil, nil, nil, nil)

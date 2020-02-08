@@ -11,7 +11,6 @@ import (
 	processIndicatorStore "github.com/stackrox/rox/central/processindicator/datastore"
 	processWhitelistStore "github.com/stackrox/rox/central/processwhitelist/datastore"
 	processWhitelistResultsStore "github.com/stackrox/rox/central/processwhitelistresults/datastore"
-	"github.com/stackrox/rox/central/ranking"
 	riskDataStore "github.com/stackrox/rox/central/risk/datastore"
 	"github.com/stackrox/rox/central/risk/manager"
 	"github.com/stackrox/rox/central/role/resources"
@@ -157,7 +156,7 @@ func (s *serviceImpl) CountDeployments(ctx context.Context, request *v1.RawQuery
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	deployments, err := newSplitQueryExecutor(parsedQuery, ranking.DeploymentRanker(), s.datastore, s.risks).getListDeployments(ctx)
+	deployments, err := s.datastore.Search(ctx, parsedQuery)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -174,11 +173,8 @@ func (s *serviceImpl) ListDeployments(ctx context.Context, request *v1.RawQuery)
 
 	// Fill in pagination.
 	paginated.FillPagination(parsedQuery, request.Pagination, maxDeploymentsReturned)
-	sortedQuery := paginated.FillDefaultSortOption(parsedQuery, &v1.QuerySortOption{
-		Field: search.Priority.String(),
-	})
 
-	deployments, err := newSplitQueryExecutor(sortedQuery, ranking.DeploymentRanker(), s.datastore, s.risks).getListDeployments(ctx)
+	deployments, err := s.datastore.SearchListDeployments(ctx, parsedQuery)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

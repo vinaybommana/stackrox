@@ -36,6 +36,11 @@ import (
 
 var (
 	deploymentsSearchHelper = sac.ForResource(resources.Deployment).MustCreateSearchHelper(deployments.OptionsMap)
+
+	defaultSortOption = &v1.QuerySortOption{
+		Field:    search.Priority.String(),
+		Reversed: false,
+	}
 )
 
 // searcherImpl provides an intermediary implementation layer for AlertStorage.
@@ -154,7 +159,8 @@ func formatSearcher(graphProvider idspace.GraphProvider,
 	transformedSortFieldSearcher := sortfields.TransformSortFields(filteredSearcher)
 	derivedFieldSortedSearcher := wrapDerivedFieldSearcher(graphProvider, transformedSortFieldSearcher)
 	paginatedSearcher := paginated.Paginated(derivedFieldSortedSearcher)
-	return paginatedSearcher
+	defaultSortedSearcher := paginated.WithDefaultSortOption(paginatedSearcher, defaultSortOption)
+	return defaultSortedSearcher
 }
 
 func getDeploymentCompoundSearcher(graphProvider idspace.GraphProvider,

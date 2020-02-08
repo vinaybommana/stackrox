@@ -17,6 +17,7 @@ import (
 	imageComponentDS "github.com/stackrox/rox/central/imagecomponent/datastore"
 	componentIndexer "github.com/stackrox/rox/central/imagecomponent/index"
 	imageComponentEdgeIndexer "github.com/stackrox/rox/central/imagecomponentedge/index"
+	"github.com/stackrox/rox/central/ranking"
 	riskDS "github.com/stackrox/rox/central/risk/datastore"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
@@ -46,7 +47,7 @@ type DataStore interface {
 	Exists(ctx context.Context, id string) (bool, error)
 }
 
-func newDatastore(storage store.Store, bleveIndex bleve.Index, noUpdateTimestamps bool, imageComponents imageComponentDS.DataStore, risks riskDS.DataStore) (DataStore, error) {
+func newDatastore(storage store.Store, bleveIndex bleve.Index, noUpdateTimestamps bool, imageComponents imageComponentDS.DataStore, risks riskDS.DataStore, imageRanker *ranking.Ranker) (DataStore, error) {
 	var searcher search.Searcher
 	indexer := imageIndexer.New(bleveIndex)
 	if features.Dackbox.Enabled() {
@@ -61,7 +62,7 @@ func newDatastore(storage store.Store, bleveIndex bleve.Index, noUpdateTimestamp
 		searcher = search.New(storage, nil, nil, nil, nil, nil, indexer)
 	}
 
-	ds, err := newDatastoreImpl(storage, indexer, searcher, imageComponents, risks)
+	ds, err := newDatastoreImpl(storage, indexer, searcher, imageComponents, risks, imageRanker)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +77,7 @@ func newDatastore(storage store.Store, bleveIndex bleve.Index, noUpdateTimestamp
 // NewBadger returns a new instance of DataStore using the input store, indexer, and searcher.
 // noUpdateTimestamps controls whether timestamps are automatically updated when upserting images.
 // This should be set to `false` except for some tests.
-func NewBadger(dacky *dackbox.DackBox, keyFence concurrency.KeyFence, db *badger.DB, bleveIndex bleve.Index, noUpdateTimestamps bool, imageComponents imageComponentDS.DataStore, risks riskDS.DataStore) (DataStore, error) {
+func NewBadger(dacky *dackbox.DackBox, keyFence concurrency.KeyFence, db *badger.DB, bleveIndex bleve.Index, noUpdateTimestamps bool, imageComponents imageComponentDS.DataStore, risks riskDS.DataStore, imageRanker *ranking.Ranker) (DataStore, error) {
 	var storage store.Store
 	if features.Dackbox.Enabled() {
 		var err error
@@ -87,5 +88,5 @@ func NewBadger(dacky *dackbox.DackBox, keyFence concurrency.KeyFence, db *badger
 	} else {
 		storage = badgerStore.New(db, noUpdateTimestamps)
 	}
-	return newDatastore(storage, bleveIndex, noUpdateTimestamps, imageComponents, risks)
+	return newDatastore(storage, bleveIndex, noUpdateTimestamps, imageComponents, risks, imageRanker)
 }

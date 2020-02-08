@@ -248,6 +248,8 @@ func (ds *datastoreImpl) upsertDeployment(ctx context.Context, deployment *stora
 		return errors.New("permission denied")
 	}
 
+	// Update deployment with latest risk score
+	deployment.RiskScore = ds.deploymentRanker.GetScoreForID(deployment.GetId())
 	ds.processFilter.Update(deployment)
 
 	err := ds.keyedMutex.DoStatusWithLock(deployment.GetId(), func() error {

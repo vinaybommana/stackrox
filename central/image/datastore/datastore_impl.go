@@ -45,7 +45,7 @@ type datastoreImpl struct {
 	imageRanker *ranking.Ranker
 }
 
-func newDatastoreImpl(storage store.Store, indexer index.Indexer, searcher search.Searcher, imageComponents imageComponentDS.DataStore, risks riskDS.DataStore) (*datastoreImpl, error) {
+func newDatastoreImpl(storage store.Store, indexer index.Indexer, searcher search.Searcher, imageComponents imageComponentDS.DataStore, risks riskDS.DataStore, imageRanker *ranking.Ranker) (*datastoreImpl, error) {
 	ds := &datastoreImpl{
 		storage:  storage,
 		indexer:  indexer,
@@ -53,6 +53,8 @@ func newDatastoreImpl(storage store.Store, indexer index.Indexer, searcher searc
 
 		components: imageComponents,
 		risks:      risks,
+
+		imageRanker: imageRanker,
 
 		keyedMutex: concurrency.NewKeyedMutex(16),
 	}
@@ -194,6 +196,7 @@ func (ds *datastoreImpl) UpsertImage(ctx context.Context, image *storage.Image) 
 	if image.GetId() == "" {
 		return errors.New("cannot upsert an image without an id")
 	}
+
 	if ok, err := imagesSAC.WriteAllowed(ctx); err != nil {
 		return err
 	} else if !ok {
@@ -207,6 +210,9 @@ func (ds *datastoreImpl) UpsertImage(ctx context.Context, image *storage.Image) 
 	if err != nil {
 		return err
 	}
+
+	// Update image with latest risk score
+	image.RiskScore = ds.imageRanker.GetScoreForID(image.GetId())
 	// If the merge causes no changes, then no reason to save
 	if exists && !merge(image, oldImage) {
 		return nil
@@ -339,8 +345,6 @@ func (ds *datastoreImpl) buildIndex() error {
 }
 
 func (ds *datastoreImpl) initializeRankers() error {
-	ds.imageRanker = ranking.ImageRanker()
-
 	riskElevatedCtx := sac.WithGlobalAccessScopeChecker(context.Background(),
 		sac.AllowFixedScopes(
 			sac.AccessModeScopeKeys(storage.Access_READ_ACCESS),

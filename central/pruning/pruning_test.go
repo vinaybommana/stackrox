@@ -20,6 +20,7 @@ import (
 	networkFlowDatastoreMocks "github.com/stackrox/rox/central/networkflow/datastore/mocks"
 	processIndicatorDatastoreMocks "github.com/stackrox/rox/central/processindicator/datastore/mocks"
 	processWhitelistDatastoreMocks "github.com/stackrox/rox/central/processwhitelist/datastore/mocks"
+	"github.com/stackrox/rox/central/ranking"
 	riskDatastoreMocks "github.com/stackrox/rox/central/risk/datastore/mocks"
 	"github.com/stackrox/rox/central/role/resources"
 	"github.com/stackrox/rox/generated/storage"
@@ -126,7 +127,7 @@ func generateImageDataStructures(ctx context.Context, t *testing.T) (alertDatast
 	require.NoError(t, err)
 
 	// Initialize real datastore
-	images, err := imageDatastore.NewBadger(dacky, concurrency.NewKeyFence(), db, bleveIndex, true, mockComponentDatastore, mockRiskDatastore)
+	images, err := imageDatastore.NewBadger(dacky, concurrency.NewKeyFence(), db, bleveIndex, true, mockComponentDatastore, mockRiskDatastore, ranking.NewRanker())
 	require.NoError(t, err)
 
 	mockProcessDataStore := processIndicatorDatastoreMocks.NewMockDataStore(ctrl)

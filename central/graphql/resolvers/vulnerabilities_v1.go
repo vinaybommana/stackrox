@@ -289,6 +289,11 @@ func (evr *EmbeddedVulnerabilityResolver) CreatedAt(ctx context.Context) (*graph
 	return timestamp(evr.lastScanned)
 }
 
+// VulnerabilityType returns the type of vulnerability
+func (evr *EmbeddedVulnerabilityResolver) VulnerabilityType() string {
+	return evr.data.VulnerabilityType.String()
+}
+
 // Components are the components that contain the CVE/Vulnerability.
 func (evr *EmbeddedVulnerabilityResolver) Components(ctx context.Context, args PaginatedQuery) ([]ComponentResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.CVEs, "Components")
@@ -551,11 +556,6 @@ func (evr *EmbeddedVulnerabilityResolver) vulnQuery() *v1.Query {
 
 func (evr *EmbeddedVulnerabilityResolver) vulnRawQuery() string {
 	return search.NewQueryBuilder().AddExactMatches(search.CVE, evr.data.GetCve()).Query()
-}
-
-// VulnerabilityType returns the type of vulnerability
-func (evr *EmbeddedVulnerabilityResolver) VulnerabilityType() string {
-	return storage.CVE_IMAGE_CVE.String()
 }
 
 // Static helpers.
