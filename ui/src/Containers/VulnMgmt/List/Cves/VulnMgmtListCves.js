@@ -286,11 +286,13 @@ const VulnMgmtCves = ({
                 // can't use pluralize() because of this bug: https://github.com/blakeembrey/pluralize/issues/127
                 const pluralizedCVEs = cveIdsToToggle.length === 1 ? 'CVE' : 'CVEs';
 
-                addToast(`Successfully suppressed ${cveIdsToToggle.length} ${pluralizedCVEs}`);
+                const actionVerb = suppressionState ? 'suppressed' : 'unsuppressed';
+                addToast(`Successfully ${actionVerb} ${cveIdsToToggle.length} ${pluralizedCVEs}`);
                 setTimeout(removeToast, 2000);
             })
             .catch(evt => {
-                addToast(`Could not suppress all of the selected CVEs: ${evt.message}`);
+                const actionVerb = suppressionState ? 'suppress' : 'unsuppress';
+                addToast(`Could not ${actionVerb} all of the selected CVEs: ${evt.message}`);
                 setTimeout(removeToast, 2000);
             });
     };
