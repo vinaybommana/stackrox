@@ -162,7 +162,7 @@ func k8sIstioVulnerabilities(ctx context.Context, root *Resolver, query *v1.Quer
 			return nil, err
 		}
 		checkImpact = func(ctx context.Context, cluster *storage.Cluster, cve *schema.NVDCVEFeedJSON10DefCVEItem) (bool, error) {
-			ok := isClusterAffectedByK8sCVE(cluster, cve)
+			ok := root.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve)
 			return ok, nil
 		}
 	} else if ct == converter.Istio {
@@ -171,7 +171,7 @@ func k8sIstioVulnerabilities(ctx context.Context, root *Resolver, query *v1.Quer
 			return nil, err
 		}
 		checkImpact = func(ctx context.Context, cluster *storage.Cluster, cve *schema.NVDCVEFeedJSON10DefCVEItem) (bool, error) {
-			ok, err := root.isClusterAffectedByIstioCVE(ctx, cluster, cve)
+			ok, err := root.cveMatcher.IsClusterAffectedByIstioCVE(ctx, cluster, cve)
 			return ok, err
 		}
 	} else {
@@ -389,22 +389,22 @@ func (resolver *Resolver) getAffectedClusterPercentage(ctx context.Context, cve 
 
 	if ct == converter.K8s {
 		checkImpact = func(ctx context.Context, cluster *storage.Cluster, entry *schema.NVDCVEFeedJSON10DefCVEItem) (bool, error) {
-			return isClusterAffectedByK8sCVE(cluster, cve), nil
+			return resolver.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve), nil
 		}
 	} else if ct == converter.Istio {
 		checkImpact = func(ctx context.Context, cluster *storage.Cluster, entry *schema.NVDCVEFeedJSON10DefCVEItem) (bool, error) {
-			ok, err := resolver.isClusterAffectedByIstioCVE(ctx, cluster, cve)
+			ok, err := resolver.cveMatcher.IsClusterAffectedByIstioCVE(ctx, cluster, cve)
 			return ok, err
 		}
 	} else {
-		return 0.0, fmt.Errorf("unknown CVE type: %d", ct)
+		return 0.0, errors.Errorf("unknown CVE type: %d", ct)
 	}
 
 	affectedClusterCount := 0
 	for _, cluster := range clusters {
 		ok, err := checkImpact(ctx, cluster, cve)
 		if err != nil {
-			return 0.0, fmt.Errorf("unknown CVE type: %d", ct)
+			return 0.0, errors.Errorf("unknown CVE type: %d", ct)
 		}
 		if ok {
 			affectedClusterCount++

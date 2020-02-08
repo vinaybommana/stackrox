@@ -19,6 +19,7 @@ import (
 	componentCVEEdgeDataStore "github.com/stackrox/rox/central/componentcveedge/datastore"
 	cveDataStore "github.com/stackrox/rox/central/cve/datastore"
 	"github.com/stackrox/rox/central/cve/fetcher"
+	cveMatcher "github.com/stackrox/rox/central/cve/matcher"
 	deploymentDatastore "github.com/stackrox/rox/central/deployment/datastore"
 	groupDataStore "github.com/stackrox/rox/central/group/datastore"
 	imageDatastore "github.com/stackrox/rox/central/image/datastore"
@@ -76,6 +77,7 @@ type Resolver struct {
 	ServiceAccountsDataStore    serviceAccountDataStore.DataStore
 	ViolationsDataStore         violationsDatastore.DataStore
 	k8sIstioCVEManager          fetcher.K8sIstioCveManager
+	cveMatcher                  *cveMatcher.CVEMatcher
 }
 
 // New returns a Resolver wired into the relevant data stores
@@ -111,6 +113,7 @@ func New() *Resolver {
 		ServiceAccountsDataStore:    serviceAccountDataStore.Singleton(),
 		ViolationsDataStore:         violationsDatastore.Singleton(),
 		k8sIstioCVEManager:          fetcher.SingletonManager(),
+		cveMatcher:                  cveMatcher.Singleton(),
 	}
 	return resolver
 }
