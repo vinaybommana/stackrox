@@ -211,7 +211,7 @@ export function renderCveDescription(row) {
     const { original } = row;
     const truncatedSummary = truncate(original.summary, maxLengthForSummary);
     return (
-        <div className="hover:bg-base-100 px-2 pb-4 pt-1 text-base-500">
+        <div className="hover:bg-transparent px-2 pb-4 pt-1 text-base-500">
             {truncatedSummary || 'No description available.'}
         </div>
     );

@@ -861,7 +861,7 @@ h6 {
 }
 
 .ReactTable .rt-tbody .rt-tr {
-    @apply min-h-12 bg-base-100 !important;
+    @apply min-h-12 bg-transparent !important;
 }
 
 .ReactTable .rt-tbody .rt-tr .rt-td {
@@ -875,22 +875,11 @@ h6 {
     @apply .whitespace-normal !important;
 }
 
-.ReactTable.expanded .rt-tbody .rt-tr:hover > .rt-td {
+.ReactTable .rt-tbody .rt-tr-group:hover {
     @apply bg-base-200 !important;
     z-index: 3 !important;
-    box-shadow: 0px -1px 0 0 theme('colors.base-400'),
-        inset 0px -1px 0 -1px theme('colors.base-400');
-}
-
-.ReactTable.expanded .rt-tbody .rt-tr-group:hover {
-    @apply bg-base-200 !important;
-    z-index: 3 !important;
-}
-
-.ReactTable .rt-tbody .rt-tr:hover > .rt-td {
-    @apply bg-base-200 !important;
-    z-index: 3 !important;
-    box-shadow: 0px -1px 0 0 theme('colors.base-400'), inset 0px -1px 0 0 theme('colors.base-400');
+    box-shadow: 0px -2px 0 0 theme('colors.base-400'),
+        inset 0px -3px 0 -1px theme('colors.base-400');
 }
 
 .ReactTable .rt-tbody .rt-tr.row-active .rt-td,
@@ -981,13 +970,6 @@ h6 {
 
 .ReactTable .rt-thead .rt-th.sticky-column:hover {
     @apply bg-primary-200 !important;
-}
-
-.ReactTable .rt-tbody .rt-tr:hover .rt-td.sticky-column,
-.ReactTable .rt-tbody .rt-tr:hover .rt-td:first-child {
-    box-shadow: 0px -1px 0 0 theme('colors.base-400'), inset 0px -1px 0 0 theme('colors.base-400'),
-        11px 0 8px -4px theme('colors.base-200');
-    z-index: 2 !important;
 }
 
 .ReactTable .rt-tbody .rt-tr.row-active .rt-td.sticky-column,
