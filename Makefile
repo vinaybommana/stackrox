@@ -442,9 +442,12 @@ docker-build-main-image: copy-binaries-to-image-dir docker-build-data-image
 	@echo "Built main image with tag: $(TAG)"
 	@echo "You may wish to:       export MAIN_IMAGE_TAG=$(TAG)"
 
+$(CURDIR)/image/rhel/bundle.tar.gz:
+	$(CURDIR)/image/rhel/create-bundle.sh $(CURDIR)/image stackrox-data:$(TAG) $@
+
 .PHONY: docker-build-main-image-rhel
-docker-build-main-image-rhel: copy-binaries-to-image-dir docker-build-data-image
-	docker build -t stackrox/main-rhel:$(TAG) --file image/Dockerfile_rhel --label version=$(TAG) --label release=$(TAG) --build-arg DATA_IMAGE_TAG=$(TAG) image/
+docker-build-main-image-rhel: copy-binaries-to-image-dir docker-build-data-image $(CURDIR)/image/rhel/bundle.tar.gz
+	docker build -t stackrox/main-rhel:$(TAG) --file image/rhel/Dockerfile --label version=$(TAG) --label release=$(TAG) image/rhel
 	@echo "Built main image for RHEL with tag: $(TAG)"
 	@echo "You may wish to:       export MAIN_IMAGE_TAG=$(TAG)"
 
@@ -521,6 +524,8 @@ clean-image:
 	git clean -xf image/bin
 	git clean -xdf image/ui image/docs
 	git clean -xf integration-tests/mock-grpc-server/image/bin/mock-grpc-server
+	rm -f $(CURDIR)/image/rhel/bundle.tar.gz
+	rm -f $(CURDIR)/image/rhel/prebuild.sh
 
 .PHONY: tag
 tag:
