@@ -48,23 +48,24 @@ type NamespaceInfo struct {
 type OrchestratorInfo struct {
 	Orchestrator        string `json:"orchestrator"`
 	OrchestratorVersion string `json:"orchestratorVersion"`
-	CloudProvider       string `json:"cloudProvider,omitempty"`
 }
 
 // SensorInfo contains information about a sensor and the cluster it is monitoring
 type SensorInfo struct {
 	*RoxComponentInfo
 
-	LastCheckIn *time.Time `json:"lastCheckIn,omitempty"`
+	LastCheckIn        *time.Time `json:"lastCheckIn,omitempty"`
+	CurrentlyConnected bool       `json:"currentlyConnected"`
 }
 
 // ClusterInfo contains telemetry data about a Kubernetes cluster
 type ClusterInfo struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID string `json:"id"`
 
-	Sensor       *SensorInfo       `json:"sensor,omitempty"`
-	Orchestrator *OrchestratorInfo `json:"orchestrator,omitempty"`
-	Nodes        []*NodeInfo       `json:"nodes,omitempty"`
-	Namespaces   []*NamespaceInfo  `json:"namespaces,omitempty"`
+	Sensor        *SensorInfo       `json:"sensor,omitempty"`
+	Orchestrator  *OrchestratorInfo `json:"orchestrator,omitempty"`
+	Nodes         []*NodeInfo       `json:"nodes,omitempty"`
+	Namespaces    []*NamespaceInfo  `json:"namespaces,omitempty"`
+	CloudProvider string            `json:"cloudProvider,omitempty"`
+	Errors        []string          `json:"errors,omitempty"`
 }

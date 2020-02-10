@@ -26,7 +26,6 @@ import (
 	"github.com/stackrox/rox/pkg/httputil/proxy"
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/sac"
-	"github.com/stackrox/rox/pkg/telemetry/data"
 	"github.com/stackrox/rox/pkg/timeutil"
 	"github.com/stackrox/rox/pkg/utils"
 )
@@ -71,14 +70,14 @@ type manager struct {
 	configUpdateC chan configUpdate
 	store         store.Store
 	httpClient    *http.Client
-	gatherer      *gatherers.CentralGatherer
+	gatherer      *gatherers.RoxGatherer
 
 	// Populated by init.
 	activeConfig atomic.Value // *storage.TelemetryConfiguration
 	nextSendTime time.Time
 }
 
-func newManager(ctx context.Context, store store.Store, gatherer *gatherers.CentralGatherer, licenseMgr licenseMgr.LicenseManager) *manager {
+func newManager(ctx context.Context, store store.Store, gatherer *gatherers.RoxGatherer, licenseMgr licenseMgr.LicenseManager) *manager {
 	mgr := &manager{
 		ctx: ctx,
 
@@ -183,9 +182,7 @@ func (m *manager) doCollectAndSendData(ctx context.Context) (time.Duration, erro
 		return 0, errors.New("invoked telemetry collection in spite of offline mode")
 	}
 
-	telemetryData := &data.TelemetryData{
-		Central: m.gatherer.Gather(),
-	}
+	telemetryData := m.gatherer.Gather(ctx)
 
 	if telemetryData.Central == nil || telemetryData.Central.License == nil {
 		return 0, errors.New("cannot send telemetry data as no license information is available")

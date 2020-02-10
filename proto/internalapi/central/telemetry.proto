@@ -10,6 +10,7 @@ message PullTelemetryDataRequest {
     enum TelemetryDataType {
         UNKNOWN         = 0;
         KUBERNETES_INFO = 1;
+        CLUSTER_INFO    = 2;
     }
 
     string request_id           = 1;
@@ -30,9 +31,14 @@ message TelemetryResponsePayload {
         repeated File files = 1;
     }
 
+    message ClusterInfo {
+        bytes chunk = 1;
+    }
+
     oneof payload {
-        EndOfStream end_of_stream      = 1;
+        EndOfStream    end_of_stream   = 1;
         KubernetesInfo kubernetes_info = 2;
+        ClusterInfo    cluster_info    = 3;
     }
 }
 

@@ -20,7 +20,7 @@ type Manager interface {
 
 // NewManager creates a new telemetry manager. The manager starts running immediately, and keeps running until the
 // given context expires.
-func NewManager(ctx context.Context, boltDB *bbolt.DB, gatherer *gatherers.CentralGatherer, licenseMgr licenseManager.LicenseManager) (Manager, error) {
+func NewManager(ctx context.Context, boltDB *bbolt.DB, gatherer *gatherers.RoxGatherer, licenseMgr licenseManager.LicenseManager) (Manager, error) {
 	telemetryStore, err := store.New(boltDB)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create telemetry store")

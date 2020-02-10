@@ -31,7 +31,7 @@ type DispatcherRegistry interface {
 // NewDispatcherRegistry creates and returns a new DispatcherRegistry.
 func NewDispatcherRegistry(podLister v1Listers.PodLister, entityStore *clusterentities.Store, processFilter filter.Filter, configHandler config.Handler) DispatcherRegistry {
 	serviceStore := newServiceStore()
-	deploymentStore := newDeploymentStore()
+	deploymentStore := DeploymentStoreSingleton()
 	nodeStore := newNodeStore()
 	nsStore := newNamespaceStore()
 	endpointManager := newEndpointManager(serviceStore, deploymentStore, nodeStore, entityStore)

@@ -11,9 +11,13 @@ import (
 // KubernetesInfoChunkCallback is a callback function that handles a single chunk of Kubernetes info returned from the sensor.
 type KubernetesInfoChunkCallback func(ctx concurrency.ErrorWaitable, chunk *central.TelemetryResponsePayload_KubernetesInfo) error
 
+// ClusterInfoCallback is a callback function that handles a single chunk of ClusterInfo returned from the sensor
+type ClusterInfoCallback func(ctx concurrency.ErrorWaitable, sensorInfo *central.TelemetryResponsePayload_ClusterInfo) error
+
 // Controller handles requesting telemetry data from remote clusters.
 type Controller interface {
 	PullKubernetesInfo(ctx context.Context, cb KubernetesInfoChunkCallback) error
+	PullClusterInfo(ctx context.Context, cb ClusterInfoCallback) error
 	ProcessTelemetryDataResponse(resp *central.PullTelemetryDataResponse) error
 }
 

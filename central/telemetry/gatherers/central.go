@@ -16,8 +16,7 @@ type CentralGatherer struct {
 	componentInfoGatherer *gatherers.ComponentInfoGatherer
 }
 
-// NewCentralGatherer creates and returns a CentralGatherer object
-func NewCentralGatherer(licenseMgr manager.LicenseManager, databaseGatherer *databaseGatherer, apiGatherer *apiGatherer, componentInfoGatherer *gatherers.ComponentInfoGatherer) *CentralGatherer {
+func newCentralGatherer(licenseMgr manager.LicenseManager, databaseGatherer *databaseGatherer, apiGatherer *apiGatherer, componentInfoGatherer *gatherers.ComponentInfoGatherer) *CentralGatherer {
 	return &CentralGatherer{
 		licenseMgr:            licenseMgr,
 		databaseGatherer:      databaseGatherer,

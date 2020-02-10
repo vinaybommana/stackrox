@@ -60,12 +60,12 @@ func (s *serviceWrap) exposure() map[portRef]*storage.PortConfig_ExposureInfo {
 // serviceDispatcher handles servidce resource events.
 type serviceDispatcher struct {
 	serviceStore    *serviceStore
-	deploymentStore *deploymentStore
+	deploymentStore *DeploymentStore
 	endpointManager *endpointManager
 }
 
 // newServiceDispatcher creates and returns a new service handler.
-func newServiceDispatcher(serviceStore *serviceStore, deploymentStore *deploymentStore, endpointManager *endpointManager) *serviceDispatcher {
+func newServiceDispatcher(serviceStore *serviceStore, deploymentStore *DeploymentStore, endpointManager *endpointManager) *serviceDispatcher {
 	return &serviceDispatcher{
 		serviceStore:    serviceStore,
 		deploymentStore: deploymentStore,

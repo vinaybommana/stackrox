@@ -38,7 +38,7 @@ func (s *gathererTestSuite) SetupSuite() {
 	s.badger = badgerDB
 	s.dir = dir
 
-	s.gatherer = NewCentralGatherer(nil, newDatabaseGatherer(newBadgerGatherer(s.badger), newBoltGatherer(s.bolt)), newAPIGatherer(metrics.GRPCSingleton(), metrics.HTTPSingleton()), gatherers.NewComponentInfoGatherer())
+	s.gatherer = newCentralGatherer(nil, newDatabaseGatherer(newBadgerGatherer(s.badger), newBoltGatherer(s.bolt)), newAPIGatherer(metrics.GRPCSingleton(), metrics.HTTPSingleton()), gatherers.NewComponentInfoGatherer())
 }
 
 func (s *gathererTestSuite) TearDownSuite() {

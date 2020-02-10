@@ -54,7 +54,7 @@ func (d *deploymentDispatcherImpl) ProcessEvent(obj interface{}, action central.
 type deploymentHandler struct {
 	podLister       v1listers.PodLister
 	serviceStore    *serviceStore
-	deploymentStore *deploymentStore
+	deploymentStore *DeploymentStore
 	endpointManager *endpointManager
 	namespaceStore  *namespaceStore
 	processFilter   filter.Filter
@@ -64,7 +64,7 @@ type deploymentHandler struct {
 }
 
 // newDeploymentHandler creates and returns a new deployment handler.
-func newDeploymentHandler(serviceStore *serviceStore, deploymentStore *deploymentStore, endpointManager *endpointManager, namespaceStore *namespaceStore,
+func newDeploymentHandler(serviceStore *serviceStore, deploymentStore *DeploymentStore, endpointManager *endpointManager, namespaceStore *namespaceStore,
 	rbac rbacUpdater, podLister v1listers.PodLister, processFilter filter.Filter, config config.Handler) *deploymentHandler {
 	return &deploymentHandler{
 		podLister:       podLister,

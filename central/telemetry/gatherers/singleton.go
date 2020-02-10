@@ -1,26 +1,40 @@
 package gatherers
 
 import (
+	clusterDatastore "github.com/stackrox/rox/central/cluster/datastore"
+	depDatastore "github.com/stackrox/rox/central/deployment/datastore"
 	"github.com/stackrox/rox/central/globaldb"
 	"github.com/stackrox/rox/central/grpc/metrics"
 	"github.com/stackrox/rox/central/license/singleton"
+	namespaceDatastore "github.com/stackrox/rox/central/namespace/datastore"
+	nodeDatastore "github.com/stackrox/rox/central/node/globaldatastore"
+	"github.com/stackrox/rox/central/sensor/service/connection"
 	"github.com/stackrox/rox/pkg/sync"
 	"github.com/stackrox/rox/pkg/telemetry/gatherers"
 )
 
 var (
-	gatherer     *CentralGatherer
+	gatherer     *RoxGatherer
 	gathererInit sync.Once
 )
 
-// Singleton initializes and returns a CentralGatherer singleton
-func Singleton() *CentralGatherer {
+// Singleton initializes and returns a RoxGatherer singleton
+func Singleton() *RoxGatherer {
 	gathererInit.Do(func() {
-		gatherer = NewCentralGatherer(
-			singleton.ManagerSingleton(),
-			newDatabaseGatherer(newBadgerGatherer(globaldb.GetGlobalBadgerDB()), newBoltGatherer(globaldb.GetGlobalDB())),
-			newAPIGatherer(metrics.GRPCSingleton(), metrics.HTTPSingleton()),
-			gatherers.NewComponentInfoGatherer(),
+		gatherer = newRoxGatherer(
+			newCentralGatherer(
+				singleton.ManagerSingleton(),
+				newDatabaseGatherer(newBadgerGatherer(globaldb.GetGlobalBadgerDB()), newBoltGatherer(globaldb.GetGlobalDB())),
+				newAPIGatherer(metrics.GRPCSingleton(), metrics.HTTPSingleton()),
+				gatherers.NewComponentInfoGatherer(),
+			),
+			newClusterGatherer(
+				clusterDatastore.Singleton(),
+				nodeDatastore.Singleton(),
+				namespaceDatastore.Singleton(),
+				connection.ManagerSingleton(),
+				depDatastore.Singleton(),
+			),
 		)
 	})
 	return gatherer

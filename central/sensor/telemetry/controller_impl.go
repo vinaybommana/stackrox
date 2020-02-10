@@ -21,6 +21,8 @@ type controller struct {
 	injector common.MessageInjector
 }
 
+type telemetryCallback func(ctx concurrency.ErrorWaitable, chunk *central.TelemetryResponsePayload) error
+
 func newController(injector common.MessageInjector, stopSig concurrency.ReadOnlyErrorSignal) *controller {
 	return &controller{
 		stopSig:     stopSig,
@@ -29,7 +31,7 @@ func newController(injector common.MessageInjector, stopSig concurrency.ReadOnly
 	}
 }
 
-func (c *controller) PullKubernetesInfo(ctx context.Context, cb KubernetesInfoChunkCallback) error {
+func (c *controller) streamingRequest(ctx context.Context, dataType central.PullTelemetryDataRequest_TelemetryDataType, cb telemetryCallback) error {
 	subCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	concurrency.CancelContextOnSignal(subCtx, cancel, c.stopSig)
@@ -40,7 +42,7 @@ func (c *controller) PullKubernetesInfo(ctx context.Context, cb KubernetesInfoCh
 		Msg: &central.MsgToSensor_TelemetryDataRequest{
 			TelemetryDataRequest: &central.PullTelemetryDataRequest{
 				RequestId: requestID,
-				DataType:  central.PullTelemetryDataRequest_KUBERNETES_INFO,
+				DataType:  dataType,
 			},
 		},
 	}
@@ -75,16 +77,36 @@ func (c *controller) PullKubernetesInfo(ctx context.Context, cb KubernetesInfoCh
 			return nil
 		}
 
-		k8sInfo := resp.GetKubernetesInfo()
-		if k8sInfo == nil {
-			utils.Should(errors.New("ignoring response in telemetry data stream with missing Kubernetes info payload"))
-			continue
-		}
-
-		if err := cb(subCtx, k8sInfo); err != nil {
+		if err := cb(subCtx, resp); err != nil {
 			return err
 		}
 	}
+}
+
+func (c *controller) PullKubernetesInfo(ctx context.Context, cb KubernetesInfoChunkCallback) error {
+	genericCB := func(ctx concurrency.ErrorWaitable, chunk *central.TelemetryResponsePayload) error {
+		k8sInfo := chunk.GetKubernetesInfo()
+		if k8sInfo == nil {
+			utils.Should(errors.New("ignoring response in telemetry data stream with missing Kubernetes info payload"))
+			return nil
+		}
+
+		return cb(ctx, k8sInfo)
+	}
+	return c.streamingRequest(ctx, central.PullTelemetryDataRequest_KUBERNETES_INFO, genericCB)
+}
+
+func (c *controller) PullClusterInfo(ctx context.Context, cb ClusterInfoCallback) error {
+	genericCB := func(ctx concurrency.ErrorWaitable, chunk *central.TelemetryResponsePayload) error {
+		clusterInfo := chunk.GetClusterInfo()
+		if clusterInfo == nil {
+			utils.Should(errors.New("ignoring response in telemetry data stream with missing Cluster info payload"))
+			return nil
+		}
+
+		return cb(ctx, clusterInfo)
+	}
+	return c.streamingRequest(ctx, central.PullTelemetryDataRequest_CLUSTER_INFO, genericCB)
 }
 
 func (c *controller) ProcessTelemetryDataResponse(resp *central.PullTelemetryDataResponse) error {
