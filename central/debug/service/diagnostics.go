@@ -161,24 +161,30 @@ func (s *serviceImpl) getK8sDiagnostics(ctx context.Context, zipWriter *zip.Writ
 	go pullCentralClusterDiagnostics(subCtx, filesC, &wg)
 
 	go func() {
-		defer close(filesC)
-
 		select {
-		case <-subCtx.Done():
 		case <-wg.Done():
+			// All invoked goroutines are done.  Close the channel so the handling loop knows it can terminate
+			close(filesC)
+		case <-subCtx.Done():
 		}
 	}()
 
-	for file := range filesC {
-		fullPath := path.Join("kubernetes", file.Path)
-		fileWriter, err := zipWriter.Create(fullPath)
-		if err != nil {
-			return err
-		}
-		if _, err := fileWriter.Write(file.Contents); err != nil {
-			return err
+	for {
+		select {
+		case <-subCtx.Done():
+			return subCtx.Err()
+		case file, ok := <-filesC:
+			if !ok {
+				return nil
+			}
+			fullPath := path.Join("kubernetes", file.Path)
+			fileWriter, err := zipWriter.Create(fullPath)
+			if err != nil {
+				return err
+			}
+			if _, err := fileWriter.Write(file.Contents); err != nil {
+				return err
+			}
 		}
 	}
-
-	return nil
 }
