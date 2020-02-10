@@ -62,7 +62,7 @@ type serviceImpl struct {
 func (s *serviceImpl) whitelistResultsForDeployment(ctx context.Context, deployment *storage.ListDeployment) (*storage.ProcessWhitelistResults, error) {
 	whitelistResults, err := s.processWhitelistResults.GetWhitelistResults(ctx, deployment.GetId())
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 	return whitelistResults, nil
 }

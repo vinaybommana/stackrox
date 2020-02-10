@@ -52,6 +52,7 @@ $(GOVERALLS_BIN): deps
 	go install github.com/mattn/goveralls
 
 ROXVET_BIN := $(GOPATH)/bin/roxvet
+.PHONY: $(ROXVET_BIN)
 $(ROXVET_BIN): deps
 	@echo "+ $@"
 	go install ./tools/roxvet

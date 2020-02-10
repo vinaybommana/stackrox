@@ -51,5 +51,5 @@ func (f *factory) ProcessHTTPRequest(w http.ResponseWriter, r *http.Request) (st
 }
 
 func (f *factory) ResolveProvider(state string) (string, error) {
-	return "", status.Errorf(codes.Unimplemented, "not implemented")
+	return "", status.Error(codes.Unimplemented, "not implemented")
 }

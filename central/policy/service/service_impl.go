@@ -381,7 +381,7 @@ func (s *serviceImpl) removeActivePolicy(policy *storage.Policy) error {
 
 func (s *serviceImpl) EnableDisablePolicyNotification(ctx context.Context, request *v1.EnableDisablePolicyNotificationRequest) (*v1.Empty, error) {
 	if request.GetPolicyId() == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "Policy ID must be specified")
+		return nil, status.Error(codes.InvalidArgument, "Policy ID must be specified")
 	}
 	var err error
 	if request.GetDisable() {
@@ -398,7 +398,7 @@ func (s *serviceImpl) EnableDisablePolicyNotification(ctx context.Context, reque
 
 func (s *serviceImpl) enablePolicyNotification(ctx context.Context, policyID string, notifierIDs []string) error {
 	if len(notifierIDs) == 0 {
-		return status.Errorf(codes.InvalidArgument, "Notifier IDs must be specified")
+		return status.Error(codes.InvalidArgument, "Notifier IDs must be specified")
 	}
 
 	policy, exists, err := s.policies.GetPolicy(ctx, policyID)
