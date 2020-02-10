@@ -15,6 +15,6 @@ type HTTPMetrics interface {
 // NewHTTPMetrics returns a new HTTPMetrics object
 func NewHTTPMetrics() HTTPMetrics {
 	return &httpMetricsImpl{
-		allMetrics: make(map[string]*perPathMetrics),
+		allMetrics: make(map[string]*perPathHTTPMetrics),
 	}
 }

@@ -36,22 +36,12 @@ func recoveringHandler(handler http.Handler, panicIndicator *bool) http.Handler 
 	})
 }
 
-func (s *httpMetricsTestSuite) testNoNormalCount(collected map[string]map[int]int64, expectedPath string) {
-	s.Contains(collected, expectedPath)
-	s.Empty(collected[expectedPath])
-}
-
 func (s *httpMetricsTestSuite) testNormalCount(collected map[string]map[int]int64, expectedPath string, expectedCode int, expectedCount int64) {
 	s.Contains(collected, expectedPath)
 	codes := collected[expectedPath]
 	s.Contains(codes, expectedCode)
 	count := codes[expectedCode]
 	s.Equal(expectedCount, count)
-}
-
-func (s *httpMetricsTestSuite) testNoPanic(panics map[string]map[string]int64, path string) {
-	s.Contains(panics, path)
-	s.Empty(panics[path])
 }
 
 // This tests that all panics have the expected count because I don't want to figure out the expected line number
@@ -74,12 +64,12 @@ func (s *httpMetricsTestSuite) TestSuccess() {
 	wrappedHandler.ServeHTTP(httptest.NewRecorder(), nil)
 	collected, panics := metrics.GetMetrics()
 	s.testNormalCount(collected, testPath, expectedCode, 1)
-	s.testNoPanic(panics, testPath)
+	s.NotContains(panics, testPath)
 
 	wrappedHandler.ServeHTTP(httptest.NewRecorder(), nil)
 	collected, panics = metrics.GetMetrics()
 	s.testNormalCount(collected, testPath, expectedCode, 2)
-	s.testNoPanic(panics, testPath)
+	s.NotContains(panics, testPath)
 }
 
 func (s *httpMetricsTestSuite) TestNoResponse() {
@@ -92,12 +82,12 @@ func (s *httpMetricsTestSuite) TestNoResponse() {
 	wrappedHandler.ServeHTTP(httptest.NewRecorder(), nil)
 	collected, panics := metrics.GetMetrics()
 	s.testNormalCount(collected, testPath, expectedCode, 1)
-	s.testNoPanic(panics, testPath)
+	s.NotContains(panics, testPath)
 
 	wrappedHandler.ServeHTTP(httptest.NewRecorder(), nil)
 	collected, panics = metrics.GetMetrics()
 	s.testNormalCount(collected, testPath, expectedCode, 2)
-	s.testNoPanic(panics, testPath)
+	s.NotContains(panics, testPath)
 }
 
 func (s *httpMetricsTestSuite) TestNonOKResponse() {
@@ -112,12 +102,12 @@ func (s *httpMetricsTestSuite) TestNonOKResponse() {
 	wrappedHandler.ServeHTTP(httptest.NewRecorder(), nil)
 	collected, panics := metrics.GetMetrics()
 	s.testNormalCount(collected, testPath, expectedCode, 1)
-	s.testNoPanic(panics, testPath)
+	s.NotContains(panics, testPath)
 
 	wrappedHandler.ServeHTTP(httptest.NewRecorder(), nil)
 	collected, panics = metrics.GetMetrics()
 	s.testNormalCount(collected, testPath, expectedCode, 2)
-	s.testNoPanic(panics, testPath)
+	s.NotContains(panics, testPath)
 }
 
 func (s *httpMetricsTestSuite) TestPanicResponse() {
@@ -133,11 +123,11 @@ func (s *httpMetricsTestSuite) TestPanicResponse() {
 	s.True(panicIndicator)
 	collected, panics := metrics.GetMetrics()
 	s.testPanicCount(panics, testPath, 1)
-	s.testNoNormalCount(collected, testPath)
+	s.NotContains(collected, testPath)
 
 	wrappedHandler.ServeHTTP(httptest.NewRecorder(), nil)
 	s.True(panicIndicator)
 	collected, panics = metrics.GetMetrics()
 	s.testPanicCount(panics, testPath, 2)
-	s.testNoNormalCount(collected, testPath)
+	s.NotContains(collected, testPath)
 }

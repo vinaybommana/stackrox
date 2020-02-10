@@ -19,22 +19,43 @@ var (
 )
 
 type grpcMetricsImpl struct {
-	callsLock sync.Mutex
-	// Map of endpoint -> response code -> count & most recent panics
-	apiCalls  map[string]map[codes.Code]int64
-	apiPanics map[string]*lru.Cache
+	allMetricsMutex sync.Mutex
+	allMetrics      map[string]*perPathGRPCMetrics
+}
+
+type perPathGRPCMetrics struct {
+	normalInvocationStats map[codes.Code]int64
+
+	panics *lru.Cache
+}
+
+func (g *grpcMetricsImpl) getOrCreateAllMetrics(path string) *perPathGRPCMetrics {
+	perPathMetric := g.allMetrics[path]
+	if perPathMetric == nil {
+		panicLRU, err := lru.New(cacheSize)
+		err = utils.Should(errors.Wrap(err, "error creating an lru"))
+		if err != nil {
+			return nil
+		}
+		perPathMetric = &perPathGRPCMetrics{
+			normalInvocationStats: make(map[codes.Code]int64),
+			panics:                panicLRU,
+		}
+		g.allMetrics[path] = perPathMetric
+	}
+
+	return perPathMetric
 }
 
 func (g *grpcMetricsImpl) updateInternalMetric(path string, responseCode codes.Code) {
-	g.callsLock.Lock()
-	defer g.callsLock.Unlock()
+	g.allMetricsMutex.Lock()
+	defer g.allMetricsMutex.Unlock()
 
-	respCodes, ok := g.apiCalls[path]
-	if !ok {
-		respCodes = make(map[codes.Code]int64)
-		g.apiCalls[path] = respCodes
+	perPathMetric := g.getOrCreateAllMetrics(path)
+	if perPathMetric == nil {
+		return
 	}
-	respCodes[responseCode]++
+	perPathMetric.normalInvocationStats[responseCode]++
 }
 
 func anyToError(x interface{}) error {
@@ -62,28 +83,21 @@ func (g *grpcMetricsImpl) UnaryMonitoringInterceptor(ctx context.Context, req in
 		}
 		// Convert the panic to an error
 		err = g.convertPanicToError(r)
-		err = status.Errorf(codes.Internal, "recovered panic: %s", err.Error())
 
 		// Keep stats about the location and number of panics
 		panicLocation := getPanicLocation(1)
 		path := info.FullMethod
-		g.callsLock.Lock()
-		defer g.callsLock.Unlock()
-		panicLRU, ok := g.apiPanics[path]
-		if !ok {
-			var lruErr error
-			panicLRU, lruErr = lru.New(cacheSize)
-			if lruErr != nil {
-				// This should only happen if cacheSize < 0 and that should be impossible.
-				log.Infof("unable to create LRU in UnaryMonitoringInterceptor for endpoint %s", path)
-			}
-			g.apiPanics[path] = panicLRU
+		g.allMetricsMutex.Lock()
+		defer g.allMetricsMutex.Unlock()
+		perPathMetric := g.getOrCreateAllMetrics(path)
+		if perPathMetric == nil {
+			panic(r)
 		}
-		apiPanic, ok := panicLRU.Get(panicLocation)
+		apiPanic, ok := perPathMetric.panics.Get(panicLocation)
 		if !ok {
 			apiPanic = int64(0)
 		}
-		panicLRU.Add(panicLocation, apiPanic.(int64)+1)
+		perPathMetric.panics.Add(panicLocation, apiPanic.(int64)+1)
 		panic(r)
 	}()
 	resp, err = handler(ctx, req)
@@ -98,27 +112,30 @@ func (g *grpcMetricsImpl) UnaryMonitoringInterceptor(ctx context.Context, req in
 
 // GetMetrics returns copies of the internal metric maps
 func (g *grpcMetricsImpl) GetMetrics() (map[string]map[codes.Code]int64, map[string]map[string]int64) {
-	externalMetrics := make(map[string]map[codes.Code]int64, len(g.apiCalls))
-	g.callsLock.Lock()
-	defer g.callsLock.Unlock()
-	for path, codeMap := range g.apiCalls {
-		externalCodeMap := make(map[codes.Code]int64, len(codeMap))
-		externalMetrics[path] = externalCodeMap
-		for responseCode, count := range codeMap {
+	g.allMetricsMutex.Lock()
+	defer g.allMetricsMutex.Unlock()
+	externalMetrics := make(map[string]map[codes.Code]int64, len(g.allMetrics))
+	externalPanics := make(map[string]map[string]int64, len(g.allMetrics))
+	for path, perPathMetric := range g.allMetrics {
+		externalCodeMap := make(map[codes.Code]int64, len(perPathMetric.normalInvocationStats))
+		for responseCode, count := range perPathMetric.normalInvocationStats {
 			externalCodeMap[responseCode] = count
 		}
-	}
+		if len(externalCodeMap) > 0 {
+			externalMetrics[path] = externalCodeMap
+		}
 
-	externalPanics := make(map[string]map[string]int64, len(g.apiPanics))
-	for path, panics := range g.apiPanics {
-		panicLocations := panics.Keys()
+		panicLocations := perPathMetric.panics.Keys()
 		panicList := make(map[string]int64, len(panicLocations))
 		for _, panicLocation := range panicLocations {
-			if panicCount, ok := panics.Get(panicLocation); ok {
+			if panicCount, ok := perPathMetric.panics.Get(panicLocation); ok {
 				panicList[panicLocation.(string)] = panicCount.(int64)
 			}
 		}
-		externalPanics[path] = panicList
+		if len(panicList) > 0 {
+			externalPanics[path] = panicList
+		}
 	}
+
 	return externalMetrics, externalPanics
 }

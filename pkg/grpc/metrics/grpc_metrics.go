@@ -3,7 +3,6 @@ package metrics
 import (
 	"context"
 
-	lru "github.com/hashicorp/golang-lru"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 )
@@ -18,7 +17,6 @@ type GRPCMetrics interface {
 // NewGRPCMetrics returns a new GRPCMetrics object
 func NewGRPCMetrics() GRPCMetrics {
 	return &grpcMetricsImpl{
-		apiCalls:  make(map[string]map[codes.Code]int64),
-		apiPanics: make(map[string]*lru.Cache),
+		allMetrics: make(map[string]*perPathGRPCMetrics),
 	}
 }
