@@ -74,9 +74,7 @@ func createTransport(tlsClientConf *tls.Config) (http.RoundTripper, error) {
 
 	if tlsClientConf != nil {
 		clientConfForTransport := tlsClientConf.Clone()
-		nextProtos := append([]string{}, clientconn.NextProtos...)
-		nextProtos = append(nextProtos, tlsClientConf.NextProtos...)
-		nextProtos = append(nextProtos, "http/1.1", "http/1.0")
+		nextProtos := sliceutils.ConcatStringSlices(clientconn.NextProtos, tlsClientConf.NextProtos, []string{"http/1.1", "http/1.0"})
 		clientConfForTransport.NextProtos = sliceutils.StringUnique(nextProtos)
 		transport.TLSClientConfig = clientConfForTransport
 	}

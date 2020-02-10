@@ -11,6 +11,7 @@ import (
 	"github.com/dgraph-io/badger"
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/pkg/migrations"
+	"github.com/stackrox/rox/pkg/sliceutils"
 )
 
 const (
@@ -79,7 +80,7 @@ func GetPrefix(key []byte) (prefix []byte) {
 	if idx == -1 {
 		return nil
 	}
-	return append([]byte{}, key[:idx]...)
+	return sliceutils.ByteClone(key[:idx])
 }
 
 // Count gets the number of keys with a specific prefix

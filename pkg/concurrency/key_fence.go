@@ -6,6 +6,7 @@ import (
 	"github.com/stackrox/rox/pkg/badgerhelper"
 	"github.com/stackrox/rox/pkg/dackbox/sortedkeys"
 	"github.com/stackrox/rox/pkg/dackbox/utils"
+	"github.com/stackrox/rox/pkg/sliceutils"
 	"github.com/stackrox/rox/pkg/sync"
 )
 
@@ -150,8 +151,8 @@ func (rks *rangeKeySetImpl) Equals(in KeySet) bool {
 
 func (rks *rangeKeySetImpl) Clone() KeySet {
 	return &rangeKeySetImpl{
-		lower: append([]byte{}, rks.lower...),
-		upper: append([]byte{}, rks.upper...),
+		lower: sliceutils.ByteClone(rks.lower),
+		upper: sliceutils.ByteClone(rks.upper),
 	}
 }
 
@@ -192,7 +193,7 @@ func (pkr *prefixKeySetImpl) Equals(in KeySet) bool {
 
 func (pkr *prefixKeySetImpl) Clone() KeySet {
 	return &prefixKeySetImpl{
-		prefix: append([]byte{}, pkr.prefix...),
+		prefix: sliceutils.ByteClone(pkr.prefix),
 	}
 }
 

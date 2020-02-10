@@ -17,6 +17,7 @@ import (
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/blevesearch"
 	"github.com/stackrox/rox/pkg/search/paginated"
+	"github.com/stackrox/rox/pkg/sliceutils"
 	"github.com/stackrox/rox/pkg/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -645,8 +646,7 @@ func (suite *DeploymentIndexTestSuite) TestSearchSorting() {
 		suite.NoError(suite.indexer.AddDeployment(d))
 	}
 
-	reversedIds := make([]string, len(ids))
-	copy(reversedIds, ids)
+	reversedIds := sliceutils.StringClone(ids)
 	sort.Sort(sort.Reverse(sort.StringSlice(reversedIds)))
 
 	var cases = []struct {

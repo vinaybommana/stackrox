@@ -17,6 +17,7 @@ import (
 	"github.com/stackrox/rox/central/graphql/resolvers/loaders"
 	"github.com/stackrox/rox/pkg/grpc/authz/allow"
 	"github.com/stackrox/rox/pkg/sac"
+	"github.com/stackrox/rox/pkg/sliceutils"
 	"github.com/stackrox/rox/pkg/utils"
 )
 
@@ -65,7 +66,7 @@ func (c *csvResults) write(writer *csv.Writer) {
 		// second has more values, so first is lesser
 		return len(second) > 0
 	})
-	header := append([]string{}, c.header...)
+	header := sliceutils.StringClone(c.header)
 	header[0] = "\uFEFF" + header[0]
 	_ = writer.Write(header)
 	for _, v := range c.values {
