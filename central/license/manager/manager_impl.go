@@ -7,6 +7,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/central/deploymentenvs"
@@ -415,14 +416,24 @@ func (m *manager) updateStore() error {
 	return err
 }
 
-func (m *manager) GetActiveLicense() *licenseproto.License {
-	m.mutex.RLock()
-	defer m.mutex.RUnlock()
+func (m *manager) GetActiveLicenseKey() string {
+	var key string
+	concurrency.WithRLock(&m.mutex, func() {
+		if m.activeLicense != nil {
+			key = m.activeLicense.licenseKey
+		}
+	})
+	return key
+}
 
-	if m.activeLicense == nil {
-		return nil
-	}
-	return m.activeLicense.licenseProto
+func (m *manager) GetActiveLicense() *licenseproto.License {
+	var licenseProto *licenseproto.License
+	concurrency.WithRLock(&m.mutex, func() {
+		if m.activeLicense != nil {
+			licenseProto = proto.Clone(m.activeLicense.licenseProto).(*licenseproto.License)
+		}
+	})
+	return licenseProto
 }
 
 func (m *manager) GetAllLicenses() []*v1.LicenseInfo {

@@ -17,6 +17,7 @@ type LicenseManager interface {
 	Initialize(listener LicenseEventListener) (*licenseproto.License, error)
 	Stop() concurrency.Waitable
 
+	GetActiveLicenseKey() string
 	GetActiveLicense() *licenseproto.License
 	GetAllLicenses() []*v1.LicenseInfo
 
