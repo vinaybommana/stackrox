@@ -103,8 +103,33 @@ func (e *evaluator) EvaluateWhitelistsAndPersistResult(deployment *storage.Deplo
 			containerNameToWhitelistResults[process.GetContainerName()].AnomalousProcessesExecuted = true
 		}
 	}
-	if err := e.persistResults(evaluatorCtx, deployment, containerNameToWhitelistResults); err != nil {
-		return nil, errors.Wrap(err, "failed to persist whitelist results")
+
+	whitelistResults, err := e.whitelistResults.GetWhitelistResults(evaluatorCtx, deployment.GetId())
+	if err != nil {
+		return nil, errors.Wrap(err, "error fetching whitelist results")
+	}
+
+	var persistenceRequired bool
+	if len(whitelistResults.GetWhitelistStatuses()) != len(containerNameToWhitelistResults) {
+		persistenceRequired = true
+	} else {
+		for _, status := range whitelistResults.GetWhitelistStatuses() {
+			newStatus := containerNameToWhitelistResults[status.GetContainerName()]
+			if newStatus == nil {
+				persistenceRequired = true
+				break
+			}
+			if status.GetAnomalousProcessesExecuted() != newStatus.GetAnomalousProcessesExecuted() ||
+				status.GetWhitelistStatus() != newStatus.GetWhitelistStatus() {
+				persistenceRequired = true
+				break
+			}
+		}
+	}
+	if persistenceRequired {
+		if err := e.persistResults(evaluatorCtx, deployment, containerNameToWhitelistResults); err != nil {
+			return nil, errors.Wrap(err, "failed to persist whitelist results")
+		}
 	}
 	return
 }
