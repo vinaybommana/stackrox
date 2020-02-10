@@ -32,6 +32,7 @@ import (
 	"github.com/stackrox/rox/pkg/httputil"
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/mtls/verifier"
+	"github.com/stackrox/rox/pkg/netutil/pipeconn"
 	"github.com/stackrox/rox/pkg/tlsutils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
@@ -207,8 +208,7 @@ type Config struct {
 	UnaryInterceptors  []grpc.UnaryServerInterceptor
 	StreamInterceptors []grpc.StreamServerInterceptor
 
-	InsecureLocalEndpoint string
-	PublicEndpoint        string
+	PublicEndpoint string
 
 	PlaintextEndpoints EndpointsConfig
 
@@ -220,7 +220,7 @@ type Config struct {
 func NewAPI(config Config) API {
 	return &apiImpl{
 		config:             config,
-		requestInfoHandler: requestinfo.NewDefaultRequestInfoHandler(),
+		requestInfoHandler: requestinfo.NewRequestInfoHandler(),
 	}
 }
 
@@ -293,13 +293,10 @@ func (a *apiImpl) streamInterceptors() []grpc.StreamServerInterceptor {
 	return s
 }
 
-func (a *apiImpl) listenOnLocalEndpoint(server *grpc.Server) error {
-	lis, err := net.Listen("tcp", a.config.InsecureLocalEndpoint)
-	if err != nil {
-		return err
-	}
+func (a *apiImpl) listenOnLocalEndpoint(server *grpc.Server) pipeconn.DialContextFunc {
+	lis, dialContext := pipeconn.NewPipeListener()
 
-	log.Infof("Launching backend GRPC listener on %v", a.config.InsecureLocalEndpoint)
+	log.Info("Launching backend gRPC listener")
 	// Launch the GRPC listener
 	go func() {
 		if err := server.Serve(lis); err != nil {
@@ -307,11 +304,14 @@ func (a *apiImpl) listenOnLocalEndpoint(server *grpc.Server) error {
 		}
 		log.Fatal("The local API server should never terminate")
 	}()
-	return nil
+	return dialContext
 }
 
-func (a *apiImpl) connectToLocalEndpoint() (*grpc.ClientConn, error) {
-	return grpc.Dial(a.config.InsecureLocalEndpoint, grpc.WithInsecure(),
+func (a *apiImpl) connectToLocalEndpoint(dialCtxFunc pipeconn.DialContextFunc) (*grpc.ClientConn, error) {
+	return grpc.Dial("", grpc.WithInsecure(),
+		grpc.WithContextDialer(func(ctx context.Context, endpoint string) (net.Conn, error) {
+			return dialCtxFunc(ctx)
+		}),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxResponseMsgSize())))
 }
 
@@ -393,15 +393,10 @@ func (a *apiImpl) run(startedSig *concurrency.Signal) {
 		service.RegisterServiceServer(grpcServer)
 	}
 
-	var localConn *grpc.ClientConn
-	if a.config.InsecureLocalEndpoint != "" {
-		if err := a.listenOnLocalEndpoint(grpcServer); err != nil {
-			log.Panicf("Could not listen on local endpoint: %v", err)
-		}
-		localConn, err = a.connectToLocalEndpoint()
-		if err != nil {
-			log.Panicf("Could not connect to local endpoint: %v", err)
-		}
+	dialCtxFunc := a.listenOnLocalEndpoint(grpcServer)
+	localConn, err := a.connectToLocalEndpoint(dialCtxFunc)
+	if err != nil {
+		log.Panicf("Could not connect to local endpoint: %v", err)
 	}
 
 	httpHandler := a.muxer(localConn)

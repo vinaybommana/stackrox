@@ -37,7 +37,6 @@ const (
 	pprofServer = "127.0.0.1:6060"
 
 	publicAPIEndpoint = ":8443"
-	localAPIEndpoint  = "127.0.0.1:8444"
 
 	publicWebhookEndpoint = ":9443"
 )
@@ -177,11 +176,10 @@ func (s *Sensor) Start() {
 	}
 
 	config := pkgGRPC.Config{
-		TLS:                   verifier.NonCA{},
-		CustomRoutes:          customRoutes,
-		IdentityExtractors:    []authn.IdentityExtractor{mtlsServiceIDExtractor},
-		PublicEndpoint:        publicAPIEndpoint,
-		InsecureLocalEndpoint: localAPIEndpoint,
+		TLS:                verifier.NonCA{},
+		CustomRoutes:       customRoutes,
+		IdentityExtractors: []authn.IdentityExtractor{mtlsServiceIDExtractor},
+		PublicEndpoint:     publicAPIEndpoint,
 	}
 	s.server = pkgGRPC.NewAPI(config)
 

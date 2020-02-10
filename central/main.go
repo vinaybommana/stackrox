@@ -152,8 +152,7 @@ const (
 
 	grpcServerWatchdogTimeout = 20 * time.Second
 
-	publicAPIEndpoint     = ":8443"
-	insecureLocalEndpoint = "127.0.0.1:8444"
+	publicAPIEndpoint = ":8443"
 
 	maxServiceCertTokenLeeway = 1 * time.Minute
 
@@ -405,15 +404,14 @@ func startGRPCServer(factory serviceFactory) {
 	}
 
 	config := pkgGRPC.Config{
-		CustomRoutes:          factory.CustomRoutes(),
-		TLS:                   tlsconfig.ManagerInstance().TLSConfigurer(),
-		IdentityExtractors:    idExtractors,
-		AuthProviders:         registry,
-		InsecureLocalEndpoint: insecureLocalEndpoint,
-		PublicEndpoint:        publicAPIEndpoint,
-		Auditor:               audit.New(processor.Singleton()),
-		GRPCMetrics:           metrics.GRPCSingleton(),
-		HTTPMetrics:           metrics.HTTPSingleton(),
+		CustomRoutes:       factory.CustomRoutes(),
+		TLS:                tlsconfig.ManagerInstance().TLSConfigurer(),
+		IdentityExtractors: idExtractors,
+		AuthProviders:      registry,
+		PublicEndpoint:     publicAPIEndpoint,
+		Auditor:            audit.New(processor.Singleton()),
+		GRPCMetrics:        metrics.GRPCSingleton(),
+		HTTPMetrics:        metrics.HTTPSingleton(),
 	}
 
 	// This helps validate that SAC is being used correctly.
