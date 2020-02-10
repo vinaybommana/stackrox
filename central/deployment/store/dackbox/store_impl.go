@@ -193,7 +193,7 @@ func (b *StoreImpl) UpsertDeployment(deployment *storage.Deployment) error {
 	}
 	deploymentKey := deploymentDackBox.KeyFunc(deployment)
 	namespaceKey := namespaceDackBox.BucketHandler.GetKey(deployment.GetNamespace())
-	clusterKey := clusterDackBox.BucketHandler.GetKey(deployment.GetNamespace())
+	clusterKey := clusterDackBox.BucketHandler.GetKey(deployment.GetClusterId())
 	keysToLock := concurrency.DiscreteKeySet(append(imageKeys,
 		deploymentKey,
 		namespaceKey,
