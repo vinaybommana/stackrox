@@ -2,11 +2,11 @@ package authproviders
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/stackrox/rox/pkg/auth/permissions"
 	"github.com/stackrox/rox/pkg/auth/tokens"
 	"github.com/stackrox/rox/pkg/logging"
@@ -262,6 +262,21 @@ func (r *registryImpl) deletedNoLock(provider Provider) {
 		return
 	}
 	backend.OnDisable(provider)
+}
+
+func (r *registryImpl) resolveProviderAndBackend(providerType, providerID string) (Provider, Backend, error) {
+	provider := r.getAuthProvider(providerID)
+	if provider == nil {
+		return nil, nil, errors.Errorf("provider with ID %q not found", providerID)
+	}
+	if provider.Type() != providerType {
+		return nil, nil, errors.Errorf("provider with ID %q has unexpected type %q (expected: %q)", provider.ID(), provider.Type(), providerType)
+	}
+	backend := provider.Backend()
+	if !provider.Enabled() {
+		backend = nil
+	}
+	return provider, backend, nil
 }
 
 func issueTokenForResponse(ctx context.Context, provider Provider, authResp *AuthResponse) (*tokens.TokenInfo, error) {

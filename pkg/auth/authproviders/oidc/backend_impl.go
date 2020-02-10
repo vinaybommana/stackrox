@@ -17,9 +17,11 @@ import (
 	"github.com/stackrox/rox/pkg/cryptoutils"
 	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/grpc/requestinfo"
+	"github.com/stackrox/rox/pkg/httputil"
+	"github.com/stackrox/rox/pkg/ioutils"
 	"github.com/stackrox/rox/pkg/netutil"
 	"github.com/stackrox/rox/pkg/set"
-	"github.com/stackrox/rox/pkg/sliceutils"
+	"github.com/stackrox/rox/pkg/utils"
 	"golang.org/x/oauth2"
 )
 
@@ -49,6 +51,7 @@ type backendImpl struct {
 	defaultUIEndpoint  string
 	allowedUIEndpoints set.StringSet
 
+	provider        *provider
 	baseRedirectURL url.URL
 	baseOauthConfig oauth2.Config
 	baseOptions     []oauth2.AuthCodeOption
@@ -85,6 +88,33 @@ func (p *backendImpl) RefreshAccessToken(ctx context.Context, refreshToken strin
 	return p.verifyIDToken(ctx, rawIDToken, dontVerifyNonce)
 }
 
+func (p *backendImpl) RevokeRefreshToken(ctx context.Context, refreshToken string) error {
+	if p.provider.RevocationEndpoint == "" {
+		return errors.New("provider does not expose a token revocation endpoint")
+	}
+
+	revokeTokenData := url.Values{
+		"token":           []string{refreshToken},
+		"token_type_hint": []string{"refresh_token"},
+	}
+	resp, err := p.baseOauthConfig.PostRawRequest(ctx, p.provider.RevocationEndpoint, revokeTokenData)
+	if err != nil {
+		return errors.Wrap(err, "transport error making token revocation request")
+	}
+	defer utils.IgnoreError(resp.Body.Close)
+
+	if httputil.Is2xxStatusCode(resp.StatusCode) {
+		return nil
+	}
+
+	respBytes, err := ioutils.ReadAtMost(resp.Body, 1024)
+	errMsg := fmt.Sprintf("server returned status %s, first 1024 bytes of the response: %s", resp.Status, respBytes)
+	if err != nil {
+		errMsg = fmt.Sprintf("%s. Additionally, there was an error reading the response body: %v", errMsg, err)
+	}
+	return errors.New(errMsg)
+}
+
 func (p *backendImpl) LoginURL(clientState string, ri *requestinfo.RequestInfo) string {
 	return p.loginURL(clientState, ri)
 }
@@ -113,45 +143,6 @@ func (p *backendImpl) verifyIDToken(ctx context.Context, rawIDToken string, nonc
 		Claims:     claim,
 		Expiration: idToken.Expiry,
 	}, nil
-}
-
-// The go-oidc library has two annoying characteristics when it comes to creating backendImpl instances:
-// - The context is passed on to the remoteKeySource that is being created. Hence, we can't use a short-lived context
-//   (such as the request context), as otherwise subsequent verifications will fail because the keys have not been
-//   retrieved.
-// - The check for the issuer is done strictly, not even tolerating a trailing slash (which makes it very hard to omit
-//   the `https://` prefix, as is common).
-// We therefore add a wrapper method that calls `oidc.NewProvider` with the background context and writes the result to
-// a channel, and retries in case of an error with a trailing slash added or removed.
-//
-type createOIDCProviderResult struct {
-	issuer   string
-	provider *oidc.Provider
-	err      error
-}
-
-func createOIDCProviderAsync(issuer string, resultC chan<- createOIDCProviderResult) {
-	provider, err := oidc.NewProvider(context.Background(), issuer)
-	if err != nil {
-		if strings.HasSuffix(issuer, "/") {
-			issuer = strings.TrimSuffix(issuer, "/")
-		} else {
-			issuer = issuer + "/"
-		}
-		provider, err = oidc.NewProvider(context.Background(), issuer)
-	}
-	resultC <- createOIDCProviderResult{issuer: issuer, provider: provider, err: err}
-}
-
-func createOIDCProvider(ctx context.Context, issuer string) (*oidc.Provider, string, error) {
-	resultC := make(chan createOIDCProviderResult, 1)
-	go createOIDCProviderAsync(issuer, resultC)
-	select {
-	case res := <-resultC:
-		return res.provider, res.issuer, res.err
-	case <-ctx.Done():
-		return nil, "", ctx.Err()
-	}
 }
 
 func newBackend(ctx context.Context, id string, uiEndpoints []string, callbackURLPath string, config map[string]string) (*backendImpl, map[string]string, error) {
@@ -184,12 +175,7 @@ func newBackend(ctx context.Context, id string, uiEndpoints []string, callbackUR
 		return nil, nil, err
 	}
 
-	var providerInfo struct {
-		ScopesSupported []string `json:"scopes_supported,omitempty"`
-	}
-	if err := oidcProvider.Claims(&providerInfo); err != nil {
-		log.Warnf("Failed to obtain OIDC provider claims: %v", err)
-	}
+	provider := wrapProvider(oidcProvider)
 
 	p := &backendImpl{
 		id: id,
@@ -197,6 +183,7 @@ func newBackend(ctx context.Context, id string, uiEndpoints []string, callbackUR
 			cryptoutils.NewNonceGenerator(nonceByteLen, rand.Reader), nonceTTL),
 		defaultUIEndpoint:  uiEndpoints[0],
 		allowedUIEndpoints: set.NewStringSet(uiEndpoints...),
+		provider:           provider,
 	}
 
 	p.baseRedirectURL = url.URL{
@@ -240,7 +227,7 @@ func newBackend(ctx context.Context, id string, uiEndpoints []string, callbackUR
 		Endpoint:     oidcProvider.Endpoint(),
 		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
 	}
-	if features.RefreshTokens.Enabled() && clientSecret != "" && sliceutils.StringFind(providerInfo.ScopesSupported, oidc.ScopeOfflineAccess) != -1 {
+	if features.RefreshTokens.Enabled() && clientSecret != "" && provider.SupportsScope(oidc.ScopeOfflineAccess) {
 		p.baseOauthConfig.Scopes = append(p.baseOauthConfig.Scopes, oidc.ScopeOfflineAccess)
 	}
 

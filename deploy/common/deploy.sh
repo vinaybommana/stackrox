@@ -238,6 +238,7 @@ function setup_auth0() {
 	"config": {
 		"issuer": "https://sr-dev.auth0.com",
 		"client_id": "bu63HaVAuVPEgMUeRVfL5PzrqTXaedA2",
+		"client_secret": "TYpciXquIi4sqlpux2rzwxcGjvvdWYfUO45d4m44CVUtvK91Z2lKJon55HUXfQJZ",
 		"mode": "post"
 	},
 	"extraUiEndpoints": ["localhost:8000", "localhost:3000", "localhost:8001", "prevent.stackrox.com"]

@@ -1,6 +1,7 @@
 package authproviders
 
 import (
+	"net/http"
 	"net/url"
 
 	"github.com/gorilla/schema"
@@ -20,6 +21,23 @@ type refreshTokenCookieData struct {
 	ProviderType string `schema:"providerType,required"`
 	ProviderID   string `schema:"providerId,required"`
 	RefreshToken string `schema:"refreshToken,required"`
+}
+
+func cookieDataFromRequest(req *http.Request) (*refreshTokenCookieData, error) {
+	cookie, err := req.Cookie(refreshTokenCookieName)
+	if err != nil {
+		if err == http.ErrNoCookie {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	var data refreshTokenCookieData
+	if err := data.Decode(cookie.Value); err != nil {
+		return nil, errors.Wrap(err, "decoding cookie value")
+	}
+
+	return &data, nil
 }
 
 func (r *refreshTokenCookieData) Encode() (string, error) {

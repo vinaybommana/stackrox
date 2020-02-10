@@ -49,4 +49,7 @@ type RefreshTokenEnabledBackend interface {
 
 	// RefreshAccessToken issues a new access token, using the given refresh token.
 	RefreshAccessToken(ctx context.Context, refreshToken string) (*AuthResponse, error)
+
+	// RevokeRefreshToken revokes an issued refresh token.
+	RevokeRefreshToken(ctx context.Context, refreshToken string) error
 }
