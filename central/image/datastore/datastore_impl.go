@@ -22,7 +22,6 @@ import (
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/sac"
 	pkgSearch "github.com/stackrox/rox/pkg/search"
-	searchPkg "github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/txn"
 )
 
@@ -64,7 +63,7 @@ func newDatastoreImpl(storage store.Store, indexer index.Indexer, searcher searc
 	return ds, nil
 }
 
-func (ds *datastoreImpl) Search(ctx context.Context, q *v1.Query) ([]searchPkg.Result, error) {
+func (ds *datastoreImpl) Search(ctx context.Context, q *v1.Query) ([]pkgSearch.Result, error) {
 	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Image", "Search")
 
 	return ds.searcher.Search(ctx, q)
@@ -126,7 +125,7 @@ func (ds *datastoreImpl) CountImages(ctx context.Context) (int, error) {
 		return ds.storage.CountImages()
 	}
 
-	searchResults, err := ds.Search(ctx, searchPkg.EmptyQuery())
+	searchResults, err := ds.Search(ctx, pkgSearch.EmptyQuery())
 	if err != nil {
 		return 0, err
 	}
@@ -141,7 +140,7 @@ func (ds *datastoreImpl) canReadImage(ctx context.Context, sha string) (bool, er
 		return true, nil
 	}
 
-	queryForImage := searchPkg.NewQueryBuilder().AddExactMatches(searchPkg.ImageSHA, sha).ProtoQuery()
+	queryForImage := pkgSearch.NewQueryBuilder().AddExactMatches(pkgSearch.ImageSHA, sha).ProtoQuery()
 	if results, err := ds.searcher.Search(ctx, queryForImage); err != nil {
 		return false, err
 	} else if len(results) > 0 {
@@ -177,7 +176,7 @@ func (ds *datastoreImpl) GetImagesBatch(ctx context.Context, shas []string) ([]*
 			return nil, err
 		}
 	} else {
-		shasQuery := searchPkg.NewQueryBuilder().AddStrings(searchPkg.ImageSHA, shas...).ProtoQuery()
+		shasQuery := pkgSearch.NewQueryBuilder().AddStrings(pkgSearch.ImageSHA, shas...).ProtoQuery()
 		imgs, err = ds.SearchRawImages(ctx, shasQuery)
 		if err != nil {
 			return nil, err
@@ -351,8 +350,8 @@ func (ds *datastoreImpl) initializeRankers() error {
 			sac.ResourceScopeKeys(resources.Risk),
 		))
 
-	imageRisks, err := ds.risks.SearchRawRisks(riskElevatedCtx, searchPkg.NewQueryBuilder().AddStrings(
-		searchPkg.RiskSubjectType, storage.RiskSubjectType_IMAGE.String()).ProtoQuery())
+	imageRisks, err := ds.risks.SearchRawRisks(riskElevatedCtx, pkgSearch.NewQueryBuilder().AddStrings(
+		pkgSearch.RiskSubjectType, storage.RiskSubjectType_IMAGE.String()).ProtoQuery())
 	if err != nil {
 		return err
 	}

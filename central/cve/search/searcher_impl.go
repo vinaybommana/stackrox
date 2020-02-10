@@ -10,7 +10,7 @@ import (
 	cveSAC "github.com/stackrox/rox/central/cve/sac"
 	"github.com/stackrox/rox/central/cve/store"
 	"github.com/stackrox/rox/central/dackbox"
-	deploymentSAC "github.com/stackrox/rox/central/image/sac"
+	deploymentSAC "github.com/stackrox/rox/central/deployment/sac"
 	imageSAC "github.com/stackrox/rox/central/image/sac"
 	componentDackBox "github.com/stackrox/rox/central/imagecomponent/dackbox"
 	componentMappings "github.com/stackrox/rox/central/imagecomponent/mappings"

@@ -28,7 +28,6 @@ import (
 	"github.com/stackrox/rox/pkg/search/filtered"
 	"github.com/stackrox/rox/pkg/search/idspace"
 	"github.com/stackrox/rox/pkg/search/options/deployments"
-	deploymentMappings "github.com/stackrox/rox/pkg/search/options/deployments"
 	imageMappings "github.com/stackrox/rox/pkg/search/options/images"
 	"github.com/stackrox/rox/pkg/search/paginated"
 	"github.com/stackrox/rox/pkg/search/sortfields"
@@ -176,7 +175,7 @@ func getDeploymentCompoundSearcher(graphProvider idspace.GraphProvider,
 		{
 			IsDefault: true,
 			Searcher:  deploymentSearcher,
-			Options:   deploymentMappings.OptionsMap,
+			Options:   deployments.OptionsMap,
 		},
 		{
 			Searcher: idspace.TransformIDs(cveSearcher, idspace.NewBackwardGraphTransformer(graphProvider, dackbox.CVEToDeploymentPath.Path)),

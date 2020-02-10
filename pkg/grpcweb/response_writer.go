@@ -43,7 +43,7 @@ func (w *responseWriter) Flush() {
 	}
 
 	w.prepareHeadersIfNecessary()
-	if flusher, _ := w.w.(http.Flusher); w != nil {
+	if flusher, _ := w.w.(http.Flusher); flusher != nil {
 		flusher.Flush()
 	}
 }
