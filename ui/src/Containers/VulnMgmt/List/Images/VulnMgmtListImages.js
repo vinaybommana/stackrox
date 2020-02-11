@@ -21,11 +21,10 @@ import removeEntityContextColumns from 'utils/tableUtils';
 import { imageSortFields } from 'constants/sortFields';
 
 export const defaultImageSort = [
-    // @TODO: uncomment the following primary sort object once it is valid in the back-end pagination
-    // {
-    //     id: imageSortFields.PRIORITY,
-    //     desc: false
-    // },
+    {
+        id: imageSortFields.PRIORITY,
+        desc: false
+    },
     {
         id: imageSortFields.NAME,
         desc: false
@@ -118,7 +117,7 @@ export function getImageTableColumns(workflowState) {
         },
         {
             Header: 'Image Status',
-            headerClassName: `w-1/10 ${defaultHeaderClassName}`,
+            headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
             Cell: ({ original, pdf }) => {
                 const { deploymentCount } = original;
@@ -126,12 +125,13 @@ export function getImageTableColumns(workflowState) {
                 return <StatusChip status={imageStatus} asString={pdf} />;
             },
             accessor: 'deploymentCount',
-            sortField: imageSortFields.IMAGE_STATUS
+            sortField: imageSortFields.IMAGE_STATUS,
+            sortable: false
         },
         {
             Header: `Deployments`,
             entityType: entityTypes.DEPLOYMENT,
-            headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
+            headerClassName: `w-1/10 ${defaultHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
             Cell: ({ original, pdf }) => (
                 <TableCountLink
@@ -142,13 +142,12 @@ export function getImageTableColumns(workflowState) {
                 />
             ),
             accessor: 'deploymentCount',
-            sortField: imageSortFields.DEPLOYMENT_COUNT,
-            sortable: false
+            sortField: imageSortFields.DEPLOYMENT_COUNT
         },
         {
             Header: `Components`,
             entityType: entityTypes.COMPONENT,
-            headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
+            headerClassName: `w-1/10 ${defaultHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
             Cell: ({ original, pdf }) => {
                 const { scan, id } = original;
@@ -164,8 +163,7 @@ export function getImageTableColumns(workflowState) {
                 );
             },
             accessor: 'scan.components',
-            sortField: imageSortFields.COMPONENT_COUNT,
-            sortable: false
+            sortField: imageSortFields.COMPONENT_COUNT
         },
         {
             Header: `Risk Priority`,

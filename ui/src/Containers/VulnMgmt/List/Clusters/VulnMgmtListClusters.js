@@ -121,7 +121,7 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
             {
                 Header: `Namespaces`,
                 entityType: entityTypes.NAMESPACE,
-                headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
+                headerClassName: `w-1/10 ${defaultHeaderClassName}`,
                 className: `w-1/10 ${defaultColumnClassName}`,
                 // eslint-disable-next-line
                 Cell: ({ original, pdf }) => (
@@ -133,13 +133,12 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
                     />
                 ),
                 accessor: 'namespaceCount',
-                sortField: clusterSortFields.NAMESPACE,
-                sortable: false
+                sortField: clusterSortFields.NAMESPACE_COUNT
             },
             {
                 Header: `Deployments`,
                 entityType: entityTypes.DEPLOYMENT,
-                headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
+                headerClassName: `w-1/10 ${defaultHeaderClassName}`,
                 className: `w-1/10 ${defaultColumnClassName}`,
                 // eslint-disable-next-line
                 Cell: ({ original, pdf }) => (
@@ -152,8 +151,7 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
                 ),
                 id: 'deploymentCount',
                 accessor: 'deploymentCount',
-                sortField: clusterSortFields.DEPLOYMENTS,
-                sortable: false
+                sortField: clusterSortFields.DEPLOYMENT_COUNT
             },
             {
                 Header: `Policies`,
@@ -194,21 +192,23 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
             },
             {
                 Header: `Latest Violation`,
-                headerClassName: `w-1/10 ${defaultHeaderClassName}`,
+                headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
                 className: `w-1/10 ${defaultColumnClassName}`,
                 Cell: ({ original, pdf }) => {
                     const { latestViolation } = original;
                     return <DateTimeField date={latestViolation} asString={pdf} />;
                 },
                 accessor: 'latestViolation',
-                sortField: clusterSortFields.LATEST_VIOLATION
+                sortField: clusterSortFields.LATEST_VIOLATION,
+                sortable: false
             },
             {
                 Header: `Risk Priority`,
-                headerClassName: `w-1/10 ${defaultHeaderClassName}`,
+                headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
                 className: `w-1/10 ${defaultColumnClassName}`,
                 accessor: 'priority',
-                sortField: clusterSortFields.PRIORITY
+                sortField: clusterSortFields.PRIORITY,
+                sortable: false
             }
         ];
         return removeEntityContextColumns(tableColumns, workflowState);

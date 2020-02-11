@@ -1,11 +1,7 @@
 import React from 'react';
 import gql from 'graphql-tag';
 
-import {
-    defaultHeaderClassName,
-    nonSortableHeaderClassName,
-    defaultColumnClassName
-} from 'Components/Table';
+import { defaultHeaderClassName, defaultColumnClassName } from 'Components/Table';
 import TopCvssLabel from 'Components/TopCvssLabel';
 import WorkflowListPage from 'Containers/Workflow/WorkflowListPage';
 import entityTypes from 'constants/entityTypes';
@@ -22,13 +18,8 @@ import { componentSortFields } from 'constants/sortFields';
 import { getFilteredComponentColumns } from './ListComponents.utils';
 
 export const defaultComponentSort = [
-    // @TODO, uncomment the primary sort field for Components, after its available for backend pagination/sorting
-    // {
-    //     id: componentSortFields.PRIORITY,
-    //     desc: false
-    // },
     {
-        id: componentSortFields.COMPONENT,
+        id: componentSortFields.PRIORITY,
         desc: false
     }
 ];
@@ -114,7 +105,7 @@ export function getComponentTableColumns(workflowState) {
         {
             Header: `Images`,
             entityType: entityTypes.IMAGE,
-            headerClassName: `w-1/8 ${nonSortableHeaderClassName}`,
+            headerClassName: `w-1/8 ${defaultHeaderClassName}`,
             className: `w-1/8 ${defaultColumnClassName}`,
             accessor: 'imageCount',
             Cell: ({ original, pdf }) => (
@@ -125,13 +116,12 @@ export function getComponentTableColumns(workflowState) {
                     selectedRowId={original.id}
                 />
             ),
-            sortField: componentSortFields.IMAGE_COUNT,
-            sortable: false
+            sortField: componentSortFields.IMAGE_COUNT
         },
         {
             Header: `Deployments`,
             entityType: entityTypes.DEPLOYMENT,
-            headerClassName: `w-1/8 ${nonSortableHeaderClassName}`,
+            headerClassName: `w-1/8 ${defaultHeaderClassName}`,
             className: `w-1/8 ${defaultColumnClassName}`,
             accessor: 'deploymentCount',
             Cell: ({ original, pdf }) => (
@@ -142,8 +132,7 @@ export function getComponentTableColumns(workflowState) {
                     selectedRowId={original.id}
                 />
             ),
-            sortField: componentSortFields.DEPLOYMENT_COUNT,
-            sortable: false
+            sortField: componentSortFields.DEPLOYMENT_COUNT
         },
         {
             Header: `Risk Priority`,

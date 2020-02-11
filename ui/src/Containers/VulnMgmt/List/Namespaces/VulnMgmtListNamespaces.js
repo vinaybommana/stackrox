@@ -95,7 +95,7 @@ export function getNamespaceTableColumns(workflowState) {
         {
             Header: `Deployments`,
             entityType: entityTypes.DEPLOYMENT,
-            headerClassName: `w-1/8 ${defaultHeaderClassName}`,
+            headerClassName: `w-1/8 ${nonSortableHeaderClassName}`,
             className: `w-1/8 ${defaultColumnClassName}`,
             Cell: ({ original, pdf }) => (
                 <TableCountLink
@@ -106,12 +106,13 @@ export function getNamespaceTableColumns(workflowState) {
                 />
             ),
             accessor: 'deploymentCount',
-            sortField: namespaceSortFields.DEPLOYMENT_COUNT
+            sortField: namespaceSortFields.DEPLOYMENT_COUNT,
+            sortable: false
         },
         {
             Header: `Images`,
             entityType: entityTypes.IMAGE,
-            headerClassName: `w-1/8 ${defaultHeaderClassName}`,
+            headerClassName: `w-1/8 ${nonSortableHeaderClassName}`,
             className: `w-1/8 ${defaultColumnClassName}`,
             Cell: ({ original, pdf }) => (
                 <TableCountLink
@@ -122,7 +123,8 @@ export function getNamespaceTableColumns(workflowState) {
                 />
             ),
             accessor: 'imageCount',
-            sortField: namespaceSortFields.IMAGES
+            sortField: namespaceSortFields.IMAGES,
+            sortable: false
         },
         {
             Header: `Policies`,
@@ -143,7 +145,7 @@ export function getNamespaceTableColumns(workflowState) {
         },
         {
             Header: `Policy Status`,
-            headerClassName: `w-1/10 ${defaultHeaderClassName}`,
+            headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
             // eslint-disable-next-line
             Cell: ({ original, pdf }) => {
@@ -156,7 +158,8 @@ export function getNamespaceTableColumns(workflowState) {
             },
             id: 'policyStatus',
             accessor: 'policyStatus.status',
-            sortField: namespaceSortFields.POLICY_STATUS
+            sortField: namespaceSortFields.POLICY_STATUS,
+            sortable: false
         },
         {
             Header: `Latest Violation`,
@@ -172,10 +175,11 @@ export function getNamespaceTableColumns(workflowState) {
         },
         {
             Header: `Risk Priority`,
-            headerClassName: `w-1/10 ${defaultHeaderClassName}`,
+            headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
             accessor: 'metadata.priority',
-            sortField: namespaceSortFields.PRIORITY
+            sortField: namespaceSortFields.PRIORITY,
+            sortable: false
         }
     ];
     return removeEntityContextColumns(tableColumns, workflowState);

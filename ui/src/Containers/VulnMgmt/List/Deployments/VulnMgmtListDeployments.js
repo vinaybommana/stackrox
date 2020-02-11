@@ -158,7 +158,7 @@ export function getDeploymentTableColumns(workflowState) {
         },
         {
             Header: `Images`,
-            headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
+            headerClassName: `w-1/10 ${defaultHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
             Cell: ({ original, pdf }) => (
                 <TableCountLink
@@ -169,8 +169,7 @@ export function getDeploymentTableColumns(workflowState) {
                 />
             ),
             accessor: 'imageCount',
-            sortField: deploymentSortFields.IMAGES,
-            sortable: false
+            sortField: deploymentSortFields.IMAGE_COUNT
         },
         {
             Header: `Risk Priority`,
