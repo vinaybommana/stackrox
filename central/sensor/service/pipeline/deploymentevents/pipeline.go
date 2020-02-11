@@ -156,17 +156,10 @@ func hasNewImageReferences(oldDeployment, newDeployment *storage.Deployment) boo
 }
 
 func (s *pipelineImpl) rewriteInstancesAndPersist(ctx context.Context, oldDeployment *storage.Deployment, newDeployment *storage.Deployment) error {
-	// Using the index of Container is save as this is ensured by the hash
-	for i, c := range newDeployment.GetContainers() {
-		oldDeployment.Containers[i].Instances = c.Instances
-	}
-
-	// Check if the images seen are different, if so, then upsert into store and index
-	// otherwise, just upsert
 	if hasNewImageReferences(oldDeployment, newDeployment) {
-		return s.deployments.UpsertDeployment(ctx, oldDeployment)
+		return s.deployments.UpsertDeployment(ctx, newDeployment)
 	}
-	return s.deployments.UpsertDeploymentIntoStoreOnly(ctx, oldDeployment)
+	return s.deployments.UpsertDeploymentIntoStoreOnly(ctx, newDeployment)
 }
 
 // Run runs the pipeline template on the input and returns the output.
@@ -179,6 +172,12 @@ func (s *pipelineImpl) runGeneralPipeline(ctx context.Context, action central.Re
 	var err error
 	deployment.Hash, err = hashstructure.Hash(deployment, &hashstructure.HashOptions{})
 	if err != nil {
+		return err
+	}
+
+	// Fill in cluster information.
+	if err := s.clusterEnrichment.do(ctx, deployment); err != nil {
+		log.Errorf("Couldn't get cluster identity: %s", err)
 		return err
 	}
 
@@ -199,12 +198,6 @@ func (s *pipelineImpl) runGeneralPipeline(ctx context.Context, action central.Re
 			}
 		}
 		incrementNetworkGraphEpoch = !compareMap(oldDeployment.GetPodLabels(), deployment.GetPodLabels())
-	}
-
-	// Fill in cluster information.
-	if err := s.clusterEnrichment.do(ctx, deployment); err != nil {
-		log.Errorf("Couldn't get cluster identity: %s", err)
-		return err
 	}
 
 	// Add/Update/Remove the deployment from persistence depending on the deployment action.
