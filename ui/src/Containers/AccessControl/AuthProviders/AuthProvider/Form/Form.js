@@ -5,11 +5,12 @@ import { selectors } from 'reducers';
 import { createSelector, createStructuredSelector } from 'reselect';
 import { FieldArray, reduxForm } from 'redux-form';
 
+import Labeled from 'Components/Labeled';
+import ReduxSelectField from 'Components/forms/ReduxSelectField';
 import CollapsibleCard from 'Components/CollapsibleCard';
-import Field from './Field';
 import RuleGroups from './RuleGroups';
 import CreateRoleModal from './CreateRoleModal';
-import formDescriptor from './formDescriptor';
+import ConfigurationFormFields from './ConfigurationFormFields';
 
 class Form extends Component {
     static propTypes = {
@@ -55,8 +56,6 @@ class Form extends Component {
 
     render() {
         const { handleSubmit, initialValues, onSubmit, roles } = this.props;
-        const fields = formDescriptor[initialValues.type];
-        if (!fields) return null;
         return (
             <>
                 <form
@@ -70,9 +69,10 @@ class Form extends Component {
                         open={!initialValues.active}
                     >
                         <div className="w-full h-full px-4 py-3">
-                            {fields.map((field, index) => (
-                                <Field key={index} disabled={initialValues.active} {...field} />
-                            ))}
+                            <ConfigurationFormFields
+                                providerType={initialValues.type}
+                                disabled={initialValues.active}
+                            />
                         </div>
                     </CollapsibleCard>
                     <div className="mt-4">
@@ -83,12 +83,9 @@ class Form extends Component {
                         >
                             <div className="p-2">
                                 <div className="w-full p-2">
-                                    <Field
-                                        label="Minimum access role"
-                                        type="select"
-                                        jsonPath="defaultRole"
-                                        options={roles}
-                                    />
+                                    <Labeled label="Minimum access role">
+                                        <ReduxSelectField name="defaultRole" options={roles} />
+                                    </Labeled>
                                     <p className="pb-2">
                                         The minimum access role is granted to all users who sign in
                                         with this authentication provider.

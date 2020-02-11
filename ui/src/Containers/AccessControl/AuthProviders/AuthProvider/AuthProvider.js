@@ -1,13 +1,11 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import set from 'lodash/set';
 
 import NoResultsMessage from 'Components/NoResultsMessage';
 import Panel, { headerClassName } from 'Components/Panel';
 import Button from 'Containers/AccessControl/AuthProviders/AuthProvider/Button';
 import Form from 'Containers/AccessControl/AuthProviders/AuthProvider/Form/Form';
 import Details from 'Containers/AccessControl/AuthProviders/AuthProvider/Details';
-import formDescriptor from './Form/formDescriptor';
 
 class AuthProvider extends Component {
     static propTypes = {
@@ -32,14 +30,6 @@ class AuthProvider extends Component {
         const newInitialValues = { ...initialValues };
         newInitialValues.uiEndpoint = window.location.host;
         newInitialValues.enabled = true;
-        // set initial values for default values from formDiscriptor
-        if (formDescriptor[initialValues.type]) {
-            formDescriptor[initialValues.type]
-                .filter(field => field.default)
-                .forEach(field => {
-                    set(newInitialValues, field.jsonPath, field.default);
-                });
-        }
         return newInitialValues;
     };
 
