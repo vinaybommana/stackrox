@@ -18,10 +18,6 @@ func build(q *v1.Query, specs []SearcherSpec) (*searchRequestSpec, error) {
 	if len(specs) == 1 {
 		return buildSingleSpec(q, specs[0])
 	}
-	// if the query is empty, use the default spec.
-	if q.GetQuery() == nil {
-		return buildDefaultSpec(specs)
-	}
 	// Otherwise, we need to walk the tree and separate which query parts refer to which spec.
 	return buildMultiSpec(q, specs)
 }
@@ -62,6 +58,10 @@ func buildMultiSpec(q *v1.Query, specs []SearcherSpec) (*searchRequestSpec, erro
 type treeBuilder []SearcherSpec
 
 func (tb treeBuilder) walkSpecsRec(q *v1.Query) (*searchRequestSpec, error) {
+	if q == nil || q.GetQuery() == nil {
+		return buildDefaultSpec(tb)
+	}
+
 	if _, isDisjunction := q.GetQuery().(*v1.Query_Disjunction); isDisjunction {
 		return tb.or(q.GetDisjunction())
 	} else if _, isConjunction := q.GetQuery().(*v1.Query_Conjunction); isConjunction {
