@@ -99,6 +99,29 @@ func (s *idTransformationTestSuite) TestTransformBackwardBatch() {
 	s.Equal([]string{string(id1)}, transformed)
 }
 
+func (s *idTransformationTestSuite) TestTransformForwardMultiplePrefixPaths() {
+	s.mockRGraph.EXPECT().GetRefsFrom(prefixedID1).Return(fromID1)
+	s.mockRGraph.EXPECT().GetRefsFrom(prefixedID2).Return(fromID2)
+	s.mockRGraph.EXPECT().GetRefsFrom(prefixedID3).Return(fromID3)
+
+	s.mockRGraph.EXPECT().GetRefsFrom(prefixedID1).Return(fromID1)
+
+	transformer := NewForwardGraphTransformer(fakeGraphProvider{mg: s.mockRGraph}, [][]byte{prefix1, prefix2, prefix3}, [][]byte{prefix1, prefix2})
+	transformed, _ := transformer.Transform(string(id1))
+	s.Equal([]string{string(id2), string(id3), string(id4), string(id5)}, transformed)
+}
+
+func (s *idTransformationTestSuite) TestTransformBackwardMultiplePrefixPaths() {
+	s.mockRGraph.EXPECT().GetRefsTo(prefixedID4).Return(toID4)
+	s.mockRGraph.EXPECT().GetRefsTo(prefixedID2).Return(toID2)
+
+	s.mockRGraph.EXPECT().GetRefsTo(prefixedID4).Return(toID4)
+
+	transformer := NewBackwardGraphTransformer(fakeGraphProvider{mg: s.mockRGraph}, [][]byte{prefix3, prefix2, prefix1}, [][]byte{prefix3, prefix2})
+	transformed, _ := transformer.Transform(string(id4))
+	s.Equal([]string{string(id1), string(id2)}, transformed)
+}
+
 type fakeGraphProvider struct {
 	mg *mocks.MockRGraph
 }

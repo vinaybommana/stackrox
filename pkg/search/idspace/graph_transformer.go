@@ -1,9 +1,12 @@
 package idspace
 
 import (
+	"strings"
+
 	"github.com/stackrox/rox/pkg/badgerhelper"
 	"github.com/stackrox/rox/pkg/dackbox/graph"
 	"github.com/stackrox/rox/pkg/dackbox/sortedkeys"
+	"github.com/stackrox/rox/pkg/set"
 )
 
 // GraphProvider is an interface that allows us to interact with an RGraph for the duration of a function's execution.
@@ -12,34 +15,34 @@ type GraphProvider interface {
 }
 
 // NewForwardGraphTransformer provides a transformer that traverses forward references from one prefix to another.
-func NewForwardGraphTransformer(graphProvider GraphProvider, prefixPath [][]byte) Transformer {
+func NewForwardGraphTransformer(graphProvider GraphProvider, prefixPaths ...[][]byte) Transformer {
 	return &graphTransformerImpl{
 		forward:       true,
 		graphProvider: graphProvider,
-		prefixPath:    prefixPath,
+		prefixPaths:   prefixPaths,
 	}
 }
 
 // NewBackwardGraphTransformer provides a transformer that traverses backward references from one prefix to another.
-func NewBackwardGraphTransformer(graphProvider GraphProvider, prefixPath [][]byte) Transformer {
+func NewBackwardGraphTransformer(graphProvider GraphProvider, prefixPaths ...[][]byte) Transformer {
 	return &graphTransformerImpl{
 		forward:       false,
 		graphProvider: graphProvider,
-		prefixPath:    prefixPath,
+		prefixPaths:   prefixPaths,
 	}
 }
 
 type graphTransformerImpl struct {
 	forward       bool
 	graphProvider GraphProvider
-	prefixPath    [][]byte
+	prefixPaths   [][][]byte
 }
 
 func (gt *graphTransformerImpl) Transform(from ...string) ([]string, error) {
 	// prefix the initial set of keys, since they will be prefixed in the graph.
 	currentIDs := make([][]byte, 0, len(from))
 	for _, key := range from {
-		currentIDs = append(currentIDs, badgerhelper.GetBucketKey(gt.prefixPath[0], []byte(key)))
+		currentIDs = append(currentIDs, badgerhelper.GetBucketKey(gt.prefixPaths[0][0], []byte(key)))
 	}
 
 	idGraph := gt.graphProvider.NewGraphView()
@@ -51,7 +54,12 @@ func (gt *graphTransformerImpl) Transform(from ...string) ([]string, error) {
 	} else {
 		step = idGraph.GetRefsTo
 	}
-	return transform(gt.prefixPath[1:], step, currentIDs), nil
+
+	var ret []string
+	for _, prefixPath := range gt.prefixPaths {
+		ret = append(ret, transform(prefixPath[1:], step, currentIDs)...)
+	}
+	return set.NewStringSet(ret...).AsSortedSlice(func(i, j string) bool { return strings.Compare(i, j) < 0 }), nil
 }
 
 func transform(prefixPath [][]byte, step func([]byte) [][]byte, currentIDs [][]byte) []string {
