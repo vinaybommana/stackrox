@@ -83,6 +83,7 @@ const Menu = ({
                 type="button"
                 onClick={onClickHandler()}
                 disabled={disabled}
+                data-testid="menu-button"
             >
                 {buttonContent}
             </button>

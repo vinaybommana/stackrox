@@ -1,9 +1,18 @@
 import store from 'store';
-import axios from './instance';
+
+import { isBackendFeatureFlagEnabled, knownBackendFlags } from 'utils/featureFlags';
+import axios from 'services/instance';
+import { fetchFeatureFlags } from 'services/FeatureFlagsService';
+import AccessTokenManager from './AccessTokenManager';
+import addTokenRefreshInterceptors, {
+    doNotStallRequestConfig
+} from './addTokenRefreshInterceptors';
 
 const authProvidersUrl = '/v1/authProviders';
 const authLoginProvidersUrl = '/v1/login/authproviders';
-const accessTokenKey = 'access_token';
+const tokenRefreshUrl = '/sso/session/tokenrefresh';
+const logoutUrl = '/sso/session/logout';
+
 const requestedLocationKey = 'requested_location';
 
 /**
@@ -80,13 +89,58 @@ export function deleteAuthProviders(authProviderIds) {
     return Promise.all(authProviderIds.map(id => deleteAuthProvider(id)));
 }
 
+/*
+ * Access Token Operations
+ */
+
+// TODO-ivan: kill this flag fetching code as soon as ROX_REFRESH_TOKENS is enabled by default
+let refreshTokensFlagCache = null;
+function isRefreshTokensFlagEnabled() {
+    if (refreshTokensFlagCache != null) return refreshTokensFlagCache;
+    return fetchFeatureFlags()
+        .then(({ response }) => {
+            const { featureFlags } = response;
+            refreshTokensFlagCache = isBackendFeatureFlagEnabled(
+                featureFlags,
+                knownBackendFlags.ROX_REFRESH_TOKENS,
+                null
+            );
+            return refreshTokensFlagCache;
+        })
+        .catch(() => false); // shouldn't happen theoretically, just don't cache
+}
+
+async function refreshAccessToken() {
+    const ROX_REFRESH_TOKENS = await isRefreshTokensFlagEnabled();
+    if (!ROX_REFRESH_TOKENS) throw new Error('Refresh tokens are not supported');
+
+    return axios
+        .post(tokenRefreshUrl, null, doNotStallRequestConfig)
+        .then(({ data: { token, expiry } }) => ({ token, info: { expiry } }));
+}
+
+const accessTokenManager = new AccessTokenManager({ refreshToken: refreshAccessToken });
+
+export const getAccessToken = () => accessTokenManager.getToken();
+export const storeAccessToken = token => accessTokenManager.setToken(token);
+
+/**
+ * Calls the server to check auth status, rejects with error if auth status isn't valid.
+ * @returns {Promise<void>}
+ */
+export function checkAuthStatus() {
+    return axios.get('/v1/auth/status').then(({ data }) => {
+        // while it's a side effect, it's the best place to do it
+        accessTokenManager.updateTokenInfo({ expiry: data.expires });
+    });
+}
+
 /**
  * Exchanges an external auth token for a Rox auth token.
  *
  * @param token the external auth token
  * @param type the type of authentication provider
  * @param state the state parameter
- * @param extra additional parameters
  * @returns {Promise} promise which is fulfilled when the request is complete
  */
 export function exchangeAuthToken(token, type, state) {
@@ -99,38 +153,19 @@ export function exchangeAuthToken(token, type, state) {
 }
 
 /**
- * Calls the server to check auth status, rejects with error if auth status isn't valid.
- *
- * @returns {Promise<Object, Error>}
+ * Terminates user's session with the backend and clears access token.
  */
-export function fetchAuthStatus() {
-    return axios.get('/v1/auth/status');
+export async function logout() {
+    const ROX_REFRESH_TOKENS = await isRefreshTokensFlagEnabled();
+    if (ROX_REFRESH_TOKENS) {
+        try {
+            await axios.post(logoutUrl);
+        } catch (e) {
+            // regardless of the result proceed with token deletion
+        }
+    }
+    accessTokenManager.clearToken();
 }
-
-export const getAccessToken = () => store.get(accessTokenKey) || null;
-export const storeAccessToken = token => store.set(accessTokenKey, token);
-export const clearAccessToken = () => store.remove(accessTokenKey);
-export const isTokenPresent = () => !!getAccessToken();
-export const parseAccessToken = token => {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-        atob(base64)
-            .split('')
-            .map(function(c) {
-                return `%${`00${c.charCodeAt(0).toString(16)}`.slice(-2)}`;
-            })
-            .join('')
-    );
-    return JSON.parse(jsonPayload);
-};
-export const getUserName = () => {
-    const tokenInfo = parseAccessToken(getAccessToken());
-    // in cypress tests we don't have an external_user field, but we do have a name field
-    const { name, external_user: externalUser } = tokenInfo;
-    if (name) return name;
-    return externalUser.full_name || 'Admin';
-};
 
 export const storeRequestedLocation = location => store.set(requestedLocationKey, location);
 export const getAndClearRequestedLocation = () => {
@@ -157,7 +192,7 @@ function setAuthHeader(config, token) {
     return newConfig;
 }
 
-function parseAuthTokenFromHeaders(headers) {
+function extractAccessTokenFromRequestConfig({ headers }) {
     if (
         !headers ||
         typeof headers.Authorization !== 'string' ||
@@ -168,39 +203,32 @@ function parseAuthTokenFromHeaders(headers) {
     return headers.Authorization.substring(BEARER_TOKEN_PREFIX.length);
 }
 
-function addRequestInterceptor() {
+const parseAccessToken = token => {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+        atob(base64)
+            .split('')
+            .map(function(c) {
+                return `%${`00${c.charCodeAt(0).toString(16)}`.slice(-2)}`;
+            })
+            .join('')
+    );
+    return JSON.parse(jsonPayload);
+};
+
+export const getUserName = () => {
+    const tokenInfo = parseAccessToken(getAccessToken());
+    // in cypress tests we don't have an external_user field, but we do have a name field
+    const { name, external_user: externalUser } = tokenInfo;
+    if (name) return name;
+    return externalUser.full_name || 'Admin';
+};
+
+function addAuthHeaderRequestInterceptor() {
     axios.interceptors.request.use(
         config => setAuthHeader(config, getAccessToken()),
         error => Promise.reject(error)
-    );
-}
-
-function addResponseInterceptor(authHttpErrorHandler) {
-    axios.interceptors.response.use(
-        response => response,
-        error => {
-            if (error.response) {
-                const {
-                    response: { status },
-                    config
-                } = error;
-                if (status && (status === 401 || status === 403)) {
-                    const requestToken = parseAuthTokenFromHeaders(config.headers);
-                    const currentToken = getAccessToken();
-                    if (currentToken !== requestToken) {
-                        // backend auth was enabled, but the request was made with old / empty token (e.g. multiple browser tabs open)
-                        // in this case retry the request with a new token instead of failing
-                        return axios.request(setAuthHeader(config, currentToken));
-                    }
-                    // we used the current / latest token and it failed
-                    const authError = new AuthHttpError('Authentication Error', status, error);
-                    if (authError.isInvalidAuth()) clearAccessToken(); // clear token since it's not valid
-                    authHttpErrorHandler(authError);
-                }
-            }
-
-            return Promise.reject(error);
-        }
     );
 }
 
@@ -213,7 +241,24 @@ let interceptorsAdded = false;
  */
 export function addAuthInterceptors(authHttpErrorHandler) {
     if (interceptorsAdded) return;
-    addRequestInterceptor();
-    addResponseInterceptor(authHttpErrorHandler);
+
+    addAuthHeaderRequestInterceptor();
+    addTokenRefreshInterceptors(axios, accessTokenManager, {
+        extractAccessToken: extractAccessTokenFromRequestConfig,
+        handleAuthError: error => {
+            const authError = new AuthHttpError(
+                'Authentication Error',
+                error.response.status,
+                error
+            );
+
+            if (authError.isInvalidAuth()) {
+                // clear token since it's not valid
+                accessTokenManager.clearToken();
+            }
+            authHttpErrorHandler(authError);
+        }
+    });
+
     interceptorsAdded = true;
 }
