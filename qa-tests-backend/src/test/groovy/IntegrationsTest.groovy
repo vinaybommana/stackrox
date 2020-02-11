@@ -114,7 +114,7 @@ ObOdSTZUQI4TZOXOpJCpa97CnqroNi7RrT05JOfoe/DPmhoJmF4AUrnd/YUb8pgF
             new Deployment()
                 .setNamespace(Constants.ORCHESTRATOR_NAMESPACE)
                 .setName("splunk")
-                .setImage("stackrox/splunk-test-repo:latest")
+                .setImage("stackrox/splunk-test-repo:6.6.0")
                 .addPort (8000)
                 .addPort (8088)
                 .addPort(8089)
