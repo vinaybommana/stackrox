@@ -58,6 +58,8 @@ var (
 	ImageVolumes                 = newFieldLabel("Image Volumes")
 	Fixable                      = newFieldLabel("Fixable")
 	FixedBy                      = newFieldLabel("Fixed By")
+	ClusterCVEFixedBy            = newFieldLabel("Cluster CVE Fixed By")
+	ClusterCVEFixable            = newFieldLabel("Cluster CVE Fixable")
 	FixableCVECount              = newFieldLabel("Fixable CVE Count")
 	LastUpdatedTime              = newFieldLabel("Last Updated")
 
