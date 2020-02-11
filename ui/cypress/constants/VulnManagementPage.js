@@ -20,6 +20,9 @@ export const url = {
     }
 };
 
+export const vmHomePageSelectors = {
+    vmDBPageTileLink: '[data-test-id="Vulnerability Management"]'
+};
 export const listSelectors = {
     riskScoreCol: '.rt-table > .rt-tbody > div > div > div:nth-child(10)',
     componentsRiskScoreCol: '.rt-table > .rt-tbody >div > div > div:nth-child(7)',
@@ -118,5 +121,6 @@ export const selectors = {
     ...sidePanelListEntityPageSelectors,
     ...policySidePanelSelectors,
     ...tablePaginationSelectors,
-    ...sidePanelSelectors
+    ...sidePanelSelectors,
+    ...vmHomePageSelectors
 };
