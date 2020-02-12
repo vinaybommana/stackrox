@@ -41,7 +41,9 @@ the login page, and log in with username "admin" and the password found in the
     - If you are using Helm v3, run helm install central ./central
   - Deploy Scanner
     - Run scanner/scripts/setup.sh
-    - If you want to run the StackRox Scanner, run helm install --name scanner ./scanner
+    - If you want to run the StackRox Scanner
+		- If you are using Helm v2, run helm install --name scanner ./scanner
+		- If you are using Helm v3, run helm install scanner ./scanner
 `
 
 	kubectlInstructionTemplate = `{{if not .K8sConfig.Monitoring.Type.None}}

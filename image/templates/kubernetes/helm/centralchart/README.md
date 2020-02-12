@@ -6,11 +6,11 @@ This Helm chart is for StackRox Central
 Run the following command to render this chart:
 - for Helm v2
 ```
-helm install --name central ./central
+helm install --name central .
 ```
 - for Helm v3
 ```
-helm install central ./central
+helm install central .
 ```
 
 {{- end}}
