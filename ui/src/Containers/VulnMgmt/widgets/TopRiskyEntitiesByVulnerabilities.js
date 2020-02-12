@@ -26,7 +26,7 @@ import { getSeverityByCvss } from 'utils/vulnerabilityUtils';
 import { entitySortFieldsMap, cveSortFields } from 'constants/sortFields';
 import { WIDGET_PAGINATION_START_OFFSET } from 'constants/workflowPages.constants';
 
-const ENTITY_COUNT = 50;
+const ENTITY_COUNT = 25;
 const VULN_COUNT = 100;
 
 const TopRiskyEntitiesByVulnerabilities = ({
@@ -51,11 +51,10 @@ const TopRiskyEntitiesByVulnerabilities = ({
     const viewAllUrl = workflowState
         .pushList(selectedEntityType)
         .setSort([
-            // @TODO to uncomment when Priority sort is available across images/deployments/namespaces/clusters
-            // {
-            //     id: entitySortFieldsMap[selectedEntityType].PRIORITY,
-            //     desc: false
-            // },
+            {
+                id: entitySortFieldsMap[selectedEntityType].PRIORITY,
+                desc: false
+            },
             {
                 id: entitySortFieldsMap[selectedEntityType].NAME,
                 desc: false
