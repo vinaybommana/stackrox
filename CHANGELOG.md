@@ -6,6 +6,8 @@ All notable changes to this project that require documentation updates will be d
 - `roxctl central cert` can be used to download Central's TLS certificate, which is then passed to `roxctl --ca`.
 - The Scanner deployment has been split into two separate deployments: Scanner and Scanner DB. The Scanner deployment is now
   controlled by a Horizontal Pod Autoscaler (HPA) that will automatically scale up the scanner as the number of requests increase.
+- Added a feature to report telemetry about a StackRox installation.  This will default to off in existing installations and can be enabled through the System Configuration page.
+- Added a feature to download a diagnostic bundle.  This can be accessed through the System Configuration page.
 
 ### Changed
 - UseStartTLS field in the Email notifier configuration has been deprecated in lieu of an enum which supports several

@@ -14,11 +14,11 @@ var (
 
 	// Telemetry enables the telemetry features
 	// NB: When removing this feature flag, remove references in ui/src/utils/featureFlags.js
-	Telemetry = registerFeature("Enable support for telemetry", "ROX_TELEMETRY", false)
+	Telemetry = registerFeature("Enable support for telemetry", "ROX_TELEMETRY", true)
 
 	// DiagnosticBundle enables support for obtaining extended diagnostic information.
 	// NB: When removing this feature flag, remove references in ui/src/utils/featureFlags.js
-	DiagnosticBundle = registerFeature("Enable support for diagnostic bundle download", "ROX_DIAGNOSTIC_BUNDLE", false)
+	DiagnosticBundle = registerFeature("Enable support for diagnostic bundle download", "ROX_DIAGNOSTIC_BUNDLE", true)
 
 	// IQTAnalystNotesUI enables the IQT Analyst Notes UI.
 	// NB: When removing this feature flag, remove references in ui/src/utils/featureFlags.js
