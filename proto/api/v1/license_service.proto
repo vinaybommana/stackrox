@@ -86,7 +86,7 @@ service LicenseService {
 
     rpc GetActiveLicenseKey(Empty) returns (GetActiveLicenseKeyResponse) {
         option (google.api.http) = {
-            get: "/v1/licenses/getactive"
+            get: "/v1/licenses/activekey"
         };
     }
 }
