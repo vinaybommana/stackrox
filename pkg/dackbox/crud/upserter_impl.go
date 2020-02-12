@@ -26,7 +26,7 @@ func (uc *upserterImpl) UpsertIn(parentKey []byte, msg proto.Message, dackTxn *d
 	}
 
 	// If a parent key is set, add the generated key to the parent's child list.
-	if parentKey != nil {
+	if len(parentKey) != 0 {
 		if err := dackTxn.Graph().AddRefs(parentKey, key); err != nil {
 			return err
 		}

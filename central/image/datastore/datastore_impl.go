@@ -18,6 +18,7 @@ import (
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/debug"
 	"github.com/stackrox/rox/pkg/errorhelpers"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/images/enricher"
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/sac"
@@ -222,7 +223,9 @@ func (ds *datastoreImpl) UpsertImage(ctx context.Context, image *storage.Image) 
 	if err = ds.storage.Upsert(image, nil); err != nil {
 		return err
 	}
-
+	if features.Dackbox.Enabled() {
+		return nil
+	}
 	return ds.indexer.AddImage(image)
 }
 
@@ -252,10 +255,9 @@ func (ds *datastoreImpl) DeleteImages(ctx context.Context, ids ...string) error 
 			errorList.AddError(err)
 			continue
 		}
-		if err := ds.indexer.DeleteImage(id); err != nil {
-			errorList.AddError(err)
+		if !features.Dackbox.Enabled() {
+			errorList.AddError(ds.indexer.DeleteImage(id))
 		}
-
 		if err := ds.risks.RemoveRisk(deleteRiskCtx, id, storage.RiskSubjectType_IMAGE); err != nil {
 			return err
 		}
@@ -305,6 +307,10 @@ func merge(mergeTo *storage.Image, mergeWith *storage.Image) (updated bool) {
 }
 
 func (ds *datastoreImpl) buildIndex() error {
+	if features.Dackbox.Enabled() {
+		return nil
+	}
+
 	defer debug.FreeOSMemory()
 	log.Info("[STARTUP] Determining if image db/indexer reconciliation is needed")
 

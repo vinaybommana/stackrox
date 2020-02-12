@@ -31,7 +31,10 @@ var (
 	)
 
 	// Upserter upserts images.
-	Upserter = crud.NewUpserter(crud.WithKeyFunction(KeyFunc))
+	Upserter = crud.NewUpserter(
+		crud.WithKeyFunction(KeyFunc),
+		crud.AddToIndex(),
+	)
 
 	// ListUpserter upserts a list image.
 	ListUpserter = crud.NewUpserter(
@@ -39,7 +42,7 @@ var (
 	)
 
 	// Deleter deletes images and list images by id.
-	Deleter = crud.NewDeleter()
+	Deleter = crud.NewDeleter(crud.RemoveFromIndex())
 
 	// ListDeleter deletes a list image.
 	ListDeleter = crud.NewDeleter()

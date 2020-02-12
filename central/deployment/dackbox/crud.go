@@ -27,7 +27,10 @@ var (
 	)
 
 	// Upserter writes storage.Deployments.
-	Upserter = crud.NewUpserter(crud.WithKeyFunction(KeyFunc))
+	Upserter = crud.NewUpserter(
+		crud.WithKeyFunction(KeyFunc),
+		crud.AddToIndex(),
+	)
 
 	// ListReader reads ListDeployments from the DB.
 	ListReader = crud.NewReader(
@@ -40,7 +43,7 @@ var (
 	)
 
 	// Deleter deletes deployments from the store.
-	Deleter = crud.NewDeleter()
+	Deleter = crud.NewDeleter(crud.RemoveFromIndex())
 
 	// ListDeleter deletes list deployments from the store.
 	ListDeleter = crud.NewDeleter()

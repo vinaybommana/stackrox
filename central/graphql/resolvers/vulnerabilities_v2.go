@@ -142,6 +142,9 @@ func (resolver *cVEResolver) EnvImpact(ctx context.Context) (float64, error) {
 	if err != nil {
 		return 0, err
 	}
+	if allDepsCount == 0 {
+		return float64(0), nil
+	}
 	return float64(float64(withThisCVECount) / float64(allDepsCount)), nil
 }
 

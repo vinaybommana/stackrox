@@ -8,6 +8,7 @@ import (
 	"github.com/stackrox/rox/central/cve/store"
 	"github.com/stackrox/rox/central/metrics"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/batcher"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/dackbox"
 	ops "github.com/stackrox/rox/pkg/metrics"
@@ -122,23 +123,36 @@ func (b *storeImpl) Upsert(cves ...*storage.CVE) error {
 		keysToUpsert = append(keysToUpsert, vulnDackBox.KeyFunc(vuln))
 	}
 	lockedKeySet := concurrency.DiscreteKeySet(keysToUpsert...)
-	b.keyFence.Lock(lockedKeySet)
-	defer b.keyFence.Unlock(lockedKeySet)
 
-	for batch := 0; batch < len(cves); batch += batchSize {
-		dackTxn := b.dacky.NewTransaction()
-		defer dackTxn.Discard()
+	return b.keyFence.DoStatusWithLock(lockedKeySet, func() error {
+		batch := batcher.New(len(cves), batchSize)
+		for {
+			start, end, ok := batch.Next()
+			if !ok {
+				break
+			}
 
-		for idx := batch; idx < len(cves) && idx < batch+batchSize; idx++ {
-			err := vulnDackBox.Upserter.UpsertIn(nil, cves[idx], dackTxn)
-			if err != nil {
+			if err := b.upsertNoBatch(cves[start:end]...); err != nil {
 				return err
 			}
 		}
+		return nil
+	})
+}
 
-		if err := dackTxn.Commit(); err != nil {
+func (b *storeImpl) upsertNoBatch(cves ...*storage.CVE) error {
+	dackTxn := b.dacky.NewTransaction()
+	defer dackTxn.Discard()
+
+	for _, cve := range cves {
+		err := vulnDackBox.Upserter.UpsertIn(nil, cve, dackTxn)
+		if err != nil {
 			return err
 		}
+	}
+
+	if err := dackTxn.Commit(); err != nil {
+		return err
 	}
 	return nil
 }
@@ -151,23 +165,36 @@ func (b *storeImpl) Delete(ids ...string) error {
 		keysToUpsert = append(keysToUpsert, vulnDackBox.BucketHandler.GetKey(id))
 	}
 	lockedKeySet := concurrency.DiscreteKeySet(keysToUpsert...)
-	b.keyFence.Lock(lockedKeySet)
-	defer b.keyFence.Unlock(lockedKeySet)
 
-	for batch := 0; batch < len(ids); batch += batchSize {
-		dackTxn := b.dacky.NewTransaction()
-		defer dackTxn.Discard()
+	return b.keyFence.DoStatusWithLock(lockedKeySet, func() error {
+		batch := batcher.New(len(ids), batchSize)
+		for {
+			start, end, ok := batch.Next()
+			if !ok {
+				break
+			}
 
-		for idx := batch; idx < len(ids) && idx < batch+batchSize; idx++ {
-			err := vulnDackBox.Deleter.DeleteIn(vulnDackBox.BucketHandler.GetKey(ids[idx]), dackTxn)
-			if err != nil {
+			if err := b.deleteNoBatch(ids[start:end]...); err != nil {
 				return err
 			}
 		}
+		return nil
+	})
+}
 
-		if err := dackTxn.Commit(); err != nil {
+func (b *storeImpl) deleteNoBatch(ids ...string) error {
+	dackTxn := b.dacky.NewTransaction()
+	defer dackTxn.Discard()
+
+	for _, id := range ids {
+		err := vulnDackBox.Deleter.DeleteIn(vulnDackBox.BucketHandler.GetKey(id), dackTxn)
+		if err != nil {
 			return err
 		}
+	}
+
+	if err := dackTxn.Commit(); err != nil {
+		return err
 	}
 	return nil
 }

@@ -1,4 +1,4 @@
-package dakcbox
+package dackbox
 
 import (
 	"github.com/stackrox/rox/central/globaldb"
@@ -19,8 +19,9 @@ var (
 	GraphBucket = []byte("dackbox_graph")
 	// DirtyBucket specifies the prefix for the set of dirty keys (need re-indexing) to add to dackbox.
 	DirtyBucket = []byte("dackbox_dirty")
-	// ValidBucket specifies the prefix for storing validation information in dackbox.
-	ValidBucket = []byte("dackbox_valid")
+	// ReindexIfMissingBucket is a bucket for all of the child buckets that do not need reindexing.
+	ReindexIfMissingBucket = []byte("dackbox_reindex")
+	needsReindexValue      = []byte{0}
 
 	toIndex  queue.WaitableQueue
 	registry indexer.WrapperRegistry
@@ -65,19 +66,23 @@ func initializeDackBox() {
 
 		globaldb.RegisterBucket(GraphBucket, "Graph Keys")
 		globaldb.RegisterBucket(DirtyBucket, "Dirty Keys")
-		globaldb.RegisterBucket(ValidBucket, "Valid DackBox State")
+		globaldb.RegisterBucket(ReindexIfMissingBucket, "Bucket for reindexed state")
 
 		toIndex = queue.NewWaitableQueue(queue.NewQueue())
 		registry = indexer.NewWrapperRegistry()
 		globalKeyLock = concurrency.NewKeyFence()
 
 		var err error
-		duckBox, err = dackbox.NewDackBox(globaldb.GetGlobalBadgerDB(), toIndex, GraphBucket, DirtyBucket, ValidBucket)
+		duckBox, err = dackbox.NewDackBox(globaldb.GetGlobalBadgerDB(), toIndex, GraphBucket, DirtyBucket, ReindexIfMissingBucket)
 		if err != nil {
 			log.Panicf("Could not load stored indices: %v", err)
 		}
 
 		lazy = indexer.NewLazy(toIndex, registry, globalindex.GetGlobalIndex(), duckBox.AckIndexed)
 		lazy.Start()
+
+		if err := Init(duckBox, ReindexIfMissingBucket, DirtyBucket, needsReindexValue); err != nil {
+			log.Panicf("Could not initialize dackbox: %v", err)
+		}
 	})
 }

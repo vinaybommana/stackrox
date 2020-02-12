@@ -24,6 +24,7 @@ import (
 	"github.com/stackrox/rox/pkg/debug"
 	"github.com/stackrox/rox/pkg/errorhelpers"
 	"github.com/stackrox/rox/pkg/expiringcache"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/images/types"
 	"github.com/stackrox/rox/pkg/process/filter"
 	"github.com/stackrox/rox/pkg/sac"
@@ -256,7 +257,7 @@ func (ds *datastoreImpl) upsertDeployment(ctx context.Context, deployment *stora
 		if err := ds.deploymentStore.UpsertDeployment(deployment); err != nil {
 			return errors.Wrapf(err, "inserting deployment '%s' to store", deployment.GetId())
 		}
-		if indexingRequired {
+		if indexingRequired && !features.Dackbox.Enabled() {
 			if err := ds.deploymentIndexer.AddDeployment(deployment); err != nil {
 				return errors.Wrapf(err, "inserting deployment '%s' to index", deployment.GetId())
 			}
@@ -305,8 +306,10 @@ func (ds *datastoreImpl) RemoveDeployment(ctx context.Context, clusterID, id str
 			return err
 		}
 
-		if err := ds.deploymentIndexer.DeleteDeployment(id); err != nil {
-			return err
+		if !features.Dackbox.Enabled() {
+			if err := ds.deploymentIndexer.DeleteDeployment(id); err != nil {
+				return err
+			}
 		}
 		return nil
 	})
@@ -367,6 +370,10 @@ func (ds *datastoreImpl) GetImagesForDeployment(ctx context.Context, deployment 
 }
 
 func (ds *datastoreImpl) buildIndex() error {
+	if features.Dackbox.Enabled() {
+		return nil
+	}
+
 	defer debug.FreeOSMemory()
 	log.Info("[STARTUP] Determining if deployment db/indexer reconciliation is needed")
 
