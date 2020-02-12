@@ -151,7 +151,8 @@ describe('Entities single views', () => {
             });
     });
 
-    it('should have consistent policy count number from namespace list to policy sublist for a specific namespace', () => {
+    // test skipped because we are not currently showing the Policy (count) column, until and if performance can be improved
+    it.skip('should have consistent policy count number from namespace list to policy sublist for a specific namespace', () => {
         cy.visit(url.list.namespaces);
 
         cy.get(selectors.policyCountLink)
