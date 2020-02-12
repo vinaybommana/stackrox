@@ -2745,6 +2745,12 @@ jobs:
               docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io
               ./release/scripts/vuln_scan.sh
 
+        - run:
+            name: Check for fixable vulns
+            command: |
+              export QUAY_BEARER_TOKEN=${QUAY_BEARER_TOKEN}
+              ./release/scripts/vuln_check.sh
+
 
   retrigger-master-workflow:
     <<: *defaults
