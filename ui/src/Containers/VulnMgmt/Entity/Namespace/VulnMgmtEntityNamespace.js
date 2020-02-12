@@ -72,11 +72,12 @@ const VulnMgmtNamespace = ({ entityId, entityListType, search, sort, page, entit
         ${fragment}
     `;
     }
+    const newEntityContext = { ...entityContext, [entityTypes.NAMESPACE]: entityId };
 
     const queryOptions = {
         variables: {
             id: entityId,
-            query: tryUpdateQueryWithVulMgmtPolicyClause(entityListType, search, entityContext),
+            query: tryUpdateQueryWithVulMgmtPolicyClause(entityListType, search, newEntityContext),
             policyQuery: queryService.objectToWhereClause({ Category: 'Vulnerability Management' })
         }
     };

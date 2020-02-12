@@ -214,4 +214,40 @@ describe('Entities single views', () => {
                     });
             });
     });
+
+    it('should filter deployment count in failing policies section in namespace findings by namespace', () => {
+        cy.visit(url.list.namespaces);
+
+        cy.get(selectors.deploymentCountLink)
+            .eq(0)
+            .as('firstDeploymentCountLink');
+
+        // in side panel
+        cy.get('@firstDeploymentCountLink')
+            .invoke('text')
+            .then(listDeploymentCountText => {
+                cy.get('@firstDeploymentCountLink').click();
+                cy.wait(1000);
+
+                cy.get(selectors.parentEntityInfoHeader).click();
+                cy.wait(1000);
+                cy.get(selectors.deploymentCountText)
+                    .eq(0)
+                    .invoke('text')
+                    .then(sidePanelDeploymentCountText => {
+                        expect(listDeploymentCountText).to.equal(sidePanelDeploymentCountText);
+
+                        // in entity page
+                        cy.get(selectors.sidePanelExpandButton).click();
+                        cy.get(selectors.deploymentCountText)
+                            .eq(0)
+                            .invoke('text')
+                            .then(entityDeploymentCountText => {
+                                expect(sidePanelDeploymentCountText).to.equal(
+                                    entityDeploymentCountText
+                                );
+                            });
+                    });
+            });
+    });
 });

@@ -13,7 +13,7 @@ const TableCountLink = ({ selectedRowId, entityType, textOnly, count, entityType
     if (count === 0) return `No ${pluralize(type)}`;
 
     const text = `${count} ${pluralize(type, count)}`;
-    if (textOnly) return text;
+    if (textOnly) return <span data-testid={`${type}CountText`}>{text}</span>;
 
     const url = workflowState
         .pushListItem(selectedRowId)

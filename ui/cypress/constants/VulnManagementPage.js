@@ -52,7 +52,8 @@ export const sidePanelListEntityPageSelectors = {
     getSidePanelTabHeader: title => {
         return `[data-test-id="widget-header"] > .w-full:contains('${title}')`;
     },
-    emptyFindingsSection: '[data-testid="results-message"]'
+    emptyFindingsSection: '[data-testid="results-message"]',
+    deploymentCountText: '.rt-td [data-testid="deploymentCountText"]'
 };
 
 export const dashboardSelectors = {
