@@ -153,25 +153,28 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
                 accessor: 'deploymentCount',
                 sortField: clusterSortFields.DEPLOYMENT_COUNT
             },
-            {
-                Header: `Policies`,
-                entityType: entityTypes.POLICY,
-                headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
-                className: `w-1/10 ${defaultColumnClassName}`,
-                // eslint-disable-next-line
-                Cell: ({ original, pdf }) => (
-                    <TableCountLink
-                        entityType={entityTypes.POLICY}
-                        count={original.policyCount}
-                        textOnly={pdf}
-                        selectedRowId={original.id}
-                    />
-                ),
-                id: 'policyCount',
-                accessor: 'policyCount',
-                sortField: clusterSortFields.POLICY_COUNT,
-                sortable: false
-            },
+            // @TODD, restore the Policy Counts column once its performance is improved,
+            //   or remove the comment if we determine that it cannot be made performant
+            //   (see https://stack-rox.atlassian.net/browse/ROX-4080)
+            // {
+            //     Header: `Policies`,
+            //     entityType: entityTypes.POLICY,
+            //     headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
+            //     className: `w-1/10 ${defaultColumnClassName}`,
+            //     // eslint-disable-next-line
+            //     Cell: ({ original, pdf }) => (
+            //         <TableCountLink
+            //             entityType={entityTypes.POLICY}
+            //             count={original.policyCount}
+            //             textOnly={pdf}
+            //             selectedRowId={original.id}
+            //         />
+            //     ),
+            //     id: 'policyCount',
+            //     accessor: 'policyCount',
+            //     sortField: clusterSortFields.POLICY_COUNT,
+            //     sortable: false
+            // },
             {
                 Header: `Policy Status`,
                 headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,

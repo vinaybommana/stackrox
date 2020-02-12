@@ -157,7 +157,7 @@ export function getPolicyTableColumns(workflowState) {
             sortable: false // not performant as of 2020-01-28
         },
         {
-            Header: `Lifecyle`,
+            Header: `Lifecycle`,
             headerClassName: `w-1/10 ${defaultHeaderClassName}`,
             className: `w-1/10 ${defaultColumnClassName}`,
             Cell: ({ original }) => {

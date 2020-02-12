@@ -226,7 +226,7 @@ describe.skip('Entities list Page', () => {
             'K8S Version',
             'Namespaces',
             'Deployments',
-            'Policies',
+            // 'Policies', //  see https://stack-rox.atlassian.net/browse/ROX-4080
             'Policy Status',
             'Latest Violation',
             'Risk Priority'
@@ -254,7 +254,7 @@ describe.skip('Entities list Page', () => {
             'Images',
             'Namespace',
             'Deployments',
-            'Policies',
+            // 'Policies', //  see https://stack-rox.atlassian.net/browse/ROX-4080
             'Policy Status',
             'Latest Violation',
             'Risk Priority'
@@ -284,7 +284,7 @@ describe.skip('Entities list Page', () => {
             'Images',
             'Namespace',
             'Deployment',
-            'Policies',
+            // 'Policies', // see https://stack-rox.atlassian.net/browse/ROX-4080
             'Policy Status',
             'Latest Violation',
             'Risk Priority'

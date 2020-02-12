@@ -34,7 +34,7 @@ export const CLUSTER_LIST_FRAGMENT = gql`
         # createdAt
         namespaceCount
         deploymentCount
-        policyCount(query: $policyQuery)
+        # policyCount(query: $policyQuery) # see https://stack-rox.atlassian.net/browse/ROX-4080
         policyStatus(query: $policyQuery) {
             status
         }
@@ -99,8 +99,8 @@ export const DEPLOYMENT_LIST_FRAGMENT = gql`
             }
             time
         }
-        policyCount(query: $policyQuery)
-        failingPolicyCount(query: $policyQuery)
+        # policyCount(query: $policyQuery) # see https://stack-rox.atlassian.net/browse/ROX-4080
+        # failingPolicyCount(query: $policyQuery) # see https://stack-rox.atlassian.net/browse/ROX-4080
         policyStatus(query: $policyQuery)
         clusterName
         clusterId
@@ -235,7 +235,7 @@ export const NAMESPACE_LIST_FRAGMENT = gql`
         }
         deploymentCount
         imageCount(query: $query)
-        policyCount(query: $policyQuery)
+        # policyCount(query: $policyQuery) # see https://stack-rox.atlassian.net/browse/ROX-4080
         policyStatus(query: $policyQuery) {
             status
         }

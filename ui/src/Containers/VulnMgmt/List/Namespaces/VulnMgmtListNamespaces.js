@@ -126,23 +126,26 @@ export function getNamespaceTableColumns(workflowState) {
             sortField: namespaceSortFields.IMAGES,
             sortable: false
         },
-        {
-            Header: `Policies`,
-            entityType: entityTypes.POLICY,
-            headerClassName: `w-1/8 ${nonSortableHeaderClassName}`,
-            className: `w-1/8 ${defaultColumnClassName}`,
-            Cell: ({ original, pdf }) => (
-                <TableCountLink
-                    entityType={entityTypes.POLICY}
-                    count={original.policyCount}
-                    textOnly={pdf}
-                    selectedRowId={original.metadata.id}
-                />
-            ),
-            accessor: 'policyCount',
-            sortField: namespaceSortFields.POLICY_COUNT,
-            sortable: false
-        },
+        // @TODD, restore the Policy Counts column once its performance is improved,
+        //   or remove the comment if we determine that it cannot be made performant
+        //   (see https://stack-rox.atlassian.net/browse/ROX-4080)
+        // {
+        //     Header: `Policies`,
+        //     entityType: entityTypes.POLICY,
+        //     headerClassName: `w-1/8 ${nonSortableHeaderClassName}`,
+        //     className: `w-1/8 ${defaultColumnClassName}`,
+        //     Cell: ({ original, pdf }) => (
+        //         <TableCountLink
+        //             entityType={entityTypes.POLICY}
+        //             count={original.policyCount}
+        //             textOnly={pdf}
+        //             selectedRowId={original.metadata.id}
+        //         />
+        //     ),
+        //     accessor: 'policyCount',
+        //     sortField: namespaceSortFields.POLICY_COUNT,
+        //     sortable: false
+        // },
         {
             Header: `Policy Status`,
             headerClassName: `w-1/10 ${nonSortableHeaderClassName}`,
