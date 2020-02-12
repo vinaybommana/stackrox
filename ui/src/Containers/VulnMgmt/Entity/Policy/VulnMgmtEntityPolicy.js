@@ -22,7 +22,7 @@ const VulmMgmtEntityPolicy = ({
     setRefreshTrigger
 }) => {
     const overviewQuery = gql`
-        query getPolicy($id: ID!, $policyQuery: String) {
+        query getPolicy($id: ID!, $query: String, $policyQuery: String) {
             result: policy(id: $id) {
                 id
                 name
@@ -159,7 +159,7 @@ const VulmMgmtEntityPolicy = ({
                     }
                     name
                 }
-                deploymentCount
+                deploymentCount(query: $query)
                 deployments(query: $policyQuery) {
                     ...deploymentFields
                 }
@@ -169,11 +169,14 @@ const VulmMgmtEntityPolicy = ({
     `;
 
     function getListQuery(listFieldName, fragmentName, fragment) {
+        // we don't need to filter the count key in the case of coming from a specific policy since we already are filtering through policy ID
         return gql`
         query getPolicy${entityListType}($id: ID!, $pagination: Pagination, $query: String, $policyQuery: String) {
             result: policy(id: $id) {
                 id
-                ${defaultCountKeyMap[entityListType]}(query: $query)
+                ${defaultCountKeyMap[entityListType]}${
+            entityContext[entityTypes.POLICY] ? '' : '(query: $query)'
+        }
                 ${listFieldName}(query: $query, pagination: $pagination) { ...${fragmentName} }
             }
         }
@@ -181,16 +184,15 @@ const VulmMgmtEntityPolicy = ({
     `;
     }
 
+    const entityContextQuery = queryService.entityContextToQueryObject(entityContext);
+
     const queryOptions = {
         variables: {
             id: entityId,
-            query: queryService.objectToWhereClause(search),
+            query: queryService.objectToWhereClause({ ...search, ...entityContextQuery }),
             policyQuery: queryService.objectToWhereClause({
                 Category: 'Vulnerability Management',
-                ...queryService.entityContextToQueryObject({
-                    ...entityContext,
-                    [entityTypes.POLICY]: entityId
-                })
+                ...entityContextQuery
             })
         }
     };

@@ -36,7 +36,8 @@ export const listSelectors = {
     fixableCVELink: '[data-testid="fixableCvesLink"]',
     numCVEColLink: '.rt-tr > .rt-td',
     statusChips: '[data-testid="label-chip"]',
-    deploymentCountLink: '[data-test-id="deploymentCountLink"]'
+    deploymentCountLink: '[data-test-id="deploymentCountLink"]',
+    policyCountLink: '[data-test-id="policyCountLink"]'
 };
 
 export const sidePanelListEntityPageSelectors = {
@@ -96,7 +97,9 @@ const linkSelectors = {
     fixableCvesLink: '[data-testid="fixableCvesLink"]',
     tileLinks: "[data-test-id='tile-link']",
     tileLinkValue: "[data-test-id='tile-link-value']",
-    tileLinkSuperText: '[data-testid="tileLinkSuperText"]'
+    tileLinkSuperText: '[data-testid="tileLinkSuperText"]',
+    deploymentTileLink: "[data-test-id='DEPLOYMENT-tile-link']",
+    policyTileLink: "[data-test-id='POLICY-tile-link']"
 };
 
 const sidepanelSelectors = {

@@ -26,13 +26,11 @@ describe('Entities single views', () => {
         cy.wait(1000);
 
         // act
-        cy.get(selectors.tileLinks)
-            .eq(3)
+        cy.get(selectors.deploymentTileLink)
             .find(selectors.tileLinkSuperText)
             .invoke('text')
             .then(numDeployments => {
-                cy.get(selectors.tileLinks)
-                    .eq(3)
+                cy.get(selectors.deploymentTileLink)
                     // force: true option needed because this open issue for cypress
                     //   https://github.com/cypress-io/cypress/issues/4856
                     .click({ force: true });
@@ -99,7 +97,7 @@ describe('Entities single views', () => {
                         expect(sectionElm).to.have.length(1);
                     });
 
-                    cy.get(`${selectors.sidePanel} ${selectors.tileLinks}`)
+                    cy.get(selectors.deploymentTileLink)
                         .eq(0)
                         .click({ force: true });
 
@@ -150,6 +148,70 @@ describe('Entities single views', () => {
                         `${selectors.sidePanel} ${selectors.statusChips}:contains('fail')`
                     ).should('not.exist');
                 }
+            });
+    });
+
+    it('should have consistent policy count number from namespace list to policy sublist for a specific namespace', () => {
+        cy.visit(url.list.namespaces);
+
+        cy.get(selectors.policyCountLink)
+            .eq(2)
+            .invoke('text')
+            .then(policyCountText => {
+                cy.get(selectors.tableBodyRows)
+                    .eq(2)
+                    .click();
+                cy.wait(1000);
+                cy.get(selectors.policyTileLink)
+                    .invoke('text')
+                    .then(relatedPolicyCountText => {
+                        expect(relatedPolicyCountText.toLowerCase().trim()).to.equal(
+                            policyCountText.replace(' ', '')
+                        );
+                    });
+                cy.get(selectors.policyTileLink).click({ force: true });
+                cy.wait(1000);
+                cy.get(selectors.entityRowHeader)
+                    .invoke('text')
+                    .then(paginationText => {
+                        expect(paginationText).to.equal(policyCountText);
+                    });
+            });
+    });
+
+    it('should have filtered deployments list in 3rd level of side panel (namespaces -> policies -> deployments)', () => {
+        cy.visit(url.list.namespaces);
+        cy.wait(1000);
+
+        cy.get(selectors.deploymentCountLink)
+            .eq(0)
+            .as('firstDeploymentCountLink');
+
+        cy.get('@firstDeploymentCountLink').click();
+        cy.get(selectors.parentEntityInfoHeader).click();
+        cy.get(selectors.policyTileLink).click({ force: true });
+
+        cy.get('@firstDeploymentCountLink')
+            .invoke('text')
+            .then(deploymentCountText => {
+                cy.get(selectors.sidePanelTableBodyRows)
+                    .eq(0)
+                    .click();
+                cy.wait(1000);
+                cy.get(selectors.deploymentTileLink)
+                    .invoke('text')
+                    .then(relatedDeploymentCountText => {
+                        expect(relatedDeploymentCountText.toLowerCase().trim()).to.equal(
+                            deploymentCountText.replace(' ', '')
+                        );
+                    });
+                cy.get(selectors.deploymentTileLink).click({ force: true });
+                cy.wait(1000);
+                cy.get(selectors.entityRowHeader)
+                    .invoke('text')
+                    .then(paginationText => {
+                        expect(paginationText).to.equal(deploymentCountText);
+                    });
             });
     });
 });

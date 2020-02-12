@@ -23,7 +23,18 @@ const getClassNameByPosition = position => {
     return '';
 };
 
-const TileLink = ({ text, superText, subText, icon, url, loading, isError, position, short }) => {
+const TileLink = ({
+    text,
+    superText,
+    subText,
+    icon,
+    url,
+    loading,
+    isError,
+    position,
+    short,
+    dataTestId
+}) => {
     const { isDarkMode } = useTheme();
 
     const positionClassName = getClassNameByPosition(position);
@@ -73,7 +84,7 @@ const TileLink = ({ text, superText, subText, icon, url, loading, isError, posit
     }
     classes += ` ${positionClassName} ${short ? 'h-full' : 'min-h-14'}`;
     return (
-        <Link to={url} className="no-underline" data-test-id="tile-link">
+        <Link to={url} className="no-underline" data-test-id={dataTestId}>
             <div className={classes}>{content}</div>
         </Link>
     );
@@ -88,7 +99,8 @@ TileLink.propTypes = {
     loading: PropTypes.bool,
     isError: PropTypes.bool,
     position: PropTypes.oneOf(Object.values(POSITION)),
-    short: PropTypes.bool
+    short: PropTypes.bool,
+    dataTestId: PropTypes.string
 };
 
 TileLink.defaultProps = {
@@ -98,7 +110,8 @@ TileLink.defaultProps = {
     superText: null,
     subText: null,
     icon: null,
-    short: false
+    short: false,
+    dataTestId: 'tile-link'
 };
 
 export default TileLink;
