@@ -98,3 +98,24 @@ func getLatestViolationTime(ctx context.Context, root *Resolver, q *v1.Query) (*
 
 	return timestamp(alerts[0].GetTime())
 }
+
+func anyActiveDeployAlerts(ctx context.Context, root *Resolver, q *v1.Query) (bool, error) {
+	if err := readAlerts(ctx); err != nil {
+		return false, err
+	}
+
+	alertsQuery := search.NewQueryBuilder().AddStrings(search.ViolationState, storage.ViolationState_ACTIVE.String()).
+		AddStrings(search.LifecycleStage, storage.LifecycleStage_DEPLOY.String()).
+		ProtoQuery()
+
+	q, err := search.AddAsConjunction(q, alertsQuery)
+	if err != nil {
+		return false, err
+	}
+	q.Pagination = &v1.QueryPagination{
+		Limit: 1,
+	}
+
+	results, err := root.ViolationsDataStore.Search(ctx, q)
+	return len(results) != 0, err
+}

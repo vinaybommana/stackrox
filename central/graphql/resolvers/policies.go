@@ -7,7 +7,6 @@ import (
 	"github.com/graph-gophers/graphql-go"
 	"github.com/stackrox/rox/central/metrics"
 	v1 "github.com/stackrox/rox/generated/api/v1"
-	"github.com/stackrox/rox/generated/storage"
 	pkgMetrics "github.com/stackrox/rox/pkg/metrics"
 	"github.com/stackrox/rox/pkg/policyutils"
 	"github.com/stackrox/rox/pkg/search"
@@ -25,8 +24,8 @@ func init() {
 		schema.AddExtraResolver("Policy", `alertCount(query: String): Int!`),
 		schema.AddExtraResolver("Policy", `deployments(query: String, pagination: Pagination): [Deployment!]!`),
 		schema.AddExtraResolver("Policy", `deploymentCount(query: String): Int!`),
-		schema.AddExtraResolver("Policy", `policyStatus: String!`),
-		schema.AddExtraResolver("Policy", "latestViolation: Time"),
+		schema.AddExtraResolver("Policy", `policyStatus(query: String): String!`),
+		schema.AddExtraResolver("Policy", "latestViolation(query: String): Time"),
 
 		schema.AddExtraResolver("PolicyFields", "imageAgeDays: Int!"),
 		schema.AddExtraResolver("PolicyFields", "scanAgeDays: Int!"),
@@ -148,18 +147,26 @@ func (resolver *policyResolver) DeploymentCount(ctx context.Context, args RawQue
 }
 
 // PolicyStatus returns the policy statusof this policy
-func (resolver *policyResolver) PolicyStatus(ctx context.Context) (string, error) {
+func (resolver *policyResolver) PolicyStatus(ctx context.Context, args RawQuery) (string, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Policies, "PolicyStatus")
-	alertsActive, err := resolver.anyActiveDeployAlerts(ctx)
-
+	q, err := args.AsV1QueryOrEmpty()
 	if err != nil {
 		return "", err
 	}
 
-	if alertsActive {
-		return "fail", nil
+	q, err = search.AddAsConjunction(q, resolver.getPolicyQuery())
+	if err != nil {
+		return "", err
 	}
 
+	activeAlerts, err := anyActiveDeployAlerts(ctx, resolver.root, q)
+	if err != nil {
+		return "", err
+	}
+
+	if activeAlerts {
+		return "fail", nil
+	}
 	return "pass", nil
 }
 
@@ -180,30 +187,24 @@ func (resolver *policyResolver) getDeploymentsForPolicy(ctx context.Context) ([]
 		Difference(search.ResultsToIDSet(whitelistResults)).AsSlice(), nil
 }
 
-func (resolver *policyResolver) anyActiveDeployAlerts(ctx context.Context) (bool, error) {
-	if err := readAlerts(ctx); err != nil {
-		return false, err
-	}
-
-	policy := resolver.data
-
-	q := search.NewQueryBuilder().AddExactMatches(search.PolicyID, policy.GetId()).
-		AddStrings(search.ViolationState, storage.ViolationState_ACTIVE.String()).
-		AddStrings(search.LifecycleStage, storage.LifecycleStage_DEPLOY.String()).
-		ProtoQuery()
-	q.Pagination = &v1.QueryPagination{
-		Limit: 1,
-	}
-
-	results, err := resolver.root.ViolationsDataStore.Search(ctx, q)
-	return len(results) != 0, err
-}
-
-func (resolver *policyResolver) LatestViolation(ctx context.Context) (*graphql.Time, error) {
+func (resolver *policyResolver) LatestViolation(ctx context.Context, args RawQuery) (*graphql.Time, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Policies, "Latest Violation")
 
-	return getLatestViolationTime(ctx, resolver.root,
-		search.NewQueryBuilder().AddExactMatches(search.PolicyID, resolver.data.GetId()).ProtoQuery())
+	q, err := args.AsV1QueryOrEmpty()
+	if err != nil {
+		return nil, err
+	}
+
+	q, err = search.AddAsConjunction(q, resolver.getPolicyQuery())
+	if err != nil {
+		return nil, err
+	}
+
+	return getLatestViolationTime(ctx, resolver.root, q)
+}
+
+func (resolver *policyResolver) getPolicyQuery() *v1.Query {
+	return search.NewQueryBuilder().AddStrings(search.PolicyID, resolver.data.GetId()).ProtoQuery()
 }
 
 func (resolver *policyResolver) getRawPolicyQuery() string {
