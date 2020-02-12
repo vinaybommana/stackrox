@@ -102,8 +102,9 @@ ObOdSTZUQI4TZOXOpJCpa97CnqroNi7RrT05JOfoe/DPmhoJmF4AUrnd/YUb8pgF
         // connections to port 25
     }
 
+    @Unroll
     @Category(Integration)
-    def "Verify Splunk Integration"() {
+    def "Verify Splunk Integration (legacy mode: #legacy)"() {
         given:
         "Only run on non-OpenShift until we can fix the route issue in CI"
         Assume.assumeTrue(Env.mustGetOrchestratorType() != OrchestratorTypes.OPENSHIFT)
@@ -146,7 +147,7 @@ ObOdSTZUQI4TZOXOpJCpa97CnqroNi7RrT05JOfoe/DPmhoJmF4AUrnd/YUb8pgF
 
         when:
         "call the grpc API for the splunk integration."
-        NotifierOuterClass.Notifier notifier = Services.addSplunkNotifier("Splunk-integration")
+        NotifierOuterClass.Notifier notifier = Services.addSplunkNotifier(legacy, "Splunk-integration")
 
         and:
         "Edit the policy with the latest keyword."
@@ -207,6 +208,10 @@ ObOdSTZUQI4TZOXOpJCpa97CnqroNi7RrT05JOfoe/DPmhoJmF4AUrnd/YUb8pgF
         if (notifier != null) {
             NotifierService.deleteNotifier(notifier.getId())
         }
+
+        where:
+        "Data inputs are"
+        legacy << [false, true]
     }
 
     @Category(Integration)

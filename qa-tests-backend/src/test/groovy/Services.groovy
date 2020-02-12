@@ -405,10 +405,10 @@ class Services extends BaseService {
     /**
      * This function add a notifier for Splunk.
      *
-     * @param name
+     * @param legacy Does this integration provide the full URL path or just the base
+     * @param name Splunk Integration name
      */
-
-    static addSplunkNotifier(String name)  throws Exception {
+    static addSplunkNotifier(boolean legacy, String name)  throws Exception {
         String splunkIntegration = "splunk-Integration"
         String prePackagedToken = "00000000-0000-0000-0000-000000000000"
         try {
@@ -423,14 +423,14 @@ class Services extends BaseService {
                                    Env.mustGetHostname() + ":" +
                                    Env.mustGetPort())
 
-                        .setSplunk(
-                                NotifierOuterClass.Splunk.newBuilder()
-                                        .setHttpToken(prePackagedToken)
-                                        .setInsecure(true)
-                                        .setHttpEndpoint("https://splunk-collector." +
-                                                "qa:8088/services/collector/event")
-                                                .build()
-                         ).build()
+                       .setSplunk(
+                               NotifierOuterClass.Splunk.newBuilder()
+                                       .setHttpToken(prePackagedToken)
+                                       .setInsecure(true)
+                                       .setHttpEndpoint(String.format("https://splunk-collector.qa:8088%s",
+                                       legacy ? "/services/collector/event" : ""))
+                                               .build()
+                       ).build()
             )
         } catch (Exception e) {
             println("Integration with splunk failed or already existed. Please check the logs")
