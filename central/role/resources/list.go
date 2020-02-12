@@ -41,6 +41,7 @@ var (
 	ProcessWhitelist      = newResourceMetadata("ProcessWhitelist", permissions.NamespaceScope)
 	Role                  = newResourceMetadata("Role", permissions.GlobalScope)
 	Risk                  = newResourceMetadata("Risk", permissions.NamespaceScope)
+	ScannerBundle         = newResourceMetadata("ScannerBundle", permissions.GlobalScope)
 	ScannerDefinitions    = newResourceMetadata("ScannerDefinitions", permissions.GlobalScope)
 	Secret                = newResourceMetadata("Secret", permissions.NamespaceScope)
 	SensorUpgradeConfig   = newResourceMetadata("SensorUpgradeConfig", permissions.GlobalScope)

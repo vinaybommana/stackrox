@@ -506,7 +506,7 @@ func (defaultFactory) CustomRoutes() (customRoutes []routes.CustomRoute) {
 		},
 		{
 			Route:         "/api/extensions/scanner/zip",
-			Authorizer:    user.With(),
+			Authorizer:    user.With(permissions.View(resources.ScannerBundle)),
 			ServerHandler: scanner.Handler(),
 			Compression:   false,
 		},
