@@ -38,8 +38,6 @@ const (
 
 	retryDelayBase = 1 * time.Minute
 	retryDelayMax  = 30 * time.Minute
-
-	defaultTelemetrySendInterval = 24 * time.Hour
 )
 
 var (
@@ -65,12 +63,13 @@ type sendResult struct {
 type manager struct {
 	ctx context.Context
 
-	licenseMgr    licenseMgr.LicenseManager
-	offlineMode   bool
-	configUpdateC chan configUpdate
-	store         store.Store
-	httpClient    *http.Client
-	gatherer      *gatherers.RoxGatherer
+	licenseMgr                   licenseMgr.LicenseManager
+	offlineMode                  bool
+	configUpdateC                chan configUpdate
+	store                        store.Store
+	httpClient                   *http.Client
+	gatherer                     *gatherers.RoxGatherer
+	defaultTelemetrySendInterval time.Duration
 
 	// Populated by init.
 	activeConfig atomic.Value // *storage.TelemetryConfiguration
@@ -78,6 +77,10 @@ type manager struct {
 }
 
 func newManager(ctx context.Context, store store.Store, gatherer *gatherers.RoxGatherer, licenseMgr licenseMgr.LicenseManager) *manager {
+	telemetrySendInterval := env.TelemetryFrequency.DurationSetting()
+	if buildinfo.ReleaseBuild {
+		telemetrySendInterval = 24 * time.Hour
+	}
 	mgr := &manager{
 		ctx: ctx,
 
@@ -88,7 +91,8 @@ func newManager(ctx context.Context, store store.Store, gatherer *gatherers.RoxG
 		httpClient: &http.Client{
 			Transport: proxy.RoundTripper(),
 		},
-		gatherer: gatherer,
+		gatherer:                     gatherer,
+		defaultTelemetrySendInterval: telemetrySendInterval,
 	}
 	mgr.Init()
 	go mgr.Run()
@@ -195,7 +199,7 @@ func (m *manager) doCollectAndSendData(ctx context.Context) (time.Duration, erro
 		return 0, errors.Wrap(err, "cannot determine telemetry endpoint from license metadata")
 	}
 	if endpoint == "" {
-		return defaultTelemetrySendInterval, nil
+		return m.defaultTelemetrySendInterval, nil
 	}
 
 	var sendBody bytes.Buffer
@@ -246,7 +250,7 @@ func (m *manager) doCollectAndSendData(ctx context.Context) (time.Duration, erro
 
 func (m *manager) updateNextSendTime(interval time.Duration) *time.Timer {
 	if interval == 0 {
-		interval = defaultTelemetrySendInterval
+		interval = m.defaultTelemetrySendInterval
 	}
 
 	// Vary the interval a bit, with a factor of +/- 10% (uniformly distributed).
@@ -315,7 +319,7 @@ func (m *manager) handleSendResult(result sendResult, retryDelay *time.Duration)
 	*retryDelay = 0
 	timeToNextSend := result.timeToNextSend
 	if timeToNextSend == 0 {
-		timeToNextSend = defaultTelemetrySendInterval
+		timeToNextSend = m.defaultTelemetrySendInterval
 	}
 	log.Infof("Successfully posted telemetry data. Sending next data in %v", timeToNextSend)
 	return timeToNextSend
