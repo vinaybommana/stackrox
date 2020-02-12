@@ -3,8 +3,6 @@ import { NavLink as Link, withRouter } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { createStructuredSelector } from 'reselect';
 import { connect } from 'react-redux';
-import downloadDiagnostics from 'services/DebugService';
-import { isBackendFeatureFlagEnabled, knownBackendFlags } from 'utils/featureFlags';
 
 import { selectors } from 'reducers';
 import {
@@ -14,8 +12,6 @@ import {
     accessControlPath,
     systemConfigPath
 } from 'routePaths';
-import * as Icon from 'react-feather';
-import PanelButton from 'Components/PanelButton';
 import { filterLinksByFeatureFlag } from './navHelpers';
 
 const navLinks = [
@@ -78,78 +74,8 @@ class NavigationPanel extends Component {
                     </Link>
                 </li>
             ))}
-            {isBackendFeatureFlagEnabled(
-                this.props.featureFlags,
-                knownBackendFlags.ROX_DIAGNOSTIC_BUNDLE,
-                false
-            ) && (
-                <li key="Download Diagnostic Data" className="text-sm border-b border-primary-900">
-                    <PanelButton
-                        icon={<Icon.Download className="h-4 w-4 ml-1 text-primary-400" />}
-                        className="flex leading-normal font-700 text-sm text-base-100 no-underline py-5 px-1 items-center uppercase"
-                        onClick={this.downloadDiagnostics}
-                        alwaysVisibleText
-                        tooltip={
-                            <div className="w-auto">
-                                <h2 className="mb-2 font-700 text-lg uppercase">
-                                    What we collect:
-                                </h2>
-                                <p className="mb-2">
-                                    The diagnostic bundle contains information pertaining to the
-                                    system health of the StackRox deployments
-                                    <br /> in the central cluster as well as all currently connected
-                                    secured clusters.
-                                </p>
-                                <p className="mb-1">It includes:</p>
-                                <ul className="mb-1 w-full list-disc">
-                                    <li>Heap profile of Central</li>
-                                    <li>
-                                        Database storage information (database size, free space on
-                                        volume)
-                                    </li>
-                                    <li>
-                                        Component health information for all StackRox components
-                                        (version, memory usage, error conditions)
-                                    </li>
-                                    <li>
-                                        Coarse-grained usage statistics (API endpoint invocation
-                                        counts)
-                                    </li>
-                                    <li>
-                                        Logs of all StackRox components from the last 20 minutes
-                                    </li>
-                                    <li>
-                                        Logs of recently crashed StackRox components from up to 20
-                                        minutes before the last crash
-                                    </li>
-                                    <li>
-                                        Kubernetes YAML definitions of StackRox components
-                                        (excluding Kubernetes secrets)
-                                    </li>
-                                    <li>Kubernetes events of objects in the StackRox namespaces</li>
-                                    <li>
-                                        Information about nodes in each secured cluster (kernel and
-                                        OS versions, resource pressure, taints)
-                                    </li>
-                                    <li>
-                                        Environment information about each secured cluster
-                                        (Kubernetes version, if applicable cloud provider)
-                                    </li>
-                                </ul>
-                            </div>
-                        }
-                    >
-                        Download Diagnostic Data{' '}
-                        <Icon.HelpCircle className="h-4 w-4 text-primary-400 ml-2" />
-                    </PanelButton>
-                </li>
-            )}
         </ul>
     );
-
-    downloadDiagnostics = () => {
-        downloadDiagnostics();
-    };
 
     render() {
         return (
