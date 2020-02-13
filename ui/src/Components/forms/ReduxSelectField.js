@@ -53,7 +53,8 @@ const ReduxSelectField = ({
     disabled,
     customComponents,
     styles,
-    value
+    value,
+    onChange
 }) => (
     <Field
         key={name}
@@ -65,6 +66,7 @@ const ReduxSelectField = ({
         disabled={disabled}
         styles={styles}
         defaultValue={value}
+        onChange={onChange}
         className="border bg-base-100 border-base-300 text-base-600 p-3 pr-8 rounded-r-sm cursor-pointer z-50 focus:border-base-300 w-full font-400"
     />
 );
@@ -76,7 +78,8 @@ ReduxSelectField.propTypes = {
     disabled: PropTypes.bool,
     customComponents: PropTypes.shape({}),
     styles: PropTypes.shape({}),
-    value: PropTypes.string
+    value: PropTypes.string,
+    onChange: PropTypes.func
 };
 
 ReduxSelectField.defaultProps = {
@@ -84,7 +87,8 @@ ReduxSelectField.defaultProps = {
     disabled: false,
     customComponents: {},
     styles: defaultSelectStyles,
-    value: null
+    value: null,
+    onChange: null
 };
 
 export default ReduxSelectField;

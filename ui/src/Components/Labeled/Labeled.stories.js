@@ -15,17 +15,14 @@ export const withTextLabelAndInput = () => (
     </Labeled>
 );
 
-export const withRenderPropLabelAndInput = () => {
-    function Label() {
-        return (
-            <p>
-                Enter value <i className="text-alert-700">(required)</i>
-            </p>
-        );
-    }
-
+export const withElementLabelAndInput = () => {
+    const label = (
+        <p>
+            Important thing <i className="text-base-500">(required)</i>
+        </p>
+    );
     return (
-        <Labeled label={Label}>
+        <Labeled label={label}>
             <input className="border-2" />
         </Labeled>
     );

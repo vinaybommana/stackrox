@@ -19,19 +19,14 @@ class Form extends Component {
         initialValues: PropTypes.shape({
             type: PropTypes.string,
             active: PropTypes.bool
-        }),
-        selectedAuthProvider: PropTypes.shape({}),
+        }).isRequired,
+        change: PropTypes.func.isRequired,
         roles: PropTypes.arrayOf(
             PropTypes.shape({
                 name: PropTypes.string,
                 globalAccess: PropTypes.string
             })
         ).isRequired
-    };
-
-    static defaultProps = {
-        initialValues: null,
-        selectedAuthProvider: null
     };
 
     constructor(props) {
@@ -55,13 +50,12 @@ class Form extends Component {
     renderRuleGroupsComponent = props => <RuleGroups toggleModal={this.toggleModal} {...props} />;
 
     render() {
-        const { handleSubmit, initialValues, onSubmit, roles } = this.props;
+        const { handleSubmit, onSubmit, initialValues, roles, change } = this.props;
         return (
             <>
                 <form
                     className="w-full justify-between overflow-auto h-full p-4"
                     onSubmit={handleSubmit(onSubmit)}
-                    initialvalues={initialValues}
                 >
                     <CollapsibleCard
                         title="1. Configuration"
@@ -71,7 +65,8 @@ class Form extends Component {
                         <div className="w-full h-full px-4 py-3">
                             <ConfigurationFormFields
                                 providerType={initialValues.type}
-                                disabled={initialValues.active}
+                                disabled={!!initialValues.active}
+                                change={change}
                             />
                         </div>
                     </CollapsibleCard>

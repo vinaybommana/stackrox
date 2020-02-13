@@ -1,20 +1,18 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import isFunction from 'lodash/isFunction';
 
 function Labeled({ label, children }) {
     if (!React.Children.count(children)) return null; // don't render w/o children
-    const renderedLabel = isFunction(label) ? label() : label;
     return (
         <div className="mb-4">
-            <div className="py-1 text-base-600 font-700">{renderedLabel}</div>
+            <div className="py-1 text-base-600 font-700">{label}</div>
             <div className="w-full py-1">{children}</div>
         </div>
     );
 }
 
 Labeled.propTypes = {
-    label: PropTypes.oneOfType([PropTypes.node, PropTypes.func]).isRequired,
+    label: PropTypes.node.isRequired,
     children: PropTypes.node
 };
 

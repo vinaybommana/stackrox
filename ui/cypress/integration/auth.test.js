@@ -29,8 +29,11 @@ describe('Authentication', () => {
         cy.route(/.*/, {}).as('everythingElse');
         // TODO-ivan: remove once ROX_REFRESH_TOKENS is enabled by default
         cy.route('GET', api.featureFlags, {
-            featureFlags: [{ name: 'Refresh tokens', envVar: 'ROX_REFRESH_TOKENS', enabled: true }]
-        });
+            featureFlags: [
+                { name: 'Refresh tokens', envVar: 'ROX_REFRESH_TOKENS', enabled: true },
+                { name: 'Vuln Mgmt', envVar: 'ROX_VULN_MGMT_UI', enabled: false }
+            ]
+        }).as('featureFlags');
         cy.route('GET', api.clusters.list, 'fixture:clusters/couple.json').as('clusters');
         cy.route('GET', api.search.options, 'fixture:search/metadataOptions.json').as(
             'searchOptions'

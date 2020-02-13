@@ -1,10 +1,16 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { formValues } from 'redux-form';
 
+import { knownBackendFlags as featureFlags } from 'utils/featureFlags';
+import FeatureEnabled from 'Containers/FeatureEnabled';
 import Labeled from 'Components/Labeled';
+import FormFieldLabel from 'Components/forms/FormFieldLabel';
 import ReduxTextField from 'Components/forms/ReduxTextField';
+import ReduxPasswordField from 'Components/forms/ReduxPasswordField';
 import ReduxSelectField from 'Components/forms/ReduxSelectField';
 import ReduxTextAreaField from 'Components/forms/ReduxTextAreaField';
+import ReduxCheckboxField from 'Components/forms/ReduxCheckboxField';
 
 const baseURL = `${window.location.protocol}//${window.location.host}`;
 const oidcFragmentCallbackURL = `${baseURL}/auth/response/oidc`;
@@ -13,7 +19,7 @@ const samlACSURL = `${baseURL}/sso/providers/saml/acs`;
 
 const CommonFields = ({ disabled }) => (
     <>
-        <Labeled label="Integration Name">
+        <Labeled label={<FormFieldLabel text="Integration Name" required />}>
             <ReduxTextField
                 name="name"
                 placeholder="Name for this integration"
@@ -34,54 +40,116 @@ const Note = ({ header, children }) => (
     </div>
 );
 
-const OidcFormFields = ({ disabled }) => (
-    <>
-        <CommonFields disabled={disabled} />
-        <Labeled label="Callback Mode">
-            <ReduxSelectField
-                name="config.mode"
-                options={[
-                    { value: 'fragment', label: 'Fragment' },
-                    { value: 'post', label: 'HTTP POST' }
-                ]}
-                defaultValue="post"
-                disabled={disabled}
-            />
-        </Labeled>
-        <Labeled label="Issuer">
-            <ReduxTextField
-                name="config.issuer"
-                placeholder="tenant.auth-provider.com"
-                disabled={disabled}
-            />
-        </Labeled>
-        <Labeled label="Client ID">
-            <ReduxTextField name="config.client_id" disabled={disabled} />
-        </Labeled>
-        <Note header="if required by your IdP, use the following callback URLs:">
-            <ul className="pl-4 mt-2 leading-loose">
-                <li>
-                    For <span className="font-700">Fragment</span> mode:{' '}
-                    <a
-                        className="text-tertiary-800 hover:text-tertiary-900"
-                        href={oidcFragmentCallbackURL}
+const OidcFormFields = ({ disabled, configValues, change }) => {
+    function onModeChange(event, newValue) {
+        // client secret is supported only with HTTP POST
+        change('config.do_not_use_client_secret', newValue !== 'post');
+        change('config.client_secret', '');
+    }
+
+    function onDoNotUseClientSecretChange(event, newValue) {
+        if (newValue) change('config.client_secret', '');
+    }
+
+    const clientSecretSupported = configValues.mode === 'post';
+
+    // use client secret placeholder as an explanation text
+    let clientSecretPlaceholder = 'Client Secret provided by your IdP';
+    if (!clientSecretSupported) {
+        clientSecretPlaceholder = 'Client Secret is only supported with HTTP POST callback mode';
+    } else if (configValues.clientOnly?.clientSecretStored) {
+        clientSecretPlaceholder = configValues.do_not_use_client_secret
+            ? 'Disabled, currently stored secret will be removed'
+            : 'Leave this field empty to keep the currently stored secret';
+    } else if (configValues.do_not_use_client_secret) {
+        clientSecretPlaceholder = 'Disabled';
+    }
+
+    // user is expected to enter the value unless opted out or ok to leave empty to preserve the old value
+    const clientSecretRequired =
+        !configValues.do_not_use_client_secret && !configValues.clientOnly?.clientSecretStored;
+    const clientSecretLabel = (
+        <FormFieldLabel text="Client Secret" required={clientSecretRequired} />
+    );
+
+    const doNotUseClientSecretDisabled = disabled || !clientSecretSupported;
+    const clientSecret = (
+        <>
+            <Labeled label={clientSecretLabel}>
+                <ReduxPasswordField
+                    name="config.client_secret"
+                    disabled={disabled || configValues.do_not_use_client_secret}
+                    placeholder={clientSecretPlaceholder}
+                />
+                <div className="mt-2">
+                    <ReduxCheckboxField
+                        name="config.do_not_use_client_secret"
+                        id="do-not-use-client-secret-checkbox"
+                        disabled={doNotUseClientSecretDisabled}
+                        onChange={onDoNotUseClientSecretChange}
+                    />
+                    <label
+                        className={`ml-2 ${doNotUseClientSecretDisabled && 'text-base-500'}`}
+                        htmlFor="do-not-use-client-secret-checkbox"
                     >
-                        {oidcFragmentCallbackURL}
-                    </a>
-                </li>
-                <li>
-                    For <span className="font-700">HTTP POST</span> mode:{' '}
-                    <a
-                        className="text-tertiary-800 hover:text-tertiary-900"
-                        href={oidcPostCallbackURL}
-                    >
-                        {oidcPostCallbackURL}
-                    </a>
-                </li>
-            </ul>
-        </Note>
-    </>
-);
+                        Do not use Client Secret (not recommended)
+                    </label>
+                </div>
+            </Labeled>
+        </>
+    );
+    return (
+        <>
+            <CommonFields disabled={disabled} />
+            <Labeled label={<FormFieldLabel text="Callback Mode" required />}>
+                <ReduxSelectField
+                    name="config.mode"
+                    options={[
+                        { value: 'fragment', label: 'Fragment' },
+                        { value: 'post', label: 'HTTP POST' }
+                    ]}
+                    disabled={disabled}
+                    onChange={onModeChange}
+                />
+            </Labeled>
+            <Labeled label={<FormFieldLabel text="Issuer" required />}>
+                <ReduxTextField
+                    name="config.issuer"
+                    placeholder="tenant.auth-provider.com"
+                    disabled={disabled}
+                />
+            </Labeled>
+            <Labeled label={<FormFieldLabel text="Client ID" required />}>
+                <ReduxTextField name="config.client_id" disabled={disabled} />
+            </Labeled>
+            <FeatureEnabled featureFlag={featureFlags.ROX_REFRESH_TOKENS}>
+                {clientSecret}
+            </FeatureEnabled>
+            <Note header="if required by your IdP, use the following callback URLs:">
+                <ul className="pl-4 mt-2 leading-loose">
+                    <li>
+                        For <span className="font-700">Fragment</span> mode:{' '}
+                        <a
+                            className="text-tertiary-800 hover:text-tertiary-900"
+                            href={oidcFragmentCallbackURL}
+                        >
+                            {oidcFragmentCallbackURL}
+                        </a>
+                    </li>
+                    <li>
+                        For <span className="font-700">HTTP POST</span> mode:{' '}
+                        <a
+                            className="text-tertiary-800 hover:text-tertiary-900"
+                            href={oidcPostCallbackURL}
+                        >
+                            {oidcPostCallbackURL}
+                        </a>
+                    </li>
+                </ul>
+            </Note>
+        </>
+    );
+};
 
 const Auth0FormFields = ({ disabled }) => (
     <>
@@ -202,16 +270,22 @@ const formFieldsComponents = {
     userpki: UserPkiFormFields
 };
 
-const ConfigurationFormFields = ({ providerType, disabled }) => {
+const ConfigurationFormFields = ({ providerType, disabled, configValues, change }) => {
     const FormFieldsComponent = formFieldsComponents[providerType];
     if (!FormFieldsComponent)
         throw new Error(`Unknown auth provider type passed to the form component: ${providerType}`);
 
-    return <FormFieldsComponent disabled={disabled} />;
+    return <FormFieldsComponent disabled={disabled} configValues={configValues} change={change} />;
 };
 ConfigurationFormFields.propTypes = {
     providerType: PropTypes.oneOf(Object.keys(formFieldsComponents)).isRequired,
-    disabled: PropTypes.bool.isRequired
+    disabled: PropTypes.bool.isRequired,
+    configValues: PropTypes.shape({}),
+    change: PropTypes.func.isRequired
 };
 
-export default ConfigurationFormFields;
+ConfigurationFormFields.defaultProps = {
+    configValues: {}
+};
+
+export default formValues({ configValues: 'config' })(ConfigurationFormFields);

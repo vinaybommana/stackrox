@@ -1,6 +1,9 @@
 import React from 'react';
 import Labeled from 'Components/Labeled';
 
+import { knownBackendFlags as featureFlags } from 'utils/featureFlags';
+import FeatureEnabled from 'Containers/FeatureEnabled';
+
 const CommonDetails = ({ name }) => (
     <>
         <Labeled label="Integration Name">{name}</Labeled>
@@ -13,7 +16,7 @@ const OidcDetails = ({ authProvider: { name, config } }) => {
         fragment: 'Fragment'
     };
     const callbackModeValue = oidcCallbackValues[config.mode];
-    // if (!callbackModeValue) throw new Error(`Unknown callback mode "${config.mode}"`);
+    if (!callbackModeValue) throw new Error(`Unknown callback mode "${config.mode}"`);
 
     return (
         <>
@@ -21,6 +24,9 @@ const OidcDetails = ({ authProvider: { name, config } }) => {
             <Labeled label="Callback Mode">{callbackModeValue}</Labeled>
             <Labeled label="Issuer">{config.issuer}</Labeled>
             <Labeled label="Client ID">{config.client_id}</Labeled>
+            <FeatureEnabled featureFlag={featureFlags.ROX_REFRESH_TOKENS}>
+                <Labeled label="Client Secret">{config.client_secret ? '*****' : null}</Labeled>
+            </FeatureEnabled>
         </>
     );
 };

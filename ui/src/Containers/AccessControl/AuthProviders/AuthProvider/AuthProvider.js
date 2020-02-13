@@ -1,5 +1,10 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import { createStructuredSelector } from 'reselect';
+import { connect } from 'react-redux';
+
+import { selectors } from 'reducers';
+import { isBackendFeatureFlagEnabled, knownBackendFlags } from 'utils/featureFlags';
 
 import NoResultsMessage from 'Components/NoResultsMessage';
 import Panel, { headerClassName } from 'Components/Panel';
@@ -19,7 +24,8 @@ class AuthProvider extends Component {
         onSave: PropTypes.func.isRequired,
         onEdit: PropTypes.func.isRequired,
         onCancel: PropTypes.func.isRequired,
-        groups: PropTypes.arrayOf(PropTypes.shape({})).isRequired
+        groups: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+        featureFlags: PropTypes.shape({}).isRequired
     };
 
     static defaultProps = {
@@ -30,7 +36,83 @@ class AuthProvider extends Component {
         const newInitialValues = { ...initialValues };
         newInitialValues.uiEndpoint = window.location.host;
         newInitialValues.enabled = true;
+        if (initialValues.type === 'oidc') {
+            newInitialValues.config = { mode: 'post', do_not_use_client_secret: false };
+        }
         return newInitialValues;
+    };
+
+    transformInitialValues = initialValues => {
+        const ROX_REFRESH_TOKENS = isBackendFeatureFlagEnabled(
+            this.props.featureFlags,
+            knownBackendFlags.ROX_REFRESH_TOKENS,
+            false
+        );
+        if (!ROX_REFRESH_TOKENS) return initialValues;
+
+        if (initialValues.type === 'oidc') {
+            const alteredConfig = { ...initialValues.config };
+
+            // backend doesn't return the exact value for the client secret for the security reasons,
+            // instead it'll return some obfuscated data, but not an empty one
+            alteredConfig.clientOnly = {
+                clientSecretStored: !!alteredConfig.client_secret
+            };
+
+            if (initialValues.name) {
+                // if it's an existing auth provider, then we're using the secret if we have it
+                alteredConfig.do_not_use_client_secret = !alteredConfig.client_secret;
+            }
+
+            // clean-up obfuscated value if any as we don't need to show it
+            alteredConfig.client_secret = '';
+
+            return {
+                ...initialValues,
+                config: alteredConfig
+            };
+        }
+        return initialValues;
+    };
+
+    transformValuesBeforeSaving = values => {
+        const ROX_REFRESH_TOKENS = isBackendFeatureFlagEnabled(
+            this.props.featureFlags,
+            knownBackendFlags.ROX_REFRESH_TOKENS,
+            false
+        );
+        if (!ROX_REFRESH_TOKENS) return values;
+
+        if (values.type === 'oidc') {
+            const alteredConfig = { ...values.config };
+
+            // if client secret is stored on the backend and user didn't enter any value,
+            // it means that user wants to preserve the stored secret, delete then
+            const preserveStoredClientSecret =
+                alteredConfig.clientOnly.clientSecretStored && !alteredConfig.client_secret;
+            if (alteredConfig.do_not_use_client_secret || preserveStoredClientSecret) {
+                delete alteredConfig.client_secret;
+            }
+
+            // backend expects only string values for the config
+            alteredConfig.do_not_use_client_secret = alteredConfig.do_not_use_client_secret
+                ? 'true'
+                : 'false';
+
+            // finally delete client only values
+            delete alteredConfig.clientOnly;
+
+            return {
+                ...values,
+                config: alteredConfig
+            };
+        }
+        return values;
+    };
+
+    onSave = values => {
+        const transformedValues = this.transformValuesBeforeSaving(values);
+        this.props.onSave(transformedValues);
     };
 
     getGroupsByAuthProviderId = (groups, id) => {
@@ -67,7 +149,7 @@ class AuthProvider extends Component {
     );
 
     displayContent = () => {
-        const { selectedAuthProvider, isEditing, onSave, groups } = this.props;
+        const { selectedAuthProvider, isEditing, groups } = this.props;
         let initialValues = { ...selectedAuthProvider };
         if (!selectedAuthProvider.name) {
             initialValues = this.populateDefaultValues(initialValues);
@@ -75,16 +157,16 @@ class AuthProvider extends Component {
         const filteredGroups = this.getGroupsByAuthProviderId(groups, selectedAuthProvider.id);
         const defaultRole = this.getDefaultRoleByAuthProviderId(groups, selectedAuthProvider.id);
 
-        const modifiedInitialValues = Object.assign(initialValues, {
+        const modifiedInitialValues = {
+            ...this.transformInitialValues(initialValues),
             groups: filteredGroups,
             defaultRole
-        });
+        };
         const content = isEditing ? (
             <Form
                 key={initialValues.type}
-                onSubmit={onSave}
+                onSubmit={this.onSave}
                 initialValues={modifiedInitialValues}
-                selectedAuthProvider={selectedAuthProvider}
             />
         ) : (
             <Details
@@ -97,7 +179,7 @@ class AuthProvider extends Component {
     };
 
     render() {
-        const { selectedAuthProvider, isEditing, onSave, onEdit, onCancel } = this.props;
+        const { selectedAuthProvider, isEditing, onEdit, onCancel } = this.props;
         const isEmptyState = !selectedAuthProvider;
         let headerText = '';
         let headerComponents = null;
@@ -113,7 +195,7 @@ class AuthProvider extends Component {
                     text={buttonText}
                     isEditing={isEditing}
                     onEdit={onEdit}
-                    onSave={onSave}
+                    onSave={this.onSave}
                     onCancel={onCancel}
                 />
             );
@@ -135,4 +217,8 @@ class AuthProvider extends Component {
     }
 }
 
-export default AuthProvider;
+const mapStateToProps = createStructuredSelector({
+    featureFlags: selectors.getFeatureFlags
+});
+
+export default connect(mapStateToProps)(AuthProvider);
