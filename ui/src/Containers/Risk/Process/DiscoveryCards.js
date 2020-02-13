@@ -17,7 +17,7 @@ function DiscoveryCards({ deploymentId, processGroup, processEpoch, setProcessEp
         ['desc', 'asc']
     );
     return sortedProcessGroups.map((pg, i, list) => (
-        <div className={`px-3 pt-5 ${i === list.length - 1 ? 'pb-5' : ''}`} key={pg.name}>
+        <div className={`px-3 ${i === list.length - 1 ? '' : 'pb-5'}`} key={pg.name}>
             <ProcessDiscoveryCard
                 process={pg}
                 deploymentId={deploymentId}

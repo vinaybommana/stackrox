@@ -1725,6 +1725,7 @@ jobs:
       - ROX_BADGER_DB: true
       - ROX_TELEMETRY: true
       - ROX_DIAGNOSTIC_BUNDLE: true
+      - ROX_IQT_EVENT_TIMELINE_UI: true
 
     steps:
       - checkout
