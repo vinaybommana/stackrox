@@ -53,10 +53,10 @@ func newDatastore(storage store.Store, bleveIndex bleve.Index, noUpdateTimestamp
 	if features.Dackbox.Enabled() {
 		searcher = search.New(storage,
 			globalDackBox.GetGlobalDackBox(),
-			cveIndexer.Singleton(),
-			componentCVEEdgeIndexer.Singleton(),
-			componentIndexer.Singleton(),
-			imageComponentEdgeIndexer.Singleton(),
+			cveIndexer.New(bleveIndex),
+			componentCVEEdgeIndexer.New(bleveIndex),
+			componentIndexer.New(bleveIndex),
+			imageComponentEdgeIndexer.New(bleveIndex),
 			imageIndexer.New(bleveIndex))
 	} else {
 		searcher = search.New(storage, nil, nil, nil, nil, nil, indexer)

@@ -5,6 +5,7 @@ import (
 	"github.com/stackrox/rox/central/componentcveedge/search"
 	"github.com/stackrox/rox/central/componentcveedge/store/dackbox"
 	globaldb "github.com/stackrox/rox/central/globaldb/dackbox"
+	"github.com/stackrox/rox/central/globalindex"
 	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/sync"
 	"github.com/stackrox/rox/pkg/utils"
@@ -24,9 +25,9 @@ func initialize() {
 	storage, err := dackbox.New(globaldb.GetGlobalDackBox())
 	utils.Must(err)
 
-	searcher := search.New(storage, index.Singleton())
+	searcher := search.New(storage, index.New(globalindex.GetGlobalIndex()))
 
-	ad, err = New(storage, index.Singleton(), searcher)
+	ad, err = New(storage, index.New(globalindex.GetGlobalIndex()), searcher)
 	utils.Must(err)
 }
 

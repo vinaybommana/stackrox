@@ -7,6 +7,7 @@ import (
 	"github.com/stackrox/rox/central/cve/store/dackbox"
 	deploymentIndexer "github.com/stackrox/rox/central/deployment/index"
 	globaldb "github.com/stackrox/rox/central/globaldb/dackbox"
+	"github.com/stackrox/rox/central/globalindex"
 	imageIndexer "github.com/stackrox/rox/central/image/index"
 	componentIndexer "github.com/stackrox/rox/central/imagecomponent/index"
 	imageComponentEdgeIndexer "github.com/stackrox/rox/central/imagecomponentedge/index"
@@ -30,14 +31,14 @@ func initialize() {
 	utils.Must(err)
 
 	searcher := search.New(storage, globaldb.GetGlobalDackBox(),
-		cveIndexer.Singleton(),
-		componentCVEEdgeIndexer.Singleton(),
-		componentIndexer.Singleton(),
-		imageComponentEdgeIndexer.Singleton(),
-		imageIndexer.Singleton(),
-		deploymentIndexer.Singleton())
+		cveIndexer.New(globalindex.GetGlobalIndex()),
+		componentCVEEdgeIndexer.New(globalindex.GetGlobalIndex()),
+		componentIndexer.New(globalindex.GetGlobalIndex()),
+		imageComponentEdgeIndexer.New(globalindex.GetGlobalIndex()),
+		imageIndexer.New(globalindex.GetGlobalIndex()),
+		deploymentIndexer.New(globalindex.GetGlobalIndex()))
 
-	ds, err = New(storage, cveIndexer.Singleton(), searcher)
+	ds, err = New(storage, cveIndexer.New(globalindex.GetGlobalIndex()), searcher)
 	utils.Must(err)
 }
 

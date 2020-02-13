@@ -32,14 +32,14 @@ func initialize() {
 	utils.Must(err)
 
 	searcher := search.New(storage, globaldb.GetGlobalDackBox(),
-		cveIndexer.Singleton(),
-		componentCVEEdgeIndexer.Singleton(),
-		componentIndexer.Singleton(),
-		imageComponentEdgeIndexer.Singleton(),
+		cveIndexer.New(globalindex.GetGlobalIndex()),
+		componentCVEEdgeIndexer.New(globalindex.GetGlobalIndex()),
+		componentIndexer.New(globalindex.GetGlobalIndex()),
+		imageComponentEdgeIndexer.New(globalindex.GetGlobalIndex()),
 		imageIndexer.New(globalindex.GetGlobalIndex()),
-		deploymentIndexer.Singleton())
+		deploymentIndexer.New(globalindex.GetGlobalIndex()))
 
-	ad, err = New(storage, componentIndexer.Singleton(), searcher, riskDataStore.Singleton())
+	ad, err = New(storage, componentIndexer.New(globalindex.GetGlobalIndex()), searcher, riskDataStore.Singleton())
 	utils.Must(err)
 }
 

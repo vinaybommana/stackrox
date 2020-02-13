@@ -65,10 +65,10 @@ func newDataStore(storage store.Store, graphProvider graph.Provider, bleveIndex 
 	if features.Dackbox.Enabled() {
 		searcher = search.New(storage,
 			graphProvider,
-			cveIndexer.Singleton(),
-			componentCVEEdgeIndexer.Singleton(),
-			componentIndexer.Singleton(),
-			imageComponentEdgeIndexer.Singleton(),
+			cveIndexer.New(bleveIndex),
+			componentCVEEdgeIndexer.New(bleveIndex),
+			componentIndexer.New(bleveIndex),
+			imageComponentEdgeIndexer.New(bleveIndex),
 			imageIndexer.New(bleveIndex),
 			indexer)
 	} else {

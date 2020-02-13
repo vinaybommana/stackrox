@@ -81,7 +81,7 @@ func initializeDackBox() {
 		lazy = indexer.NewLazy(toIndex, registry, globalindex.GetGlobalIndex(), duckBox.AckIndexed)
 		lazy.Start()
 
-		if err := Init(duckBox, ReindexIfMissingBucket, DirtyBucket, needsReindexValue); err != nil {
+		if err := Init(duckBox, toIndex, registry, ReindexIfMissingBucket, DirtyBucket, needsReindexValue); err != nil {
 			log.Panicf("Could not initialize dackbox: %v", err)
 		}
 	})
