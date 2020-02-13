@@ -19,6 +19,7 @@ import (
 	"github.com/stackrox/rox/pkg/grpc/requestinfo"
 	"github.com/stackrox/rox/pkg/httputil"
 	"github.com/stackrox/rox/pkg/ioutils"
+	"github.com/stackrox/rox/pkg/maputil"
 	"github.com/stackrox/rox/pkg/netutil"
 	"github.com/stackrox/rox/pkg/set"
 	"github.com/stackrox/rox/pkg/utils"
@@ -31,10 +32,11 @@ const (
 	nonceTTL     = 1 * time.Minute
 	nonceByteLen = 20
 
-	issuerConfigKey       = "issuer"
-	clientIDConfigKey     = "client_id"
-	clientSecretConfigKey = "client_secret"
-	modeConfigKey         = "mode"
+	issuerConfigKey              = "issuer"
+	clientIDConfigKey            = "client_id"
+	clientSecretConfigKey        = "client_secret"
+	dontUseClientSecretConfigKey = "do_not_use_client_secret"
+	modeConfigKey                = "mode"
 )
 
 type nonceVerificationSetting int
@@ -56,6 +58,8 @@ type backendImpl struct {
 	baseOauthConfig oauth2.Config
 	baseOptions     []oauth2.AuthCodeOption
 	formPostMode    bool
+
+	config map[string]string
 }
 
 func (p *backendImpl) OnEnable(provider authproviders.Provider) {
@@ -145,18 +149,18 @@ func (p *backendImpl) verifyIDToken(ctx context.Context, rawIDToken string, nonc
 	}, nil
 }
 
-func newBackend(ctx context.Context, id string, uiEndpoints []string, callbackURLPath string, config map[string]string) (*backendImpl, map[string]string, error) {
+func newBackend(ctx context.Context, id string, uiEndpoints []string, callbackURLPath string, config map[string]string) (*backendImpl, error) {
 	if len(uiEndpoints) == 0 {
-		return nil, nil, errors.New("OIDC requires a default UI endpoint")
+		return nil, errors.New("OIDC requires a default UI endpoint")
 	}
 
 	issuer := config[issuerConfigKey]
 	if issuer == "" {
-		return nil, nil, errors.New("no issuer provided")
+		return nil, errors.New("no issuer provided")
 	}
 
 	if strings.HasPrefix(issuer, "http://") {
-		return nil, nil, errors.New("unencrypted http is not allowed for OIDC issuers")
+		return nil, errors.New("unencrypted http is not allowed for OIDC issuers")
 	}
 	if !strings.HasPrefix(issuer, "https://") {
 		issuer = "https://" + issuer
@@ -167,12 +171,12 @@ func newBackend(ctx context.Context, id string, uiEndpoints []string, callbackUR
 	}
 
 	if oidcCfg.ClientID == "" {
-		return nil, nil, errors.New("no client ID provided")
+		return nil, errors.New("no client ID provided")
 	}
 
 	oidcProvider, issuer, err := createOIDCProvider(ctx, issuer)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	provider := wrapProvider(oidcProvider)
@@ -201,20 +205,22 @@ func newBackend(ctx context.Context, id string, uiEndpoints []string, callbackUR
 		p.baseOptions = append(p.baseOptions, oauth2.SetAuthURLParam("response_mode", "form_post"))
 		p.formPostMode = true
 	default:
-		return nil, nil, fmt.Errorf("invalid mode %q", mode)
+		return nil, errors.Errorf("invalid mode %q", mode)
 	}
 
 	responseType := "id_token"
 	clientSecret := config[clientSecretConfigKey]
 	if clientSecret != "" {
 		if !features.RefreshTokens.Enabled() {
-			return nil, nil, errors.New("setting a client secret is not supported yet")
+			return nil, errors.New("setting a client secret is not supported yet")
 		}
 
 		if mode != "post" {
-			return nil, nil, errors.Errorf("mode %q cannot be used with a client secret", mode)
+			return nil, errors.Errorf("mode %q cannot be used with a client secret", mode)
 		}
 		responseType = "code"
+	} else if config[dontUseClientSecretConfigKey] == "false" {
+		return nil, errors.New("please specify a client secret, or explicitly opt-out of client secret usage")
 	}
 
 	p.baseOptions = append(p.baseOptions, oauth2.SetAuthURLParam("response_type", responseType))
@@ -231,14 +237,30 @@ func newBackend(ctx context.Context, id string, uiEndpoints []string, callbackUR
 		p.baseOauthConfig.Scopes = append(p.baseOauthConfig.Scopes, oidc.ScopeOfflineAccess)
 	}
 
-	effectiveConfig := map[string]string{
+	p.config = map[string]string{
 		issuerConfigKey:       issuer,
 		clientIDConfigKey:     oidcCfg.ClientID,
 		clientSecretConfigKey: clientSecret,
 		modeConfigKey:         mode,
 	}
 
-	return p, effectiveConfig, nil
+	return p, nil
+}
+
+func (p *backendImpl) Config(redact bool) map[string]string {
+	configCopy := maputil.CloneStringStringMap(p.config)
+	if redact && configCopy[clientSecretConfigKey] != "" {
+		configCopy[clientSecretConfigKey] = "*****"
+	}
+	return configCopy
+}
+
+func (p *backendImpl) MergeConfigInto(newCfg map[string]string) map[string]string {
+	mergedCfg := maputil.CloneStringStringMap(newCfg)
+	if mergedCfg[dontUseClientSecretConfigKey] == "false" {
+		mergedCfg[clientSecretConfigKey] = p.config[clientSecretConfigKey]
+	}
+	return mergedCfg
 }
 
 func (p *backendImpl) useCodeFlow() bool {

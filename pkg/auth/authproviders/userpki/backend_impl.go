@@ -3,7 +3,6 @@ package userpki
 import (
 	"context"
 	"crypto/x509"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -16,6 +15,7 @@ import (
 	"github.com/stackrox/rox/pkg/grpc/requestinfo"
 	"github.com/stackrox/rox/pkg/httputil"
 	"github.com/stackrox/rox/pkg/logging"
+	"github.com/stackrox/rox/pkg/maputil"
 	"github.com/stackrox/rox/pkg/set"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -34,14 +34,14 @@ var (
 	errInvalidCertificate = errors.New("user certificate doesn't match any configured provider")
 )
 
-func newBackend(ctx context.Context, pathPrefix string, callbacks ProviderCallbacks, config map[string]string) (authproviders.Backend, map[string]string, error) {
+func newBackend(ctx context.Context, pathPrefix string, callbacks ProviderCallbacks, config map[string]string) (authproviders.Backend, error) {
 	pem := config[ConfigKeys]
 	if pem == "" {
-		return nil, nil, fmt.Errorf("parameter %q is required", ConfigKeys)
+		return nil, errors.Errorf("parameter %q is required", ConfigKeys)
 	}
 	certs, err := helpers.ParseCertificatesPEM([]byte(pem))
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	fingerprints := set.NewStringSet()
 	for _, cert := range certs {
@@ -52,7 +52,10 @@ func newBackend(ctx context.Context, pathPrefix string, callbacks ProviderCallba
 		callbacks:    callbacks,
 		certs:        certs,
 		fingerprints: fingerprints,
-	}, config, nil
+		config: map[string]string{
+			ConfigKeys: pem,
+		},
+	}, nil
 }
 
 type backendImpl struct {
@@ -60,6 +63,15 @@ type backendImpl struct {
 	callbacks    ProviderCallbacks
 	certs        []*x509.Certificate
 	fingerprints set.StringSet
+	config       map[string]string
+}
+
+func (p *backendImpl) Config(redact bool) map[string]string {
+	return maputil.CloneStringStringMap(p.config)
+}
+
+func (p *backendImpl) MergeConfigInto(newCfg map[string]string) map[string]string {
+	return newCfg
 }
 
 func (p *backendImpl) OnEnable(provider authproviders.Provider) {

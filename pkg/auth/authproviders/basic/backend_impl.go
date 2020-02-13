@@ -55,16 +55,24 @@ func (p *backendImpl) LoginURL(clientState string, _ *requestinfo.RequestInfo) s
 	return u.String()
 }
 
+func (p *backendImpl) Config(redact bool) map[string]string {
+	return nil
+}
+
+func (p *backendImpl) MergeConfigInto(newCfg map[string]string) map[string]string {
+	return newCfg
+}
+
 func (p *backendImpl) RefreshURL() string {
 	return ""
 }
 
-func newBackend(urlPathPrefix string) (*backendImpl, map[string]string, error) {
+func newBackend(urlPathPrefix string) (*backendImpl, error) {
 	backendImpl := &backendImpl{
 		urlPathPrefix: urlPathPrefix,
 		monoClock:     monoclock.New(),
 	}
-	return backendImpl, nil, nil
+	return backendImpl, nil
 }
 
 func (p *backendImpl) ProcessHTTPRequest(w http.ResponseWriter, r *http.Request) (*authproviders.AuthResponse, string, error) {
