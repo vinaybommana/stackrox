@@ -1,12 +1,19 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import PropTypes from 'prop-types';
 
+import { adjustTooltipPosition } from 'utils/domUtils';
+
 const TooltipOverlay = ({ top, left, className, title, subtitle, body, footer }) => {
+    const tooltipRef = useRef(null);
     if (!title || !body) return null;
+
+    const [adjustedTop, adjustedLeft] = adjustTooltipPosition(top, left, tooltipRef);
+
     return (
         <div
             className={`graph-hint text-xs text-base-600 z-10 bg-tertiary-200 rounded min-w-32 border border-tertiary-400 ${className}`}
-            style={{ top, left }}
+            style={{ top: adjustedTop, left: adjustedLeft }}
+            ref={tooltipRef}
         >
             <div className="flex flex-col border-b border-primary-400 mb-1 py-1 px-2 leading-loose">
                 <h2 className="graph-hint-title text-sm">{title}</h2>
