@@ -1,6 +1,6 @@
 defaults: &defaults
   docker:
-    - image: docker.io/stackrox/apollo-ci:0.2.9
+    - image: docker.io/stackrox/apollo-ci:0.2.10
       auth:
         username: $DOCKER_IO_PULL_USERNAME
         password: $DOCKER_IO_PULL_PASSWORD
@@ -402,6 +402,22 @@ buildLivenessCheck: &buildLivenessCheck
     name: Ensure workflow is still live
     command: |
       .circleci/check-workflow-live.sh
+
+checkEksLabel: &checkEksLabel
+  run:
+    name: Determine whether to run eks tests
+    command: |
+      set +e
+      if [ -z "${CIRCLE_TAG}" ]; then
+        .circleci/pr_has_label.sh ci-eks-tests
+        # SPECIAL CASE: eks-tests are currently NOT run on master.
+        # If you want to run it on master, change this block to be like
+        # checkOpenShiftLabel.
+        if [ $? -ne 0 ]; then
+          echo "Skipping tests because we're not on a PR OR the PR doesn't have the ci-eks-tests label. Apply the ci-eks-tests label to your PR if you want to run them."
+          circleci step halt
+        fi
+      fi
 
 checkKopsLabel: &checkKopsLabel
   run:
@@ -2403,6 +2419,160 @@ jobs:
           flavor: multi
           version: 0.6.1
 
+  provision-eks:
+    <<: *defaults
+    environment:
+      - EKS_AUTOMATION_VERSION: 0.0.1
+    steps:
+      - checkout
+      - *checkEksLabel
+
+      - setup_remote_docker
+
+      - run:
+          name: Login to Docker Hub
+          command: docker login -u "$DOCKER_IO_PULL_USERNAME" -p "$DOCKER_IO_PULL_PASSWORD"
+
+      - attach_workspace:
+          at: /go/src/github.com/stackrox/rox
+
+      - run:
+          name: Create EKS cluster
+          command: |
+            mkdir $PWD/eks
+            docker run --name eks-automation -t \
+              -v $PWD/eks:/data \
+              -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY \
+              stackrox/eks-automation:$EKS_AUTOMATION_VERSION create "${CIRCLE_WORKFLOW_ID:0:7}"
+            docker cp eks-automation:/data $PWD/eks
+
+      - run:
+          name: Validate Kubeconfig
+          command: |
+            ls -lh $PWD/eks/data
+            export KUBECONFIG=$PWD/eks/data/eks-kube.yaml
+            sudo chown "$USER" $PWD/eks/data/eks-kube.yaml
+            kubectl get nodes
+
+      - store_artifacts:
+          path: eks
+          destination: eks
+
+      - *buildLivenessCheck
+
+      - persist_to_workspace:
+          root: .
+          paths:
+            - eks
+
+      - run:
+          name: Destroy EKS cluster
+          command: |
+            docker run --rm -t \
+              -v $PWD/eks/data:/data \
+              -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY \
+              stackrox/eks-automation:$EKS_AUTOMATION_VERSION destroy "${CIRCLE_WORKFLOW_ID:0:7}"
+          when: on_fail
+
+
+  eks-tests:
+    <<: *defaults
+    environment:
+      - EKS_AUTOMATION_VERSION: 0.0.1
+      - LOCAL_PORT: 8000
+      - RUNTIME_SUPPORT: kernel-module
+      - MONITORING_SUPPORT: true
+      - SCANNER_SUPPORT: true
+      - ROX_WHITELIST_GENERATION_DURATION: 1m
+      - ADMISSION_CONTROLLER: true
+
+    steps:
+      - checkout
+      - *checkEksLabel
+
+      - setup_remote_docker
+
+      - run:
+          name: Login to Docker Hub
+          command: docker login -u "$DOCKER_IO_PULL_USERNAME" -p "$DOCKER_IO_PULL_PASSWORD"
+
+      - attach_workspace:
+          at: /go/src/github.com/stackrox/rox
+
+      - run:
+          name: Sanity check KUBECONFIG
+          command: |
+            ls -lh $PWD/eks/data
+            export KUBECONFIG=$PWD/eks/data/eks-kube.yaml
+            kubectl get nodes
+
+      - *setupRoxctl
+
+      - run:
+          name: Configure Deployment Environment
+          command: |
+            cci-export KUBECONFIG "$PWD/eks/data/eks-kube.yaml"
+            cci-export CLAIRIFY_IMAGE_TAG 0.5.4
+            cci-export ROX_IMAGE_REGISTRY docker.io
+            cci-export MAIN_IMAGE_TAG "$(make --quiet tag)"
+            cci-export REGISTRY_PASSWORD "$DOCKER_IO_PULL_PASSWORD"
+            cci-export REGISTRY_USERNAME "$DOCKER_IO_PULL_USERNAME"
+
+      - *setupGoogleAppCreds
+      - *setupLicense
+
+      - *setupDefaultTLSCerts
+
+      - deploy-stackrox:
+          post-central-deploy-steps:
+            - *setupClientTLSCerts
+
+      - deploy-webhook-server
+      - deploy-authz-plugin
+
+      - *restoreGradle
+      - run:
+          name: QA Automation Platform
+          command: |
+            export CLUSTER=K8S
+            export HOSTNAME=localhost
+            export PORT=${LOCAL_PORT}
+            make -C qa-tests-backend test
+
+      - *storeQATestResults
+      - *storeQASpockReports
+      - copy-gradle-files:
+          target-dir: eks-tests
+
+      - *updateTestRail
+
+      - *restoreUI
+      - *determineWhetherToRunUIDevServer
+      - *runUIDevServer
+      - *waitForUIDevServer
+      - *runUIE2E
+      - *collectImbuedUILogs
+      - *storeImbuedUILogs
+
+      - *collectK8sLogs
+      - *backupDB
+      - *storeDBBackupArtifact
+      - *verifyNoStackRoxRestarts
+      - *storeK8sLogs
+
+      - *storeCypressResults
+      - *storeCypressScreenshots
+      - *storeCypressVideos
+
+      - run:
+          name: Destroy EKS cluster
+          command: |
+            docker run --rm -t \
+              -v $PWD/eks/data:/data \
+              -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY \
+              stackrox/eks-automation:$EKS_AUTOMATION_VERSION destroy "${CIRCLE_WORKFLOW_ID:0:7}"
+          when: always
+
   provision-kops:
     machine: true
     environment:
@@ -2997,6 +3167,13 @@ workflows:
           requires:
             - build
             - provision-openshift-crio
+      - provision-eks:
+          <<: *runOnAllTagsWithDockerIOPullCtx
+      - eks-tests:
+          <<: *runOnAllTagsWithDockerIOPullCtx
+          requires:
+            - build
+            - provision-eks
       - provision-kops:
           <<: *runOnAllTagsWithDockerIOPullCtx
       - kops-tests:
