@@ -6,7 +6,8 @@ import (
 	"github.com/stackrox/rox/central/globaldb"
 	"github.com/stackrox/rox/central/globalindex"
 	"github.com/stackrox/rox/central/grpc/metrics"
-	"github.com/stackrox/rox/central/license/singleton"
+	installation "github.com/stackrox/rox/central/installation/store"
+	manager "github.com/stackrox/rox/central/license/singleton"
 	namespaceDatastore "github.com/stackrox/rox/central/namespace/datastore"
 	nodeDatastore "github.com/stackrox/rox/central/node/globaldatastore"
 	"github.com/stackrox/rox/central/sensor/service/connection"
@@ -24,7 +25,8 @@ func Singleton() *RoxGatherer {
 	gathererInit.Do(func() {
 		gatherer = newRoxGatherer(
 			newCentralGatherer(
-				singleton.ManagerSingleton(),
+				manager.ManagerSingleton(),
+				installation.Singleton(),
 				newDatabaseGatherer(newBadgerGatherer(globaldb.GetGlobalBadgerDB()), newBoltGatherer(globaldb.GetGlobalDB()), newBleveGatherer(globalindex.GetGlobalIndex())),
 				newAPIGatherer(metrics.GRPCSingleton(), metrics.HTTPSingleton()),
 				gatherers.NewComponentInfoGatherer(),

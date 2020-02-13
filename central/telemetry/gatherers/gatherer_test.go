@@ -9,6 +9,7 @@ import (
 	"github.com/etcd-io/bbolt"
 	"github.com/stackrox/rox/central/globalindex"
 	"github.com/stackrox/rox/central/grpc/metrics"
+	installation "github.com/stackrox/rox/central/installation/store"
 	"github.com/stackrox/rox/pkg/badgerhelper"
 	"github.com/stackrox/rox/pkg/bolthelper"
 	"github.com/stackrox/rox/pkg/telemetry/data"
@@ -45,7 +46,10 @@ func (s *gathererTestSuite) SetupSuite() {
 	s.Require().NoError(err, "Failed to make in-memory Bleve: %s", err)
 	s.index = index
 
-	s.gatherer = newCentralGatherer(nil, newDatabaseGatherer(newBadgerGatherer(s.badger), newBoltGatherer(s.bolt), newBleveGatherer(s.index)), newAPIGatherer(metrics.GRPCSingleton(), metrics.HTTPSingleton()), gatherers.NewComponentInfoGatherer())
+	installationStore := installation.New(s.bolt)
+	s.Require().NoError(err, "Failed to make installation store")
+
+	s.gatherer = newCentralGatherer(nil, installationStore, newDatabaseGatherer(newBadgerGatherer(s.badger), newBoltGatherer(s.bolt), newBleveGatherer(s.index)), newAPIGatherer(metrics.GRPCSingleton(), metrics.HTTPSingleton()), gatherers.NewComponentInfoGatherer())
 }
 
 func (s *gathererTestSuite) TearDownSuite() {

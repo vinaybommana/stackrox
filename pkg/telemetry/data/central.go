@@ -2,6 +2,7 @@ package data
 
 import (
 	"bytes"
+	"time"
 
 	"github.com/gogo/protobuf/jsonpb"
 	licenseproto "github.com/stackrox/rox/generated/shared/license"
@@ -91,6 +92,9 @@ func (l *LicenseJSON) UnmarshalJSON(data []byte) error {
 // CentralInfo contains telemetry data specific to StackRox' Central deployment
 type CentralInfo struct {
 	*RoxComponentInfo
+
+	ID               string     `json:"id,omitempty"`
+	InstallationTime *time.Time `json:"installationTime,omitempty"`
 
 	License      *LicenseJSON      `json:"license,omitempty"`
 	Storage      *StorageInfo      `json:"storage,omitempty"`

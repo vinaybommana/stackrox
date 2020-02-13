@@ -14,7 +14,6 @@ import (
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/logging"
-	"github.com/stackrox/rox/pkg/protoconv"
 	"github.com/stackrox/rox/pkg/telemetry"
 	"github.com/stackrox/rox/pkg/telemetry/data"
 )
@@ -130,10 +129,5 @@ func (c *ClusterGatherer) clusterFromDatastores(ctx context.Context, cluster *st
 
 func getLastContact(cluster *storage.Cluster) *time.Time {
 	status := cluster.GetStatus()
-	var lastContact *time.Time
-	if status.GetLastContact() != nil {
-		converted := protoconv.ConvertTimestampToTimeOrNow(status.GetLastContact())
-		lastContact = &converted
-	}
-	return lastContact
+	return telemetry.GetTimeOrNil(status.GetLastContact())
 }
