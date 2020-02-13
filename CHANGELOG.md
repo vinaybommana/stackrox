@@ -12,7 +12,10 @@ All notable changes to this project that require documentation updates will be d
     Read permission: Download the scanner bundle (with `roxctl scanner generate`)
     Write permission: N/A
 - Related to above, `roxctl scanner generate` now requires users to have read permissions to the newly created `ScannerBundle` resource.
-Previously, this endpoint was accessible to any authenticated user.
+  Previously, this endpoint was accessible to any authenticated user.
+- OIDC auth providers now support refresh tokens, in order to keep you logged in beyond the ID token expiration time
+  configured in your identity provider (sometimes only 15 minutes or less). In order to use refresh tokens, a client
+  secret must be specified in the OIDC auth provider configuration.
 
 ### Changed
 - UseStartTLS field in the Email notifier configuration has been deprecated in lieu of an enum which supports several
