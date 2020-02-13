@@ -20,6 +20,8 @@ different authentication methods
 - `roxctl central generate k8s` and `roxctl central generate openshift` no longer contain prompts for the monitoring stack because
   it is now deprecated
 - The scanner v2 preview is now removed
+- The scanner's updater now pulls from https://definitions.stackrox.io, and not https://storage.googleapis.com/definitions.stackrox.io/ like it previously would.
+- Fixed https://stack-rox.atlassian.net/browse/ROX-3985.
 
 ## [38.0]
 ### Added
