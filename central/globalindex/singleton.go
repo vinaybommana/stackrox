@@ -5,6 +5,11 @@ import (
 	"github.com/stackrox/rox/pkg/sync"
 )
 
+const (
+	// DefaultBlevePath is the default path to Bleve's on-disk files
+	DefaultBlevePath = "/var/lib/stackrox/scorch.bleve"
+)
+
 var (
 	once sync.Once
 
@@ -13,7 +18,7 @@ var (
 
 func initialize() {
 	var err error
-	gi, err = InitializeIndices("/var/lib/stackrox/scorch.bleve")
+	gi, err = InitializeIndices(DefaultBlevePath)
 	if err != nil {
 		panic(err)
 	}

@@ -4,6 +4,7 @@ import (
 	clusterDatastore "github.com/stackrox/rox/central/cluster/datastore"
 	depDatastore "github.com/stackrox/rox/central/deployment/datastore"
 	"github.com/stackrox/rox/central/globaldb"
+	"github.com/stackrox/rox/central/globalindex"
 	"github.com/stackrox/rox/central/grpc/metrics"
 	"github.com/stackrox/rox/central/license/singleton"
 	namespaceDatastore "github.com/stackrox/rox/central/namespace/datastore"
@@ -24,7 +25,7 @@ func Singleton() *RoxGatherer {
 		gatherer = newRoxGatherer(
 			newCentralGatherer(
 				singleton.ManagerSingleton(),
-				newDatabaseGatherer(newBadgerGatherer(globaldb.GetGlobalBadgerDB()), newBoltGatherer(globaldb.GetGlobalDB())),
+				newDatabaseGatherer(newBadgerGatherer(globaldb.GetGlobalBadgerDB()), newBoltGatherer(globaldb.GetGlobalDB()), newBleveGatherer(globalindex.GetGlobalIndex())),
 				newAPIGatherer(metrics.GRPCSingleton(), metrics.HTTPSingleton()),
 				gatherers.NewComponentInfoGatherer(),
 			),

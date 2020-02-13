@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/blevesearch/bleve"
 	"github.com/dgraph-io/badger"
 	"github.com/etcd-io/bbolt"
+	"github.com/stackrox/rox/central/globalindex"
 	"github.com/stackrox/rox/central/grpc/metrics"
 	"github.com/stackrox/rox/pkg/badgerhelper"
 	"github.com/stackrox/rox/pkg/bolthelper"
@@ -24,6 +26,7 @@ type gathererTestSuite struct {
 
 	bolt     *bbolt.DB
 	badger   *badger.DB
+	index    bleve.Index
 	dir      string
 	gatherer *CentralGatherer
 }
@@ -38,7 +41,11 @@ func (s *gathererTestSuite) SetupSuite() {
 	s.badger = badgerDB
 	s.dir = dir
 
-	s.gatherer = newCentralGatherer(nil, newDatabaseGatherer(newBadgerGatherer(s.badger), newBoltGatherer(s.bolt)), newAPIGatherer(metrics.GRPCSingleton(), metrics.HTTPSingleton()), gatherers.NewComponentInfoGatherer())
+	index, err := globalindex.MemOnlyIndex()
+	s.Require().NoError(err, "Failed to make in-memory Bleve: %s", err)
+	s.index = index
+
+	s.gatherer = newCentralGatherer(nil, newDatabaseGatherer(newBadgerGatherer(s.badger), newBoltGatherer(s.bolt), newBleveGatherer(s.index)), newAPIGatherer(metrics.GRPCSingleton(), metrics.HTTPSingleton()), gatherers.NewComponentInfoGatherer())
 }
 
 func (s *gathererTestSuite) TearDownSuite() {
