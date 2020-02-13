@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 import { ChevronDown } from 'react-feather';
 import Menu from 'Components/Menu';
@@ -14,9 +15,14 @@ const DashboardMenu = ({ text, options }) => {
                 </div>
             }
             options={options}
-            className="min-w-32"
+            className="h-full min-w-32"
         />
     );
+};
+
+DashboardMenu.propTypes = {
+    text: PropTypes.string.isRequired,
+    options: PropTypes.arrayOf(PropTypes.shape({})).isRequired
 };
 
 export default DashboardMenu;

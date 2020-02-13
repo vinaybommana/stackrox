@@ -3,11 +3,15 @@ import { withRouter } from 'react-router-dom';
 import ReactRouterPropTypes from 'react-router-prop-types';
 
 import entityTypes from 'constants/entityTypes';
+import { createOptions } from 'utils/workflowUtils';
 import DashboardLayout from 'Components/DashboardLayout';
 import ExportButton from 'Components/ExportButton';
 import RadioButtonGroup from 'Components/RadioButtonGroup';
 import workflowStateContext from 'Containers/workflowStateContext';
 import { DASHBOARD_LIMIT } from 'constants/workflowPages.constants';
+import DashboardMenu from 'Components/DashboardMenu';
+import PoliciesCountTile from '../Components/PoliciesCountTile';
+import CvesCountTile from '../Components/CvesCountTile';
 import TopRiskyEntitiesByVulnerabilities from '../widgets/TopRiskyEntitiesByVulnerabilities';
 import TopRiskiestImagesAndComponents from '../widgets/TopRiskiestImagesAndComponents';
 import FrequentlyViolatedPolicies from '../widgets/FrequentlyViolatedPolicies';
@@ -15,9 +19,14 @@ import RecentlyDetectedVulnerabilities from '../widgets/RecentlyDetectedVulnerab
 import MostCommonVulnerabilities from '../widgets/MostCommonVulnerabilities';
 import DeploymentsWithMostSeverePolicyViolations from '../widgets/DeploymentsWithMostSeverePolicyViolations';
 import ClustersWithMostK8sIstioVulnerabilities from '../widgets/ClustersWithMostK8sIstioVulnerabilities';
-import VulnMgmtNavHeader from '../Components/VulnMgmtNavHeader';
 
-// layout-specific graph widget counts
+const entityMenuTypes = [
+    entityTypes.CLUSTER,
+    entityTypes.NAMESPACE,
+    entityTypes.DEPLOYMENT,
+    entityTypes.IMAGE,
+    entityTypes.COMPONENT
+];
 
 const VulnDashboardPage = ({ history }) => {
     const workflowState = useContext(workflowStateContext);
@@ -70,7 +79,16 @@ const VulnDashboardPage = ({ history }) => {
                     pdfId="capture-dashboard"
                 />
             </div>
-            <VulnMgmtNavHeader />
+            <div className="flex h-full ml-3 pl-3 border-l border-base-400">
+                <PoliciesCountTile />
+                <CvesCountTile />
+                <div className="flex w-32">
+                    <DashboardMenu
+                        text="Application & Infrastructure"
+                        options={createOptions(entityMenuTypes, workflowState)}
+                    />
+                </div>
+            </div>
         </>
     );
     return (
