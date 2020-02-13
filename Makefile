@@ -526,7 +526,6 @@ clean-image:
 	git clean -xdf image/ui image/docs
 	git clean -xf integration-tests/mock-grpc-server/image/bin/mock-grpc-server
 	rm -f $(CURDIR)/image/rhel/bundle.tar.gz
-	rm -f $(CURDIR)/image/rhel/prebuild.sh
 
 .PHONY: tag
 tag:

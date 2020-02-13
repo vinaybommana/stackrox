@@ -1496,37 +1496,6 @@ jobs:
           at: /go/src/github.com/stackrox/rox
 
       - run:
-          name: Login to RedHat registry
-          command: |
-            success=0
-            for i in {1..10}; do
-              if docker login -u "$REDHAT_REGISTRY_USERNAME" -p "$REDHAT_REGISTRY_PASSWORD" https://registry.redhat.io; then
-                success=1
-                break
-              fi
-              sleep $(( 2 ** i ))
-            done
-
-            if (( ! success )); then
-              echo "Failed to login to RHEL registry"
-              exit 1
-            fi
-
-            success=0
-            for i in {1..10}; do
-              if docker pull registry.access.redhat.com/ubi7/ubi-minimal; then
-                success=1
-                break
-              fi
-              sleep $(( 2 ** i ))
-            done
-
-            if (( ! success )); then
-              echo "Failed to pull RHEL image"
-              exit 1
-            fi
-
-      - run:
           name: Install ossls
           working_directory: /tmp
           command: |
@@ -1556,6 +1525,11 @@ jobs:
 
             TAG="$(make --quiet tag)"
             docker push "docker.io/stackrox/main-rhel:${TAG}" | cat
+
+      - persist_to_workspace:
+          root: /go/src/github.com/stackrox/rox
+          paths:
+            - image/rhel/bundle.tar.gz
 
       - cleanup-clusters-on-fail
 
@@ -2837,7 +2811,6 @@ jobs:
             docker push collector.stackrox.io/collector-rhel:$COLLECTOR_TAG | cat
             docker push "collector.stackrox.io/collector-rhel:${COLLECTOR_TAG}-latest" | cat
 
-
       - run:
           name: Push roxctl to stackrox-hub
           command: |
@@ -2898,6 +2871,14 @@ jobs:
               gsutil cp scripts/offline-bundle/image-bundle-rhel.tgz           gs://sr-roxc/${release}/image-bundle-rhel.tgz
               gsutil cp scripts/offline-bundle/image-collector-bundle-rhel.tgz gs://sr-roxc/${release}/image-collector-bundle-rhel.tgz
             done
+
+      - run:
+          name: Upload main image RHEL DSOP bundle to dsop-artifacts.stackrox.io
+          command: |
+              gcloud auth activate-service-account --key-file <(echo "$GCLOUD_SERVICE_ACCOUNT_CIRCLECI_ROX")
+              gcloud auth list
+              TAG="$(make --quiet tag)"
+              gsutil cp image/rhel/bundle.tar.gz "gs://dsop-artifacts.stackrox.io/main-rhel/${TAG}/"
 
   scan-images-in-quay:
       <<: *defaults
@@ -3198,6 +3179,7 @@ workflows:
           context: docker-io-and-stackrox-io-push
           requires:
             - build
+            - build-rhel
             - build-deployer
             - unit-tests
 
