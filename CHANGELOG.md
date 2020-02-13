@@ -2,6 +2,8 @@
 All notable changes to this project that require documentation updates will be documented in this file.
 
 ## [NEXT RELEASE]
+
+## [39.0]
 ### Added
 - `roxctl central cert` can be used to download Central's TLS certificate, which is then passed to `roxctl --ca`.
 - The Scanner deployment has been split into two separate deployments: Scanner and Scanner DB. The Scanner deployment is now
