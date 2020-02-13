@@ -59,7 +59,7 @@ const OidcFormFields = ({ disabled, configValues, change }) => {
         clientSecretPlaceholder = 'Client Secret is only supported with HTTP POST callback mode';
     } else if (configValues.clientOnly?.clientSecretStored) {
         clientSecretPlaceholder = configValues.do_not_use_client_secret
-            ? 'Disabled, currently stored secret will be removed'
+            ? 'Disabled, the currently stored secret will be removed'
             : 'Leave this field empty to keep the currently stored secret';
     } else if (configValues.do_not_use_client_secret) {
         clientSecretPlaceholder = 'Disabled';
