@@ -60,7 +60,7 @@ func (f *namespaceFilterImpl) collectNamespaceScopes(ctx context.Context, idGrap
 	}
 	// Keep ascending to the namespace.
 	for _, parentID := range parents {
-		return combineMaps(ret, f.collectNamespaceScopes(ctx, idGraph, path[1:], parentID))
+		ret = combineMaps(ret, f.collectNamespaceScopes(ctx, idGraph, path[1:], parentID))
 	}
 	return ret
 }

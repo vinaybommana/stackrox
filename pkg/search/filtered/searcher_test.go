@@ -31,19 +31,22 @@ var (
 	id6 = []byte("id6")
 	id7 = []byte("id7")
 	id8 = []byte("id8")
+	id9 = []byte("id9")
 
 	prefixedID1 = badgerhelper.GetBucketKey(prefix1, id1)
 	prefixedID2 = badgerhelper.GetBucketKey(prefix1, id2)
 	prefixedID3 = badgerhelper.GetBucketKey(prefix2, id3)
 	prefixedID4 = badgerhelper.GetBucketKey(prefix2, id4)
+	prefixedID9 = badgerhelper.GetBucketKey(prefix2, id9)
 	prefixedID5 = badgerhelper.GetBucketKey(prefix3, id5)
 	prefixedID6 = badgerhelper.GetBucketKey(prefix3, id6)
 	prefixedID7 = badgerhelper.GetBucketKey(prefix4, id7)
 	prefixedID8 = badgerhelper.GetBucketKey(prefix4, id8)
 
-	// id1 -> id3 -> id5 (namespace) -> id7, id8 (cluster)
+	// id1 -> id9
+	//      \ id3 -> id5 (namespace) -> id7, id8 (cluster)
 	// id2 -> id4 -> id6 (namespace) -> id7 (cluster)
-	toID1 = [][]byte{prefixedID3}
+	toID1 = [][]byte{prefixedID9, prefixedID3}
 	toID2 = [][]byte{prefixedID4}
 	toID3 = [][]byte{prefixedID5}
 	toID4 = [][]byte{prefixedID6}
@@ -149,6 +152,7 @@ func (s *filteredSearcherTestSuite) TestClusterScoped() {
 	s.mockRGraph.EXPECT().GetRefsTo(prefixedID4).Return(toID4)
 	s.mockRGraph.EXPECT().GetRefsTo(prefixedID5).Return(toID5)
 	s.mockRGraph.EXPECT().GetRefsTo(prefixedID6).Return(toID6)
+	s.mockRGraph.EXPECT().GetRefsTo(prefixedID9).Return(nil)
 
 	s.mockUnsafeSearcher.EXPECT().Search(gomock.Any()).Return([]search.Result{
 		{
@@ -192,6 +196,7 @@ func (s *filteredSearcherTestSuite) TestClusterScopedMultiCluster() {
 	s.mockRGraph.EXPECT().GetRefsTo(prefixedID4).Return(toID4)
 	s.mockRGraph.EXPECT().GetRefsTo(prefixedID5).Return(toID5)
 	s.mockRGraph.EXPECT().GetRefsTo(prefixedID6).Return(toID6)
+	s.mockRGraph.EXPECT().GetRefsTo(prefixedID9).Return(nil)
 
 	s.mockUnsafeSearcher.EXPECT().Search(gomock.Any()).Return([]search.Result{
 		{
@@ -233,6 +238,7 @@ func (s *filteredSearcherTestSuite) TestNamespaceScoped() {
 	s.mockRGraph.EXPECT().GetRefsTo(prefixedID4).Return(toID4)
 	s.mockRGraph.EXPECT().GetRefsTo(prefixedID5).Return(toID5)
 	s.mockRGraph.EXPECT().GetRefsTo(prefixedID6).Return(toID6)
+	s.mockRGraph.EXPECT().GetRefsTo(prefixedID9).Return(nil)
 
 	s.mockUnsafeSearcher.EXPECT().Search(gomock.Any()).Return([]search.Result{
 		{
@@ -276,6 +282,7 @@ func (s *filteredSearcherTestSuite) TestNamespaceScopedMultiCluster() {
 	s.mockRGraph.EXPECT().GetRefsTo(prefixedID4).Return(toID4)
 	s.mockRGraph.EXPECT().GetRefsTo(prefixedID5).Return(toID5)
 	s.mockRGraph.EXPECT().GetRefsTo(prefixedID6).Return(toID6)
+	s.mockRGraph.EXPECT().GetRefsTo(prefixedID9).Return(nil)
 
 	s.mockUnsafeSearcher.EXPECT().Search(gomock.Any()).Return([]search.Result{
 		{
@@ -316,6 +323,7 @@ func (s *filteredSearcherTestSuite) TestMutipleSACFiltersFail() {
 	s.mockRGraph.EXPECT().GetRefsTo(prefixedID2).Return(toID2)
 	s.mockRGraph.EXPECT().GetRefsTo(prefixedID3).Return(toID3)
 	s.mockRGraph.EXPECT().GetRefsTo(prefixedID4).Return(toID4)
+	s.mockRGraph.EXPECT().GetRefsTo(prefixedID9).Return(nil)
 
 	s.mockUnsafeSearcher.EXPECT().Search(gomock.Any()).Return([]search.Result{
 		{
@@ -350,6 +358,7 @@ func (s *filteredSearcherTestSuite) TestMutipleSACFiltersPass() {
 	s.mockRGraph.EXPECT().GetRefsTo(prefixedID2).Return(toID2)
 	s.mockRGraph.EXPECT().GetRefsTo(prefixedID3).Return(toID3)
 	s.mockRGraph.EXPECT().GetRefsTo(prefixedID4).Return(toID4)
+	s.mockRGraph.EXPECT().GetRefsTo(prefixedID9).Return(nil)
 
 	s.mockRGraph.EXPECT().GetRefsTo(prefixedID1).Return(toID1)
 	s.mockRGraph.EXPECT().GetRefsTo(prefixedID2).Return(toID2)
@@ -357,6 +366,8 @@ func (s *filteredSearcherTestSuite) TestMutipleSACFiltersPass() {
 	s.mockRGraph.EXPECT().GetRefsTo(prefixedID4).Return(toID4)
 	s.mockRGraph.EXPECT().GetRefsTo(prefixedID5).Return(toID5)
 	s.mockRGraph.EXPECT().GetRefsTo(prefixedID6).Return(toID6)
+	s.mockRGraph.EXPECT().GetRefsTo(prefixedID9).Return(nil)
+
 	s.mockUnsafeSearcher.EXPECT().Search(gomock.Any()).Return([]search.Result{
 		{
 			ID: string(id1),
