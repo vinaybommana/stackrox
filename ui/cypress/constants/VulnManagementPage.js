@@ -48,6 +48,7 @@ export const sidePanelListEntityPageSelectors = {
     childEntityInfoHeader: '[data-test-id="breadcrumb-link-text"] > span',
     tileLinkText: '[data-testid="tileLinkSuperText"]',
     tileLinkValue: '[data-test-id="tile-link-value"]',
+    imageTileLink: '[data-test-id="IMAGE-tile-link"]',
     tabButton: '[data-test-id="tab"]',
     getSidePanelTabHeader: title => {
         return `[data-test-id="widget-header"] > .w-full:contains('${title}')`;
