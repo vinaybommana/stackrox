@@ -51,7 +51,7 @@ function ProcessMessage({ process }) {
             </div>
             {ancestors}
             <div className="mb-4 p-2">
-                <FeatureEnabled featureFlag={knownBackendFlags.ROX_IQT_ANALYST_NOTES_UI}>
+                <FeatureEnabled featureFlag={knownBackendFlags.ROX_ANALYST_NOTES_UI}>
                     <div className="mb-3">
                         <AnalystTags type="Process" />
                     </div>

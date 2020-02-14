@@ -25,7 +25,7 @@ function DiscoveryCards({ deploymentId, processGroup, processEpoch, setProcessEp
                 setProcessEpoch={setProcessEpoch}
             >
                 <div className="p-2">
-                    <FeatureEnabled featureFlag={knownBackendFlags.ROX_IQT_ANALYST_NOTES_UI}>
+                    <FeatureEnabled featureFlag={knownBackendFlags.ROX_ANALYST_NOTES_UI}>
                         <div className="mb-3">
                             <AnalystTags type="Process" />
                         </div>

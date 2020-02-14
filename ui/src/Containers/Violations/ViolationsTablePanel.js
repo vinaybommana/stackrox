@@ -51,7 +51,7 @@ function ViolationsTablePanelButtons({ setDialogue, checkedAlertIds, runtimeAler
     const whitelistCount = numCheckedAlertIds;
     return (
         <React.Fragment>
-            <FeatureEnabled featureFlag={knownBackendFlags.ROX_IQT_ANALYST_NOTES_UI}>
+            <FeatureEnabled featureFlag={knownBackendFlags.ROX_ANALYST_NOTES_UI}>
                 {numCheckedAlertIds !== 0 && (
                     <PanelButton
                         icon={<Tag className="h-4 ml-1" />}

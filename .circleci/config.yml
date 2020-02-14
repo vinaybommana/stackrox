@@ -1721,11 +1721,11 @@ jobs:
       - LOAD_BALANCER: lb
       - ROX_PLAINTEXT_ENDPOINTS: "8080,grpc@8081"
       - ROX_VULN_MGMT_UI: true
-      - ROX_IQT_ANALYST_NOTES_UI: true
+      - ROX_ANALYST_NOTES_UI: true
       - ROX_BADGER_DB: true
       - ROX_TELEMETRY: true
       - ROX_DIAGNOSTIC_BUNDLE: true
-      - ROX_IQT_EVENT_TIMELINE_UI: true
+      - ROX_EVENT_TIMELINE_UI: true
 
     steps:
       - checkout

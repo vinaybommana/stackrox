@@ -20,13 +20,13 @@ var (
 	// NB: When removing this feature flag, remove references in ui/src/utils/featureFlags.js
 	DiagnosticBundle = registerFeature("Enable support for diagnostic bundle download", "ROX_DIAGNOSTIC_BUNDLE", true)
 
-	// IQTAnalystNotesUI enables the IQT Analyst Notes UI.
+	// AnalystNotesUI enables the Analyst Notes UI.
 	// NB: When removing this feature flag, remove references in ui/src/utils/featureFlags.js
-	IQTAnalystNotesUI = registerFeature("Enable IQT Analyst Notes UI", "ROX_IQT_ANALYST_NOTES_UI", false)
+	AnalystNotesUI = registerFeature("Enable Analyst Notes UI", "ROX_ANALYST_NOTES_UI", false)
 
-	// IQTEventTimelineUI enables the IQT Event Timeline UI.
+	// EventTimelineUI enables the Event Timeline UI.
 	// NB: When removing this feature flag, remove references in ui/src/utils/featureFlags.js
-	IQTEventTimelineUI = registerFeature("Enable IQT Event Timeline UI", "ROX_IQT_EVENT_TIMELINE_UI", false)
+	EventTimelineUI = registerFeature("Enable Event Timeline UI", "ROX_EVENT_TIMELINE_UI", false)
 
 	// NistSP800_53 enables the NIST SP 800-53 compliance standard.
 	NistSP800_53 = registerFeature("NIST SP 800-53", "ROX_NIST_800_53", false)
