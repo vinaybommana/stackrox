@@ -101,7 +101,7 @@ class DiagnosticBundleTest extends BaseSpecification {
                 ZipEntry entry
                 while ((entry = zis.nextEntry) != null) {
                     print "Found file ${entry.name}"
-                    if (entry.name.startsWith("kubernetes/")) {
+                    if (entry.name == "kubernetes/remote/stackrox/sensor/deployment-sensor.yaml") {
                         foundK8sInfo = true
                     }
                 }

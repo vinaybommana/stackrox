@@ -22,6 +22,7 @@ var (
 			{
 				GVK:           schema.GroupVersionKind{Version: "v1", Kind: "Secret"},
 				RedactionFunc: RedactSecret,
+				FilterFunc:    FilterOutServiceAccountSecrets,
 			},
 			{
 				GVK: schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"},

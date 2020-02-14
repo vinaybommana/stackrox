@@ -11,7 +11,8 @@ type ObjectConfig struct {
 	GVK           schema.GroupVersionKind
 	LabelSelector *metav1.LabelSelector // Label selector to apply; MUST be set for non-namespaced resources.
 
-	RedactionFunc func(unstructured *unstructured.Unstructured)
+	RedactionFunc func(obj *unstructured.Unstructured)
+	FilterFunc    func(obj *unstructured.Unstructured) bool
 }
 
 // Config configures the behavior of the Kubernetes self-diagnosis feature.

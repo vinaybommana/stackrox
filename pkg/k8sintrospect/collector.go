@@ -2,9 +2,12 @@ package k8sintrospect
 
 import (
 	"bytes"
+	"encoding/csv"
 	"fmt"
+	"math"
 	"net/http"
 	"path"
+	"sort"
 	"strings"
 	"time"
 
@@ -16,10 +19,12 @@ import (
 	v1 "k8s.io/api/core/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/kubectl/pkg/scheme"
 	"sigs.k8s.io/yaml"
 )
 
@@ -145,7 +150,15 @@ func (c *collector) createDynamicClients() map[schema.GroupVersionKind]dynamic.N
 }
 
 func (c *collector) collectPodData(pod *v1.Pod) error {
-	yamlData, err := yaml.Marshal(pod)
+	objToMarshal := (interface{})(pod)
+
+	var unstructuredPod unstructured.Unstructured
+	if err := scheme.Scheme.Convert(pod, &unstructuredPod, nil); err == nil {
+		RedactGeneric(&unstructuredPod)
+		objToMarshal = &unstructuredPod
+	}
+
+	yamlData, err := yaml.Marshal(objToMarshal)
 	if err != nil {
 		yamlData = []byte(fmt.Sprintf("Error marshaling pod to YAML: %v", err))
 	}
@@ -195,7 +208,6 @@ func (c *collector) recordError(err error) {
 }
 
 func (c *collector) collectObjectsData(ns string, cfg ObjectConfig, resourceClient dynamic.NamespaceableResourceInterface) error {
-	log.Infof("Collecting data for object type %v", cfg.GVK)
 	objList, err := resourceClient.Namespace(ns).List(metav1.ListOptions{})
 	if err != nil {
 		c.recordError(err)
@@ -203,10 +215,17 @@ func (c *collector) collectObjectsData(ns string, cfg ObjectConfig, resourceClie
 	}
 
 	for _, obj := range objList.Items {
+		if cfg.FilterFunc != nil {
+			if !cfg.FilterFunc(&obj) {
+				continue
+			}
+		}
+
+		RedactGeneric(&obj)
 		if cfg.RedactionFunc != nil {
 			cfg.RedactionFunc(&obj)
 		}
-		objYAML, err := yaml.Marshal(obj)
+		objYAML, err := yaml.Marshal(&obj)
 		if err != nil {
 			objYAML = []byte(fmt.Sprintf("Failed to marshal object to YAML: %v", err))
 		}
@@ -240,17 +259,60 @@ func (c *collector) collectNamespaceData(ns string) (bool, error) {
 }
 
 func (c *collector) collectEventsData(ns string) error {
-	eventList, err := c.client.CoreV1().Events(ns).List(metav1.ListOptions{})
-
-	var eventsYAML []byte
-	if err == nil && eventList != nil {
-		eventsYAML, err = yaml.Marshal(eventList)
-	}
-	if err != nil && len(eventsYAML) == 0 {
-		eventsYAML = []byte(fmt.Sprintf("Failed to retrieve events: %v", err))
+	eventList, err := c.client.CoreV1().Events(ns).List(metav1.ListOptions{
+		Limit: 500,
+	})
+	if err != nil {
+		return c.emitFileRaw(fmt.Sprintf("%s/event-list-error.txt", ns), []byte(err.Error()))
 	}
 
-	return c.emitFileRaw(fmt.Sprintf("%s/event-list.yaml", ns), eventsYAML)
+	// Sort events, newest first
+	events := eventList.Items
+	sort.Slice(events, func(i, j int) bool {
+		return events[i].LastTimestamp.After(events[j].LastTimestamp.Time)
+	})
+
+	var csvContents bytes.Buffer
+	csvWriter := csv.NewWriter(&csvContents)
+
+	csvHeadings := []string{
+		"Last Seen",
+		"Frequency",
+		"Type",
+		"Reason",
+		"Object",
+		"Source",
+		"Message",
+	}
+
+	if err := csvWriter.Write(csvHeadings); err != nil {
+		return err
+	}
+
+	for _, event := range eventList.Items {
+		var frequency string
+		if event.Count > 1 {
+			period := event.LastTimestamp.Sub(event.FirstTimestamp.Time)
+			period = time.Duration(math.Round(float64(period)/float64(time.Minute)) * float64(time.Minute))
+			frequency = fmt.Sprintf("%dx over %v", event.Count, period)
+		}
+		record := []string{
+			event.LastTimestamp.Format(time.RFC3339),
+			frequency,
+			event.Type,
+			event.Reason,
+			fmt.Sprintf("%s/%s", strings.ToLower(event.InvolvedObject.Kind), event.Name),
+			event.Source.Component,
+			event.Message,
+		}
+		if err := csvWriter.Write(record); err != nil {
+			return err
+		}
+	}
+
+	csvWriter.Flush()
+
+	return c.emitFileRaw(fmt.Sprintf("%s/event-list.csv", ns), csvContents.Bytes())
 }
 
 func (c *collector) collectPodsData(ns string) error {

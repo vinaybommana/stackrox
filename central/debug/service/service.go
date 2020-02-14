@@ -15,11 +15,13 @@ import (
 
 	"github.com/gogo/protobuf/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/expfmt"
 	"github.com/stackrox/rox/central/cluster/datastore"
 	"github.com/stackrox/rox/central/role/resources"
 	"github.com/stackrox/rox/central/sensor/service/connection"
+	"github.com/stackrox/rox/central/telemetry/gatherers"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/pkg/auth/permissions"
 	"github.com/stackrox/rox/pkg/errorhelpers"
@@ -31,6 +33,7 @@ import (
 	"github.com/stackrox/rox/pkg/grpc/routes"
 	"github.com/stackrox/rox/pkg/k8sintrospect"
 	"github.com/stackrox/rox/pkg/logging"
+	"github.com/stackrox/rox/pkg/telemetry/data"
 	"github.com/stackrox/rox/pkg/version"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -77,16 +80,18 @@ type Service interface {
 }
 
 // New returns a Service that implements v1.DebugServiceServer
-func New(clusters datastore.DataStore, sensorConnMgr connection.Manager) Service {
+func New(clusters datastore.DataStore, sensorConnMgr connection.Manager, telemetryGatherer *gatherers.RoxGatherer) Service {
 	return &serviceImpl{
-		clusters:      clusters,
-		sensorConnMgr: sensorConnMgr,
+		clusters:          clusters,
+		sensorConnMgr:     sensorConnMgr,
+		telemetryGatherer: telemetryGatherer,
 	}
 }
 
 type serviceImpl struct {
-	sensorConnMgr connection.Manager
-	clusters      datastore.DataStore
+	sensorConnMgr     connection.Manager
+	clusters          datastore.DataStore
+	telemetryGatherer *gatherers.RoxGatherer
 }
 
 // RegisterServiceServer registers this service with the given gRPC Server.
@@ -268,6 +273,20 @@ func getVersion(zipWriter *zip.Writer) error {
 	return err
 }
 
+func writeTelemetryData(zipWriter *zip.Writer, telemetryInfo *data.TelemetryData) error {
+	if telemetryInfo == nil {
+		return errors.New("no telemetry data provided")
+	}
+
+	w, err := zipWriter.Create("telemetry-data.json")
+	if err != nil {
+		return err
+	}
+	jsonEnc := json.NewEncoder(w)
+	jsonEnc.SetIndent("", "  ")
+	return jsonEnc.Encode(telemetryInfo)
+}
+
 // DebugHandler is an HTTP handler that outputs debugging information
 func (s *serviceImpl) CustomRoutes() []routes.CustomRoute {
 	customRoutes := []routes.CustomRoute{
@@ -340,6 +359,13 @@ func (s *serviceImpl) writeZippedDebugDump(ctx context.Context, w http.ResponseW
 	}
 	if logs == localLogs {
 		if err := getLogs(zipWriter); err != nil {
+			log.Error(err)
+		}
+	}
+
+	if s.telemetryGatherer != nil {
+		telemetryData := s.telemetryGatherer.Gather(ctx)
+		if err := writeTelemetryData(zipWriter, telemetryData); err != nil {
 			log.Error(err)
 		}
 	}

@@ -17,8 +17,9 @@ type CentralCommunication interface {
 // NewCentralCommunication returns a new CentralCommunication.
 func NewCentralCommunication(components ...common.SensorComponent) CentralCommunication {
 	return &centralCommunicationImpl{
-		receiver: NewCentralReceiver(components...),
-		sender:   NewCentralSender(components...),
+		receiver:   NewCentralReceiver(components...),
+		sender:     NewCentralSender(components...),
+		components: components,
 
 		stopC:    concurrency.NewErrorSignal(),
 		stoppedC: concurrency.NewErrorSignal(),
