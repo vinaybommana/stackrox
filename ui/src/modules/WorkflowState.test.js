@@ -69,17 +69,55 @@ describe('WorkflowState', () => {
         ).toEqual([{ t: entityTypes.DEPLOYMENT, i: entityId2 }]);
     });
 
-    it('Removes sidepanel params state', () => {
-        // in list
-        expect(getListState().removeSidePanelParams().stateStack).toEqual([
-            { t: entityTypes.CLUSTER }
-        ]);
+    describe('removeSidePanelParams', () => {
+        it('Removes sidepanel params state for a list', () => {
+            const isSidePanelOpen = true;
+            expect(getListState(isSidePanelOpen).removeSidePanelParams().stateStack).toEqual([
+                { t: entityTypes.CLUSTER }
+            ]);
+        });
 
-        // in entity
-        expect(getEntityState(true).removeSidePanelParams().stateStack).toEqual([
-            { t: entityTypes.CLUSTER, i: entityId1 },
-            { t: entityTypes.DEPLOYMENT }
-        ]);
+        it('Removes sidepanel params state, and preserves the list search', () => {
+            const isSidePanelOpen = true;
+            const sidepanelStateWithSearch = getListState(isSidePanelOpen);
+
+            const newState = sidepanelStateWithSearch.removeSidePanelParams();
+
+            expect(newState.search[searchParams.page]).toEqual(
+                searchParamValues[searchParams.page]
+            );
+            expect(newState.search[searchParams.sidePanel]).toBeFalsy();
+        });
+
+        it('Removes sidepanel params state, and preserves the list sort', () => {
+            const isSidePanelOpen = true;
+            const sidepanelStateWithSearch = getListState(isSidePanelOpen);
+
+            const newState = sidepanelStateWithSearch.removeSidePanelParams();
+
+            expect(newState.sort[sortParams.page]).toEqual(sortParamValues[sortParams.page]);
+            expect(newState.sort[sortParams.sidePanel]).toBeFalsy();
+        });
+
+        it('Removes sidepanel params state, and preserves the list pagination', () => {
+            const isSidePanelOpen = true;
+            const sidepanelStateWithSearch = getListState(isSidePanelOpen);
+
+            const newState = sidepanelStateWithSearch.removeSidePanelParams();
+
+            expect(newState.paging[pagingParams.page]).toEqual(
+                pagingParamValues[pagingParams.page]
+            );
+            expect(newState.paging[pagingParams.sidePanel]).toBeFalsy();
+        });
+
+        it('Removes sidepanel params state for an entity', () => {
+            const isSidePanelOpen = true;
+            expect(getEntityState(isSidePanelOpen).removeSidePanelParams().stateStack).toEqual([
+                { t: entityTypes.CLUSTER, i: entityId1 },
+                { t: entityTypes.DEPLOYMENT }
+            ]);
+        });
     });
 
     it('pushes a list onto the stack related to current workflow state', () => {

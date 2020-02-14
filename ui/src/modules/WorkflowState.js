@@ -224,8 +224,8 @@ export class WorkflowState {
         const { useCase, search, sort, paging } = this;
         const newStateStack = this.getPageStack();
         const newSearch = search ? { [searchParams.page]: search[searchParams.page] } : null;
-        const newSort = sort ? { [searchParams.page]: sort[searchParams.page] } : null;
-        const newPaging = paging ? { [searchParams.page]: paging[searchParams.page] } : null;
+        const newSort = sort ? { [sortParams.page]: sort[sortParams.page] } : null;
+        const newPaging = paging ? { [pagingParams.page]: paging[pagingParams.page] } : null;
         return new WorkflowState(useCase, newStateStack, newSearch, newSort, newPaging);
     }
 
