@@ -3,7 +3,7 @@ import checkFeatureFlag from '../../helpers/features';
 import { url, selectors } from '../../constants/VulnManagementPage';
 import { hasExpectedHeaderColumns, allChecksForEntities } from '../../helpers/vmWorkflowUtils';
 
-describe('CVEs list Page and its entity detail page,sub list  validations ', () => {
+describe.skip('CVEs list Page and its entity detail page,sub list  validations ', () => {
     before(function beforeHook() {
         // skip the whole suite if vuln mgmt isn't enabled
         if (checkFeatureFlag('ROX_VULN_MGMT_UI', false)) {
