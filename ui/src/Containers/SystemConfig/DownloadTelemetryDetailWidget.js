@@ -1,9 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import downloadDiagnostics from 'services/DebugService';
 import PanelButton from 'Components/PanelButton';
 import * as Icon from 'react-feather';
+import { ClipLoader } from 'react-spinners';
 
 const DownloadTelemetryDetailWidget = () => {
+    const [isDownloading, setIsDownloading] = useState(false);
+
+    function triggerDownload() {
+        setIsDownloading(true);
+        downloadDiagnostics().finally(() => {
+            setIsDownloading(false);
+        });
+    }
+
+    const icon = isDownloading ? (
+        <ClipLoader color="blue" loading size={15} />
+    ) : (
+        <Icon.Download className="h-4 w-4 ml-1 text-primary-600" />
+    );
+
     return (
         <div className="px-3 w-full h-full" data-test-id="download-telemetry">
             <div className="bg-base-100 border-base-200 shadow h-full">
@@ -20,9 +36,10 @@ const DownloadTelemetryDetailWidget = () => {
                         </div>
                         <div className="flex justify-center">
                             <PanelButton
-                                icon={<Icon.Download className="h-4 w-4 ml-1 text-primary-600" />}
+                                icon={icon}
                                 className="flex leading-normal rounded font-700 text-sm text-base-600 no-underline py-4 px-1 items-center uppercase border-2 border-base-300 shadow"
-                                onClick={downloadDiagnostics}
+                                onClick={triggerDownload}
+                                disabled={isDownloading}
                                 alwaysVisibleText
                                 tooltip={
                                     <div className="w-auto">
