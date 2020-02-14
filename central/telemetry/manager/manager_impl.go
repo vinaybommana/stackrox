@@ -297,7 +297,8 @@ func (m *manager) Init() {
 		log.Errorf("Could not read next telemetry send time from store: %v. Assuming no telemetry data has been sent yet ...", err)
 	}
 	if m.nextSendTime.IsZero() {
-		m.nextSendTime = time.Now()
+		// TODO: Write a service to wait until all known Sensors have synced or a timeout.  Waiting 5 minutes is a hack.
+		m.nextSendTime = time.Now().Add(5 * time.Minute)
 	}
 }
 
