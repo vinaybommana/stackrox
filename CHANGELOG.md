@@ -9,7 +9,7 @@ All notable changes to this project that require documentation updates will be d
 - The Scanner deployment has been split into two separate deployments: Scanner and Scanner DB. The Scanner deployment is now
   controlled by a Horizontal Pod Autoscaler (HPA) that will automatically scale up the scanner as the number of requests increase.
 - Added a feature to report telemetry about a StackRox installation.  This will default to off in existing installations and can be enabled through the System Configuration page.
-- Added a feature to download a diagnostic bundle.  This can be accessed through the System Configuration page.
+- Added a feature to download a diagnostic bundle.  This can be accessed through the System Configuration page or through `roxctl central debug download-diagnostics`
 - A new `ScannerBundle` resource type (for the purposes of StackRox RBAC) is introduced. The resource definition for this is:
     Read permission: Download the scanner bundle (with `roxctl scanner generate`)
     Write permission: N/A

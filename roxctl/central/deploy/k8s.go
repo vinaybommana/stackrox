@@ -118,7 +118,7 @@ func k8sBasedOrchestrator(k8sConfig *renderer.K8sConfig, shortName, longName str
 	flagWrap.StringVar(&k8sConfig.ScannerDBImage, "scanner-db-image", defaults.ScannerDBImage(), "Scanner DB image to use", "scanner")
 
 	if features.Telemetry.Enabled() {
-		flagWrap.BoolVar(&k8sConfig.TelemetryOptOut, "telemetry-opt-out", false, "whether to enable telemetry", "central")
+		flagWrap.BoolVar(&k8sConfig.EnableTelemetry, "enable-telemetry", true, "whether to enable telemetry", "central")
 	}
 	return c
 }

@@ -155,10 +155,10 @@ func OutputZip(config renderer.Config) error {
 		config.Environment[env.OfflineModeEnv.EnvVar()] = strconv.FormatBool(config.K8sConfig.OfflineMode)
 
 		if features.Telemetry.Enabled() {
-			if !config.K8sConfig.TelemetryOptOut {
-				fmt.Fprintln(os.Stderr, "NOTE: Unless run in offline mode, StackRox Kubernetes Security Platform collects and transmits aggregated usage and system health information.  If you want to OPT OUT from this, re-generate the deployment bundle with the '--telemetry-opt-out' flag")
+			if config.K8sConfig.EnableTelemetry {
+				fmt.Fprintln(os.Stderr, "NOTE: Unless run in offline mode, StackRox Kubernetes Security Platform collects and transmits aggregated usage and system health information.  If you want to OPT OUT from this, re-generate the deployment bundle with the '--enable-telemetry=false' flag")
 			}
-			config.Environment[env.InitialTelemetryEnabledEnv.EnvVar()] = strconv.FormatBool(!config.K8sConfig.TelemetryOptOut)
+			config.Environment[env.InitialTelemetryEnabledEnv.EnvVar()] = strconv.FormatBool(config.K8sConfig.EnableTelemetry)
 		}
 	}
 
