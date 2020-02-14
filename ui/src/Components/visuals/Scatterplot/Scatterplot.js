@@ -26,6 +26,8 @@ const Scatterplot = ({
     upperY,
     xMultiple,
     yMultiple,
+    shouldPadX,
+    shouldPadY,
     plotProps,
     yAxisTitle,
     xAxisTitle,
@@ -35,11 +37,11 @@ const Scatterplot = ({
     const { hint, onValueMouseOver, onValueMouseOut, onMouseMove } = useGraphHoverHint();
 
     const lowX = lowerX !== null ? lowerX : getLowValue(data, 'x', xMultiple);
-    const highX = upperX !== null ? upperX : getHighValue(data, 'x', xMultiple);
+    const highX = upperX !== null ? upperX : getHighValue(data, 'x', xMultiple, shouldPadX);
     const xDomain = [lowX, highX];
 
     const lowY = lowerY !== null ? lowerY : getLowValue(data, 'y', yMultiple);
-    const highY = upperY !== null ? upperY : getHighValue(data, 'y', yMultiple);
+    const highY = upperY !== null ? upperY : getHighValue(data, 'y', yMultiple, shouldPadY);
     const yDomain = [lowY, highY];
 
     function onValueClickHandler(datum) {
@@ -119,6 +121,8 @@ Scatterplot.propTypes = {
     upperY: PropTypes.number,
     xMultiple: PropTypes.number,
     yMultiple: PropTypes.number,
+    shouldPadX: PropTypes.bool,
+    shouldPadY: PropTypes.bool,
     plotProps: PropTypes.shape({}),
     yAxisTitle: PropTypes.string,
     xAxisTitle: PropTypes.string,
@@ -136,6 +140,8 @@ Scatterplot.defaultProps = {
     upperY: null,
     xMultiple: 10,
     yMultiple: 10,
+    shouldPadX: false,
+    shouldPadY: false,
     plotProps: null,
     yAxisTitle: null,
     xAxisTitle: null,

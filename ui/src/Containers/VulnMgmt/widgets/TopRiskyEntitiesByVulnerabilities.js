@@ -356,8 +356,9 @@ const TopRiskyEntitiesByVulnerabilities = ({
             content = (
                 <Scatterplot
                     data={results}
-                    xMultiple={10}
-                    yMultiple={10}
+                    xMultiple={5}
+                    yMultiple={5}
+                    shouldPadX
                     yAxisTitle="Average CVSS Score"
                     xAxisTitle="Critical Vulnerabilities & Exposures"
                     legendData={!small ? severityColorLegend : []}
