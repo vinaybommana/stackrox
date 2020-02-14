@@ -51,6 +51,11 @@ function validateTileLinksInSidePanel(colSelector, col, parentUrl) {
             if (col1.includes('image')) entitySelector = vulnManagementSelectors.imageTileLink;
             else if (col1.includes('deployment'))
                 entitySelector = vulnManagementSelectors.deploymentTileLink;
+            else if (col1.includes('namespace'))
+                entitySelector = vulnManagementSelectors.namespaceTileLink;
+            else if (col1.includes('component'))
+                entitySelector = vulnManagementSelectors.componentTileLink;
+            else if (col1.includes('cve')) entitySelector = vulnManagementSelectors.cveTileLink;
             else entitySelector = vulnManagementSelectors.getTileLink(col.toUpperCase());
             cy.get(entitySelector)
                 .find(vulnManagementSelectors.tileLinkText)
