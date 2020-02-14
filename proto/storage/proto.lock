@@ -1165,6 +1165,38 @@
                 "type": "google.protobuf.Timestamp"
               }
             ]
+          },
+          {
+            "name": "ClusterCVEEdge",
+            "fields": [
+              {
+                "id": 1,
+                "name": "id",
+                "type": "string"
+              },
+              {
+                "id": 2,
+                "name": "is_fixable",
+                "type": "bool",
+                "options": [
+                  {
+                    "name": "(gogoproto.moretags)",
+                    "value": "search:\\\"Cluster CVE Fixable,store,hidden\\"
+                  }
+                ]
+              },
+              {
+                "id": 3,
+                "name": "fixed_by",
+                "type": "string",
+                "options": [
+                  {
+                    "name": "(gogoproto.moretags)",
+                    "value": "search:\\\"Cluster CVE Fixed By,store,hidden\\"
+                  }
+                ]
+              }
+            ]
           }
         ],
         "imports": [
@@ -2136,17 +2168,6 @@
                     "value": "search:\\\"CVE Suppressed,store\\"
                   }
                 ]
-              },
-              {
-                "id": 13,
-                "name": "fixed_by",
-                "type": "string",
-                "options": [
-                  {
-                    "name": "(gogoproto.moretags)",
-                    "value": "search:\\\"Fixed By,store\\"
-                  }
-                ]
               }
             ],
             "messages": [
@@ -2572,6 +2593,17 @@
                   {
                     "name": "(gogoproto.moretags)",
                     "value": "hash:\\\"ignore\\\" sensorhash:\\\"ignore\\"
+                  }
+                ]
+              },
+              {
+                "id": 29,
+                "name": "risk_score",
+                "type": "float",
+                "options": [
+                  {
+                    "name": "(gogoproto.moretags)",
+                    "value": "search:\\\"Risk Score,hidden\\"
                   }
                 ]
               }
@@ -3660,6 +3692,17 @@
                 "id": 11,
                 "name": "priority",
                 "type": "int64"
+              },
+              {
+                "id": 12,
+                "name": "risk_score",
+                "type": "float",
+                "options": [
+                  {
+                    "name": "(gogoproto.moretags)",
+                    "value": "search:\\\"Risk Score,hidden\\"
+                  }
+                ]
               }
             ],
             "reserved_ids": [
@@ -4220,6 +4263,17 @@
                   {
                     "name": "(gogoproto.moretags)",
                     "value": "search:\\\"Component Source,store\\"
+                  }
+                ]
+              },
+              {
+                "id": 7,
+                "name": "risk_score",
+                "type": "float",
+                "options": [
+                  {
+                    "name": "(gogoproto.moretags)",
+                    "value": "search:\\\"Risk Score,hidden\\"
                   }
                 ]
               }
@@ -8516,8 +8570,18 @@
                 "id": 1,
                 "name": "enabled",
                 "type": "bool"
+              },
+              {
+                "id": 2,
+                "name": "last_set_time",
+                "type": "google.protobuf.Timestamp"
               }
             ]
+          }
+        ],
+        "imports": [
+          {
+            "path": "google/protobuf/timestamp.proto"
           }
         ],
         "package": {

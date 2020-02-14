@@ -43,6 +43,15 @@ var (
 		ForwardTraversal: true,
 	}
 
+	// ClusterToClusterCVE defines prefix path to from cluster to cluster cves in dackbox
+	ClusterToClusterCVE = dackbox.Path{
+		Path: [][]byte{
+			clusterDackBox.Bucket,
+			cveDackBox.Bucket,
+		},
+		ForwardTraversal: true,
+	}
+
 	// NamespaceToDeploymentPath defines prefix path to go from namespaces to deployments in dackbox
 	NamespaceToDeploymentPath = dackbox.Path{
 		Path: [][]byte{

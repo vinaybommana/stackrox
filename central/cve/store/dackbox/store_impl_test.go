@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/dgraph-io/badger"
+	"github.com/stackrox/rox/central/cve/converter"
 	"github.com/stackrox/rox/central/cve/store"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/badgerhelper"
@@ -13,11 +14,11 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-func TestImageStore(t *testing.T) {
-	suite.Run(t, new(ImageStoreTestSuite))
+func TestCVEStore(t *testing.T) {
+	suite.Run(t, new(CVEStoreTestSuite))
 }
 
-type ImageStoreTestSuite struct {
+type CVEStoreTestSuite struct {
 	suite.Suite
 
 	db    *badger.DB
@@ -27,7 +28,7 @@ type ImageStoreTestSuite struct {
 	store store.Store
 }
 
-func (suite *ImageStoreTestSuite) SetupSuite() {
+func (suite *CVEStoreTestSuite) SetupSuite() {
 	var err error
 	suite.db, suite.dir, err = badgerhelper.NewTemp("reference")
 	if err != nil {
@@ -43,11 +44,11 @@ func (suite *ImageStoreTestSuite) SetupSuite() {
 	}
 }
 
-func (suite *ImageStoreTestSuite) TearDownSuite() {
+func (suite *CVEStoreTestSuite) TearDownSuite() {
 	testutils.TearDownBadger(suite.db, suite.dir)
 }
 
-func (suite *ImageStoreTestSuite) TestImages() {
+func (suite *CVEStoreTestSuite) TestCVES() {
 	cves := []*storage.CVE{
 		{
 			Id:   "CVE-2019-02-14",
@@ -89,4 +90,52 @@ func (suite *ImageStoreTestSuite) TestImages() {
 	count, err := suite.store.Count()
 	suite.NoError(err)
 	suite.Equal(len(cves), count)
+}
+
+func (suite *CVEStoreTestSuite) TestClusterCVES() {
+	cveParts := []converter.ClusterCVEParts{
+		{
+			CVE: &storage.CVE{
+				Id:   "CVE-2019-02-14",
+				Cvss: 1.3,
+			},
+		},
+		{
+			CVE: &storage.CVE{
+				Id:   "CVE-2019-03-14",
+				Cvss: 5.0,
+			},
+		},
+	}
+
+	// Test Add
+	for _, d := range cveParts {
+		suite.NoError(suite.store.UpsertClusterCVEs(d))
+	}
+
+	for _, d := range cveParts {
+		got, exists, err := suite.store.Get(d.CVE.GetId())
+		suite.NoError(err)
+		suite.True(exists)
+		suite.Equal(got, d.CVE)
+	}
+
+	// Test Update
+	for _, d := range cveParts {
+		d.CVE.Cvss += 1.0
+	}
+
+	suite.NoError(suite.store.UpsertClusterCVEs(cveParts...))
+
+	for _, d := range cveParts {
+		got, exists, err := suite.store.Get(d.CVE.GetId())
+		suite.NoError(err)
+		suite.True(exists)
+		suite.Equal(got, d.CVE)
+	}
+
+	// Test Count
+	count, err := suite.store.Count()
+	suite.NoError(err)
+	suite.Equal(len(cveParts), count)
 }

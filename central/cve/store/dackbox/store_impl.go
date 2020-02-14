@@ -4,6 +4,9 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
+	clusterDackBox "github.com/stackrox/rox/central/cluster/dackbox"
+	clusterCVEEdgeDackBox "github.com/stackrox/rox/central/clustercveedge/dackbox"
+	"github.com/stackrox/rox/central/cve/converter"
 	vulnDackBox "github.com/stackrox/rox/central/cve/dackbox"
 	"github.com/stackrox/rox/central/cve/store"
 	"github.com/stackrox/rox/central/metrics"
@@ -11,6 +14,7 @@ import (
 	"github.com/stackrox/rox/pkg/batcher"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/dackbox"
+	"github.com/stackrox/rox/pkg/dackbox/sortedkeys"
 	ops "github.com/stackrox/rox/pkg/metrics"
 )
 
@@ -157,6 +161,41 @@ func (b *storeImpl) upsertNoBatch(cves ...*storage.CVE) error {
 	return nil
 }
 
+func (b *storeImpl) UpsertClusterCVEs(parts ...converter.ClusterCVEParts) error {
+	defer metrics.SetBadgerOperationDurationTime(time.Now(), ops.Upsert, "CVE")
+
+	keysToUpdate := gatherKeysForCVEParts(parts...)
+	lockedKeySet := concurrency.DiscreteKeySet(keysToUpdate...)
+	b.keyFence.Lock(lockedKeySet)
+	defer b.keyFence.Unlock(lockedKeySet)
+
+	for batch := 0; batch < len(parts); batch += batchSize {
+		dackTxn := b.dacky.NewTransaction()
+		defer dackTxn.Discard()
+
+		for idx := batch; idx < len(parts) && idx < batch+batchSize; idx++ {
+			if err := vulnDackBox.Upserter.UpsertIn(nil, parts[idx].CVE, dackTxn); err != nil {
+				return err
+			}
+
+			for _, child := range parts[idx].Children {
+				if err := clusterCVEEdgeDackBox.Upserter.UpsertIn(nil, child.Edge, dackTxn); err != nil {
+					return err
+				}
+
+				if err := dackTxn.Graph().AddRefs(clusterDackBox.BucketHandler.GetKey(child.ClusterID), vulnDackBox.KeyFunc(parts[idx].CVE)); err != nil {
+					return err
+				}
+			}
+		}
+
+		if err := dackTxn.Commit(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (b *storeImpl) Delete(ids ...string) error {
 	defer metrics.SetBadgerOperationDurationTime(time.Now(), ops.RemoveMany, "CVE")
 
@@ -197,4 +236,15 @@ func (b *storeImpl) deleteNoBatch(ids ...string) error {
 		return err
 	}
 	return nil
+}
+
+func gatherKeysForCVEParts(parts ...converter.ClusterCVEParts) [][]byte {
+	var allKeys [][]byte
+	for _, part := range parts {
+		allKeys = append(allKeys, vulnDackBox.KeyFunc(part.CVE))
+		for _, child := range part.Children {
+			allKeys = append(allKeys, clusterDackBox.BucketHandler.GetKey(child.ClusterID))
+		}
+	}
+	return sortedkeys.Sort(allKeys)
 }

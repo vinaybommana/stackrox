@@ -235,7 +235,7 @@ func TestNvdCVEsToProtoCVEs(t *testing.T) {
 		assert.Nil(t, err)
 		expectedVul.LastModified = protoconv.ConvertTimeToTimestamp(ts)
 
-		actualVul, err := NvdCveToProtoCVE(cves[i], K8s)
+		actualVul, err := NvdCVEToProtoCVE(cves[i], K8s)
 		assert.Nil(t, err)
 		assert.Equal(t, actualVul, expectedVul)
 	}

@@ -330,7 +330,7 @@ func (f defaultFactory) ServicesToRegister(registry authproviders.Registry) []pk
 	if features.VulnMgmtUI.Enabled() {
 		m := fetcher.SingletonManager()
 		if env.OfflineModeEnv.Setting() != "true" {
-			go m.Fetch()
+			go m.Fetch(false)
 		}
 	}
 

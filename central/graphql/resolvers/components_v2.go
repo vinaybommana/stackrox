@@ -166,16 +166,19 @@ func (eicr *imageComponentResolver) VulnCounter(ctx context.Context, args RawQue
 	if err != nil {
 		return nil, err
 	}
-	q1 := search.NewConjunctionQuery(eicr.componentQuery(), search.NewQueryBuilder().AddBools(search.Fixable, true).ProtoQuery())
-	fixableVulns, err := vulnLoader.FromQuery(ctx, q1)
+
+	fixableVulnsQuery := search.NewConjunctionQuery(eicr.componentQuery(), search.NewQueryBuilder().AddBools(search.Fixable, true).ProtoQuery())
+	fixableVulns, err := vulnLoader.FromQuery(ctx, fixableVulnsQuery)
 	if err != nil {
 		return nil, err
 	}
-	allVulns, err := vulnLoader.FromQuery(ctx, eicr.componentQuery())
+
+	unFixableVulnsQuery := search.NewConjunctionQuery(eicr.componentQuery(), search.NewQueryBuilder().AddBools(search.Fixable, false).ProtoQuery())
+	unFixableCVEs, err := vulnLoader.FromQuery(ctx, unFixableVulnsQuery)
 	if err != nil {
 		return nil, err
 	}
-	return mapVCEsToVulnerabilityCounter(fixableVulns, allVulns), nil
+	return mapCVEsToVulnerabilityCounter(fixableVulns, unFixableCVEs), nil
 }
 
 // Images are the images that contain the Component.

@@ -10,6 +10,7 @@ import (
 	violationsDatastore "github.com/stackrox/rox/central/alert/datastore"
 	"github.com/stackrox/rox/central/apitoken/backend"
 	clusterDatastore "github.com/stackrox/rox/central/cluster/datastore"
+	clusterCVEEdgeDataStore "github.com/stackrox/rox/central/clustercveedge/datastore"
 	"github.com/stackrox/rox/central/compliance/aggregation"
 	complianceDS "github.com/stackrox/rox/central/compliance/datastore"
 	complianceManager "github.com/stackrox/rox/central/compliance/manager"
@@ -55,6 +56,7 @@ type Resolver struct {
 	ComplianceService           v1.ComplianceServiceServer
 	ComplianceManagementService v1.ComplianceManagementServiceServer
 	ComplianceManager           complianceManager.ComplianceManager
+	clusterCVEEdgeDataStore     clusterCVEEdgeDataStore.DataStore
 	ComponentCVEEdgeDataStore   componentCVEEdgeDataStore.DataStore
 	CVEDataStore                cveDataStore.DataStore
 	DeploymentDataStore         deploymentDatastore.DataStore
@@ -76,7 +78,7 @@ type Resolver struct {
 	SecretsDataStore            secretDataStore.DataStore
 	ServiceAccountsDataStore    serviceAccountDataStore.DataStore
 	ViolationsDataStore         violationsDatastore.DataStore
-	k8sIstioCVEManager          fetcher.K8sIstioCveManager
+	k8sIstioCVEManager          fetcher.K8sIstioCVEManager
 	cveMatcher                  *cveMatcher.CVEMatcher
 }
 
@@ -91,6 +93,7 @@ func New() *Resolver {
 		ComplianceManager:           complianceManager.Singleton(),
 		ComplianceService:           complianceService.Singleton(),
 		ClusterDataStore:            clusterDatastore.Singleton(),
+		clusterCVEEdgeDataStore:     clusterCVEEdgeDataStore.Singleton(),
 		ComponentCVEEdgeDataStore:   componentCVEEdgeDataStore.Singleton(),
 		CVEDataStore:                cveDataStore.Singleton(),
 		DeploymentDataStore:         deploymentDatastore.Singleton(),

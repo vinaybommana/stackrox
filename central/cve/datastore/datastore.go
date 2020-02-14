@@ -3,6 +3,7 @@ package datastore
 import (
 	"context"
 
+	"github.com/stackrox/rox/central/cve/converter"
 	"github.com/stackrox/rox/central/cve/index"
 	"github.com/stackrox/rox/central/cve/search"
 	"github.com/stackrox/rox/central/cve/store"
@@ -27,6 +28,7 @@ type DataStore interface {
 	Unsuppress(ctx context.Context, ids ...string) error
 
 	Upsert(ctx context.Context, cves ...*storage.CVE) error
+	UpsertClusterCVEs(ctx context.Context, cves ...converter.ClusterCVEParts) error
 	Delete(ctx context.Context, ids ...string) error
 }
 

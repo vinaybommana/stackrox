@@ -3,8 +3,9 @@ package search
 import (
 	"context"
 
+	clusterMappings "github.com/stackrox/rox/central/cluster/index/mappings"
+	clusterCVEEdgeMappings "github.com/stackrox/rox/central/clustercveedge/mappings"
 	componentCVEEdgeMappings "github.com/stackrox/rox/central/componentcveedge/mappings"
-	cveDackBox "github.com/stackrox/rox/central/cve/dackbox"
 	"github.com/stackrox/rox/central/cve/index"
 	cveMappings "github.com/stackrox/rox/central/cve/mappings"
 	cveSAC "github.com/stackrox/rox/central/cve/sac"
@@ -12,7 +13,6 @@ import (
 	"github.com/stackrox/rox/central/dackbox"
 	deploymentSAC "github.com/stackrox/rox/central/deployment/sac"
 	imageSAC "github.com/stackrox/rox/central/image/sac"
-	componentDackBox "github.com/stackrox/rox/central/imagecomponent/dackbox"
 	componentMappings "github.com/stackrox/rox/central/imagecomponent/mappings"
 	componentSAC "github.com/stackrox/rox/central/imagecomponent/sac"
 	imageComponentEdgeMappings "github.com/stackrox/rox/central/imagecomponentedge/mappings"
@@ -30,7 +30,6 @@ import (
 	deploymentMappings "github.com/stackrox/rox/pkg/search/options/deployments"
 	imageMappings "github.com/stackrox/rox/pkg/search/options/images"
 	"github.com/stackrox/rox/pkg/search/paginated"
-	"github.com/stackrox/rox/pkg/search/sortfields"
 )
 
 var (
@@ -99,29 +98,34 @@ func convertOne(cve *storage.CVE, result *search.Result) *v1.SearchResult {
 // Format the search functionality of the indexer to be filtered (for sac) and paginated.
 func formatSearcher(graphProvider idspace.GraphProvider,
 	cveIndexer blevesearch.UnsafeSearcher,
+	clusterCVEEdgeIndexer blevesearch.UnsafeSearcher,
 	componentCVEEdgeIndexer blevesearch.UnsafeSearcher,
 	componentIndexer blevesearch.UnsafeSearcher,
 	imageComponentEdgeIndexer blevesearch.UnsafeSearcher,
 	imageIndexer blevesearch.UnsafeSearcher,
-	deploymentIndexer blevesearch.UnsafeSearcher) search.Searcher {
+	deploymentIndexer blevesearch.UnsafeSearcher,
+	clusterIndexer blevesearch.UnsafeSearcher) search.Searcher {
 
 	cveSearcher := blevesearch.WrapUnsafeSearcherAsSearcher(cveIndexer)
+	clusterCVEEdgeSearcher := blevesearch.WrapUnsafeSearcherAsSearcher(clusterCVEEdgeIndexer)
 	componentCVEEdgeSearcher := blevesearch.WrapUnsafeSearcherAsSearcher(componentCVEEdgeIndexer)
 	componentSearcher := blevesearch.WrapUnsafeSearcherAsSearcher(componentIndexer)
 	imageComponentEdgeSearcher := blevesearch.WrapUnsafeSearcherAsSearcher(imageComponentEdgeIndexer)
 	imageSearcher := blevesearch.WrapUnsafeSearcherAsSearcher(imageIndexer)
 	deploymentSearcher := blevesearch.WrapUnsafeSearcherAsSearcher(deploymentIndexer)
+	clusterSearcher := blevesearch.WrapUnsafeSearcherAsSearcher(clusterIndexer)
 
 	compoundSearcher := getCompoundCVESearcher(graphProvider,
 		cveSearcher,
+		clusterCVEEdgeSearcher,
 		componentCVEEdgeSearcher,
 		componentSearcher,
 		imageComponentEdgeSearcher,
 		imageSearcher,
-		deploymentSearcher)
-	filteredSearcher := filtered.Searcher(compoundSearcher, cveSAC.GetSACFilter())
-	transformedSortSearcher := sortfields.TransformSortFields(filteredSearcher)
-	derivedFieldSortedSearcher := wrapDerivedFieldSearcher(graphProvider, transformedSortSearcher)
+		deploymentSearcher,
+		clusterSearcher)
+	filteredSearcher := filtered.Searcher(compoundSearcher, cveSAC.GetSACFilters()...)
+	derivedFieldSortedSearcher := wrapDerivedFieldSearcher(graphProvider, filteredSearcher)
 	paginatedSearcher := paginated.Paginated(derivedFieldSortedSearcher)
 	defaultSortedSearcher := paginated.WithDefaultSortOption(paginatedSearcher, defaultSortOption)
 	return defaultSortedSearcher
@@ -143,11 +147,13 @@ func (ds *searcherImpl) searchCVEs(ctx context.Context, q *v1.Query) ([]*storage
 
 func getCompoundCVESearcher(graphProvider idspace.GraphProvider,
 	cveSearcher search.Searcher,
+	clusterCVEEdgeSearcher search.Searcher,
 	componentCVEEdgeSearcher search.Searcher,
 	componentSearcher search.Searcher,
 	imageComponentEdgeSearcher search.Searcher,
 	imageSearcher search.Searcher,
-	deploymentSearcher search.Searcher) search.Searcher {
+	deploymentSearcher search.Searcher,
+	clusterSearcher search.Searcher) search.Searcher {
 	imageComponentEdgeToComponentSearcher := idspace.TransformIDs(imageComponentEdgeSearcher, idspace.NewEdgeToChildTransformer())
 	return compound.NewSearcher([]compound.SearcherSpec{
 		{
@@ -160,26 +166,28 @@ func getCompoundCVESearcher(graphProvider idspace.GraphProvider,
 			Options:  componentCVEEdgeMappings.OptionsMap,
 		},
 		{
-			Searcher: idspace.TransformIDs(componentSearcher, idspace.NewForwardGraphTransformer(graphProvider,
-				[][]byte{componentDackBox.Bucket,
-					cveDackBox.Bucket,
-				})),
-			Options: componentMappings.OptionsMap,
+			Searcher: idspace.TransformIDs(clusterCVEEdgeSearcher, idspace.NewEdgeToChildTransformer()),
+			Options:  clusterCVEEdgeMappings.OptionsMap,
 		},
 		{
-			Searcher: idspace.TransformIDs(imageComponentEdgeToComponentSearcher, idspace.NewForwardGraphTransformer(graphProvider,
-				[][]byte{componentDackBox.Bucket,
-					cveDackBox.Bucket,
-				})),
-			Options: imageComponentEdgeMappings.OptionsMap,
+			Searcher: idspace.TransformIDs(componentSearcher, idspace.NewForwardGraphTransformer(graphProvider, dackbox.ComponentToCVEPath.Path)),
+			Options:  componentMappings.OptionsMap,
 		},
 		{
-			Searcher: idspace.TransformIDs(imageSearcher, idspace.NewForwardGraphTransformer(graphProvider, dackbox.ImageToCVEPath.Path)),
-			Options:  imageMappings.OptionsMap,
+			Searcher: idspace.TransformIDs(imageComponentEdgeToComponentSearcher, idspace.NewForwardGraphTransformer(graphProvider, dackbox.ComponentToCVEPath.Path)),
+			Options:  imageComponentEdgeMappings.OptionsMap,
+		},
+		{
+			Searcher: idspace.TransformIDs(clusterSearcher, idspace.NewForwardGraphTransformer(graphProvider, dackbox.ClusterToCVE.Path, dackbox.ClusterToClusterCVE.Path)),
+			Options:  clusterMappings.OptionsMap,
 		},
 		{
 			Searcher: idspace.TransformIDs(deploymentSearcher, idspace.NewForwardGraphTransformer(graphProvider, dackbox.DeploymentToCVE.Path)),
 			Options:  deploymentMappings.OptionsMap,
+		},
+		{
+			Searcher: idspace.TransformIDs(imageSearcher, idspace.NewForwardGraphTransformer(graphProvider, dackbox.ImageToCVEPath.Path)),
+			Options:  imageMappings.OptionsMap,
 		},
 	}...)
 }

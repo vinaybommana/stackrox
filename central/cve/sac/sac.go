@@ -18,6 +18,11 @@ import (
 var (
 	cveSAC = sac.ForResource(resources.CVE)
 
+	clusterCVEClusterPath = [][]byte{
+		cveDackBox.Bucket,
+		clusterDackBox.Bucket,
+	}
+
 	cveClusterPath = [][]byte{
 		cveDackBox.Bucket,
 		componentDackBox.Bucket,
@@ -35,12 +40,13 @@ var (
 		namespaceDackBox.Bucket,
 	}
 
-	cveSACFilter filtered.Filter
-	once         sync.Once
+	clusterCVESACFilter filtered.Filter
+	cveSACFilter        filtered.Filter
+	once                sync.Once
 )
 
-// GetSACFilter returns the sac filter for cve ids.
-func GetSACFilter() filtered.Filter {
+// GetSACFilters returns the sac filter for cve ids.
+func GetSACFilters() []filtered.Filter {
 	once.Do(func() {
 		var err error
 		cveSACFilter, err = filtered.NewSACFilter(
@@ -50,6 +56,13 @@ func GetSACFilter() filtered.Filter {
 			filtered.WithNamespacePath(cveNamespacePath...),
 		)
 		utils.Must(err)
+
+		clusterCVESACFilter, err = filtered.NewSACFilter(
+			filtered.WithResourceHelper(cveSAC),
+			filtered.WithGraphProvider(globaldb.GetGlobalDackBox()),
+			filtered.WithClusterPath(clusterCVEClusterPath...),
+		)
+		utils.Must(err)
 	})
-	return cveSACFilter
+	return []filtered.Filter{cveSACFilter, clusterCVESACFilter}
 }

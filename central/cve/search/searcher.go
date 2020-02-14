@@ -3,6 +3,8 @@ package search
 import (
 	"context"
 
+	clusterIndexer "github.com/stackrox/rox/central/cluster/index"
+	clusterCVEEdgeIndexer "github.com/stackrox/rox/central/clustercveedge/index"
 	componentCVEEdgeIndexer "github.com/stackrox/rox/central/componentcveedge/index"
 	cveIndexer "github.com/stackrox/rox/central/cve/index"
 	"github.com/stackrox/rox/central/cve/store"
@@ -27,20 +29,24 @@ type Searcher interface {
 // New returns a new instance of Searcher for the given storage and index.
 func New(storage store.Store, graphProvider idspace.GraphProvider,
 	cveIndexer cveIndexer.Indexer,
+	clusterCVEEdgeIndexer clusterCVEEdgeIndexer.Indexer,
 	componentCVEEdgeIndexer componentCVEEdgeIndexer.Indexer,
 	componentIndexer componentIndexer.Indexer,
 	imageComponentEdgeIndexer imageComponentEdgeIndexer.Indexer,
 	imageIndexer imageIndexer.Indexer,
-	deploymentIndexer deploymentIndexer.Indexer) Searcher {
+	deploymentIndexer deploymentIndexer.Indexer,
+	clusterIndexer clusterIndexer.Indexer) Searcher {
 	return &searcherImpl{
 		storage: storage,
 		indexer: cveIndexer,
 		searcher: formatSearcher(graphProvider,
 			cveIndexer,
+			clusterCVEEdgeIndexer,
 			componentCVEEdgeIndexer,
 			componentIndexer,
 			imageComponentEdgeIndexer,
 			imageIndexer,
-			deploymentIndexer),
+			deploymentIndexer,
+			clusterIndexer),
 	}
 }

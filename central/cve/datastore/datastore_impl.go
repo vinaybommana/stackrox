@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
+	"github.com/stackrox/rox/central/cve/converter"
 	"github.com/stackrox/rox/central/cve/index"
 	"github.com/stackrox/rox/central/cve/search"
 	"github.com/stackrox/rox/central/cve/store"
@@ -15,7 +16,6 @@ import (
 )
 
 var (
-	// TODO: Need to setup sac for CVEs correctly instead of relying on global access.
 	imagesSAC = sac.ForResource(resources.Image)
 )
 
@@ -83,6 +83,7 @@ func (ds *datastoreImpl) GetBatch(ctx context.Context, ids []string) ([]*storage
 	if ok, err := imagesSAC.ReadAllowed(ctx); err != nil || !ok {
 		return nil, err
 	}
+
 	cves, _, err := ds.storage.GetBatch(ids)
 	if err != nil {
 		return nil, err
@@ -94,13 +95,14 @@ func (ds *datastoreImpl) Upsert(ctx context.Context, cves ...*storage.CVE) error
 	if len(cves) == 0 {
 		return nil
 	}
+
 	if ok, err := imagesSAC.WriteAllowed(ctx); err != nil {
 		return err
 	} else if !ok {
 		return errors.New("permission denied")
 	}
 
-	// Load the supressed value for any CVEs already present.
+	// Load the suppressed value for any CVEs already present.
 	ids := make([]string, 0, len(cves))
 	for _, cve := range cves {
 		ids = append(ids, cve.GetId())
@@ -121,6 +123,38 @@ func (ds *datastoreImpl) Upsert(ctx context.Context, cves ...*storage.CVE) error
 	return ds.storage.Upsert(cves...)
 }
 
+func (ds *datastoreImpl) UpsertClusterCVEs(ctx context.Context, parts ...converter.ClusterCVEParts) error {
+	if len(parts) == 0 {
+		return nil
+	}
+
+	if ok, err := imagesSAC.WriteAllowed(ctx); err != nil {
+		return err
+	} else if !ok {
+		return errors.New("permission denied")
+	}
+
+	// Load the suppressed value for any CVEs already present.
+	ids := make([]string, 0, len(parts))
+	for _, p := range parts {
+		ids = append(ids, p.CVE.GetId())
+	}
+	currentCVEs, _, err := ds.storage.GetBatch(ids)
+	if err != nil {
+		return err
+	}
+	var currentIndex int
+	for newIndex := 0; newIndex < len(parts) && currentIndex < len(currentCVEs); newIndex++ {
+		if currentCVEs[currentIndex].GetId() == parts[newIndex].CVE.GetId() {
+			parts[newIndex].CVE.Suppressed = currentCVEs[currentIndex].Suppressed
+			currentIndex++
+		}
+	}
+
+	// Store the new CVE data.
+	return ds.storage.UpsertClusterCVEs(parts...)
+}
+
 func (ds *datastoreImpl) Suppress(ctx context.Context, ids ...string) error {
 	if ok, err := imagesSAC.WriteAllowed(ctx); err != nil {
 		return err
@@ -132,6 +166,7 @@ func (ds *datastoreImpl) Suppress(ctx context.Context, ids ...string) error {
 	if err != nil {
 		return err
 	}
+
 	for _, cve := range cves {
 		cve.Suppressed = true
 	}
@@ -149,6 +184,7 @@ func (ds *datastoreImpl) Unsuppress(ctx context.Context, ids ...string) error {
 	if err != nil {
 		return err
 	}
+
 	for _, cve := range cves {
 		cve.Suppressed = false
 	}

@@ -2,18 +2,12 @@ package resolvers
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/graph-gophers/graphql-go"
-	"github.com/pkg/errors"
-	"github.com/stackrox/rox/central/cve/converter"
 	"github.com/stackrox/rox/central/metrics"
-	"github.com/stackrox/rox/generated/storage"
-	"github.com/stackrox/rox/pkg/devbuild"
 	"github.com/stackrox/rox/pkg/features"
 	pkgMetrics "github.com/stackrox/rox/pkg/metrics"
-	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/utils"
 )
 
@@ -53,12 +47,6 @@ func init() {
 		schema.AddQuery("istioVulnerability(id: ID): EmbeddedVulnerability"),
 		schema.AddQuery("istioVulnerabilities(query: String, pagination: Pagination): [EmbeddedVulnerability!]!"),
 	)
-	if devbuild.IsEnabled() {
-		utils.Must(
-			schema.AddQuery("allK8sVulnerabilities(query: String, pagination: Pagination): [EmbeddedVulnerability!]!"),
-			schema.AddQuery("allIstioVulnerabilities(query: String, pagination: Pagination): [EmbeddedVulnerability!]!"),
-		)
-	}
 }
 
 // VulnerabilityResolver represents a generic resolver of vulnerability fields.
@@ -145,140 +133,54 @@ func (resolver *Resolver) VulnCounter(ctx context.Context, args RawQuery) (*Vuln
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // K8sVulnerability resolves a single k8s vulnerability based on an id (the CVE value).
-func (resolver *Resolver) K8sVulnerability(ctx context.Context, args idQuery) (*EmbeddedVulnerabilityResolver, error) {
+func (resolver *Resolver) K8sVulnerability(ctx context.Context, args idQuery) (VulnerabilityResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "K8sVulnerability")
 	if err := readImages(ctx); err != nil {
 		return nil, err
 	}
 
-	query := search.NewQueryBuilder().AddExactMatches(search.CVE, string(*args.ID)).ProtoQuery()
-	vulns, err := k8sIstioVulnerabilities(ctx, resolver, query, converter.K8s)
-	if err != nil {
-		return nil, err
-	} else if len(vulns) == 0 {
-		return nil, nil
-	} else if len(vulns) > 1 {
-		return nil, fmt.Errorf("multiple k8s vulns matched: %q this should not happen", string(*args.ID))
+	if features.Dackbox.Enabled() {
+		return resolver.k8sVulnerabilityV2(ctx, args)
 	}
-	return vulns[0], nil
+	return resolver.k8sVulnerabilityV1(ctx, args)
 }
 
 // K8sVulnerabilities resolves a set of k8s vulnerabilities based on a query.
-func (resolver *Resolver) K8sVulnerabilities(ctx context.Context, q PaginatedQuery) ([]*EmbeddedVulnerabilityResolver, error) {
+func (resolver *Resolver) K8sVulnerabilities(ctx context.Context, args PaginatedQuery) ([]VulnerabilityResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "K8sVulnerabilities")
 	if err := readImages(ctx); err != nil {
 		return nil, err
 	}
 
-	query, err := q.AsV1QueryOrEmpty()
-	if err != nil {
-		return nil, err
+	if features.Dackbox.Enabled() {
+		return resolver.k8sVulnerabilitiesV2(ctx, args)
 	}
-
-	pagination := query.Pagination
-	query.Pagination = nil
-
-	resolvers, err := paginationWrapper{
-		pv: pagination,
-	}.paginate(k8sIstioVulnerabilities(ctx, resolver, query, converter.K8s))
-	return resolvers.([]*EmbeddedVulnerabilityResolver), err
-}
-
-// AllK8sVulnerabilities resolves a set of k8s vulnerabilities based on a query.
-func (resolver *Resolver) AllK8sVulnerabilities(ctx context.Context, q PaginatedQuery) ([]*EmbeddedVulnerabilityResolver, error) {
-	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "AllK8sVulnerabilities")
-	if !devbuild.IsEnabled() {
-		return nil, errors.New("test api not supported in this build")
-	}
-
-	if err := readImages(ctx); err != nil {
-		return nil, err
-	}
-	query, err := q.AsV1QueryOrEmpty()
-	if err != nil {
-		return nil, err
-	}
-
-	protoCVEs, err := paginationWrapper{
-		pv: query.Pagination,
-	}.paginate(resolver.k8sIstioCVEManager.GetK8sCVEs(ctx, query))
-	if err != nil {
-		return nil, err
-	}
-
-	embeddedCVEs, err := converter.ProtoCVEsToEmbeddedCVEs(protoCVEs.([]*storage.CVE))
-	if err != nil {
-		return nil, err
-	}
-
-	return resolver.wrapEmbeddedVulns(embeddedCVEs), nil
+	return resolver.k8sVulnerabilitiesV1(ctx, args)
 }
 
 // IstioVulnerability resolves a single istio vulnerability based on an id (the CVE value).
-func (resolver *Resolver) IstioVulnerability(ctx context.Context, args idQuery) (*EmbeddedVulnerabilityResolver, error) {
+func (resolver *Resolver) IstioVulnerability(ctx context.Context, args idQuery) (VulnerabilityResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "IstioVulnerability")
 	if err := readImages(ctx); err != nil {
 		return nil, err
 	}
 
-	query := search.NewQueryBuilder().AddExactMatches(search.CVE, string(*args.ID)).ProtoQuery()
-	vulns, err := k8sIstioVulnerabilities(ctx, resolver, query, converter.Istio)
-	if err != nil {
-		return nil, err
-	} else if len(vulns) == 0 {
-		return nil, nil
-	} else if len(vulns) > 1 {
-		return nil, fmt.Errorf("multiple istio vulns matched: %q this should not happen", string(*args.ID))
+	if features.Dackbox.Enabled() {
+		return resolver.istioVulnerabilityV2(ctx, args)
 	}
-	return vulns[0], nil
+	return resolver.istioVulnerabilityV1(ctx, args)
 }
 
 // IstioVulnerabilities resolves a set of istio vulnerabilities based on a query.
-func (resolver *Resolver) IstioVulnerabilities(ctx context.Context, q PaginatedQuery) ([]*EmbeddedVulnerabilityResolver, error) {
+func (resolver *Resolver) IstioVulnerabilities(ctx context.Context, args PaginatedQuery) ([]VulnerabilityResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "IstioVulnerabilities")
 	if err := readImages(ctx); err != nil {
 		return nil, err
 	}
 
-	query, err := q.AsV1QueryOrEmpty()
-	if err != nil {
-		return nil, err
+	if features.Dackbox.Enabled() {
+		return resolver.istioVulnerabilitiesV2(ctx, args)
 	}
 
-	pagination := query.Pagination
-	query.Pagination = nil
-
-	resolvers, err := paginationWrapper{
-		pv: pagination,
-	}.paginate(k8sIstioVulnerabilities(ctx, resolver, query, converter.Istio))
-	return resolvers.([]*EmbeddedVulnerabilityResolver), err
-}
-
-// AllIstioVulnerabilities resolves a set of k8s vulnerabilities based on a query.
-func (resolver *Resolver) AllIstioVulnerabilities(ctx context.Context, q PaginatedQuery) ([]*EmbeddedVulnerabilityResolver, error) {
-	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Root, "AllIstioVulnerabilities")
-	if !devbuild.IsEnabled() {
-		return nil, errors.New("test api not supported in this build")
-	}
-
-	if err := readImages(ctx); err != nil {
-		return nil, err
-	}
-	query, err := q.AsV1QueryOrEmpty()
-	if err != nil {
-		return nil, err
-	}
-	protoCVEs, err := paginationWrapper{
-		pv: query.Pagination,
-	}.paginate(resolver.k8sIstioCVEManager.GetIstioCVEs(ctx, query))
-	if err != nil {
-		return nil, err
-	}
-
-	embeddedCVEs, err := converter.ProtoCVEsToEmbeddedCVEs(protoCVEs.([]*storage.CVE))
-	if err != nil {
-		return nil, err
-	}
-
-	return resolver.wrapEmbeddedVulns(embeddedCVEs), nil
+	return resolver.istioVulnerabilitiesV1(ctx, args)
 }

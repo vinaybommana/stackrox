@@ -80,16 +80,39 @@ func (resolver *Resolver) vulnCounterV2Query(ctx context.Context, query *v1.Quer
 	if err != nil {
 		return nil, err
 	}
-	q1 := search.NewConjunctionQuery(query, search.NewQueryBuilder().AddBools(search.Fixable, true).ProtoQuery())
-	fixableVulns, err := vulnLoader.FromQuery(ctx, q1)
+
+	fixableVulnsQuery := search.NewConjunctionQuery(query, search.NewQueryBuilder().AddBools(search.Fixable, true).ProtoQuery())
+	fixableVulns, err := vulnLoader.FromQuery(ctx, fixableVulnsQuery)
 	if err != nil {
 		return nil, err
 	}
-	allVulns, err := vulnLoader.FromQuery(ctx, query)
+
+	unFixableVulnsQuery := search.NewConjunctionQuery(query, search.NewQueryBuilder().AddBools(search.Fixable, false).ProtoQuery())
+	unFixableCVEs, err := vulnLoader.FromQuery(ctx, unFixableVulnsQuery)
 	if err != nil {
 		return nil, err
 	}
-	return mapVCEsToVulnerabilityCounter(fixableVulns, allVulns), nil
+	return mapCVEsToVulnerabilityCounter(fixableVulns, unFixableCVEs), nil
+}
+
+func (resolver *Resolver) k8sVulnerabilityV2(ctx context.Context, args idQuery) (VulnerabilityResolver, error) {
+	return resolver.vulnerabilityV2(ctx, args)
+}
+
+func (resolver *Resolver) k8sVulnerabilitiesV2(ctx context.Context, q PaginatedQuery) ([]VulnerabilityResolver, error) {
+	query := search.AddRawQueriesAsConjunction(q.String(),
+		search.NewQueryBuilder().AddExactMatches(search.CVEType, storage.CVE_K8S_CVE.String()).Query())
+	return resolver.vulnerabilitiesV2(ctx, PaginatedQuery{Query: &query, Pagination: q.Pagination})
+}
+
+func (resolver *Resolver) istioVulnerabilityV2(ctx context.Context, args idQuery) (VulnerabilityResolver, error) {
+	return resolver.vulnerabilityV2(ctx, args)
+}
+
+func (resolver *Resolver) istioVulnerabilitiesV2(ctx context.Context, q PaginatedQuery) ([]VulnerabilityResolver, error) {
+	query := search.AddRawQueriesAsConjunction(q.String(),
+		search.NewQueryBuilder().AddExactMatches(search.CVEType, storage.CVE_ISTIO_CVE.String()).Query())
+	return resolver.vulnerabilitiesV2(ctx, PaginatedQuery{Query: &query, Pagination: q.Pagination})
 }
 
 // Implemented Resolver.
@@ -149,7 +172,7 @@ func (resolver *cVEResolver) EnvImpact(ctx context.Context) (float64, error) {
 }
 
 func (resolver *cVEResolver) getEnvImpactForK8sIstioVuln(ctx context.Context, ct converter.CVEType) (float64, error) {
-	cve := resolver.root.getNvdCVE(resolver.data.GetId())
+	cve := resolver.root.k8sIstioCVEManager.GetNVDCVE(resolver.data.GetId())
 	if cve == nil {
 		return 0.0, fmt.Errorf("cve: %q not found", resolver.data.GetId())
 	}

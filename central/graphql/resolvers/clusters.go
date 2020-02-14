@@ -550,7 +550,7 @@ func (resolver *clusterResolver) VulnCounter(ctx context.Context, args RawQuery)
 	return resolver.root.VulnCounter(ctx, RawQuery{Query: &query})
 }
 
-func (resolver *clusterResolver) K8sVulns(ctx context.Context, args PaginatedQuery) ([]*EmbeddedVulnerabilityResolver, error) {
+func (resolver *clusterResolver) K8sVulns(ctx context.Context, args PaginatedQuery) ([]VulnerabilityResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "K8sVulns")
 
 	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getClusterRawQuery())
@@ -568,7 +568,7 @@ func (resolver *clusterResolver) K8sVulnCount(ctx context.Context, args RawQuery
 	return int32(len(vulns)), nil
 }
 
-func (resolver *clusterResolver) IstioVulns(ctx context.Context, args PaginatedQuery) ([]*EmbeddedVulnerabilityResolver, error) {
+func (resolver *clusterResolver) IstioVulns(ctx context.Context, args PaginatedQuery) ([]VulnerabilityResolver, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Cluster, "IstioVulns")
 
 	query := search.AddRawQueriesAsConjunction(args.String(), resolver.getClusterRawQuery())

@@ -13,8 +13,10 @@ import (
 	"github.com/stackrox/rox/central/cve/converter"
 	imageDataStore "github.com/stackrox/rox/central/image/datastore"
 	nsDataStore "github.com/stackrox/rox/central/namespace/datastore"
+	"github.com/stackrox/rox/central/role/resources"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/logging"
+	"github.com/stackrox/rox/pkg/sac"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/set"
 	"github.com/stackrox/rox/pkg/stringutils"
@@ -22,6 +24,12 @@ import (
 
 var (
 	log = logging.LoggerForModule()
+
+	readCtx = sac.WithGlobalAccessScopeChecker(context.Background(),
+		sac.AllowFixedScopes(
+			sac.AccessModeScopeKeys(storage.Access_READ_ACCESS),
+			sac.ResourceScopeKeys(resources.Cluster, resources.Namespace, resources.Image),
+		))
 
 	gkeVersionRegex = regexp.MustCompile(`^[v|V]?[0-9]+\.[0-9]+\.[0-9]+-gke\.[0-9]+$`)
 	eksVersionRegex = regexp.MustCompile(`^[v|V]?[0-9]+\.[0-9]+\.[0-9]+.*eks.*$`)
@@ -43,6 +51,18 @@ func NewCVEMatcher(clusters clusterDataStore.DataStore, namespaces nsDataStore.D
 	}, nil
 }
 
+// IsClusterCVEFixable returns if the true if cluster cve is fixable
+func IsClusterCVEFixable(cve *schema.NVDCVEFeedJSON10DefCVEItem) bool {
+	for _, node := range cve.Configurations.Nodes {
+		for _, cpeMatch := range node.CPEMatch {
+			if cpeMatch.VersionEndExcluding != "" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // IsGKEOrEKSVersion determines if given version string is GKE or EKS
 func (m *CVEMatcher) IsGKEOrEKSVersion(version string) bool {
 	return m.IsGKEVersion(version) || m.IsEKSVersion(version)
@@ -58,15 +78,50 @@ func (m *CVEMatcher) IsEKSVersion(version string) bool {
 	return eksVersionRegex.MatchString(version)
 }
 
+// GetAffectedClusters returns the clusters affected by k8s and istio cves
+func (m *CVEMatcher) GetAffectedClusters(nvdCVE *schema.NVDCVEFeedJSON10DefCVEItem) ([]*storage.Cluster, error) {
+	clusters, err := m.clusters.GetClusters(readCtx)
+	if err != nil {
+		return nil, err
+	}
+
+	filtered := make([]*storage.Cluster, 0, len(clusters))
+	for _, cluster := range clusters {
+		affected, err := m.IsClusterAffectedByK8sOrIstioCVE(readCtx, cluster, nvdCVE)
+		if err != nil {
+			return nil, err
+		}
+
+		if !affected {
+			continue
+		}
+		filtered = append(filtered, cluster)
+	}
+	return filtered, nil
+}
+
+// IsClusterAffectedByK8sOrIstioCVE returns true if cluster is affected by k8s and istio cve
+func (m *CVEMatcher) IsClusterAffectedByK8sOrIstioCVE(ctx context.Context, cluster *storage.Cluster, cve *schema.NVDCVEFeedJSON10DefCVEItem) (bool, error) {
+	affected1, err := m.IsClusterAffectedByIstioCVE(ctx, cluster, cve)
+	if err != nil {
+		return false, err
+	}
+	affected2, err := m.IsClusterAffectedByK8sCVE(ctx, cluster, cve)
+	if err != nil {
+		return false, err
+	}
+	return affected1 || affected2, nil
+}
+
 // IsClusterAffectedByK8sCVE returns true if cluster is affected by k8s cve
-func (m *CVEMatcher) IsClusterAffectedByK8sCVE(cluster *storage.Cluster, cve *schema.NVDCVEFeedJSON10DefCVEItem) bool {
+func (m *CVEMatcher) IsClusterAffectedByK8sCVE(_ context.Context, cluster *storage.Cluster, cve *schema.NVDCVEFeedJSON10DefCVEItem) (bool, error) {
 	clusterVersion := cluster.GetStatus().GetOrchestratorMetadata().GetVersion()
 	for _, node := range cve.Configurations.Nodes {
 		if m.matchVersions(node, clusterVersion, converter.K8s) {
-			return true
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }
 
 // IsClusterAffectedByIstioCVE returns true if cluster is affected by istio cve
@@ -298,15 +353,4 @@ func getVersionAndUpdateFromCpe(cpe string, ct converter.CVEType) (string, error
 	}
 
 	return strings.Join(ss[5:7], ":"), nil
-}
-
-func isK8sCVEFixable(cve *schema.NVDCVEFeedJSON10DefCVEItem) bool {
-	for _, node := range cve.Configurations.Nodes {
-		for _, cpeMatch := range node.CPEMatch {
-			if cpeMatch.VersionEndExcluding != "" {
-				return true
-			}
-		}
-	}
-	return false
 }

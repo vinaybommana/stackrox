@@ -42,10 +42,6 @@ message CVE {
     CVSSV2                    cvss_v2       = 10;
     CVSSV3                    cvss_v3       = 11;
     bool                      suppressed    = 12 [(gogoproto.moretags) = "search:\"CVE Suppressed,store\""];
-    oneof set_fixed_by { // Applies to only k8s and istio CVEs
-        string fixed_by                     = 13 [(gogoproto.moretags) = "search:\"Fixed By,store\""];
-    }
-
 }
 
 message CVSSV2 {

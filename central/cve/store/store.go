@@ -1,6 +1,7 @@
 package store
 
 import (
+	"github.com/stackrox/rox/central/cve/converter"
 	"github.com/stackrox/rox/generated/storage"
 )
 
@@ -15,5 +16,6 @@ type Store interface {
 	Exists(id string) (bool, error)
 
 	Upsert(cves ...*storage.CVE) error
+	UpsertClusterCVEs(cveParts ...converter.ClusterCVEParts) error
 	Delete(ids ...string) error
 }

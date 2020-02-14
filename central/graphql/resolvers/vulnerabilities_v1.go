@@ -2,7 +2,6 @@ package resolvers
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/facebookincubator/nvdtools/cvefeed/nvd/schema"
@@ -16,7 +15,6 @@ import (
 	"github.com/stackrox/rox/central/metrics"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
-	"github.com/stackrox/rox/pkg/features"
 	pkgMetrics "github.com/stackrox/rox/pkg/metrics"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/predicate"
@@ -38,7 +36,7 @@ func (resolver *Resolver) vulnerabilityV1(ctx context.Context, args idQuery) (Vu
 	} else if len(vulns) == 0 {
 		return nil, nil
 	} else if len(vulns) > 1 {
-		return nil, fmt.Errorf("multiple vulns matched: %s this should not happen", string(*args.ID))
+		return nil, errors.Errorf("multiple vulns matched: %s this should not happen", string(*args.ID))
 	}
 	return vulns[0], nil
 }
@@ -74,6 +72,60 @@ func (resolver *Resolver) vulnerabilityCountV1(ctx context.Context, args RawQuer
 		return 0, err
 	}
 	return int32(len(vulns)), nil
+}
+
+func (resolver *Resolver) k8sVulnerabilityV1(ctx context.Context, args idQuery) (VulnerabilityResolver, error) {
+	query := search.NewQueryBuilder().AddExactMatches(search.CVE, string(*args.ID)).ProtoQuery()
+	vulns, err := k8sVulnerabilities(ctx, resolver, query)
+	if err != nil {
+		return nil, err
+	} else if len(vulns) == 0 {
+		return nil, nil
+	} else if len(vulns) > 1 {
+		return nil, errors.Errorf("multiple k8s vulns matched: %q this should not happen", string(*args.ID))
+	}
+	return vulns[0], nil
+}
+
+func (resolver *Resolver) k8sVulnerabilitiesV1(ctx context.Context, args PaginatedQuery) ([]VulnerabilityResolver, error) {
+	query, err := args.AsV1QueryOrEmpty()
+	if err != nil {
+		return nil, err
+	}
+	pagination := query.Pagination
+	query.Pagination = nil
+
+	resolvers, err := paginationWrapper{
+		pv: pagination,
+	}.paginate(k8sVulnerabilities(ctx, resolver, query))
+	return resolvers.([]VulnerabilityResolver), err
+}
+
+func (resolver *Resolver) istioVulnerabilityV1(ctx context.Context, args idQuery) (VulnerabilityResolver, error) {
+	query := search.NewQueryBuilder().AddExactMatches(search.CVE, string(*args.ID)).ProtoQuery()
+	vulns, err := istioVulnerabilities(ctx, resolver, query)
+	if err != nil {
+		return nil, err
+	} else if len(vulns) == 0 {
+		return nil, nil
+	} else if len(vulns) > 1 {
+		return nil, errors.Errorf("multiple istio vulns matched: %q this should not happen", string(*args.ID))
+	}
+	return vulns[0], nil
+}
+
+func (resolver *Resolver) istioVulnerabilitiesV1(ctx context.Context, args PaginatedQuery) ([]VulnerabilityResolver, error) {
+	query, err := args.AsV1QueryOrEmpty()
+	if err != nil {
+		return nil, err
+	}
+	pagination := query.Pagination
+	query.Pagination = nil
+
+	resolvers, err := paginationWrapper{
+		pv: pagination,
+	}.paginate(istioVulnerabilities(ctx, resolver, query))
+	return resolvers.([]VulnerabilityResolver), err
 }
 
 func (resolver *Resolver) vulnCounterV1(ctx context.Context, args RawQuery) (*VulnerabilityCounterResolver, error) {
@@ -119,12 +171,12 @@ func vulnerabilities(ctx context.Context, root *Resolver, query *v1.Query) ([]*E
 		return nil, err
 	}
 
-	k8sVulnResolvers, err := k8sIstioVulnerabilities(ctx, root, query, converter.K8s)
+	k8sVulnResolvers, err := k8sVulnerabilities(ctx, root, query)
 	if err != nil {
 		return nil, err
 	}
 
-	istioVulnResolvers, err := k8sIstioVulnerabilities(ctx, root, query, converter.Istio)
+	istioVulnResolvers, err := istioVulnerabilities(ctx, root, query)
 	if err != nil {
 		return nil, err
 	}
@@ -134,77 +186,32 @@ func vulnerabilities(ctx context.Context, root *Resolver, query *v1.Query) ([]*E
 	return imageVulnResolvers, nil
 }
 
-// k8sIstioVulnerabilities returns the k8s/istio vulnerabilities that match the input query.
-func k8sIstioVulnerabilities(ctx context.Context, root *Resolver, query *v1.Query, ct converter.CVEType) ([]*EmbeddedVulnerabilityResolver, error) {
-	var cves []*storage.CVE
+// k8sVulnerabilities returns the k8s vulnerabilities that match the input query.
+func k8sVulnerabilities(ctx context.Context, root *Resolver, query *v1.Query) ([]*EmbeddedVulnerabilityResolver, error) {
 	_, containsUnmatchableFields := search.FilterQueryWithMap(query, search.CombineOptionsMaps(clusterMappings.OptionsMap, mappings.VulnerabilityOptionsMap))
 	if containsUnmatchableFields {
 		return nil, nil
 	}
 
-	vulnQuery, _ := search.FilterQueryWithMap(query, mappings.VulnerabilityOptionsMap)
-	vulnPred, err := vulnPredicateFactory.GeneratePredicate(vulnQuery)
+	cves, err := root.k8sIstioCVEManager.GetK8sCVEs(ctx, query)
 	if err != nil {
 		return nil, err
 	}
+	return root.wrapEmbeddedVulns(cves), nil
+}
 
-	clusterQuery, _ := search.FilterQueryWithMap(query, clusterMappings.OptionsMap)
-	clusters, err := root.ClusterDataStore.SearchRawClusters(ctx, clusterQuery)
+// istioVulnerabilities returns the istio vulnerabilities that match the input query.
+func istioVulnerabilities(ctx context.Context, root *Resolver, query *v1.Query) ([]*EmbeddedVulnerabilityResolver, error) {
+	_, containsUnmatchableFields := search.FilterQueryWithMap(query, search.CombineOptionsMaps(clusterMappings.OptionsMap, mappings.VulnerabilityOptionsMap))
+	if containsUnmatchableFields {
+		return nil, nil
+	}
+
+	cves, err := root.k8sIstioCVEManager.GetIstioCVEs(ctx, query)
 	if err != nil {
 		return nil, err
 	}
-
-	var checkImpact func(context.Context, *storage.Cluster, *schema.NVDCVEFeedJSON10DefCVEItem) (bool, error)
-
-	if ct == converter.K8s {
-		cves, err = root.k8sIstioCVEManager.GetK8sCVEs(ctx, vulnQuery)
-		if err != nil {
-			return nil, err
-		}
-		checkImpact = func(ctx context.Context, cluster *storage.Cluster, cve *schema.NVDCVEFeedJSON10DefCVEItem) (bool, error) {
-			ok := root.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve)
-			return ok, nil
-		}
-	} else if ct == converter.Istio {
-		cves, err = root.k8sIstioCVEManager.GetIstioCVEs(ctx, vulnQuery)
-		if err != nil {
-			return nil, err
-		}
-		checkImpact = func(ctx context.Context, cluster *storage.Cluster, cve *schema.NVDCVEFeedJSON10DefCVEItem) (bool, error) {
-			ok, err := root.cveMatcher.IsClusterAffectedByIstioCVE(ctx, cluster, cve)
-			return ok, err
-		}
-	} else {
-		return nil, errors.Errorf("unknown CVE type: %d", ct)
-	}
-
-	ret := make([]*EmbeddedVulnerabilityResolver, 0, len(cves))
-
-	for _, cve := range cves {
-		for _, cluster := range clusters {
-			nvdCVE := root.getNvdCVE(cve.Id)
-			ok, err := checkImpact(ctx, cluster, nvdCVE)
-			if err != nil {
-				return nil, err
-			}
-			if !ok {
-				continue
-			}
-
-			embedded := converter.ProtoCVEToEmbeddedCVE(cve)
-			if !features.Dackbox.Enabled() && !vulnPred.Matches(embedded) {
-				continue
-			}
-
-			r := &EmbeddedVulnerabilityResolver{
-				data: embedded,
-				root: root,
-			}
-			ret = append(ret, r)
-			break // No need to continue the clusters loop since the CVE was already added to the list.
-		}
-	}
-	return ret, nil
+	return root.wrapEmbeddedVulns(cves), nil
 }
 
 func (resolver *Resolver) wrapEmbeddedVulnerability(value *storage.EmbeddedVulnerability, err error) (*EmbeddedVulnerabilityResolver, error) {
@@ -375,56 +382,26 @@ func (evr *EmbeddedVulnerabilityResolver) DeploymentCount(ctx context.Context, a
 	return deploymentLoader.CountFromQuery(ctx, search.ConjunctionQuery(deploymentBaseQuery, query))
 }
 
-func (resolver *Resolver) getNvdCVE(id string) *schema.NVDCVEFeedJSON10DefCVEItem {
-	for _, cve := range resolver.k8sIstioCVEManager.GetK8sAndIstioCVEs() {
-		if cve.CVE.CVEDataMeta.ID == id {
-			return cve
-		}
-	}
-	return nil
-}
-
 func (resolver *Resolver) getAffectedClusterPercentage(ctx context.Context, cve *schema.NVDCVEFeedJSON10DefCVEItem, ct converter.CVEType) (float64, error) {
 	clusters, err := resolver.ClusterDataStore.GetClusters(ctx)
 	if err != nil {
 		return 0, err
 	}
-
-	var checkImpact func(context.Context, *storage.Cluster, *schema.NVDCVEFeedJSON10DefCVEItem) (bool, error)
-
-	if ct == converter.K8s {
-		checkImpact = func(ctx context.Context, cluster *storage.Cluster, entry *schema.NVDCVEFeedJSON10DefCVEItem) (bool, error) {
-			return resolver.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve), nil
-		}
-	} else if ct == converter.Istio {
-		checkImpact = func(ctx context.Context, cluster *storage.Cluster, entry *schema.NVDCVEFeedJSON10DefCVEItem) (bool, error) {
-			ok, err := resolver.cveMatcher.IsClusterAffectedByIstioCVE(ctx, cluster, cve)
-			return ok, err
-		}
-	} else {
-		return 0.0, errors.Errorf("unknown CVE type: %d", ct)
-	}
-
-	affectedClusterCount := 0
-	for _, cluster := range clusters {
-		ok, err := checkImpact(ctx, cluster, cve)
-		if err != nil {
-			return 0.0, errors.Errorf("unknown CVE type: %d", ct)
-		}
-		if ok {
-			affectedClusterCount++
-		}
-	}
 	if len(clusters) == 0 {
 		return float64(0), nil
 	}
-	return float64(affectedClusterCount) / float64(len(clusters)), nil
+
+	affectedClusters, err := resolver.cveMatcher.GetAffectedClusters(cve)
+	if err != nil {
+		return 0.0, errors.Errorf("unknown CVE type: %d", ct)
+	}
+	return float64(len(affectedClusters)) / float64(len(clusters)), nil
 }
 
 func (evr *EmbeddedVulnerabilityResolver) getEnvImpactForK8sIstioVuln(ctx context.Context, ct converter.CVEType) (float64, error) {
-	cve := evr.root.getNvdCVE(evr.data.Cve)
+	cve := evr.root.k8sIstioCVEManager.GetNVDCVE(evr.data.Cve)
 	if cve == nil {
-		return 0.0, fmt.Errorf("cve: %q not found", evr.data.Cve)
+		return 0.0, errors.Errorf("cve: %q not found", evr.data.Cve)
 	}
 	p, err := evr.root.getAffectedClusterPercentage(ctx, cve, ct)
 	if err != nil {

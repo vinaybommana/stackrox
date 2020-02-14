@@ -12,12 +12,12 @@ import (
 )
 
 // NewGraphBasedDerivedFieldCounter generates derived field count for input keys by traversing the RGraph
-func NewGraphBasedDerivedFieldCounter(graphProvider graph.Provider, dackboxPath dackbox.Path, sacFilter filtered.Filter) DerivedFieldCounter {
+func NewGraphBasedDerivedFieldCounter(graphProvider graph.Provider, dackboxPath dackbox.Path, sacFilters ...filtered.Filter) DerivedFieldCounter {
 	return &graphBasedDerivedFieldCounterImpl{
 		forwardTraversal: dackboxPath.ForwardTraversal,
 		graphProvider:    graphProvider,
 		prefixPath:       dackboxPath.Path,
-		sacFilter:        sacFilter,
+		sacFilters:       sacFilters,
 	}
 }
 
@@ -25,7 +25,7 @@ type graphBasedDerivedFieldCounterImpl struct {
 	forwardTraversal bool
 	graphProvider    graph.Provider
 	prefixPath       [][]byte
-	sacFilter        filtered.Filter
+	sacFilters       []filtered.Filter
 }
 
 func (c *graphBasedDerivedFieldCounterImpl) Count(ctx context.Context, keys ...string) (map[string]int32, error) {
@@ -45,10 +45,10 @@ func (c *graphBasedDerivedFieldCounterImpl) Count(ctx context.Context, keys ...s
 		step = idGraph.GetRefsTo
 	}
 
-	return count(ctx, currentIDs, c.prefixPath, step, c.sacFilter)
+	return count(ctx, currentIDs, c.prefixPath, step, c.sacFilters)
 }
 
-func count(ctx context.Context, currentIDs [][]byte, prefixPath [][]byte, step func([]byte) [][]byte, sacFilter filtered.Filter) (map[string]int32, error) {
+func count(ctx context.Context, currentIDs [][]byte, prefixPath [][]byte, step func([]byte) [][]byte, sacFilter []filtered.Filter) (map[string]int32, error) {
 	counts := make(map[string]int32)
 	cache := make(map[string]int32)
 	var err error
@@ -61,7 +61,7 @@ func count(ctx context.Context, currentIDs [][]byte, prefixPath [][]byte, step f
 	return counts, nil
 }
 
-func dfs(ctx context.Context, currentID []byte, cache map[string]int32, seenIDs set.StringSet, prefixPath [][]byte, step func([]byte) [][]byte, sacFilter filtered.Filter) (int32, error) {
+func dfs(ctx context.Context, currentID []byte, cache map[string]int32, seenIDs set.StringSet, prefixPath [][]byte, step func([]byte) [][]byte, sacFilters []filtered.Filter) (int32, error) {
 	if len(prefixPath) == 0 {
 		return 0, nil
 	}
@@ -79,7 +79,7 @@ func dfs(ctx context.Context, currentID []byte, cache map[string]int32, seenIDs 
 	if len(prefixPath) == 1 {
 		id := GetIDForKey(prefixPath[0], currentID)
 		// Perform SAC check only on final prefix
-		allowed, err := sacFilter.Apply(ctx, id)
+		allowed, err := filtered.ApplySACFilters(ctx, []string{id}, sacFilters...)
 		if err != nil || len(allowed) == 0 {
 			return 0, err
 		}
@@ -95,7 +95,7 @@ func dfs(ctx context.Context, currentID []byte, cache map[string]int32, seenIDs 
 	totalCount := int32(0)
 	nextIDs := filterByPrefix(prefixPath[1], transformedIDs)
 	for _, nextID := range nextIDs {
-		count, err := dfs(ctx, nextID, cache, seenIDs, prefixPath[1:], step, sacFilter)
+		count, err := dfs(ctx, nextID, cache, seenIDs, prefixPath[1:], step, sacFilters)
 		if err != nil {
 			return 0, err
 		}

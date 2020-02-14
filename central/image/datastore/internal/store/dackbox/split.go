@@ -2,6 +2,7 @@ package dackbox
 
 import (
 	"github.com/gogo/protobuf/proto"
+	"github.com/stackrox/rox/central/cve/converter"
 	"github.com/stackrox/rox/central/imagecomponent"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/dackbox/edges"
@@ -45,7 +46,7 @@ func splitCVEs(component ComponentParts, embedded *storage.EmbeddedImageScanComp
 	ret := make([]CVEParts, 0, len(embedded.GetVulns()))
 	for _, cve := range embedded.GetVulns() {
 		cp := CVEParts{}
-		cp.cve = generateCVE(cve)
+		cp.cve = converter.EmbeddedCVEToProtoCVE(cve)
 		cp.edge = generateComponentCVEEdge(component.component, cp.cve, cve)
 		ret = append(ret, cp)
 	}
@@ -86,29 +87,6 @@ func generateImageComponentEdge(image *storage.Image, converted *storage.ImageCo
 		}
 	}
 	ret.Location = embedded.GetLocation()
-	return ret
-}
-
-func generateCVE(from *storage.EmbeddedVulnerability) *storage.CVE {
-	ret := &storage.CVE{
-		Type:         storage.CVE_IMAGE_CVE,
-		Id:           from.GetCve(),
-		Cvss:         from.GetCvss(),
-		Summary:      from.GetSummary(),
-		Link:         from.GetLink(),
-		PublishedOn:  from.GetPublishedOn(),
-		LastModified: from.GetLastModified(),
-		CvssV2:       from.GetCvssV2(),
-		CvssV3:       from.GetCvssV3(),
-		Suppressed:   from.GetSuppressed(),
-	}
-	if ret.CvssV3 != nil {
-		ret.ScoreVersion = storage.CVE_V3
-		ret.ImpactScore = from.GetCvssV3().GetImpactScore()
-	} else if ret.CvssV2 != nil {
-		ret.ScoreVersion = storage.CVE_V2
-		ret.ImpactScore = from.GetCvssV2().GetImpactScore()
-	}
 	return ret
 }
 

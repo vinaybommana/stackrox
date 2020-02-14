@@ -22,22 +22,13 @@ func UnsafeSearcher(searcher blevesearch.UnsafeSearcher, filters ...Filter) sear
 			return results, err
 		}
 
-		var filtered []string
-		for _, filter := range filters {
-			filtered, err = filter.Apply(ctx, search.ResultsToIDs(results)...)
-
-			// If there is no error and if result is non-empty we assume that we evaluated on correct sac filter.
-			// If we have receive error or if the length of result is 0, we try another filter.
-			if err == nil && len(filtered) > 0 {
-				break
-			}
-		}
+		allFiltered, err := ApplySACFilters(ctx, search.ResultsToIDs(results), filters...)
 		if err != nil {
 			return results, err
 		}
 
 		filteredResults := results[:0]
-		filteredSet := set.NewStringSet(filtered...)
+		filteredSet := set.NewStringSet(allFiltered...)
 		for _, result := range results {
 			if filteredSet.Contains(result.ID) {
 				filteredResults = append(filteredResults, result)
@@ -50,28 +41,18 @@ func UnsafeSearcher(searcher blevesearch.UnsafeSearcher, filters ...Filter) sear
 // Searcher returns a new searcher based on the filtered output from the input Searcher.
 func Searcher(searcher search.Searcher, filters ...Filter) search.Searcher {
 	return search.Func(func(ctx context.Context, q *v1.Query) ([]search.Result, error) {
-		var err error
 		results, err := searcher.Search(ctx, q)
 		if err != nil {
 			return results, err
 		}
 
-		var filtered []string
-		for _, filter := range filters {
-			filtered, err = filter.Apply(ctx, search.ResultsToIDs(results)...)
-
-			// If there is no error and if result is non-empty we assume that we evaluated on correct sac filter.
-			// If we have receive error or if the length of result is 0, we try another filter.
-			if err == nil && len(filtered) > 0 {
-				break
-			}
-		}
+		allFiltered, err := ApplySACFilters(ctx, search.ResultsToIDs(results), filters...)
 		if err != nil {
 			return results, err
 		}
 
 		filteredResults := results[:0]
-		filteredSet := set.NewStringSet(filtered...)
+		filteredSet := set.NewStringSet(allFiltered...)
 		for _, result := range results {
 			if filteredSet.Contains(result.ID) {
 				filteredResults = append(filteredResults, result)
@@ -79,4 +60,22 @@ func Searcher(searcher search.Searcher, filters ...Filter) search.Searcher {
 		}
 		return filteredResults, nil
 	})
+}
+
+// ApplySACFilters filters ids with sac filters
+func ApplySACFilters(ctx context.Context, ids []string, filters ...Filter) ([]string, error) {
+	var allFiltered []string
+	for _, filter := range filters {
+		filtered, err := filter.Apply(ctx, ids...)
+		if err != nil {
+			return ids, err
+		} else if len(filtered) == 0 {
+			continue
+		}
+
+		allFiltered = append(allFiltered, filtered...)
+		// evaluate unfiltered ids on other sac filters
+		ids = set.NewStringSet(ids...).Difference(set.NewStringSet(filtered...)).AsSlice()
+	}
+	return allFiltered, nil
 }

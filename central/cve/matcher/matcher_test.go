@@ -168,35 +168,35 @@ func (s *cveMatcherTestSuite) TestIfSpecificVersionCVEAffectsCluster() {
 		},
 	}
 
-	ret := s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve1)
+	ret, _ := s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve1)
 	s.Equal(true, ret)
-	ret = s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve2)
+	ret, _ = s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve2)
 	s.Equal(false, ret)
-	ret = s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve3)
+	ret, _ = s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve3)
 	s.Equal(false, ret)
 
 	cluster.Status.OrchestratorMetadata.Version = "v1.15.3+build1"
-	ret = s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve1)
+	ret, _ = s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve1)
 	s.Equal(true, ret)
-	ret = s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve2)
+	ret, _ = s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve2)
 	s.Equal(false, ret)
-	ret = s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve3)
+	ret, _ = s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve3)
 	s.Equal(false, ret)
 
 	cluster.Status.OrchestratorMetadata.Version = "v1.15.3-alpha1"
-	ret = s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve1)
+	ret, _ = s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve1)
 	s.Equal(true, ret)
-	ret = s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve2)
+	ret, _ = s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve2)
 	s.Equal(false, ret)
-	ret = s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve3)
+	ret, _ = s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve3)
 	s.Equal(true, ret)
 
 	cluster.Status.OrchestratorMetadata.Version = "v1.15.3-alpha1+build1"
-	ret = s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve1)
+	ret, _ = s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve1)
 	s.Equal(true, ret)
-	ret = s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve2)
+	ret, _ = s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve2)
 	s.Equal(false, ret)
-	ret = s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve3)
+	ret, _ = s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve3)
 	s.Equal(true, ret)
 }
 
@@ -298,39 +298,39 @@ func (s *cveMatcherTestSuite) TestMultipleVersionCVEAffectsCluster() {
 		},
 	}
 
-	ret := s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve1)
+	ret, _ := s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve1)
 	s.Equal(false, ret)
 
-	ret = s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve2)
+	ret, _ = s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve2)
 	s.Equal(true, ret)
 
 	cluster.Status.OrchestratorMetadata.Version = "v1.15.1-beta1"
-	ret = s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve1)
+	ret, _ = s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve1)
 	s.Equal(false, ret)
 
-	ret = s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve2)
+	ret, _ = s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve2)
 	s.Equal(true, ret)
 
 	cluster.Status.OrchestratorMetadata.Version = "v1.15.9"
-	ret = s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve1)
+	ret, _ = s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve1)
 	s.Equal(false, ret)
 
-	ret = s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve2)
+	ret, _ = s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve2)
 	s.Equal(false, ret)
 
 	cluster.Status.OrchestratorMetadata.Version = "v1.15.1"
-	ret = s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve1)
+	ret, _ = s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve1)
 	s.Equal(false, ret)
 
-	ret = s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve2)
+	ret, _ = s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve2)
 	s.Equal(true, ret)
 
 	cluster.Status.OrchestratorMetadata.Version = "v1.16.4"
-	ret = s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve3)
+	ret, _ = s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve3)
 	s.Equal(false, ret)
 
 	cluster.Status.OrchestratorMetadata.Version = "v1.17.4"
-	ret = s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve3)
+	ret, _ = s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve3)
 	s.Equal(true, ret)
 }
 
@@ -381,19 +381,19 @@ func (s *cveMatcherTestSuite) TestSingleAndMultipleVersionCVEAffectsCluster() {
 		},
 	}
 
-	ret := s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve)
+	ret, _ := s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve)
 	s.Equal(true, ret)
 
 	cluster.Status.OrchestratorMetadata.Version = "v1.10.3-alpha1"
-	ret = s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve)
+	ret, _ = s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve)
 	s.Equal(true, ret)
 
 	cluster.Status.OrchestratorMetadata.Version = "v1.10.3-beta1"
-	ret = s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve)
+	ret, _ = s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve)
 	s.Equal(true, ret)
 
 	cluster.Status.OrchestratorMetadata.Version = "v1.10.3-rc1"
-	ret = s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve)
+	ret, _ = s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve)
 	s.Equal(true, ret)
 }
 
@@ -498,10 +498,11 @@ func (s *cveMatcherTestSuite) TestCountCVEsAffectsCluster() {
 
 	var countAffectedClusters, countFixableCVEs int
 	for _, cve := range cves {
-		if s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cve) {
+		affected, _ := s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cve)
+		if affected {
 			countAffectedClusters++
 		}
-		if isK8sCVEFixable(cve) {
+		if IsClusterCVEFixable(cve) {
 			countFixableCVEs++
 		}
 	}
@@ -602,9 +603,9 @@ func (s *cveMatcherTestSuite) TestNonK8sCPEMatch() {
 		},
 	}
 
-	ret := s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cves[0])
+	ret, _ := s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cves[0])
 	s.Equal(false, ret)
-	ret = s.cveMatcher.IsClusterAffectedByK8sCVE(cluster, cves[1])
+	ret, _ = s.cveMatcher.IsClusterAffectedByK8sCVE(s.hasReadCtx, cluster, cves[1])
 	s.Equal(true, ret)
 }
 
@@ -675,11 +676,11 @@ func (s *cveMatcherTestSuite) TestFixableCVEs() {
 			},
 		},
 	}
-	actual := isK8sCVEFixable(cves[0])
+	actual := IsClusterCVEFixable(cves[0])
 	s.Equal(actual, true)
-	actual = isK8sCVEFixable(cves[1])
+	actual = IsClusterCVEFixable(cves[1])
 	s.Equal(actual, false)
-	actual = isK8sCVEFixable(cves[2])
+	actual = IsClusterCVEFixable(cves[2])
 	s.Equal(actual, false)
 }
 

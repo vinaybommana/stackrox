@@ -1,6 +1,8 @@
 package datastore
 
 import (
+	clusterIndexer "github.com/stackrox/rox/central/cluster/index"
+	clusterCVEEdgeIndexer "github.com/stackrox/rox/central/clustercveedge/index"
 	componentCVEEdgeIndexer "github.com/stackrox/rox/central/componentcveedge/index"
 	cveIndexer "github.com/stackrox/rox/central/cve/index"
 	"github.com/stackrox/rox/central/cve/search"
@@ -32,11 +34,13 @@ func initialize() {
 
 	searcher := search.New(storage, globaldb.GetGlobalDackBox(),
 		cveIndexer.New(globalindex.GetGlobalIndex()),
+		clusterCVEEdgeIndexer.New(globalindex.GetGlobalIndex()),
 		componentCVEEdgeIndexer.New(globalindex.GetGlobalIndex()),
 		componentIndexer.New(globalindex.GetGlobalIndex()),
 		imageComponentEdgeIndexer.New(globalindex.GetGlobalIndex()),
 		imageIndexer.New(globalindex.GetGlobalIndex()),
-		deploymentIndexer.New(globalindex.GetGlobalIndex()))
+		deploymentIndexer.New(globalindex.GetGlobalIndex()),
+		clusterIndexer.New(globalindex.GetGlobalIndex()))
 
 	ds, err = New(storage, cveIndexer.New(globalindex.GetGlobalIndex()), searcher)
 	utils.Must(err)
