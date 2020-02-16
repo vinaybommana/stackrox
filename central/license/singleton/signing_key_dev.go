@@ -10,36 +10,37 @@ import (
 	"github.com/stackrox/rox/pkg/timeutil"
 )
 
-func init() {
+func getDevSigningKeyRestrictions(earliestNotValidBefore, latestNotValidAfter time.Time) validator.SigningKeyRestrictions {
+	return validator.SigningKeyRestrictions{
+		EarliestNotValidBefore:                  earliestNotValidBefore,
+		LatestNotValidAfter:                     latestNotValidAfter,
+		MaxDuration:                             30 * 24 * time.Hour,
+		AllowOffline:                            true,
+		MaxNodeLimit:                            50,
+		BuildFlavors:                            []string{"development"},
+		AllowNoDeploymentEnvironmentRestriction: true,
+	}
+}
 
+func init() {
 	registerValidatorRegistrationArgs(
 		validatorRegistrationArgs{
 			publickeys.Dev,
 			func() validator.SigningKeyRestrictions {
-				return validator.SigningKeyRestrictions{
-					EarliestNotValidBefore:                  timeutil.MustParse(time.RFC3339, "2019-12-01T00:00:00Z"),
-					LatestNotValidAfter:                     timeutil.MustParse(time.RFC3339, "2020-04-01T00:00:00Z"),
-					MaxDuration:                             30 * 24 * time.Hour,
-					AllowOffline:                            true,
-					MaxNodeLimit:                            50,
-					BuildFlavors:                            []string{"development"},
-					AllowNoDeploymentEnvironmentRestriction: true,
-				}
+				return getDevSigningKeyRestrictions(
+					timeutil.MustParse(time.RFC3339, "2019-12-01T00:00:00Z"),
+					timeutil.MustParse(time.RFC3339, "2020-04-01T00:00:00Z"),
+				)
 			},
 		},
 		// OLD VERSION - NO LONGER USED FOR NEW LICENSES
 		validatorRegistrationArgs{
 			publickeys.DevOld,
 			func() validator.SigningKeyRestrictions {
-				return validator.SigningKeyRestrictions{
-					EarliestNotValidBefore:                  timeutil.MustParse(time.RFC3339, "2019-09-01T00:00:00Z"),
-					LatestNotValidAfter:                     timeutil.MustParse(time.RFC3339, "2020-01-01T00:00:00Z"),
-					MaxDuration:                             30 * 24 * time.Hour,
-					AllowOffline:                            true,
-					MaxNodeLimit:                            50,
-					BuildFlavors:                            []string{"development"},
-					AllowNoDeploymentEnvironmentRestriction: true,
-				}
+				return getDevSigningKeyRestrictions(
+					timeutil.MustParse(time.RFC3339, "2019-09-01T00:00:00Z"),
+					timeutil.MustParse(time.RFC3339, "2020-01-01T00:00:00Z"),
+				)
 			},
 		},
 	)
