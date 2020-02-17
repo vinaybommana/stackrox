@@ -35,6 +35,18 @@ var (
 				},
 			}
 		},
+		search.Component: func(option *v1.QuerySortOption) []*v1.QuerySortOption {
+			return []*v1.QuerySortOption{
+				{
+					Field:    search.ComponentName.String(),
+					Reversed: option.GetReversed(),
+				},
+				{
+					Field:    search.ComponentVersion.String(),
+					Reversed: option.GetReversed(),
+				},
+			}
+		},
 		search.LifecycleStage: func(option *v1.QuerySortOption) []*v1.QuerySortOption {
 			return []*v1.QuerySortOption{
 				{
