@@ -80,7 +80,10 @@ func (c *ClusterGatherer) clusterFromSensor(ctx context.Context, sensorConn conn
 		return nil
 	}
 
-	err := sensorConn.Telemetry().PullClusterInfo(ctx, callback)
+	pullClusterCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	err := sensorConn.Telemetry().PullClusterInfo(pullClusterCtx, callback)
 	if err != nil {
 		return nil, err
 	}
