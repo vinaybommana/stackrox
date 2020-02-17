@@ -59,7 +59,7 @@ const TOP_RISKIEST_IMAGES = gql`
 
 const TOP_RISKIEST_COMPONENTS = gql`
     query topRiskiestComponents($query: String, $pagination: Pagination) {
-        ddd: components(query: $query, pagination: $pagination) {
+        results: components(query: $query, pagination: $pagination) {
             id
             name
             version
