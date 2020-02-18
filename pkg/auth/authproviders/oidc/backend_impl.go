@@ -257,7 +257,11 @@ func (p *backendImpl) Config(redact bool) map[string]string {
 
 func (p *backendImpl) MergeConfigInto(newCfg map[string]string) map[string]string {
 	mergedCfg := maputil.CloneStringStringMap(newCfg)
-	if mergedCfg[dontUseClientSecretConfigKey] == "false" {
+	// This handles the case where the client sends an "unchanged" client secret. In that case,
+	// we will take the client secret from the stored config and put it into the merged config.
+	// We only put secret into the merged config if the new config says it wants to use a client secret, AND the client
+	// secret is not specified in the request.
+	if mergedCfg[dontUseClientSecretConfigKey] == "false" && mergedCfg[clientSecretConfigKey] == "" {
 		mergedCfg[clientSecretConfigKey] = p.config[clientSecretConfigKey]
 	}
 	return mergedCfg
