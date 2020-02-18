@@ -103,7 +103,7 @@ func (z zipHandler) getAdditionalCAs() ([]*zip.File, error) {
 
 	if caFile, err := getDefaultCertCA(); err != nil {
 		log.Errorf("Error obtaining default CA cert: %v", err)
-	} else {
+	} else if caFile != nil {
 		files = append(files, caFile)
 	}
 
