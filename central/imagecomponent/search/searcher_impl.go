@@ -131,7 +131,7 @@ func formatSearcher(graphProvider idspace.GraphProvider,
 		imageComponentEdgeSearcher,
 		imageSearcher,
 		deploymentSearcher)
-	filteredSearcher := filtered.Searcher(compoundSearcher, componentSAC.GetSACFilter())
+	filteredSearcher := filtered.Searcher(compoundSearcher, componentSAC.GetSACFilter(graphProvider))
 	transformedSortSearcher := sortfields.TransformSortFields(filteredSearcher)
 	derivedFieldSortedSearcher := wrapDerivedFieldSearcher(graphProvider, transformedSortSearcher)
 	paginatedSearcher := paginated.Paginated(derivedFieldSortedSearcher)
@@ -187,8 +187,8 @@ func wrapDerivedFieldSearcher(graphProvider graph.Provider, searcher search.Sear
 		return searcher
 	}
 	return derivedfields.CountSortedSearcher(searcher, map[string]counter.DerivedFieldCounter{
-		search.DeploymentCount.String(): counter.NewGraphBasedDerivedFieldCounter(graphProvider, dackbox.ComponentToDeploymentPath, deploymentSAC.GetSACFilter()),
-		search.ImageCount.String():      counter.NewGraphBasedDerivedFieldCounter(graphProvider, dackbox.ComponentToImagePath, imageSAC.GetSACFilter()),
-		search.CVECount.String():        counter.NewGraphBasedDerivedFieldCounter(graphProvider, dackbox.ComponentToCVEPath, cveSAC.GetSACFilters()...),
+		search.DeploymentCount.String(): counter.NewGraphBasedDerivedFieldCounter(graphProvider, dackbox.ComponentToDeploymentPath, deploymentSAC.GetSACFilter(graphProvider)),
+		search.ImageCount.String():      counter.NewGraphBasedDerivedFieldCounter(graphProvider, dackbox.ComponentToImagePath, imageSAC.GetSACFilter(graphProvider)),
+		search.CVECount.String():        counter.NewGraphBasedDerivedFieldCounter(graphProvider, dackbox.ComponentToCVEPath, cveSAC.GetSACFilters(graphProvider)...),
 	})
 }

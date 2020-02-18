@@ -145,7 +145,7 @@ func formatSearcher(graphProvider idspace.GraphProvider,
 			componentSearcher,
 			imageComponentEdgeSearcher,
 			imageSearcher)
-		filteredSearcher = filtered.Searcher(compoundSearcher, pkgImageSAC.GetSACFilter())
+		filteredSearcher = filtered.Searcher(compoundSearcher, pkgImageSAC.GetSACFilter(graphProvider))
 	} else {
 		filteredSearcher = imagesSACSearchHelper.FilteredSearcher(imageIndexer) // Make the UnsafeSearcher safe.
 	}
@@ -203,6 +203,6 @@ func wrapDerivedFieldSearcher(graphProvider graph.Provider, searcher search.Sear
 		return searcher
 	}
 	return derivedfields.CountSortedSearcher(searcher, map[string]counter.DerivedFieldCounter{
-		search.DeploymentCount.String(): counter.NewGraphBasedDerivedFieldCounter(graphProvider, dackbox.ImageToDeploymentPath, pkgDeploymentSAC.GetSACFilter()),
+		search.DeploymentCount.String(): counter.NewGraphBasedDerivedFieldCounter(graphProvider, dackbox.ImageToDeploymentPath, pkgDeploymentSAC.GetSACFilter(graphProvider)),
 	})
 }
