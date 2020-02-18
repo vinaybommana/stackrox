@@ -8,10 +8,7 @@ import { defaultCountKeyMap } from 'constants/workflowPages.constants';
 import queryService from 'modules/queryService';
 import { VULN_CVE_LIST_FRAGMENT } from 'Containers/VulnMgmt/VulnMgmt.fragments';
 import WorkflowEntityPage from 'Containers/Workflow/WorkflowEntityPage';
-import {
-    getPolicyQueryVar,
-    tryUpdateQueryWithVulMgmtPolicyClause
-} from '../VulnMgmtPolicyQueryUtil';
+import { getPolicyQueryVar, getQueryVar } from '../VulnMgmtPolicyQueryUtil';
 import VulnMgmtClusterOverview from './VulnMgmtClusterOverview';
 import EntityList from '../../List/VulnMgmtList';
 
@@ -28,8 +25,8 @@ const VulmMgmtEntityCluster = ({ entityId, entityListType, search, sort, page, e
                         id
                         name
                         description
-                        policyStatus
-                        latestViolation
+                        policyStatus(query: $query)
+                        latestViolation(query: $query)
                         severity
                         deploymentCount(query: $query)
                         lifecycleStages
@@ -62,25 +59,29 @@ const VulmMgmtEntityCluster = ({ entityId, entityListType, search, sort, page, e
         // @TODO: remove this hack after we are able to search for k8s vulns
         const parsedListFieldName =
             search && search['Vulnerability Type'] ? 'vulns: k8sVulns' : listFieldName;
+        const queryVar = getQueryVar(entityListType);
 
         return gql`
-        query getCluster_${entityListType}($id: ID!, $pagination: Pagination, $query: String${getPolicyQueryVar(
+        query getCluster${entityListType}($id: ID!, $pagination: Pagination, $query: String${getPolicyQueryVar(
             entityListType
         )}) {
             result: cluster(id: $id) {
                 id
-                ${defaultCountKeyMap[entityListType]}(query: $query)
-                ${parsedListFieldName}(query: $query, pagination: $pagination) { ...${fragmentName} }
+                ${defaultCountKeyMap[entityListType]}(query: ${queryVar})
+                ${parsedListFieldName}(query: ${queryVar}, pagination: $pagination) { ...${fragmentName} }
             }
         }
         ${fragment}
     `;
     }
 
+    const entityContextObj = queryService.entityContextToQueryObject(entityContext);
+
     const queryOptions = {
         variables: {
             id: entityId,
-            query: tryUpdateQueryWithVulMgmtPolicyClause(entityListType, search, entityContext)
+            query: queryService.objectToWhereClause({ ...search, ...entityContextObj }),
+            policyQuery: queryService.objectToWhereClause({ Category: 'Vulnerability Management' })
         }
     };
 

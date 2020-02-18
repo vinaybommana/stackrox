@@ -10,10 +10,7 @@ import WorkflowEntityPage from 'Containers/Workflow/WorkflowEntityPage';
 import { VULN_CVE_LIST_FRAGMENT } from 'Containers/VulnMgmt/VulnMgmt.fragments';
 import VulnMgmtNamespaceOverview from './VulnMgmtNamespaceOverview';
 import EntityList from '../../List/VulnMgmtList';
-import {
-    getPolicyQueryVar,
-    tryUpdateQueryWithVulMgmtPolicyClause
-} from '../VulnMgmtPolicyQueryUtil';
+import { getPolicyQueryVar, getQueryVar } from '../VulnMgmtPolicyQueryUtil';
 
 const VulnMgmtNamespace = ({ entityId, entityListType, search, sort, page, entityContext }) => {
     const overviewQuery = gql`
@@ -65,8 +62,10 @@ const VulnMgmtNamespace = ({ entityId, entityListType, search, sort, page, entit
                 metadata {
                     id
                 }
-                ${defaultCountKeyMap[entityListType]}(query: $query)
-                ${listFieldName}(query: $query, pagination: $pagination) { ...${fragmentName} }
+                ${defaultCountKeyMap[entityListType]}(query: ${getQueryVar(entityListType)})
+                ${listFieldName}(query: ${getQueryVar(
+            entityListType
+        )}, pagination: $pagination) { ...${fragmentName} }
             }
         }
         ${fragment}
@@ -74,10 +73,12 @@ const VulnMgmtNamespace = ({ entityId, entityListType, search, sort, page, entit
     }
     const newEntityContext = { ...entityContext, [entityTypes.NAMESPACE]: entityId };
 
+    const entityContextObj = queryService.entityContextToQueryObject(newEntityContext);
+
     const queryOptions = {
         variables: {
             id: entityId,
-            query: tryUpdateQueryWithVulMgmtPolicyClause(entityListType, search, newEntityContext),
+            query: queryService.objectToWhereClause({ ...search, ...entityContextObj }),
             policyQuery: queryService.objectToWhereClause({ Category: 'Vulnerability Management' })
         }
     };

@@ -74,6 +74,7 @@ const WorkflowEntityPageLayout = ({ location }) => {
     if (pageEntity) {
         entityContext[pageEntity.entityType] = pageEntity.entityId;
     }
+
     return (
         <workflowStateContext.Provider value={pageState}>
             <div className="flex flex-1 flex-col bg-base-200" style={style}>
@@ -107,6 +108,7 @@ const WorkflowEntityPageLayout = ({ location }) => {
                             search={pageSearch}
                             sort={pageSort}
                             page={pagePaging}
+                            entityContext={entityContext}
                         />
                     </div>
 

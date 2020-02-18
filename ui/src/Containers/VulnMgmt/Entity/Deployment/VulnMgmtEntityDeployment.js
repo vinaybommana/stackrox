@@ -10,10 +10,7 @@ import WorkflowEntityPage from 'Containers/Workflow/WorkflowEntityPage';
 import { VULN_CVE_LIST_FRAGMENT } from 'Containers/VulnMgmt/VulnMgmt.fragments';
 import VulnMgmtDeploymentOverview from './VulnMgmtDeploymentOverview';
 import EntityList from '../../List/VulnMgmtList';
-import {
-    getPolicyQueryVar,
-    tryUpdateQueryWithVulMgmtPolicyClause
-} from '../VulnMgmtPolicyQueryUtil';
+import { getPolicyQueryVar, getQueryVar } from '../VulnMgmtPolicyQueryUtil';
 
 const VulmMgmtDeployment = ({ entityId, entityListType, search, entityContext, sort, page }) => {
     const overviewQuery = gql`
@@ -22,7 +19,6 @@ const VulmMgmtDeployment = ({ entityId, entityListType, search, entityContext, s
                 id
                 priority
                 policyStatus(query: $policyQuery)
-
                 failingPolicies(query: $policyQuery) {
                     id
                     name
@@ -110,18 +106,22 @@ const VulmMgmtDeployment = ({ entityId, entityListType, search, entityContext, s
         )}) {
             result: deployment(id: $id) {
                 id
-                ${defaultCountKeyMap[entityListType]}(query: $query)
-                ${listFieldName}(query: $query, pagination: $pagination) { ...${fragmentName} }
+                ${defaultCountKeyMap[entityListType]}(query: ${getQueryVar(entityListType)})
+                ${listFieldName}(query: ${getQueryVar(
+            entityListType
+        )}, pagination: $pagination) { ...${fragmentName} }
             }
         }
         ${fragment}
     `;
     }
 
+    const entityContextObj = queryService.entityContextToQueryObject(entityContext);
+
     const queryOptions = {
         variables: {
             id: entityId,
-            query: tryUpdateQueryWithVulMgmtPolicyClause(entityListType, search, entityContext),
+            query: queryService.objectToWhereClause({ ...search, ...entityContextObj }),
             policyQuery: queryService.objectToWhereClause({ Category: 'Vulnerability Management' })
         }
     };

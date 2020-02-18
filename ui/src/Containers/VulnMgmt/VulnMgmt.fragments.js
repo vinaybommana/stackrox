@@ -101,7 +101,7 @@ export const DEPLOYMENT_LIST_FRAGMENT = gql`
         }
         # policyCount(query: $policyQuery) # see https://stack-rox.atlassian.net/browse/ROX-4080
         # failingPolicyCount(query: $policyQuery) # see https://stack-rox.atlassian.net/browse/ROX-4080
-        policyStatus(query: $policyQuery)
+        policyStatus(query: $query)
         clusterName
         clusterId
         namespace
@@ -110,7 +110,7 @@ export const DEPLOYMENT_LIST_FRAGMENT = gql`
         serviceAccountID
         secretCount
         imageCount
-        latestViolation(query: $policyQuery)
+        latestViolation(query: $query)
         priority
     }
 `;
@@ -243,28 +243,38 @@ export const NAMESPACE_LIST_FRAGMENT = gql`
     }
 `;
 
-export const UNSCOPED_POLICY_LIST_FRAGMENT = gql`
-    fragment unscopedPolicyFields on Policy {
+export const POLICY_LIST_FRAGMENT_CORE = gql`
+    fragment corePolicyFields on Policy {
         id
         disabled
         notifiers
         name
         description
-        policyStatus
         lastUpdated
-        latestViolation
         severity
         lifecycleStages
         enforcementActions
     }
 `;
 
+export const UNSCOPED_POLICY_LIST_FRAGMENT = gql`
+    fragment unscopedPolicyFields on Policy {
+        ...corePolicyFields
+        deploymentCount
+        latestViolation
+        policyStatus
+    }
+    ${POLICY_LIST_FRAGMENT_CORE}
+`;
+
 export const POLICY_LIST_FRAGMENT = gql`
     fragment policyFields on Policy {
-        ...unscopedPolicyFields
+        ...corePolicyFields
         deploymentCount(query: $query)
+        latestViolation(query: $query)
+        policyStatus(query: $query)
     }
-    ${UNSCOPED_POLICY_LIST_FRAGMENT}
+    ${POLICY_LIST_FRAGMENT_CORE}
 `;
 
 export const POLICY_ENTITY_ALL_FIELDS_FRAGMENT = gql`

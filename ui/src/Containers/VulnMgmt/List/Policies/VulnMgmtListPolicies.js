@@ -209,7 +209,6 @@ const VulnMgmtPolicies = ({
         query getPolicies($policyQuery: String, $pagination: Pagination) {
             results: policies(query: $policyQuery, pagination: $pagination) {
                 ...unscopedPolicyFields
-                deploymentCount
             }
             count: policyCount(query: $policyQuery)
         }

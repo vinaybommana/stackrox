@@ -20,7 +20,7 @@ import { EntityComponentMap, ListComponentMap } from './UseCaseComponentMaps';
 
 const WorkflowListPageLayout = ({ location }) => {
     const workflowState = parseURL(location);
-    const { useCase, search, sort, paging, stateStack } = workflowState;
+    const { useCase, search, sort, paging } = workflowState;
     const pageState = new WorkflowState(
         useCase,
         workflowState.getPageStack(),
@@ -59,7 +59,7 @@ const WorkflowListPageLayout = ({ location }) => {
     const exportFilename = `${useCaseLabels[useCase]} ${pluralize(startCase(header))} Report`;
     const entityContext = {};
 
-    if (selectedRow && stateStack.length > 2) {
+    if (selectedRow) {
         const { entityType, entityId } = selectedRow;
         entityContext[entityType] = entityId;
     }

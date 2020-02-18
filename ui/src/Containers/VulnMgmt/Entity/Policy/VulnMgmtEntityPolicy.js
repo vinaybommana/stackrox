@@ -21,8 +21,10 @@ const VulmMgmtEntityPolicy = ({
     page,
     setRefreshTrigger
 }) => {
+    const queryVarParam = entityContext[entityTypes.POLICY] ? '' : '(query: $query)';
+    const queryVarConcat = entityContext[entityTypes.POLICY] ? '' : ', query: $query';
     const overviewQuery = gql`
-        query getPolicy($id: ID!, $query: String, $policyQuery: String) {
+        query getPolicy($id: ID!, $query: String) {
             result: policy(id: $id) {
                 id
                 name
@@ -159,8 +161,8 @@ const VulmMgmtEntityPolicy = ({
                     }
                     name
                 }
-                deploymentCount(query: $query)
-                deployments(query: $policyQuery) {
+                deploymentCount${queryVarParam}
+                deployments${queryVarParam} {
                     ...deploymentFields
                 }
             }
@@ -169,15 +171,15 @@ const VulmMgmtEntityPolicy = ({
     `;
 
     function getListQuery(listFieldName, fragmentName, fragment) {
-        // we don't need to filter the count key in the case of coming from a specific policy since we already are filtering through policy ID
+        // we don't need to filter the count key or entity list when coming from a specific policy since we're already filtering through policy ID
+        // @TODO: rethink entity context and when it accumulates entity info -- currently it holds info from list -> selected row, but not when you
+        // hit the external link and view it as an entity page
         return gql`
-        query getPolicy${entityListType}($id: ID!, $pagination: Pagination, $query: String, $policyQuery: String) {
+        query getPolicy${entityListType}($id: ID!, $pagination: Pagination, $query: String) {
             result: policy(id: $id) {
                 id
-                ${defaultCountKeyMap[entityListType]}${
-            entityContext[entityTypes.POLICY] ? '' : '(query: $query)'
-        }
-                ${listFieldName}(query: $query, pagination: $pagination) { ...${fragmentName} }
+                ${defaultCountKeyMap[entityListType]}${queryVarParam}
+                ${listFieldName}(pagination: $pagination${queryVarConcat}) { ...${fragmentName} }
             }
         }
         ${fragment}
@@ -191,8 +193,7 @@ const VulmMgmtEntityPolicy = ({
             id: entityId,
             query: queryService.objectToWhereClause({ ...search, ...entityContextQuery }),
             policyQuery: queryService.objectToWhereClause({
-                Category: 'Vulnerability Management',
-                ...entityContextQuery
+                Category: 'Vulnerability Management'
             })
         }
     };
