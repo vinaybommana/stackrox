@@ -5,6 +5,7 @@ import (
 
 	"github.com/stackrox/rox/central/cluster/index"
 	"github.com/stackrox/rox/central/cluster/store"
+	"github.com/stackrox/rox/central/ranking"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/dackbox/graph"
@@ -19,10 +20,10 @@ type Searcher interface {
 }
 
 // New returns a new instance of Searcher for the given storage and indexer.
-func New(storage store.Store, indexer index.Indexer, graphProvider graph.Provider) Searcher {
+func New(storage store.Store, indexer index.Indexer, graphProvider graph.Provider, clusterRanker *ranking.Ranker) Searcher {
 	return &searcherImpl{
 		storage:           storage,
 		indexer:           indexer,
-		formattedSearcher: formatSearcher(indexer, graphProvider),
+		formattedSearcher: formatSearcher(indexer, graphProvider, clusterRanker),
 	}
 }

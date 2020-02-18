@@ -10,6 +10,7 @@ import (
 	"github.com/stackrox/rox/central/globalindex"
 	nodeDataStore "github.com/stackrox/rox/central/node/globaldatastore"
 	notifierProcessor "github.com/stackrox/rox/central/notifier/processor"
+	"github.com/stackrox/rox/central/ranking"
 	secretDataStore "github.com/stackrox/rox/central/secret/datastore"
 	"github.com/stackrox/rox/central/sensor/service/connection"
 	"github.com/stackrox/rox/pkg/sync"
@@ -35,7 +36,8 @@ func initialize() {
 		secretDataStore.Singleton(),
 		connection.ManagerSingleton(),
 		notifierProcessor.Singleton(),
-		dackbox.GetGlobalDackBox())
+		dackbox.GetGlobalDackBox(),
+		ranking.ClusterRanker())
 	utils.Must(err)
 }
 

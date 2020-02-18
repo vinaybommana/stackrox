@@ -11,6 +11,7 @@ import (
 	deploymentDataStore "github.com/stackrox/rox/central/deployment/datastore"
 	nodeDataStore "github.com/stackrox/rox/central/node/globaldatastore"
 	notifierProcessor "github.com/stackrox/rox/central/notifier/processor"
+	"github.com/stackrox/rox/central/ranking"
 	"github.com/stackrox/rox/central/role/resources"
 	secretDataStore "github.com/stackrox/rox/central/secret/datastore"
 	"github.com/stackrox/rox/central/sensor/service/connection"
@@ -65,25 +66,23 @@ func New(
 	ss secretDataStore.DataStore,
 	cm connection.Manager,
 	notifier notifierProcessor.Processor,
-	graphProvider graph.Provider) (DataStore, error) {
+	graphProvider graph.Provider,
+	clusterRanker *ranking.Ranker) (DataStore, error) {
 	ds := &datastoreImpl{
-		storage:  storage,
-		indexer:  indexer,
-		searcher: search.New(storage, indexer, graphProvider),
-		ads:      ads,
-		dds:      dds,
-		ns:       ns,
-		ss:       ss,
-		cm:       cm,
-		notifier: notifier,
+		storage:       storage,
+		indexer:       indexer,
+		searcher:      search.New(storage, indexer, graphProvider, clusterRanker),
+		ads:           ads,
+		dds:           dds,
+		ns:            ns,
+		ss:            ss,
+		cm:            cm,
+		notifier:      notifier,
+		clusterRanker: clusterRanker,
 
 		cache: simplecache.New(),
 	}
 	if err := ds.buildIndex(); err != nil {
-		return ds, err
-	}
-
-	if err := ds.initializeRanker(); err != nil {
 		return ds, err
 	}
 

@@ -7,6 +7,7 @@ import (
 	"github.com/stackrox/rox/central/globalindex"
 	"github.com/stackrox/rox/central/namespace/index"
 	"github.com/stackrox/rox/central/namespace/store"
+	"github.com/stackrox/rox/central/ranking"
 	"github.com/stackrox/rox/pkg/sync"
 	"github.com/stackrox/rox/pkg/utils"
 )
@@ -22,7 +23,7 @@ func initialize() {
 	indexer := index.New(globalindex.GetGlobalIndex())
 
 	var err error
-	as, err = New(storage, dackbox.GetGlobalDackBox(), indexer, deploymentDataStore.Singleton())
+	as, err = New(storage, dackbox.GetGlobalDackBox(), indexer, deploymentDataStore.Singleton(), ranking.NamespaceRanker())
 	utils.Must(err)
 }
 

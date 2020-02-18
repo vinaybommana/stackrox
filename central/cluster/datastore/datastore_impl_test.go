@@ -13,6 +13,7 @@ import (
 	deploymentMocks "github.com/stackrox/rox/central/deployment/datastore/mocks"
 	nodeMocks "github.com/stackrox/rox/central/node/globaldatastore/mocks"
 	notifierMocks "github.com/stackrox/rox/central/notifier/processor/mocks"
+	"github.com/stackrox/rox/central/ranking"
 	riskMocks "github.com/stackrox/rox/central/risk/datastore/mocks"
 	"github.com/stackrox/rox/central/role/resources"
 	secretMocks "github.com/stackrox/rox/central/secret/datastore/mocks"
@@ -86,7 +87,7 @@ func (suite *ClusterDataStoreTestSuite) SetupTest() {
 		suite.nodeDataStore,
 		suite.secretDataStore,
 		suite.connMgr,
-		suite.notifierMock, nil)
+		suite.notifierMock, nil, ranking.NewRanker())
 	suite.NoError(err)
 }
 

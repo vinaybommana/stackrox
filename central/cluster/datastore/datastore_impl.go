@@ -54,11 +54,6 @@ type datastoreImpl struct {
 	cache simplecache.Cache
 }
 
-func (ds *datastoreImpl) initializeRanker() error {
-	ds.clusterRanker = ranking.ClusterRanker()
-	return nil
-}
-
 func (ds *datastoreImpl) UpdateClusterUpgradeStatus(ctx context.Context, id string, upgradeStatus *storage.ClusterUpgradeStatus) error {
 	if err := checkWriteSac(ctx, id); err != nil {
 		return err
