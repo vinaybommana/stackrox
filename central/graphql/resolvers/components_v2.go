@@ -265,10 +265,7 @@ func (eicr *imageComponentResolver) DeploymentCount(ctx context.Context, args Ra
 ////////////////////
 
 func (eicr *imageComponentResolver) componentQuery() *v1.Query {
-	return search.NewQueryBuilder().
-		AddExactMatches(search.ComponentName, eicr.data.GetName()).
-		AddExactMatches(search.ComponentVersion, eicr.data.GetVersion()).
-		ProtoQuery()
+	return search.NewQueryBuilder().AddExactMatches(search.ComponentID, eicr.data.GetId()).ProtoQuery()
 }
 
 // These return dummy values, as they should not be accessed from the top level component resolver, but the embedded

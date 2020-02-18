@@ -28,7 +28,7 @@ var (
 	cveElevatedCtx = sac.WithGlobalAccessScopeChecker(context.Background(),
 		sac.AllowFixedScopes(
 			sac.AccessModeScopeKeys(storage.Access_READ_ACCESS, storage.Access_READ_WRITE_ACCESS),
-			sac.ResourceScopeKeys(resources.Image),
+			sac.ResourceScopeKeys(resources.Cluster, resources.Image),
 		))
 )
 
@@ -257,7 +257,7 @@ func (m *k8sIstioCVEManagerImpl) reconcileOfflineModeCVEs(ct converter.CVEType, 
 		return err
 	}
 
-	if oldCveChecksum == newCveChecksum {
+	if oldCveChecksum != newCveChecksum {
 		log.Infof("%s CVEs have been updated, %d new CVEs found", cveTypeToString[ct], len(newCVEs))
 	}
 	return nil
