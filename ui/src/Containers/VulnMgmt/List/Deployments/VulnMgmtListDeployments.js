@@ -187,7 +187,7 @@ export function getDeploymentTableColumns(workflowState) {
 
 const VulnMgmtDeployments = ({ selectedRowId, search, sort, page, data, totalResults }) => {
     const query = gql`
-        query getDeployments($query: String, $policyQuery: String, $pagination: Pagination) {
+        query getDeployments($query: String, $pagination: Pagination) {
             results: deployments(query: $query, pagination: $pagination) {
                 ...deploymentFields
             }
