@@ -33,4 +33,7 @@ var (
 
 	// RefreshTokens enables supports for refresh tokens & OIDC code flow.
 	RefreshTokens = registerFeature("Refresh tokens", "ROX_REFRESH_TOKENS", true)
+
+	// SensorBasedDetection enables detection in Sensor and will not enrich or detect in Central for deployments
+	SensorBasedDetection = registerFeature("Sensor Based Detection", "ROX_SENSOR_DETECTION", false)
 )

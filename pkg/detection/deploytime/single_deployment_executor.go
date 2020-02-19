@@ -60,7 +60,7 @@ func (d *policyExecutor) Execute(compiled detection.CompiledPolicy) error {
 }
 
 func (d *policyExecutor) getViolations(ctx context.Context, enforcement storage.EnforcementAction, matcher searchbasedpolicies.Matcher) ([]*storage.Alert_Violation, error) {
-	violations, err := matcher.MatchOne(ctx, d.deployment, d.images...)
+	violations, err := matcher.MatchOne(ctx, d.deployment, d.images, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -77,6 +77,20 @@ func (mr *MockManagerMockRecorder) UpsertPolicy(policy interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertPolicy", reflect.TypeOf((*MockManager)(nil).UpsertPolicy), policy)
 }
 
+// HandleAlerts mocks base method
+func (m *MockManager) HandleAlerts(deploymentID string, alerts []*storage.Alert, stage storage.LifecycleStage) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HandleAlerts", deploymentID, alerts, stage)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// HandleAlerts indicates an expected call of HandleAlerts
+func (mr *MockManagerMockRecorder) HandleAlerts(deploymentID, alerts, stage interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleAlerts", reflect.TypeOf((*MockManager)(nil).HandleAlerts), deploymentID, alerts, stage)
+}
+
 // DeploymentRemoved mocks base method
 func (m *MockManager) DeploymentRemoved(deployment *storage.Deployment) error {
 	m.ctrl.T.Helper()

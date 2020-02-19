@@ -16,6 +16,7 @@ import (
 	"github.com/stackrox/rox/sensor/common"
 	"github.com/stackrox/rox/sensor/common/compliance"
 	"github.com/stackrox/rox/sensor/common/config"
+	"github.com/stackrox/rox/sensor/common/detector"
 	"github.com/stackrox/rox/sensor/common/networkflow/manager"
 	"github.com/stackrox/rox/sensor/common/networkflow/service"
 	"github.com/stackrox/rox/sensor/common/sensor"
@@ -54,17 +55,19 @@ func main() {
 
 	configHandler := config.NewCommandHandler()
 
-	listener := listener.New(configHandler)
+	enforcer := enforcer.MustCreate()
+	policyDetector := detector.New(enforcer)
+	listener := listener.New(configHandler, policyDetector)
 
 	o := orchestrator.New()
 	complianceService := compliance.NewService(o)
 	complianceCommandHandler := compliance.NewCommandHandler(complianceService)
 
-	processSignals := signalService.Singleton()
+	processSignals := signalService.New(policyDetector)
 
 	components := []common.SensorComponent{
 		listener,
-		enforcer.MustCreate(),
+		enforcer,
 		manager.Singleton(),
 		networkpolicies.NewCommandHandler(),
 		clusterstatus.NewUpdater(),
@@ -79,6 +82,7 @@ func main() {
 
 	s := sensor.NewSensor(
 		configHandler,
+		policyDetector,
 		components...,
 	)
 

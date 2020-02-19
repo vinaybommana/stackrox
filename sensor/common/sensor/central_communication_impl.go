@@ -7,8 +7,10 @@ import (
 	"github.com/stackrox/rox/generated/internalapi/central"
 	"github.com/stackrox/rox/pkg/centralsensor"
 	"github.com/stackrox/rox/pkg/concurrency"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/sensor/common"
 	"github.com/stackrox/rox/sensor/common/config"
+	"github.com/stackrox/rox/sensor/common/detector"
 	"google.golang.org/grpc"
 )
 
@@ -23,8 +25,8 @@ type centralCommunicationImpl struct {
 	stoppedC concurrency.ErrorSignal
 }
 
-func (s *centralCommunicationImpl) Start(conn *grpc.ClientConn, centralReachable *concurrency.Flag, configHandler config.Handler) {
-	go s.sendEvents(central.NewSensorServiceClient(conn), centralReachable, configHandler, s.receiver.Stop, s.sender.Stop)
+func (s *centralCommunicationImpl) Start(conn *grpc.ClientConn, centralReachable *concurrency.Flag, configHandler config.Handler, detector detector.Detector) {
+	go s.sendEvents(central.NewSensorServiceClient(conn), centralReachable, configHandler, detector, s.receiver.Stop, s.sender.Stop)
 }
 
 func (s *centralCommunicationImpl) Stop(err error) {
@@ -35,7 +37,7 @@ func (s *centralCommunicationImpl) Stopped() concurrency.ReadOnlyErrorSignal {
 	return &s.stoppedC
 }
 
-func (s *centralCommunicationImpl) sendEvents(client central.SensorServiceClient, centralReachable *concurrency.Flag, configHandler config.Handler, onStops ...func(error)) {
+func (s *centralCommunicationImpl) sendEvents(client central.SensorServiceClient, centralReachable *concurrency.Flag, configHandler config.Handler, detector detector.Detector, onStops ...func(error)) {
 	defer func() {
 		s.stoppedC.SignalWithError(s.stopC.Err())
 		runAll(s.stopC.Err(), onStops...)
@@ -81,6 +83,36 @@ func (s *centralCommunicationImpl) sendEvents(client central.SensorServiceClient
 	if err := configHandler.ProcessMessage(msg); err != nil {
 		s.stopC.SignalWithError(errors.Wrap(err, "processing initial cluster config"))
 		return
+	}
+
+	if features.SensorBasedDetection.Enabled() {
+		msg, err = stream.Recv()
+		if err != nil {
+			s.stopC.SignalWithError(errors.Wrap(err, "receiving initial policies"))
+			return
+		}
+
+		if msg.GetPolicySync() == nil {
+			s.stopC.SignalWithError(errors.Errorf("second message received from Sensor was not a policy sync: %T", msg.Msg))
+			return
+		}
+
+		if err := detector.ProcessMessage(msg); err != nil {
+			s.stopC.SignalWithError(errors.Wrap(err, "policy sync could not be successfully processed"))
+			return
+		}
+
+		msg, err = stream.Recv()
+		if err != nil {
+			s.stopC.SignalWithError(errors.Wrap(err, "receiving initial whitelists"))
+			return
+		}
+
+		// Policy Sync
+		if err := detector.ProcessMessage(msg); err != nil {
+			s.stopC.SignalWithError(errors.Wrap(err, "process whitelists could not be successfully processed"))
+			return
+		}
 	}
 
 	defer func() {

@@ -27,6 +27,8 @@ type DataStore interface {
 	UpdateProcessWhitelistElements(ctx context.Context, key *storage.ProcessWhitelistKey, addElements []*storage.WhitelistItem, removeElements []*storage.WhitelistItem, auto bool) (*storage.ProcessWhitelist, error)
 	UpsertProcessWhitelist(ctx context.Context, key *storage.ProcessWhitelistKey, addElements []*storage.WhitelistItem, auto bool) (*storage.ProcessWhitelist, error)
 	UserLockProcessWhitelist(ctx context.Context, key *storage.ProcessWhitelistKey, locked bool) (*storage.ProcessWhitelist, error)
+
+	WalkAll(ctx context.Context, fn func(whitelist *storage.ProcessWhitelist) error) error
 }
 
 // New returns a new instance of DataStore using the input store, indexer, and searcher.

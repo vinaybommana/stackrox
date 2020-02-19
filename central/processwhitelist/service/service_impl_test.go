@@ -14,6 +14,7 @@ import (
 	resultsMocks "github.com/stackrox/rox/central/processwhitelistresults/datastore/mocks"
 	"github.com/stackrox/rox/central/reprocessor/mocks"
 	"github.com/stackrox/rox/central/role/resources"
+	connectionMocks "github.com/stackrox/rox/central/sensor/service/connection/mocks"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/bolthelper"
@@ -59,6 +60,7 @@ type ProcessWhitelistServiceTestSuite struct {
 	db              *bbolt.DB
 	reprocessor     *mocks.MockLoop
 	resultDatastore *resultsMocks.MockDataStore
+	connectionMgr   *connectionMocks.MockManager
 	mockCtrl        *gomock.Controller
 }
 
@@ -82,7 +84,8 @@ func (suite *ProcessWhitelistServiceTestSuite) SetupTest() {
 
 	suite.datastore = datastore.New(wlStore, indexer, searcher, suite.resultDatastore)
 	suite.reprocessor = mocks.NewMockLoop(suite.mockCtrl)
-	suite.service = New(suite.datastore, suite.reprocessor)
+	suite.connectionMgr = connectionMocks.NewMockManager(suite.mockCtrl)
+	suite.service = New(suite.datastore, suite.reprocessor, suite.connectionMgr)
 }
 
 func (suite *ProcessWhitelistServiceTestSuite) TearDownTest() {
@@ -246,6 +249,9 @@ func (suite *ProcessWhitelistServiceTestSuite) TestUpdateProcessWhitelist() {
 				RemoveElements: fixtures.MakeWhitelistItems(c.toRemove...),
 			}
 			suite.reprocessor.EXPECT().ReprocessRiskForDeployments(gomock.Any())
+			for range c.expectedSuccessKeys {
+				suite.connectionMgr.EXPECT().SendMessage(gomock.Any(), gomock.Any())
+			}
 			response, err := suite.service.UpdateProcessWhitelists(hasWriteCtx, request)
 			assert.NoError(t, err)
 			var successKeys []*storage.ProcessWhitelistKey

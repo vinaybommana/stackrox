@@ -17,7 +17,6 @@ type PolicySet interface {
 	ForOne(policyID string, pt PolicyExecutor) error
 	ForEach(pt PolicyExecutor) error
 	GetCompiledPolicies() map[string]CompiledPolicy
-	Recompile(policyID string) error
 
 	UpsertPolicy(*storage.Policy) error
 	RemovePolicy(policyID string) error

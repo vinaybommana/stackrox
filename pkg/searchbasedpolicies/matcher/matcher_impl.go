@@ -9,11 +9,13 @@ import (
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/predicate"
 	"github.com/stackrox/rox/pkg/searchbasedpolicies"
+	"github.com/stackrox/rox/pkg/searchbasedpolicies/builders"
 )
 
 type matcherImpl struct {
 	q *v1.Query
 
+	processPredicate    predicate.Predicate
 	deploymentPredicate predicate.Predicate
 	imagePredicate      predicate.Predicate
 
@@ -31,8 +33,17 @@ func (m *matcherImpl) errorPrefixForMatchOne() string {
 
 // MatchOne returns detection against the deployment and images using predicate matching
 // The deployment parameter can be nil in the case of image detection
-func (m *matcherImpl) MatchOne(ctx context.Context, deployment *storage.Deployment, images ...*storage.Image) (violations searchbasedpolicies.Violations, err error) {
+func (m *matcherImpl) MatchOne(ctx context.Context, deployment *storage.Deployment, images []*storage.Image, indicator *storage.ProcessIndicator) (violations searchbasedpolicies.Violations, err error) {
 	var results []*search.Result
+
+	if indicator != nil {
+		result, matches := m.processPredicate(indicator)
+		if !matches {
+			return
+		}
+		results = append(results, result)
+	}
+
 	if deployment != nil {
 		result, matches := m.deploymentPredicate(deployment)
 		if !matches {
@@ -57,6 +68,11 @@ func (m *matcherImpl) MatchOne(ctx context.Context, deployment *storage.Deployme
 
 	finalResult := predicate.MergeResults(results...)
 	violations = m.violationPrinter(ctx, *finalResult)
+	if indicator != nil {
+		v := &storage.Alert_ProcessViolation{Processes: []*storage.ProcessIndicator{indicator}}
+		builders.UpdateRuntimeAlertViolationMessage(v)
+		violations.ProcessViolation = v
+	}
 	if violationsEmpty(violations) {
 		err = fmt.Errorf("%s: result matched query but couldn't find any violation messages: %+v", m.errorPrefixForMatchOne(), finalResult)
 		return

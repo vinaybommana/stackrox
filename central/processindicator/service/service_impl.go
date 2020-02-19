@@ -16,6 +16,7 @@ import (
 	"github.com/stackrox/rox/pkg/grpc/authz"
 	"github.com/stackrox/rox/pkg/grpc/authz/perrpc"
 	"github.com/stackrox/rox/pkg/grpc/authz/user"
+	processWhitelistPkg "github.com/stackrox/rox/pkg/processwhitelist"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/set"
 	"google.golang.org/grpc"
@@ -136,7 +137,7 @@ func indicatorsToGroupedResponsesWithContainer(indicators []*storage.ProcessIndi
 	processGroups := make(map[groupKey]map[string][]*storage.ProcessIndicator)
 	processNameToContainers := make(map[groupKey]*set.StringSet)
 	for _, i := range indicators {
-		name := processwhitelist.WhitelistItemFromProcess(i)
+		name := processWhitelistPkg.WhitelistItemFromProcess(i)
 		if name == "" {
 			continue
 		}

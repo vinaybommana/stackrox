@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/searchbasedpolicies"
 	"github.com/stackrox/rox/pkg/set"
@@ -98,6 +99,9 @@ func (p ProcessQueryBuilder) Query(fields *storage.PolicyFields, optionsMap map[
 	q = search.NewQueryBuilder().AddLinkedFieldsWithHighlightValues(fieldLabels, queryStrings, highlights).ProtoQuery()
 
 	v = func(ctx context.Context, result search.Result) searchbasedpolicies.Violations {
+		if features.SensorBasedDetection.Enabled() {
+			return searchbasedpolicies.Violations{}
+		}
 		matches := result.Matches[processIDSearchField.GetFieldPath()]
 		if len(result.Matches[processIDSearchField.GetFieldPath()]) == 0 {
 			log.Errorf("ID %s matched process query, but couldn't find the matching id", result.ID)

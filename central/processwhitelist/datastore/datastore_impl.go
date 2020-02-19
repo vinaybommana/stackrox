@@ -347,3 +347,12 @@ func (ds *datastoreImpl) UserLockProcessWhitelist(ctx context.Context, key *stor
 	}
 	return whitelist, nil
 }
+
+func (ds *datastoreImpl) WalkAll(ctx context.Context, fn func(whitelist *storage.ProcessWhitelist) error) error {
+	if ok, err := processWhitelistSAC.ReadAllowed(ctx); err != nil {
+		return err
+	} else if !ok {
+		return errors.New("permission denied")
+	}
+	return ds.storage.WalkAll(fn)
+}

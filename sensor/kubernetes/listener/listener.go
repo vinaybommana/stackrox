@@ -6,6 +6,7 @@ import (
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/sensor/common"
 	"github.com/stackrox/rox/sensor/common/config"
+	"github.com/stackrox/rox/sensor/common/detector"
 )
 
 var (
@@ -13,12 +14,13 @@ var (
 )
 
 // New returns a new kubernetes listener.
-func New(configHandler config.Handler) common.SensorComponent {
+func New(configHandler config.Handler, detector detector.Detector) common.SensorComponent {
 	k := &listenerImpl{
 		clients:       createClient(),
 		eventsC:       make(chan *central.MsgFromSensor, 10),
 		stopSig:       concurrency.NewSignal(),
 		configHandler: configHandler,
+		detector:      detector,
 	}
 	return k
 }

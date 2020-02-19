@@ -118,7 +118,7 @@ message ImageMetadata {
 }
 
 message V2Metadata {
-    string                    digest = 1;
+    string                    digest      = 1;
 }
 
 message V1Metadata {

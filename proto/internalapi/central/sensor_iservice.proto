@@ -5,9 +5,11 @@ option go_package = "central";
 import "internalapi/central/cluster_config.proto";
 import "internalapi/central/cluster_status.proto";
 import "internalapi/central/network_flow.proto";
+import "internalapi/central/policy_sync.proto";
 import "internalapi/central/sensor_events.proto";
 import "internalapi/central/sensor_upgrade.proto";
 import "internalapi/central/telemetry.proto";
+import "internalapi/central/whitelist_sync.proto";
 
 package central;
 
@@ -24,6 +26,8 @@ message MsgFromSensor {
     }
 }
 
+message ReassessPolicies {}
+
 message MsgToSensor {
     oneof msg {
         SensorEnforcement            enforcement                    = 1;
@@ -32,6 +36,9 @@ message MsgToSensor {
         ClusterConfig                cluster_config                 = 4;
         SensorUpgradeTrigger         sensor_upgrade_trigger         = 5;
         PullTelemetryDataRequest     telemetry_data_request         = 6;
+        PolicySync                   policy_sync                    = 7;
+        ReassessPolicies             reassess_policies              = 8;
+        WhitelistSync                whitelist_sync                 = 9;
     }
 }
 

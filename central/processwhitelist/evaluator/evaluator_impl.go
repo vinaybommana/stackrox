@@ -10,6 +10,7 @@ import (
 	whitelistResultsStore "github.com/stackrox/rox/central/processwhitelistresults/datastore"
 	"github.com/stackrox/rox/central/role/resources"
 	"github.com/stackrox/rox/generated/storage"
+	processWhitelistPkg "github.com/stackrox/rox/pkg/processwhitelist"
 	"github.com/stackrox/rox/pkg/sac"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/set"
@@ -91,14 +92,14 @@ func (e *evaluator) EvaluateWhitelistsAndPersistResult(deployment *storage.Deplo
 		if !exists {
 			continue
 		}
-		whitelistItem := processwhitelist.WhitelistItemFromProcess(process)
+		whitelistItem := processWhitelistPkg.WhitelistItemFromProcess(process)
 		if whitelistItem == "" {
 			continue
 		}
 		if processwhitelist.IsStartupProcess(process) {
 			continue
 		}
-		if !processSet.Contains(processwhitelist.WhitelistItemFromProcess(process)) {
+		if !processSet.Contains(processWhitelistPkg.WhitelistItemFromProcess(process)) {
 			violatingProcesses = append(violatingProcesses, process)
 			containerNameToWhitelistResults[process.GetContainerName()].AnomalousProcessesExecuted = true
 		}

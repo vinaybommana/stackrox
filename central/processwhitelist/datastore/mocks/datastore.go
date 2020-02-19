@@ -169,3 +169,17 @@ func (mr *MockDataStoreMockRecorder) UserLockProcessWhitelist(ctx, key, locked i
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserLockProcessWhitelist", reflect.TypeOf((*MockDataStore)(nil).UserLockProcessWhitelist), ctx, key, locked)
 }
+
+// WalkAll mocks base method
+func (m *MockDataStore) WalkAll(ctx context.Context, fn func(*storage.ProcessWhitelist) error) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WalkAll", ctx, fn)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// WalkAll indicates an expected call of WalkAll
+func (mr *MockDataStoreMockRecorder) WalkAll(ctx, fn interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WalkAll", reflect.TypeOf((*MockDataStore)(nil).WalkAll), ctx, fn)
+}

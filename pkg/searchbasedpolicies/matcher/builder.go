@@ -15,6 +15,7 @@ import (
 var (
 	imageFactory      = predicate.NewFactory("image", (*storage.Image)(nil))
 	deploymentFactory = predicate.NewFactory("deployment", (*storage.Deployment)(nil))
+	processFactory    = predicate.NewFactory("process_indicator", (*storage.ProcessIndicator)(nil))
 )
 
 // Builder builds matchers.
@@ -67,10 +68,16 @@ func (mb *builderImpl) ForPolicy(policy *storage.Policy) (searchbasedpolicies.Ma
 		return nil, err
 	}
 
+	processPredicate, err := processFactory.GeneratePredicate(q)
+	if err != nil {
+		return nil, err
+	}
+
 	return &matcherImpl{
 		q:                   q,
 		imagePredicate:      imgPredicate,
 		deploymentPredicate: deploymentPredicate,
+		processPredicate:    processPredicate,
 
 		violationPrinter: v,
 		policyName:       policy.GetName(),

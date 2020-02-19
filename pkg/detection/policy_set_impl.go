@@ -56,19 +56,3 @@ func (p *setImpl) RemovePolicy(policyID string) error {
 func (p *setImpl) GetCompiledPolicies() map[string]CompiledPolicy {
 	return p.policyIDToCompiled.GetMap()
 }
-
-func (p *setImpl) Recompile(policyID string) error {
-	olcCompiled, exists := p.policyIDToCompiled.Get(policyID)
-	if !exists {
-		return fmt.Errorf("policy %s does not exist to recompile", policyID)
-	}
-
-	newCompiled, err := p.compiler.CompilePolicy(olcCompiled.Policy())
-	if err != nil {
-		log.Errorf("unable to compile policy: %s", err)
-		return err
-	}
-
-	p.policyIDToCompiled.Set(newCompiled.Policy().GetId(), newCompiled)
-	return nil
-}

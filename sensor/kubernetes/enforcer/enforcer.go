@@ -3,7 +3,6 @@ package enforcer
 import (
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/logging"
-	"github.com/stackrox/rox/sensor/common"
 	"github.com/stackrox/rox/sensor/common/enforcer"
 	"github.com/stackrox/rox/sensor/kubernetes/client"
 	"k8s.io/client-go/kubernetes"
@@ -20,7 +19,7 @@ type enforcerImpl struct {
 }
 
 // MustCreate creates a new enforcer or panics.
-func MustCreate() common.SensorComponent {
+func MustCreate() enforcer.Enforcer {
 	e, err := New()
 	if err != nil {
 		panic(err)
@@ -29,7 +28,7 @@ func MustCreate() common.SensorComponent {
 }
 
 // New returns a new Kubernetes Enforcer.
-func New() (common.SensorComponent, error) {
+func New() (enforcer.Enforcer, error) {
 	cl := client.MustCreateClientSet()
 	e := &enforcerImpl{
 		client:   cl,

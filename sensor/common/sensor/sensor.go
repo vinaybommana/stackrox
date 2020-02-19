@@ -28,6 +28,7 @@ import (
 	"github.com/stackrox/rox/sensor/common"
 	"github.com/stackrox/rox/sensor/common/admissioncontroller"
 	"github.com/stackrox/rox/sensor/common/config"
+	"github.com/stackrox/rox/sensor/common/detector"
 	"golang.org/x/net/http2"
 	"google.golang.org/grpc"
 )
@@ -53,6 +54,7 @@ type Sensor struct {
 	advertisedEndpoint string
 
 	configHandler config.Handler
+	detector      detector.Detector
 	components    []common.SensorComponent
 	apiServices   []pkgGRPC.APIService
 
@@ -66,14 +68,15 @@ type Sensor struct {
 }
 
 // NewSensor initializes a Sensor, including reading configurations from the environment.
-func NewSensor(configHandler config.Handler, components ...common.SensorComponent) *Sensor {
+func NewSensor(configHandler config.Handler, detector detector.Detector, components ...common.SensorComponent) *Sensor {
 	return &Sensor{
 		clusterID:          env.ClusterID.Setting(),
 		centralEndpoint:    env.CentralEndpoint.Setting(),
 		advertisedEndpoint: env.AdvertisedEndpoint.Setting(),
 
 		configHandler: configHandler,
-		components:    append(components, configHandler), // Explicitly add the config handler
+		detector:      detector,
+		components:    append(components, detector, configHandler), // Explicitly add the config handler
 
 		stoppedSig: concurrency.NewErrorSignal(),
 	}
@@ -141,6 +144,7 @@ func (s *Sensor) Start() {
 	if err != nil {
 		log.Fatalf("Error connecting to central: %s", err)
 	}
+	s.detector.SetClient(s.centralConnection)
 
 	s.profilingServer = s.startProfilingServer()
 
@@ -265,7 +269,7 @@ func pollMetadataWithTimeout(svc v1.MetadataServiceClient) error {
 func (s *Sensor) communicationWithCentral(centralReachable *concurrency.Flag) {
 	s.centralCommunication = NewCentralCommunication(s.components...)
 
-	s.centralCommunication.Start(s.centralConnection, centralReachable, s.configHandler)
+	s.centralCommunication.Start(s.centralConnection, centralReachable, s.configHandler, s.detector)
 
 	if err := s.centralCommunication.Stopped().Wait(); err != nil {
 		log.Errorf("Sensor reported an error: %v", err)

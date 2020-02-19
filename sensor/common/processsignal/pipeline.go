@@ -3,10 +3,12 @@ package processsignal
 import (
 	"github.com/stackrox/rox/generated/internalapi/central"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/process/filter"
 	"github.com/stackrox/rox/pkg/uuid"
 	"github.com/stackrox/rox/sensor/common/clusterentities"
+	"github.com/stackrox/rox/sensor/common/detector"
 	"github.com/stackrox/rox/sensor/common/metrics"
 )
 
@@ -21,10 +23,11 @@ type Pipeline struct {
 	enrichedIndicators chan *storage.ProcessIndicator
 	enricher           *enricher
 	processFilter      filter.Filter
+	detector           detector.Detector
 }
 
 // NewProcessPipeline defines how to process a ProcessIndicator
-func NewProcessPipeline(indicators chan *central.MsgFromSensor, clusterEntities *clusterentities.Store, processFilter filter.Filter) *Pipeline {
+func NewProcessPipeline(indicators chan *central.MsgFromSensor, clusterEntities *clusterentities.Store, processFilter filter.Filter, detector detector.Detector) *Pipeline {
 	enrichedIndicators := make(chan *storage.ProcessIndicator)
 	p := &Pipeline{
 		clusterEntities:    clusterEntities,
@@ -32,6 +35,7 @@ func NewProcessPipeline(indicators chan *central.MsgFromSensor, clusterEntities 
 		enricher:           newEnricher(clusterEntities, enrichedIndicators),
 		enrichedIndicators: enrichedIndicators,
 		processFilter:      processFilter,
+		detector:           detector,
 	}
 	go p.sendIndicatorEvent()
 	return p
@@ -69,6 +73,10 @@ func (p *Pipeline) sendIndicatorEvent() {
 		if !p.processFilter.Add(indicator) {
 			continue
 		}
+		if features.SensorBasedDetection.Enabled() {
+			p.detector.ProcessIndicator(indicator)
+		}
+
 		p.indicators <- &central.MsgFromSensor{Msg: &central.MsgFromSensor_Event{Event: &central.SensorEvent{
 			Id:     indicator.GetId(),
 			Action: central.ResourceAction_CREATE_RESOURCE,

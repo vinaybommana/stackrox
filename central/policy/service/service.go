@@ -11,6 +11,7 @@ import (
 	notifierProcessor "github.com/stackrox/rox/central/notifier/processor"
 	"github.com/stackrox/rox/central/policy/datastore"
 	"github.com/stackrox/rox/central/reprocessor"
+	"github.com/stackrox/rox/central/sensor/service/connection"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/pkg/expiringcache"
 	"github.com/stackrox/rox/pkg/grpc"
@@ -38,7 +39,8 @@ func New(policies datastore.DataStore,
 	manager lifecycle.Manager,
 	processor notifierProcessor.Processor,
 	metadataCache expiringcache.Cache,
-	scanCache expiringcache.Cache) Service {
+	scanCache expiringcache.Cache,
+	connectionManager connection.Manager) Service {
 	return &serviceImpl{
 		policies:          policies,
 		clusters:          clusters,
@@ -48,6 +50,7 @@ func New(policies datastore.DataStore,
 		buildTimePolicies: buildTimePolicies,
 		testMatchBuilder:  deploymentMatcherBuilder,
 		lifecycleManager:  manager,
+		connectionManager: connectionManager,
 
 		processor: processor,
 

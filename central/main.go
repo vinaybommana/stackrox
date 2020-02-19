@@ -63,9 +63,11 @@ import (
 	notifierService "github.com/stackrox/rox/central/notifier/service"
 	_ "github.com/stackrox/rox/central/notifiers/all" // These imports are required to register things from the respective packages.
 	pingService "github.com/stackrox/rox/central/ping/service"
+	policyDataStore "github.com/stackrox/rox/central/policy/datastore"
 	policyService "github.com/stackrox/rox/central/policy/service"
 	probeUploadService "github.com/stackrox/rox/central/probeupload/service"
 	processIndicatorService "github.com/stackrox/rox/central/processindicator/service"
+	processWhitelistDataStore "github.com/stackrox/rox/central/processwhitelist/datastore"
 	processWhitelistService "github.com/stackrox/rox/central/processwhitelist/service"
 	"github.com/stackrox/rox/central/pruning"
 	rbacService "github.com/stackrox/rox/central/rbac/service"
@@ -323,7 +325,7 @@ func (f defaultFactory) ServicesToRegister(registry authproviders.Registry) []pk
 	}
 
 	autoTriggerUpgrades := sensorUpgradeConfigStore.Singleton().AutoTriggerSetting()
-	if err := connection.ManagerSingleton().Start(clusterDataStore.Singleton(), autoTriggerUpgrades); err != nil {
+	if err := connection.ManagerSingleton().Start(clusterDataStore.Singleton(), policyDataStore.Singleton(), processWhitelistDataStore.Singleton(), autoTriggerUpgrades); err != nil {
 		log.Panicf("Couldn't start sensor connection manager: %v", err)
 	}
 

@@ -145,23 +145,18 @@ func (mr *MockMatcherMockRecorder) Match(ctx, searcher interface{}) *gomock.Call
 }
 
 // MatchOne mocks base method
-func (m *MockMatcher) MatchOne(ctx context.Context, deployment *storage.Deployment, images ...*storage.Image) (searchbasedpolicies.Violations, error) {
+func (m *MockMatcher) MatchOne(ctx context.Context, deployment *storage.Deployment, images []*storage.Image, pi *storage.ProcessIndicator) (searchbasedpolicies.Violations, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{ctx, deployment}
-	for _, a := range images {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "MatchOne", varargs...)
+	ret := m.ctrl.Call(m, "MatchOne", ctx, deployment, images, pi)
 	ret0, _ := ret[0].(searchbasedpolicies.Violations)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // MatchOne indicates an expected call of MatchOne
-func (mr *MockMatcherMockRecorder) MatchOne(ctx, deployment interface{}, images ...interface{}) *gomock.Call {
+func (mr *MockMatcherMockRecorder) MatchOne(ctx, deployment, images, pi interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{ctx, deployment}, images...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MatchOne", reflect.TypeOf((*MockMatcher)(nil).MatchOne), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MatchOne", reflect.TypeOf((*MockMatcher)(nil).MatchOne), ctx, deployment, images, pi)
 }
 
 // MatchMany mocks base method

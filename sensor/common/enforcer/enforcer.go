@@ -15,11 +15,17 @@ var (
 	log = logging.LoggerForModule()
 )
 
+// Enforcer implements the interface to apply enforcement to a sensor cluster
+type Enforcer interface {
+	common.SensorComponent
+	ProcessAlertResults(action central.ResourceAction, stage storage.LifecycleStage, alertResults *central.AlertResults)
+}
+
 // EnforceFunc represents an enforcement function.
 type EnforceFunc func(*central.SensorEnforcement) error
 
 // CreateEnforcer creates a new enforcer that performs the given enforcement actions.
-func CreateEnforcer(enforcementMap map[storage.EnforcementAction]EnforceFunc) common.SensorComponent {
+func CreateEnforcer(enforcementMap map[storage.EnforcementAction]EnforceFunc) Enforcer {
 	return &enforcer{
 		enforcementMap: enforcementMap,
 		actionsC:       make(chan *central.SensorEnforcement, 10),
@@ -41,6 +47,10 @@ func (e *enforcer) Capabilities() []centralsensor.SensorCapability {
 
 func (e *enforcer) ResponsesC() <-chan *central.MsgFromSensor {
 	return nil
+}
+
+func (e *enforcer) ProcessAlertResults(action central.ResourceAction, stage storage.LifecycleStage, alertResults *central.AlertResults) {
+
 }
 
 func (e *enforcer) ProcessMessage(msg *central.MsgToSensor) error {

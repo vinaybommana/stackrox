@@ -12,7 +12,7 @@ import "protobuf/gogoproto/gogo.proto";
 package storage;
 
 message Alert {
-    string id                                = 1;
+    string id                                = 1 [(gogoproto.moretags) = "sensorhash:\"ignore\""]; // Internal use only
 
     Policy policy                            = 2 [(gogoproto.moretags) = "search_index:\"Policy ID,Policy,Category,Severity\""];
     LifecycleStage lifecycle_stage           = 3 [(gogoproto.moretags) = "search:\"Lifecycle Stage,store\""];
@@ -57,9 +57,8 @@ message Alert {
         string message                   = 2;
     }
     Enforcement enforcement                  = 6;
-
-    google.protobuf.Timestamp time           = 7 [(gogoproto.moretags) = "search:\"Violation Time\""];
-    google.protobuf.Timestamp first_occurred = 10;
+    google.protobuf.Timestamp time           = 7 [(gogoproto.moretags) = "search:\"Violation Time\" sensorhash:\"ignore\""];
+    google.protobuf.Timestamp first_occurred = 10 [(gogoproto.moretags) = "sensorhash:\"ignore\""];
     ViolationState state                     = 11 [(gogoproto.moretags) = "search:\"Violation State,store\""];
     google.protobuf.Timestamp snooze_till    = 12;
 }

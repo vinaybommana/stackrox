@@ -8,6 +8,7 @@ import (
 	"github.com/stackrox/rox/pkg/centralsensor"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/sensor/common/config"
+	"github.com/stackrox/rox/sensor/common/detector"
 	"k8s.io/client-go/informers"
 )
 
@@ -24,6 +25,7 @@ type listenerImpl struct {
 	stopSig concurrency.Signal
 
 	configHandler config.Handler
+	detector      detector.Detector
 }
 
 func (k *listenerImpl) Start() error {
@@ -40,7 +42,7 @@ func (k *listenerImpl) Start() error {
 	patchNamespaces(k.clients.k8s, &k.stopSig)
 
 	// Start handling resource events.
-	go handleAllEvents(k8sFactory, k8sResyncingFactory, osFactory, k.eventsC, &k.stopSig, k.configHandler)
+	go handleAllEvents(k8sFactory, k8sResyncingFactory, osFactory, k.eventsC, &k.stopSig, k.configHandler, k.detector)
 	return nil
 }
 

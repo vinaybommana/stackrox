@@ -16,18 +16,22 @@ import (
 	"github.com/stackrox/rox/central/policy/datastore"
 	"github.com/stackrox/rox/central/reprocessor"
 	"github.com/stackrox/rox/central/role/resources"
+	"github.com/stackrox/rox/central/sensor/service/connection"
 	v1 "github.com/stackrox/rox/generated/api/v1"
+	"github.com/stackrox/rox/generated/internalapi/central"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/auth/permissions"
 	"github.com/stackrox/rox/pkg/detection"
 	"github.com/stackrox/rox/pkg/errorhelpers"
 	"github.com/stackrox/rox/pkg/expiringcache"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/grpc/authz"
 	"github.com/stackrox/rox/pkg/grpc/authz/perrpc"
 	"github.com/stackrox/rox/pkg/grpc/authz/user"
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/policies"
 	"github.com/stackrox/rox/pkg/protoconv"
+	"github.com/stackrox/rox/pkg/sac"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/searchbasedpolicies/matcher"
 	"github.com/stackrox/rox/pkg/set"
@@ -63,13 +67,20 @@ const (
 	uncategorizedCategory = `Uncategorized`
 )
 
+var (
+	policySyncReadCtx = sac.WithGlobalAccessScopeChecker(context.Background(),
+		sac.AllowFixedScopes(sac.AccessModeScopeKeys(storage.Access_READ_ACCESS),
+			sac.ResourceScopeKeys(resources.Policy)))
+)
+
 // serviceImpl provides APIs for alerts.
 type serviceImpl struct {
-	policies    datastore.DataStore
-	clusters    clusterDataStore.DataStore
-	deployments deploymentDataStore.DataStore
-	notifiers   notifierDataStore.DataStore
-	reprocessor reprocessor.Loop
+	policies          datastore.DataStore
+	clusters          clusterDataStore.DataStore
+	deployments       deploymentDataStore.DataStore
+	notifiers         notifierDataStore.DataStore
+	reprocessor       reprocessor.Loop
+	connectionManager connection.Manager
 
 	buildTimePolicies detection.PolicySet
 	testMatchBuilder  matcher.Builder
@@ -175,6 +186,11 @@ func (s *serviceImpl) PostPolicy(ctx context.Context, request *storage.Policy) (
 	if err := s.addActivePolicy(request); err != nil {
 		return nil, errors.Wrap(err, "Policy could not be edited due to")
 	}
+
+	if err := s.syncPoliciesWithSensors(); err != nil {
+		return nil, err
+	}
+
 	return request, nil
 }
 
@@ -193,6 +209,11 @@ func (s *serviceImpl) PutPolicy(ctx context.Context, request *storage.Policy) (*
 	if err := s.addActivePolicy(request); err != nil {
 		return nil, errors.Wrap(err, "Policy could not be edited due to")
 	}
+
+	if err := s.syncPoliciesWithSensors(); err != nil {
+		return nil, err
+	}
+
 	return &v1.Empty{}, nil
 }
 
@@ -208,6 +229,7 @@ func (s *serviceImpl) PatchPolicy(ctx context.Context, request *v1.PatchPolicyRe
 	if request.SetDisabled != nil {
 		policy.Disabled = request.GetDisabled()
 	}
+
 	return s.PutPolicy(ctx, policy)
 }
 
@@ -229,6 +251,10 @@ func (s *serviceImpl) DeletePolicy(ctx context.Context, request *v1.ResourceByID
 	}
 
 	if err := s.removeActivePolicy(policy); err != nil {
+		return nil, err
+	}
+
+	if err := s.syncPoliciesWithSensors(); err != nil {
 		return nil, err
 	}
 
@@ -323,6 +349,10 @@ func (s *serviceImpl) RenamePolicyCategory(ctx context.Context, request *v1.Rena
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	if err := s.syncPoliciesWithSensors(); err != nil {
+		return nil, err
+	}
+
 	return &v1.Empty{}, nil
 }
 
@@ -339,6 +369,10 @@ func (s *serviceImpl) DeletePolicyCategory(ctx context.Context, request *v1.Dele
 
 	if err := s.policies.DeletePolicyCategory(ctx, request); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	if err := s.syncPoliciesWithSensors(); err != nil {
+		return nil, err
 	}
 
 	return &v1.Empty{}, nil
@@ -435,6 +469,24 @@ func (s *serviceImpl) enablePolicyNotification(ctx context.Context, policyID str
 	err = errorList.ToError()
 	if err != nil {
 		return status.Error(codes.Internal, err.Error())
+	}
+	return nil
+}
+
+func (s *serviceImpl) syncPoliciesWithSensors() error {
+	if features.SensorBasedDetection.Enabled() {
+		policies, err := s.policies.GetPolicies(policySyncReadCtx)
+		if err != nil {
+			return errors.Wrap(err, "error reading policies from store")
+		}
+		msg := &central.MsgToSensor{
+			Msg: &central.MsgToSensor_PolicySync{
+				PolicySync: &central.PolicySync{
+					Policies: policies,
+				},
+			},
+		}
+		s.connectionManager.BroadcastMessage(msg)
 	}
 	return nil
 }

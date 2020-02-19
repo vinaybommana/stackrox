@@ -2,8 +2,10 @@ package resources
 
 import (
 	"github.com/stackrox/rox/generated/internalapi/central"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/process/filter"
 	"github.com/stackrox/rox/sensor/common/config"
+	"github.com/stackrox/rox/sensor/common/detector"
 	"github.com/stackrox/rox/sensor/kubernetes/listener/resources/references"
 	v1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,6 +37,7 @@ func (d *deploymentDispatcherImpl) ProcessEvent(obj, oldObj interface{}, action 
 		log.Errorf("could not process %+v as it does not implement metaV1.Object", obj)
 		return nil
 	}
+
 	if action == central.ResourceAction_REMOVE_RESOURCE {
 		d.handler.hierarchy.Remove(string(metaObj.GetUID()))
 		return d.handler.processWithType(obj, oldObj, action, d.deploymentType)
@@ -61,11 +64,13 @@ type deploymentHandler struct {
 	config          config.Handler
 	hierarchy       references.ParentHierarchy
 	rbac            rbacUpdater
+
+	detector detector.Detector
 }
 
 // newDeploymentHandler creates and returns a new deployment handler.
 func newDeploymentHandler(serviceStore *serviceStore, deploymentStore *DeploymentStore, endpointManager *endpointManager, namespaceStore *namespaceStore,
-	rbac rbacUpdater, podLister v1listers.PodLister, processFilter filter.Filter, config config.Handler) *deploymentHandler {
+	rbac rbacUpdater, podLister v1listers.PodLister, processFilter filter.Filter, config config.Handler, detector detector.Detector) *deploymentHandler {
 	return &deploymentHandler{
 		podLister:       podLister,
 		serviceStore:    serviceStore,
@@ -76,6 +81,8 @@ func newDeploymentHandler(serviceStore *serviceStore, deploymentStore *Deploymen
 		config:          config,
 		hierarchy:       references.NewParentHierarchy(),
 		rbac:            rbac,
+
+		detector: detector,
 	}
 }
 
@@ -94,6 +101,9 @@ func (d *deploymentHandler) processWithType(obj, oldObj interface{}, action cent
 		d.deploymentStore.removeDeployment(wrap)
 		d.endpointManager.OnDeploymentRemove(wrap)
 		d.processFilter.Delete(wrap.GetId())
+	}
+	if features.SensorBasedDetection.Enabled() {
+		d.detector.ProcessDeployment(wrap.GetDeployment(), action)
 	}
 	return []*central.SensorEvent{wrap.toEvent(action)}
 }

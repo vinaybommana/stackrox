@@ -42,6 +42,8 @@ type Manager interface {
 	DeploymentUpdated(ctx enricher.EnrichmentContext, deployment *storage.Deployment, create bool, injector common.MessageInjector) error
 	UpsertPolicy(policy *storage.Policy) error
 
+	HandleAlerts(deploymentID string, alerts []*storage.Alert, stage storage.LifecycleStage) error
+
 	DeploymentRemoved(deployment *storage.Deployment) error
 	RemovePolicy(policyID string) error
 }

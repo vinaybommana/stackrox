@@ -10,6 +10,7 @@ import (
 	"github.com/stackrox/rox/central/sensor/service/recorder"
 	"github.com/stackrox/rox/central/sensor/telemetry"
 	"github.com/stackrox/rox/generated/internalapi/central"
+	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/centralsensor"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/features"
@@ -39,12 +40,14 @@ type sensorConnection struct {
 
 	eventPipeline pipeline.ClusterPipeline
 
-	clusterMgr ClusterManager
+	clusterMgr   ClusterManager
+	policyMgr    PolicyManager
+	whitelistMgr WhitelistManager
 
 	capabilities centralsensor.SensorCapabilitySet
 }
 
-func newConnection(ctx context.Context, clusterID string, eventPipeline pipeline.ClusterPipeline, clusterMgr ClusterManager) *sensorConnection {
+func newConnection(ctx context.Context, clusterID string, eventPipeline pipeline.ClusterPipeline, clusterMgr ClusterManager, policyMgr PolicyManager, whitelistMgr WhitelistManager) *sensorConnection {
 	conn := &sensorConnection{
 		stopSig:       concurrency.NewErrorSignal(),
 		stoppedSig:    concurrency.NewErrorSignal(),
@@ -52,8 +55,10 @@ func newConnection(ctx context.Context, clusterID string, eventPipeline pipeline
 		eventPipeline: eventPipeline,
 		queues:        make(map[string]*dedupingQueue),
 
-		clusterID:  clusterID,
-		clusterMgr: clusterMgr,
+		clusterID:    clusterID,
+		clusterMgr:   clusterMgr,
+		policyMgr:    policyMgr,
+		whitelistMgr: whitelistMgr,
 
 		capabilities: centralsensor.ExtractCapsFromContext(ctx),
 	}
@@ -185,6 +190,44 @@ func (c *sensorConnection) handleMessage(ctx context.Context, msg *central.MsgFr
 	return c.eventPipeline.Run(ctx, msg, c)
 }
 
+func (c *sensorConnection) getPolicySyncMsg(ctx context.Context) (*central.MsgToSensor, error) {
+	policies, err := c.policyMgr.GetPolicies(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "error getting policies for initial sync")
+	}
+	return &central.MsgToSensor{
+		Msg: &central.MsgToSensor_PolicySync{
+			PolicySync: &central.PolicySync{
+				Policies: policies,
+			},
+		},
+	}, nil
+}
+
+func (c *sensorConnection) getWhitelistSyncMsg(ctx context.Context) (*central.MsgToSensor, error) {
+	var whitelists []*storage.ProcessWhitelist
+	err := c.whitelistMgr.WalkAll(ctx, func(pw *storage.ProcessWhitelist) error {
+		if pw.GetUserLockedTimestamp() == nil {
+			return nil
+		}
+		if pw.GetKey().GetClusterId() != c.clusterID {
+			return nil
+		}
+		whitelists = append(whitelists, pw)
+		return nil
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "could not list process whitelists for Sensor connection")
+	}
+	return &central.MsgToSensor{
+		Msg: &central.MsgToSensor_WhitelistSync{
+			WhitelistSync: &central.WhitelistSync{
+				Whitelists: whitelists,
+			},
+		},
+	}, nil
+}
+
 func (c *sensorConnection) getClusterConfigMsg(ctx context.Context) (*central.MsgToSensor, error) {
 	cluster, exists, err := c.clusterMgr.GetCluster(ctx, c.clusterID)
 	if err != nil {
@@ -202,7 +245,7 @@ func (c *sensorConnection) getClusterConfigMsg(ctx context.Context) (*central.Ms
 	}, nil
 }
 
-func (c *sensorConnection) Run(ctx context.Context, server central.SensorService_CommunicateServer) error {
+func (c *sensorConnection) Run(ctx context.Context, server central.SensorService_CommunicateServer, connectionCapabilities centralsensor.SensorCapabilitySet) error {
 	if err := server.SendHeader(metadata.MD{}); err != nil {
 		return errors.Wrap(err, "sending initial metadata")
 	}
@@ -215,6 +258,24 @@ func (c *sensorConnection) Run(ctx context.Context, server central.SensorService
 
 	if err := server.Send(msg); err != nil {
 		return errors.Wrapf(err, "unable to sync config to cluster %q", c.clusterID)
+	}
+
+	if features.SensorBasedDetection.Enabled() && connectionCapabilities.Contains(centralsensor.SensorDetectionCap) {
+		msg, err = c.getPolicySyncMsg(ctx)
+		if err != nil {
+			return errors.Wrapf(err, "unable to get policy sync msg for %q", c.clusterID)
+		}
+		if err := server.Send(msg); err != nil {
+			return errors.Wrapf(err, "unable to sync initial policies to cluster %q", c.clusterID)
+		}
+
+		msg, err = c.getWhitelistSyncMsg(ctx)
+		if err != nil {
+			return errors.Wrapf(err, "unable to get whitelist sync msg for %q", c.clusterID)
+		}
+		if err := server.Send(msg); err != nil {
+			return errors.Wrapf(err, "unable to sync initial whitelists to cluster %q", c.clusterID)
+		}
 	}
 
 	go c.runSend(server)

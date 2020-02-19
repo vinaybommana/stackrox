@@ -27,9 +27,11 @@ import (
 	deployTimePkg "github.com/stackrox/rox/pkg/detection/deploytime"
 	"github.com/stackrox/rox/pkg/enforcers"
 	"github.com/stackrox/rox/pkg/expiringcache"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/images/enricher"
 	"github.com/stackrox/rox/pkg/policies"
 	"github.com/stackrox/rox/pkg/process/filter"
+	processWhitelistPkg "github.com/stackrox/rox/pkg/processwhitelist"
 	"github.com/stackrox/rox/pkg/sac"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/set"
@@ -131,6 +133,7 @@ func (m *managerImpl) flushQueuePeriodically() {
 
 func (m *managerImpl) generateProcessAlertsAndEnforcement(indicators map[string]indicatorWithInjector) {
 	deploymentIDs := uniqueDeploymentIDs(indicators)
+
 	newAlerts, err := m.runtimeDetector.AlertsForDeployments(deploymentIDs...)
 	if err != nil {
 		log.Errorf("Failed to compute runtime alerts: %s", err)
@@ -139,7 +142,7 @@ func (m *managerImpl) generateProcessAlertsAndEnforcement(indicators map[string]
 
 	deploymentToMatchingIndicators := make(map[string][]*storage.ProcessIndicator)
 	for _, ind := range indicators {
-		userWhitelist, _, err := m.checkWhitelist(ind.indicator)
+		userWhitelist, _, err := m.checkAndUpdateWhitelist(ind.indicator)
 		if err != nil {
 			log.Debugf("error checking whitelist for indicator: %v - %+v", err, ind)
 			continue
@@ -203,7 +206,16 @@ func (m *managerImpl) flushIndicatorQueue() {
 		log.Errorf("Error adding process indicators: %v", err)
 	}
 
-	m.generateProcessAlertsAndEnforcement(copiedQueue)
+	if !features.SensorBasedDetection.Enabled() {
+		m.generateProcessAlertsAndEnforcement(copiedQueue)
+	} else {
+		for _, i := range indicatorSlice {
+			_, _, err := m.checkAndUpdateWhitelist(i)
+			if err != nil {
+				log.Errorf("error checking whitelist: %v", err)
+			}
+		}
+	}
 }
 
 func (m *managerImpl) addToQueue(indicator *storage.ProcessIndicator, injector common.MessageInjector) {
@@ -228,7 +240,7 @@ const (
 	whitelistLockingGracePeriod = 5 * time.Second
 )
 
-func (m *managerImpl) checkWhitelist(indicator *storage.ProcessIndicator) (userWhitelist bool, roxWhitelist bool, err error) {
+func (m *managerImpl) checkAndUpdateWhitelist(indicator *storage.ProcessIndicator) (userWhitelist bool, roxWhitelist bool, err error) {
 	key := &storage.ProcessWhitelistKey{
 		DeploymentId:  indicator.DeploymentId,
 		ContainerName: indicator.ContainerName,
@@ -242,7 +254,7 @@ func (m *managerImpl) checkWhitelist(indicator *storage.ProcessIndicator) (userW
 		return
 	}
 
-	insertableElement := &storage.WhitelistItem{Item: &storage.WhitelistItem_ProcessName{ProcessName: processwhitelist.WhitelistItemFromProcess(indicator)}}
+	insertableElement := &storage.WhitelistItem{Item: &storage.WhitelistItem_ProcessName{ProcessName: processWhitelistPkg.WhitelistItemFromProcess(indicator)}}
 	if !exists {
 		_, err = m.whitelists.UpsertProcessWhitelist(lifecycleMgrCtx, key, []*storage.WhitelistItem{insertableElement}, true)
 		return
@@ -323,6 +335,17 @@ func (m *managerImpl) DeploymentUpdated(ctx enricher.EnrichmentContext, deployme
 			log.Errorf("Could not generate runtime alerts for deployment %s: %v", deployment.GetId(), err)
 		}
 	}
+	return nil
+}
+
+func (m *managerImpl) HandleAlerts(deploymentID string, alerts []*storage.Alert, stage storage.LifecycleStage) error {
+	defer m.reprocessor.ReprocessRiskForDeployments(deploymentID)
+
+	if _, err := m.alertManager.AlertAndNotify(lifecycleMgrCtx, alerts,
+		alertmanager.WithLifecycleStage(stage), alertmanager.WithDeploymentIDs(deploymentID)); err != nil {
+		return err
+	}
+
 	return nil
 }
 

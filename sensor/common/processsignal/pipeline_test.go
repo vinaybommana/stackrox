@@ -15,7 +15,7 @@ func TestProcessPipeline(t *testing.T) {
 	sensorEvents := make(chan *central.MsgFromSensor)
 	actualEvents := make(chan *central.MsgFromSensor)
 	mockStore := clusterentities.NewStore()
-	p := NewProcessPipeline(sensorEvents, mockStore, filter.NewFilter(5, []int{10, 10, 10}))
+	p := NewProcessPipeline(sensorEvents, mockStore, filter.NewFilter(5, []int{10, 10, 10}), nil)
 	closeChan := make(chan bool)
 
 	go consumeEnrichedSignals(sensorEvents, actualEvents, closeChan)

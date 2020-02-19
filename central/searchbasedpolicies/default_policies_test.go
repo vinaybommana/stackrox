@@ -1048,7 +1048,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			for id, violations := range c.expectedViolations {
 				// Test match one only if we aren't testing processes
 				if violations.ProcessViolation == nil {
-					gotFromMatchOne, err := m.MatchOne(suite.matchCtx, suite.deployments[id], suite.deploymentsToImages[id]...)
+					gotFromMatchOne, err := m.MatchOne(suite.matchCtx, suite.deployments[id], suite.deploymentsToImages[id], nil)
 					require.NoError(t, err)
 					// Make checks case insensitive due to differences in regex
 					for _, a := range violations.AlertViolations {
@@ -1323,7 +1323,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 
 			for id, violations := range c.expectedViolations {
 				// Test match one
-				gotFromMatchOne, err := m.MatchOne(suite.testCtx, nil, suite.images[id])
+				gotFromMatchOne, err := m.MatchOne(suite.testCtx, nil, []*storage.Image{suite.images[id]}, nil)
 				require.NoError(t, err)
 				assert.ElementsMatch(t, violations.AlertViolations, gotFromMatchOne.AlertViolations, "Expected violations from match one %+v don't match what we got %+v", violations, gotFromMatchOne)
 			}

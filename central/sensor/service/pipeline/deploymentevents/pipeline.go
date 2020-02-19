@@ -10,11 +10,13 @@ import (
 	imageDataStore "github.com/stackrox/rox/central/image/datastore"
 	countMetrics "github.com/stackrox/rox/central/metrics"
 	"github.com/stackrox/rox/central/networkpolicies/graph"
+	"github.com/stackrox/rox/central/reprocessor"
 	"github.com/stackrox/rox/central/sensor/service/common"
 	"github.com/stackrox/rox/central/sensor/service/pipeline"
 	"github.com/stackrox/rox/central/sensor/service/pipeline/reconciliation"
 	"github.com/stackrox/rox/generated/internalapi/central"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/images/enricher"
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/metrics"
@@ -51,6 +53,8 @@ func NewPipeline(clusters clusterDataStore.DataStore, deployments deploymentData
 		graphEvaluator: graphEvaluator,
 		deployments:    deployments,
 		clusters:       clusters,
+
+		reprocessor: reprocessor.Singleton(),
 	}
 }
 
@@ -63,6 +67,7 @@ type pipelineImpl struct {
 
 	deployments deploymentDataStore.DataStore
 	clusters    clusterDataStore.DataStore
+	reprocessor reprocessor.Loop
 
 	graphEvaluator graph.Evaluator
 }
@@ -205,19 +210,24 @@ func (s *pipelineImpl) runGeneralPipeline(ctx context.Context, action central.Re
 		return err
 	}
 
-	// Update the deployments images with the latest version from storage.
-	s.updateImages.do(ctx, deployment)
+	if !features.SensorBasedDetection.Enabled() {
+		// Update the deployments images with the latest version from storage.
+		s.updateImages.do(ctx, deployment)
 
-	// Process the deployment (alert generation, enforcement action generation)
-	// Only pass in the enforcement injector (which is a signal to the lifecycle manager
-	// that it should inject enforcement) on creates.
-	var injectorToPass common.MessageInjector
-	create := action == central.ResourceAction_CREATE_RESOURCE
-	if create {
-		injectorToPass = injector
-	}
-	if err := s.lifecycleManager.DeploymentUpdated(enricher.EnrichmentContext{UseNonBlockingCallsWherePossible: true}, deployment, create, injectorToPass); err != nil {
-		return err
+		// Process the deployment (alert generation, enforcement action generation)
+		// Only pass in the enforcement injector (which is a signal to the lifecycle manager
+		// that it should inject enforcement) on creates.
+		var injectorToPass common.MessageInjector
+		create := action == central.ResourceAction_CREATE_RESOURCE
+		if create {
+			injectorToPass = injector
+		}
+		if err := s.lifecycleManager.DeploymentUpdated(enricher.EnrichmentContext{UseNonBlockingCallsWherePossible: true}, deployment, create, injectorToPass); err != nil {
+			return err
+		}
+	} else {
+		// Update risk asynchronously
+		s.reprocessor.ReprocessRiskForDeployments(deployment.GetId())
 	}
 	if incrementNetworkGraphEpoch {
 		s.graphEvaluator.IncrementEpoch(deployment.GetClusterId())
