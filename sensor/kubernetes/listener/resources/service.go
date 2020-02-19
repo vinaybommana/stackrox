@@ -74,7 +74,7 @@ func newServiceDispatcher(serviceStore *serviceStore, deploymentStore *Deploymen
 }
 
 // Process processes a service resource event, and returns the sensor events to emit in response.
-func (sh *serviceDispatcher) ProcessEvent(obj interface{}, action central.ResourceAction) []*central.SensorEvent {
+func (sh *serviceDispatcher) ProcessEvent(obj, _ interface{}, action central.ResourceAction) []*central.SensorEvent {
 	svc := obj.(*v1.Service)
 	if action == central.ResourceAction_CREATE_RESOURCE {
 		return sh.processCreate(svc)

@@ -44,7 +44,7 @@ func (r *rbacDispatcher) processEvent(obj interface{}, action central.ResourceAc
 	return nil
 }
 
-func (r *rbacDispatcher) ProcessEvent(obj interface{}, action central.ResourceAction) []*central.SensorEvent {
+func (r *rbacDispatcher) ProcessEvent(obj, _ interface{}, action central.ResourceAction) []*central.SensorEvent {
 	evt := r.processEvent(obj, action)
 	if evt == nil {
 		utils.Should(errors.Errorf("rbac obj %+v was not correlated to a sensor event", obj))

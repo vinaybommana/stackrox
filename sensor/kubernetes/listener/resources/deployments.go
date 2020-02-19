@@ -27,7 +27,7 @@ func newDeploymentDispatcher(deploymentType string, handler *deploymentHandler) 
 }
 
 // ProcessEvent processes a deployment resource events, and returns the sensor events to emit in response.
-func (d *deploymentDispatcherImpl) ProcessEvent(obj interface{}, action central.ResourceAction) []*central.SensorEvent {
+func (d *deploymentDispatcherImpl) ProcessEvent(obj, oldObj interface{}, action central.ResourceAction) []*central.SensorEvent {
 	// Check owner references and build graph
 	// Every single object should implement this interface
 	metaObj, ok := obj.(metaV1.Object)
@@ -37,7 +37,7 @@ func (d *deploymentDispatcherImpl) ProcessEvent(obj interface{}, action central.
 	}
 	if action == central.ResourceAction_REMOVE_RESOURCE {
 		d.handler.hierarchy.Remove(string(metaObj.GetUID()))
-		return d.handler.processWithType(obj, action, d.deploymentType)
+		return d.handler.processWithType(obj, oldObj, action, d.deploymentType)
 	}
 
 	parents := make([]string, 0, len(metaObj.GetOwnerReferences()))
@@ -47,7 +47,7 @@ func (d *deploymentDispatcherImpl) ProcessEvent(obj interface{}, action central.
 		}
 	}
 	d.handler.hierarchy.Add(parents, string(metaObj.GetUID()))
-	return d.handler.processWithType(obj, action, d.deploymentType)
+	return d.handler.processWithType(obj, oldObj, action, d.deploymentType)
 }
 
 // deploymentHandler handles deployment resource events and does the actual processing.
@@ -79,10 +79,10 @@ func newDeploymentHandler(serviceStore *serviceStore, deploymentStore *Deploymen
 	}
 }
 
-func (d *deploymentHandler) processWithType(obj interface{}, action central.ResourceAction, deploymentType string) []*central.SensorEvent {
+func (d *deploymentHandler) processWithType(obj, oldObj interface{}, action central.ResourceAction, deploymentType string) []*central.SensorEvent {
 	wrap := newDeploymentEventFromResource(obj, &action, deploymentType, d.podLister, d.namespaceStore, d.hierarchy, d.config.GetConfig().GetRegistryOverride())
 	if wrap == nil {
-		return d.maybeProcessPod(obj)
+		return d.maybeProcessPod(obj, oldObj, action)
 	}
 	wrap.updatePortExposureFromStore(d.serviceStore)
 	if action != central.ResourceAction_REMOVE_RESOURCE {
@@ -98,15 +98,34 @@ func (d *deploymentHandler) processWithType(obj interface{}, action central.Reso
 	return []*central.SensorEvent{wrap.toEvent(action)}
 }
 
-func (d *deploymentHandler) maybeProcessPod(obj interface{}) []*central.SensorEvent {
+func (d *deploymentHandler) maybeProcessPod(obj, oldObj interface{}, action central.ResourceAction) []*central.SensorEvent {
 	pod, ok := obj.(*v1.Pod)
 	if !ok {
 		return nil
 	}
+
+	// We care if the pod is running OR if the pod is being removed as that can impact the top level object
+	if pod.Status.Phase != v1.PodRunning && action != central.ResourceAction_REMOVE_RESOURCE {
+		return nil
+	}
+
+	if action != central.ResourceAction_REMOVE_RESOURCE && oldObj != nil {
+		oldPod, ok := oldObj.(*v1.Pod)
+		if !ok {
+			log.Error("previous version of pod is not a pod")
+			return nil
+		}
+		// We care when pods are transitioning to running so ensure that the old pod status is not RUNNING
+		// In the cases of CREATES or UPDATES
+		if oldPod.Status.Phase == v1.PodRunning {
+			return nil
+		}
+	}
+
 	owners := d.deploymentStore.getOwningDeployments(pod.Namespace, pod.Labels)
 	var events []*central.SensorEvent
 	for _, owner := range owners {
-		events = append(events, d.processWithType(owner.original, central.ResourceAction_UPDATE_RESOURCE, owner.Type)...)
+		events = append(events, d.processWithType(owner.original, nil, central.ResourceAction_UPDATE_RESOURCE, owner.Type)...)
 	}
 	return events
 }

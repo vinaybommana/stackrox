@@ -12,7 +12,7 @@ import (
 // in response.
 //go:generate mockgen-wrapper Dispatcher
 type Dispatcher interface {
-	ProcessEvent(obj interface{}, action central.ResourceAction) []*central.SensorEvent
+	ProcessEvent(obj, oldObj interface{}, action central.ResourceAction) []*central.SensorEvent
 }
 
 // DispatcherRegistry provides dispatchers to use.
