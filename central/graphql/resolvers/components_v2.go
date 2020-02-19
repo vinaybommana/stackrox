@@ -280,3 +280,8 @@ func (eicr *imageComponentResolver) Location(ctx context.Context) string {
 func (eicr *imageComponentResolver) LayerIndex() *int32 {
 	return nil
 }
+
+// UnusedVarSink represents a query sink
+func (eicr *imageComponentResolver) UnusedVarSink(ctx context.Context, args RawQuery) *int32 {
+	return nil
+}

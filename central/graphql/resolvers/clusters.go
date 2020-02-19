@@ -74,6 +74,7 @@ func init() {
 		schema.AddExtraResolver("Cluster", `complianceControlCount(query: String): ComplianceControlCount!`),
 		schema.AddExtraResolver("Cluster", `risk: Risk`),
 		schema.AddExtraResolver("Cluster", `isGKECluster: Boolean!`),
+		schema.AddExtraResolver("Cluster", `unusedVarSink(query: String): Int`),
 	)
 }
 
@@ -888,4 +889,8 @@ func (resolver *clusterResolver) LatestViolation(ctx context.Context, args RawQu
 	}
 
 	return getLatestViolationTime(ctx, resolver.root, q)
+}
+
+func (resolver *clusterResolver) UnusedVarSink(ctx context.Context, args RawQuery) *int32 {
+	return nil
 }

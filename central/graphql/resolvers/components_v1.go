@@ -124,6 +124,11 @@ type EmbeddedImageScanComponentResolver struct {
 	data        *storage.EmbeddedImageScanComponent
 }
 
+// UnusedVarSink represents a query sink
+func (eicr *EmbeddedImageScanComponentResolver) UnusedVarSink(ctx context.Context, args RawQuery) *int32 {
+	return nil
+}
+
 // License return the license for the image component.
 func (eicr *EmbeddedImageScanComponentResolver) License(ctx context.Context) (*licenseResolver, error) {
 	value := eicr.data.GetLicense()

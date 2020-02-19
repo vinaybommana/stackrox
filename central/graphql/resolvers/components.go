@@ -44,6 +44,7 @@ func init() {
 		schema.AddQuery("component(id: ID): EmbeddedImageScanComponent"),
 		schema.AddQuery("components(query: String, pagination: Pagination): [EmbeddedImageScanComponent!]!"),
 		schema.AddQuery("componentCount(query: String): Int!"),
+		schema.AddExtraResolver("EmbeddedImageScanComponent", `unusedVarSink(query: String): Int`),
 	)
 }
 
@@ -71,6 +72,7 @@ type ComponentResolver interface {
 
 	Deployments(ctx context.Context, args PaginatedQuery) ([]*deploymentResolver, error)
 	DeploymentCount(ctx context.Context, args RawQuery) (int32, error)
+	UnusedVarSink(ctx context.Context, args RawQuery) *int32
 }
 
 // Component returns an image scan component based on an input id (name:version)

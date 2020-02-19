@@ -28,6 +28,7 @@ func init() {
 		schema.AddExtraResolver("EmbeddedImageScanComponent", "layerIndex: Int"),
 		schema.AddExtraResolver("Image", "components(query: String, pagination: Pagination): [EmbeddedImageScanComponent!]!"),
 		schema.AddExtraResolver("Image", `componentCount(query: String): Int!`),
+		schema.AddExtraResolver("Image", `unusedVarSink(query: String): Int`),
 	)
 }
 
@@ -263,4 +264,8 @@ func (resolver *Resolver) getImage(ctx context.Context, id string) *storage.Imag
 
 func (resolver *imageResolver) getImageRawQuery() string {
 	return search.NewQueryBuilder().AddExactMatches(search.ImageSHA, resolver.data.GetId()).Query()
+}
+
+func (resolver *imageResolver) UnusedVarSink(ctx context.Context, args RawQuery) *int32 {
+	return nil
 }

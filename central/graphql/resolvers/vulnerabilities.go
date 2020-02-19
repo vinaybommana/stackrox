@@ -46,6 +46,7 @@ func init() {
 		schema.AddQuery("k8sVulnerabilities(query: String, pagination: Pagination): [EmbeddedVulnerability!]!"),
 		schema.AddQuery("istioVulnerability(id: ID): EmbeddedVulnerability"),
 		schema.AddQuery("istioVulnerabilities(query: String, pagination: Pagination): [EmbeddedVulnerability!]!"),
+		schema.AddExtraResolver("EmbeddedVulnerability", `unusedVarSink(query: String): Int`),
 	)
 }
 
@@ -78,6 +79,7 @@ type VulnerabilityResolver interface {
 
 	Deployments(ctx context.Context, args PaginatedQuery) ([]*deploymentResolver, error)
 	DeploymentCount(ctx context.Context, args RawQuery) (int32, error)
+	UnusedVarSink(ctx context.Context, args RawQuery) *int32
 }
 
 // Vulnerability resolves a single vulnerability based on an id (the CVE value).

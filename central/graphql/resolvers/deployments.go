@@ -49,6 +49,7 @@ func init() {
 		schema.AddExtraResolver("Deployment", "secrets(query: String, pagination: Pagination): [Secret!]!"),
 		schema.AddExtraResolver("Deployment", "secretCount(query: String): Int!"),
 		schema.AddExtraResolver("Deployment", "policyStatus(query: String) : String!"),
+		schema.AddExtraResolver("Deployment", `unusedVarSink(query: String): Int`),
 	)
 }
 
@@ -598,4 +599,8 @@ func (resolver *deploymentResolver) LatestViolation(ctx context.Context, args Ra
 	}
 
 	return getLatestViolationTime(ctx, resolver.root, q)
+}
+
+func (resolver *deploymentResolver) UnusedVarSink(ctx context.Context, args RawQuery) *int32 {
+	return nil
 }

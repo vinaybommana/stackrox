@@ -19,6 +19,7 @@ func init() {
 		schema.AddQuery("violations(query: String, pagination: Pagination): [Alert!]!"),
 		schema.AddQuery("violationCount(query: String): Int!"),
 		schema.AddQuery("violation(id: ID!): Alert"),
+		schema.AddExtraResolver("Alert", `unusedVarSink(query: String): Int`),
 	)
 }
 
@@ -69,6 +70,10 @@ func (resolver *Resolver) getAlert(ctx context.Context, id string) *storage.Aler
 		return nil
 	}
 	return alert
+}
+
+func (resolver *alertResolver) UnusedVarSink(ctx context.Context, args RawQuery) *int32 {
+	return nil
 }
 
 func getLatestViolationTime(ctx context.Context, root *Resolver, q *v1.Query) (*graphql.Time, error) {

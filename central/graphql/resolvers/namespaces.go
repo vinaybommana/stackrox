@@ -50,6 +50,7 @@ func init() {
 		schema.AddExtraResolver("Namespace", `deploymentCount(query: String): Int!`),
 		schema.AddExtraResolver("Namespace", `risk: Risk`),
 		schema.AddExtraResolver("Namespace", "latestViolation(query: String): Time"),
+		schema.AddExtraResolver("Namespace", `unusedVarSink(query: String): Int`),
 	)
 }
 
@@ -567,4 +568,8 @@ func (resolver *namespaceResolver) LatestViolation(ctx context.Context, args Raw
 	}
 
 	return getLatestViolationTime(ctx, resolver.root, q)
+}
+
+func (resolver *namespaceResolver) UnusedVarSink(ctx context.Context, args RawQuery) *int32 {
+	return nil
 }

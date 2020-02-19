@@ -33,6 +33,7 @@ func init() {
 		schema.AddExtraResolver("PolicyFields", "privileged: Boolean!"),
 		schema.AddExtraResolver("PolicyFields", "readOnlyRootFs: Boolean!"),
 		schema.AddExtraResolver("PolicyFields", "whitelistEnabled: Boolean!"),
+		schema.AddExtraResolver("Policy", `unusedVarSink(query: String): Int`),
 	)
 }
 
@@ -209,6 +210,10 @@ func (resolver *policyResolver) getPolicyQuery() *v1.Query {
 
 func (resolver *policyResolver) getRawPolicyQuery() string {
 	return search.NewQueryBuilder().AddStrings(search.PolicyID, resolver.data.GetId()).Query()
+}
+
+func (resolver *policyResolver) UnusedVarSink(ctx context.Context, args RawQuery) *int32 {
+	return nil
 }
 
 // Following handle the basic type oneOf fields in policy fields that the codegen does not handle.

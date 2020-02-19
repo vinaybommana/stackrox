@@ -475,6 +475,11 @@ func (evr *EmbeddedVulnerabilityResolver) ImpactScore(ctx context.Context) float
 	return float64(0.0)
 }
 
+// UnusedVarSink represents a query sink
+func (evr *EmbeddedVulnerabilityResolver) UnusedVarSink(ctx context.Context, args RawQuery) *int32 {
+	return nil
+}
+
 func (evr *EmbeddedVulnerabilityResolver) loadImages(ctx context.Context, query *v1.Query) ([]*imageResolver, error) {
 	imageLoader, err := loaders.GetImageLoader(ctx)
 	if err != nil {

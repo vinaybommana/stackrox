@@ -372,3 +372,8 @@ func (resolver *cVEResolver) cveQuery() *v1.Query {
 func (resolver *cVEResolver) FixedByVersion(ctx context.Context) (string, error) {
 	return "", nil
 }
+
+// UnusedVarSink represents a query sink
+func (resolver *cVEResolver) UnusedVarSink(ctx context.Context, args RawQuery) *int32 {
+	return nil
+}
