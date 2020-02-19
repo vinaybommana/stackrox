@@ -247,8 +247,10 @@ export class WorkflowState {
                 ? stateStack.slice(0, -1)
                 : [...stateStack];
         newStateStack.push(newItem);
+        const trimmedStack = trimStack(newStateStack);
+        const newPaging = trimmedStack.length === newStateStack.length ? paging : null;
 
-        return new WorkflowState(useCase, trimStack(newStateStack), search, sort, paging);
+        return new WorkflowState(useCase, trimStack(newStateStack), search, sort, newPaging);
     }
 
     // Selects an item in a list by Id

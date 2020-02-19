@@ -490,6 +490,38 @@ describe('WorkflowState', () => {
         ]);
     });
 
+    it('clears pagination when overflowing stack into a list', () => {
+        const workflowState = new WorkflowState(
+            useCases.VULN_MANAGEMENT,
+            [
+                new WorkflowEntity(entityTypes.IMAGE),
+                new WorkflowEntity(entityTypes.IMAGE, entityId1),
+                new WorkflowEntity(entityTypes.COMPONENT),
+                new WorkflowEntity(entityTypes.COMPONENT, entityId2),
+                new WorkflowEntity(entityTypes.CVE),
+                new WorkflowEntity(entityTypes.CVE, entityId3)
+            ],
+            {},
+            {},
+            2
+        );
+        expect(workflowState.pushList(entityTypes.DEPLOYMENT).paging).not.toEqual(2);
+    });
+
+    it('does not clear pagination when pushing a list to the stack that does not overflow', () => {
+        const workflowState = new WorkflowState(
+            useCases.VULN_MANAGEMENT,
+            [
+                new WorkflowEntity(entityTypes.CLUSTER),
+                new WorkflowEntity(entityTypes.NAMESPACE, entityId2)
+            ],
+            {},
+            {},
+            2
+        );
+        expect(workflowState.pushList(entityTypes.IMAGE).paging).toEqual(2);
+    });
+
     it('pops the last entity off of the stack', () => {
         expect(getEntityState().pop().stateStack).toEqual([
             { t: entityTypes.CLUSTER, i: entityId1 }
