@@ -9,6 +9,7 @@ const PanelButton = ({
     text,
     onClick,
     className,
+    dataTestId,
     disabled,
     tooltip,
     alwaysVisibleText
@@ -27,6 +28,7 @@ const PanelButton = ({
                 className={className}
                 onClick={onClick}
                 disabled={disabled}
+                data-testid={dataTestId}
                 data-test-id={`${text.toLowerCase()}-button`}
             >
                 {icon && <span className="flex items-center">{icon}</span>}
@@ -50,6 +52,7 @@ PanelButton.propTypes = {
     text: PropTypes.string,
     onClick: PropTypes.func.isRequired,
     className: PropTypes.string,
+    dataTestId: PropTypes.string,
     disabled: PropTypes.bool,
     tooltip: PropTypes.node,
     alwaysVisibleText: PropTypes.bool
@@ -60,6 +63,7 @@ PanelButton.defaultProps = {
     icon: null,
     text: '',
     className: '',
+    dataTestId: '',
     disabled: false,
     tooltip: '',
     alwaysVisibleText: false

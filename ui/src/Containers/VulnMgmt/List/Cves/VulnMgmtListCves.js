@@ -321,12 +321,14 @@ const VulnMgmtCves = ({
             <RowActionButton
                 text="Add to Policy"
                 onClick={addToPolicy(id)}
+                date-testid="row-action-add-to-policy"
                 icon={<Icon.Plus className="mt-1 h-4 w-4" />}
             />
             <RowActionButton
                 text={`${viewingSuppressed ? 'Unsuppress CVE' : 'Suppress CVE'}`}
                 border="border-l-2 border-base-400"
                 onClick={toggleCveSuppression(id)}
+                date-testid="row-action-toggle-suppression"
                 icon={
                     viewingSuppressed ? (
                         <Icon.Bell className="mt-1 h-4 w-4" />
@@ -349,6 +351,7 @@ const VulnMgmtCves = ({
                 onClick={addToPolicy()}
                 disabled={selectedCveIds.length === 0}
                 tooltip="Add Selected CVEs to Policy"
+                dataTestId="panel-button-add-cves-to-policy"
             >
                 Add to Policy
             </PanelButton>
@@ -364,6 +367,7 @@ const VulnMgmtCves = ({
                 onClick={toggleCveSuppression()}
                 disabled={selectedCveIds.length === 0}
                 tooltip={`${toggleButtonText} Selected CVEs`}
+                dataTestId="panel-button-toggle-suppress-selected-cves"
             >
                 {toggleButtonText}
             </PanelButton>
@@ -379,6 +383,7 @@ const VulnMgmtCves = ({
                 className="btn-icon btn-tertiary ml-2"
                 onClick={toggleSuppressedView}
                 tooltip={`${viewButtonText} CVEs`}
+                dataTestId="panel-button-toggle-suppressed-cves-view"
             >
                 {viewButtonText}
             </PanelButton>
