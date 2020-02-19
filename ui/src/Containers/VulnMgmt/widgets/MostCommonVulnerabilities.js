@@ -14,9 +14,8 @@ import NoResultsMessage from 'Components/NoResultsMessage';
 import queryService from 'modules/queryService';
 import dateTimeFormat from 'constants/dateTimeFormat';
 import entityTypes from 'constants/entityTypes';
-import { parseCVESearch } from 'utils/vulnerabilityUtils';
-// import { cveSortFields } from 'constants/sortFields';
-// import { WIDGET_PAGINATION_START_OFFSET } from 'constants/workflowPages.constants';
+import { cveSortFields } from 'constants/sortFields';
+import { WIDGET_PAGINATION_START_OFFSET } from 'constants/workflowPages.constants';
 
 const MOST_COMMON_VULNERABILITIES = gql`
     query mostCommonVulnerabilities($query: String, $vulnPagination: Pagination) {
@@ -83,23 +82,20 @@ const processData = (data, workflowState, limit) => {
 const MostCommonVulnerabilities = ({ entityContext, search, limit }) => {
     const entityContextObject = queryService.entityContextToQueryObject(entityContext); // deals with BE inconsistency
 
-    const parsedSearch = parseCVESearch(search); // hack until isFixable is allowed in search
-
-    const queryObject = { ...entityContextObject, ...parsedSearch }; // Combine entity context and search
+    const queryObject = { ...entityContextObject, ...search }; // Combine entity context and search
     const query = queryService.objectToWhereClause(queryObject); // get final gql query string
 
     const { loading, data = {} } = useQuery(MOST_COMMON_VULNERABILITIES, {
         variables: {
             query,
-            vulnPagination: {} // @TODO: remove this line, and uncomment the block below, after "Deployment Count" available for sorting
-            // vulnPagination: queryService.getPagination(
-            //     {
-            //         id: cveSortFields.DEPLOYMENT_COUNT,
-            //         desc: true
-            //     },
-            //     WIDGET_PAGINATION_START_OFFSET,
-            //     limit
-            // )
+            vulnPagination: queryService.getPagination(
+                {
+                    id: cveSortFields.DEPLOYMENT_COUNT,
+                    desc: true
+                },
+                WIDGET_PAGINATION_START_OFFSET,
+                limit
+            )
         }
     });
 
@@ -119,12 +115,10 @@ const MostCommonVulnerabilities = ({ entityContext, search, limit }) => {
 
     const viewAllURL = workflowState
         .pushList(entityTypes.CVE)
-        // @TODO uncomment once these sorts are supported by backend on CVE list
-        // .setSort([
-        //     { id: cveSortFields.DEPLOYMENT_COUNT, desc: true },
-        //     { id: cveSortFields.CVSS_SCORE, desc: true },
-        //     { id: cveSortFields.ENV_IMPACT, desc: true }
-        // ])
+        .setSort([
+            { id: cveSortFields.DEPLOYMENT_COUNT, desc: true },
+            { id: cveSortFields.CVSS_SCORE, desc: true }
+        ])
         .toUrl();
 
     return (
