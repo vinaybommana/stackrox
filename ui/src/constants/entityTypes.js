@@ -48,9 +48,8 @@ export const searchCategories = {
     NODE: 'NODES',
     CLUSTER: 'CLUSTERS',
     CONTROL: 'COMPLIANCE',
-    // @TODO, replace the following with "CVES" or "VULNERABILTIIES" when those categories are available
-    CVE: 'IMAGES',
-    COMPONENT: 'IMAGES',
+    CVE: 'VULNERABILITIES',
+    COMPONENT: 'IMAGE_COMPONENTS',
     DEPLOYMENT: 'DEPLOYMENTS',
     SECRET: 'SECRETS',
     POLICY: 'POLICIES',
