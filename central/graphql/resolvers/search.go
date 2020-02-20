@@ -61,13 +61,13 @@ func (r *Pagination) AsV1Pagination() *v1.Pagination {
 	}
 	return &v1.Pagination{
 		Offset: func() int32 {
-			if r.Offset == nil {
+			if r.Offset == nil || *r.Offset < 0 {
 				return 0
 			}
 			return *r.Offset
 		}(),
 		Limit: func() int32 {
-			if r.Limit == nil {
+			if r.Limit == nil || *r.Limit < 0 {
 				return 0
 			}
 			return *r.Limit

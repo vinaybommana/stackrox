@@ -302,6 +302,12 @@ func (pw paginationWrapper) paginate(datSlice interface{}, err error) (interface
 
 	offset := int(pw.pv.GetOffset())
 	limit := int(pw.pv.GetLimit())
+	if offset < 0 {
+		offset = 0
+	}
+	if limit < 0 {
+		limit = 0
+	}
 
 	remnants := datValue.Len() - offset
 	if remnants <= 0 {
