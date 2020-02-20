@@ -1291,3 +1291,15 @@ h6 {
     background-repeat: repeat-x;
     background-position: bottom right;
 }
+
+/* multi-line truncation:
+   (not available in Tailwind)
+   see https://css-tricks.com/almanac/properties/l/line-clamp/
+*/
+.line-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  padding-bottom: 1px; /* necessary to fix bug where descenders are cut off */
+}

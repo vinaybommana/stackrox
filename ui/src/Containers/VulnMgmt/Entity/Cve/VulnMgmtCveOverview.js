@@ -10,7 +10,6 @@ import Widget from 'Components/Widget';
 import dateTimeFormat from 'constants/dateTimeFormat';
 import entityTypes from 'constants/entityTypes';
 import { getSeverityChipType } from 'utils/vulnerabilityUtils';
-import { truncate } from 'utils/textUtils';
 import RelatedEntitiesSideList from '../RelatedEntitiesSideList';
 
 const emptyCve = {
@@ -104,8 +103,6 @@ const VulnMgmtCveOverview = ({ data, entityContext }) => {
     const severityStyle = getSeverityChipType(cvss);
     const newEntityContext = { ...entityContext, [entityTypes.CVE]: cve };
 
-    const truncatedSummary = truncate(summary);
-
     return (
         <div className="flex h-full">
             <div className="flex flex-col flex-grow min-w-0">
@@ -152,7 +149,7 @@ const VulnMgmtCveOverview = ({ data, entityContext }) => {
                                         </span>
                                     </div>
                                 </div>
-                                <div className="p-4 pb-12 leading-loose">{truncatedSummary}</div>
+                                <div className="p-4 pb-12 leading-loose">{summary}</div>
                             </div>
                         </Widget>
                         <Metadata

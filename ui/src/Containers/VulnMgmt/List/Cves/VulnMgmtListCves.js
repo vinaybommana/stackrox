@@ -27,7 +27,6 @@ import { actions as notificationActions } from 'reducers/notifications';
 import { updateCveSuppressedState } from 'services/VulnerabilitiesService';
 import removeEntityContextColumns from 'utils/tableUtils';
 import { doesSearchContain } from 'utils/searchUtils';
-import { truncate } from 'utils/textUtils';
 import { cveSortFields } from 'constants/sortFields';
 
 import { VULN_CVE_LIST_FRAGMENT } from 'Containers/VulnMgmt/VulnMgmt.fragments';
@@ -206,14 +205,11 @@ export function getCveTableColumns(workflowState) {
     return removeEntityContextColumns(tableColumns, workflowState);
 }
 
-const maxLengthForSummary = 360; // based on showing up to approximately 2 lines before table starts scrolling horizontally
-
 export function renderCveDescription(row) {
     const { original } = row;
-    const truncatedSummary = truncate(original.summary, maxLengthForSummary);
     return (
         <div className="hover:bg-transparent px-2 pb-4 pt-1 text-base-500">
-            {truncatedSummary || 'No description available.'}
+            <div className="line-clamp">{original.summary || 'No description available.'}</div>
         </div>
     );
 }
