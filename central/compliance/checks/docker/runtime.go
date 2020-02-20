@@ -11,6 +11,7 @@ import (
 	"github.com/stackrox/rox/central/compliance/framework"
 	"github.com/stackrox/rox/pkg/docker/types"
 	"github.com/stackrox/rox/pkg/set"
+	"github.com/stackrox/rox/pkg/stringutils"
 )
 
 func init() {
@@ -404,10 +405,22 @@ func utsNamespace(ctx framework.ComplianceContext, container types.ContainerJSON
 	}
 }
 
+func isRootUser(user string) bool {
+	return user == "" || user == "root" || user == "0"
+}
+
 func usersInContainer(ctx framework.ComplianceContext, container types.ContainerJSON) {
-	if container.Config != nil && (container.Config.User == "" || container.Config.User == "root" || container.Config.User == "0") {
+	user := container.Config.User
+
+	if isRootUser(user) {
+		framework.Failf(ctx, "Container %q is running as the root user", container.Name)
+		return
+	}
+
+	user, _ = stringutils.Split2(user, ":")
+	if isRootUser(user) {
 		framework.Failf(ctx, "Container %q is running as the root user", container.Name)
 	} else {
-		framework.Passf(ctx, "Container %q is running as the user %q", container.Name, container.Config.User)
+		framework.Passf(ctx, "Container %q is running as the user %q", container.Name, user)
 	}
 }

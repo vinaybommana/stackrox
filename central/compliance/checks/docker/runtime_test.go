@@ -727,6 +727,60 @@ func TestDockerRuntimeChecks(t *testing.T) {
 			},
 			status: framework.FailStatus,
 		},
+		{
+			name: "CIS_Docker_v1_2_0:4_1",
+			container: types.ContainerJSON{
+				Config: &types.Config{
+					User: "0",
+				},
+			},
+			status: framework.FailStatus,
+		},
+		{
+			name: "CIS_Docker_v1_2_0:4_1",
+			container: types.ContainerJSON{
+				Config: &types.Config{
+					User: "0:0",
+				},
+			},
+			status: framework.FailStatus,
+		},
+		{
+			name: "CIS_Docker_v1_2_0:4_1",
+			container: types.ContainerJSON{
+				Config: &types.Config{
+					User: "0:70",
+				},
+			},
+			status: framework.FailStatus,
+		},
+		{
+			name: "CIS_Docker_v1_2_0:4_1",
+			container: types.ContainerJSON{
+				Config: &types.Config{
+					User: "70:70",
+				},
+			},
+			status: framework.PassStatus,
+		},
+		{
+			name: "CIS_Docker_v1_2_0:4_1",
+			container: types.ContainerJSON{
+				Config: &types.Config{
+					User: "root:root",
+				},
+			},
+			status: framework.FailStatus,
+		},
+		{
+			name: "CIS_Docker_v1_2_0:4_1",
+			container: types.ContainerJSON{
+				Config: &types.Config{
+					User: "stackrox:stackrox",
+				},
+			},
+			status: framework.PassStatus,
+		},
 	}
 
 	indicators := []*storage.ProcessIndicator{
