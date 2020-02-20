@@ -7,7 +7,6 @@ package mocks
 import (
 	proto "github.com/gogo/protobuf/proto"
 	gomock "github.com/golang/mock/gomock"
-	indexer "github.com/stackrox/rox/pkg/dackbox/indexer"
 	reflect "reflect"
 )
 
@@ -47,68 +46,4 @@ func (m *MockWrapper) Wrap(key []byte, msg proto.Message) (string, interface{}) 
 func (mr *MockWrapperMockRecorder) Wrap(key, msg interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Wrap", reflect.TypeOf((*MockWrapper)(nil).Wrap), key, msg)
-}
-
-// MockWrapperRegistry is a mock of WrapperRegistry interface
-type MockWrapperRegistry struct {
-	ctrl     *gomock.Controller
-	recorder *MockWrapperRegistryMockRecorder
-}
-
-// MockWrapperRegistryMockRecorder is the mock recorder for MockWrapperRegistry
-type MockWrapperRegistryMockRecorder struct {
-	mock *MockWrapperRegistry
-}
-
-// NewMockWrapperRegistry creates a new mock instance
-func NewMockWrapperRegistry(ctrl *gomock.Controller) *MockWrapperRegistry {
-	mock := &MockWrapperRegistry{ctrl: ctrl}
-	mock.recorder = &MockWrapperRegistryMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use
-func (m *MockWrapperRegistry) EXPECT() *MockWrapperRegistryMockRecorder {
-	return m.recorder
-}
-
-// RegisterWrapper mocks base method
-func (m *MockWrapperRegistry) RegisterWrapper(prefix []byte, wrapper indexer.Wrapper) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterWrapper", prefix, wrapper)
-}
-
-// RegisterWrapper indicates an expected call of RegisterWrapper
-func (mr *MockWrapperRegistryMockRecorder) RegisterWrapper(prefix, wrapper interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterWrapper", reflect.TypeOf((*MockWrapperRegistry)(nil).RegisterWrapper), prefix, wrapper)
-}
-
-// Matches mocks base method
-func (m *MockWrapperRegistry) Matches(key []byte) bool {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Matches", key)
-	ret0, _ := ret[0].(bool)
-	return ret0
-}
-
-// Matches indicates an expected call of Matches
-func (mr *MockWrapperRegistryMockRecorder) Matches(key interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Matches", reflect.TypeOf((*MockWrapperRegistry)(nil).Matches), key)
-}
-
-// Wrap mocks base method
-func (m *MockWrapperRegistry) Wrap(key []byte, msg proto.Message) (string, interface{}) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Wrap", key, msg)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(interface{})
-	return ret0, ret1
-}
-
-// Wrap indicates an expected call of Wrap
-func (mr *MockWrapperRegistryMockRecorder) Wrap(key, msg interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Wrap", reflect.TypeOf((*MockWrapperRegistry)(nil).Wrap), key, msg)
 }

@@ -68,7 +68,7 @@ func initializeDackBox() {
 		globaldb.RegisterBucket(DirtyBucket, "Dirty Keys")
 		globaldb.RegisterBucket(ReindexIfMissingBucket, "Bucket for reindexed state")
 
-		toIndex = queue.NewWaitableQueue(queue.NewQueue())
+		toIndex = queue.NewWaitableQueue()
 		registry = indexer.NewWrapperRegistry()
 		globalKeyLock = concurrency.NewKeyFence()
 

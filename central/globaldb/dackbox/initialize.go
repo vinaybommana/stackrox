@@ -20,6 +20,7 @@ import (
 	imagecomponentEdgeIndex "github.com/stackrox/rox/central/imagecomponentedge/index"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/pkg/badgerhelper"
+	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/dackbox"
 	"github.com/stackrox/rox/pkg/dackbox/crud"
 	"github.com/stackrox/rox/pkg/dackbox/indexer"
@@ -95,6 +96,7 @@ func RemoveReindexBucket(db *badger.DB) error {
 
 // Init runs all registered initialization functions.
 func Init(dacky *dackbox.DackBox, indexQ queue.WaitableQueue, registry indexer.WrapperRegistry, reindexBucket, dirtyBucket, reindexValue []byte) error {
+	synchronized := concurrency.NewSignal()
 	for _, initialized := range initializedBuckets {
 		// Register the wrapper to index the objects.
 		registry.RegisterWrapper(initialized.bucket, initialized.wrapper)
@@ -105,9 +107,14 @@ func Init(dacky *dackbox.DackBox, indexQ queue.WaitableQueue, registry indexer.W
 			return errors.Wrap(err, "unable to read dackbox backup state")
 		}
 
-		if err := initializeBucket(dacky, indexQ, needsReindex, initialized.category, dirtyBucket, initialized.bucket, initialized.reader); err != nil {
+		if err := queueBucketForIndexing(dacky, indexQ, needsReindex, initialized.category, dirtyBucket, initialized.bucket, initialized.reader); err != nil {
 			return errors.Wrap(err, "unable to initialize dackbox, initialization function failed")
 		}
+
+		// Wait for the reindexing of the bucket to finish.
+		synchronized.Reset()
+		indexQ.PushSignal(&synchronized)
+		synchronized.Wait()
 
 		if err := setDoesNotNeedReindex(dacky, reindexBucket, initialized.bucket, reindexValue); err != nil {
 			return errors.Wrap(err, "unable to set dackbox backup state")
@@ -130,7 +137,7 @@ func readNeedsReindex(dacky *dackbox.DackBox, reindexBucket, bucket []byte) (boo
 	return false, nil
 }
 
-func initializeBucket(dacky *dackbox.DackBox, indexQ queue.WaitableQueue, needsReindex bool, category v1.SearchCategory, dirtyBucket, bucket []byte, reader crud.Reader) error {
+func queueBucketForIndexing(dacky *dackbox.DackBox, indexQ queue.WaitableQueue, needsReindex bool, category v1.SearchCategory, dirtyBucket, bucket []byte, reader crud.Reader) error {
 	defer debug.FreeOSMemory()
 
 	txn := dacky.NewReadOnlyTransaction()
@@ -155,9 +162,9 @@ func initializeBucket(dacky *dackbox.DackBox, indexQ queue.WaitableQueue, needsR
 		}
 	}
 	if len(keys) == 0 {
-		log.Infof("no keys to reindex in bucket: %s", string(bucket))
+		log.Infof("no keys to reindex in bucket: %s", bucket)
 	} else {
-		log.Infof("indexing %d keys in bucket: %s", len(keys), string(bucket))
+		log.Infof("indexing %d keys in bucket: %s", len(keys), bucket)
 	}
 
 	// Push them into the indexing queue.
@@ -168,9 +175,6 @@ func initializeBucket(dacky *dackbox.DackBox, indexQ queue.WaitableQueue, needsR
 		}
 		indexQ.Push(key, msg)
 	}
-
-	// Wait for the queue of things to index to be exhausted.
-	<-indexQ.Empty().Done()
 
 	return nil
 }

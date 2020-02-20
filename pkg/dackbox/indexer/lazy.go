@@ -25,8 +25,6 @@ type Acker func(keys ...[]byte) error
 
 // Lazy represents an interface for lazily indexing values that have been written to DackBox.
 type Lazy interface {
-	Mark([]byte, proto.Message)
-
 	Start()
 	Stop()
 }
@@ -39,6 +37,7 @@ func NewLazy(toIndex queue.WaitableQueue, wrapper Wrapper, index bleve.Index, ac
 		index:      index,
 		acker:      acker,
 		toIndex:    toIndex,
+		buff:       NewBuffer(maxBatchSize),
 		stopSignal: concurrency.NewSignal(),
 	}
 }
@@ -49,11 +48,9 @@ type lazyImpl struct {
 	acker   Acker
 	toIndex queue.WaitableQueue
 
-	stopSignal concurrency.Signal
-}
+	buff Buffer
 
-func (li *lazyImpl) Mark(key []byte, value proto.Message) {
-	li.toIndex.Push(key, value)
+	stopSignal concurrency.Signal
 }
 
 func (li *lazyImpl) Start() {
@@ -69,8 +66,6 @@ func (li *lazyImpl) runIndexing() {
 	ticker := time.NewTicker(procInterval)
 	defer ticker.Stop()
 
-	valuesToIndex := make(map[string]interface{})
-	keysToAck := make([][]byte, 0, maxBatchSize)
 	for {
 		select {
 		case <-li.stopSignal.Done():
@@ -78,38 +73,56 @@ func (li *lazyImpl) runIndexing() {
 
 		// Don't wait more than the interval to index.
 		case <-ticker.C:
-			li.flush(keysToAck, valuesToIndex)
-			keysToAck = keysToAck[:0]
-			valuesToIndex = make(map[string]interface{})
+			li.flush()
 
 		// Collect items from the queue to index.
 		case <-li.toIndex.NotEmpty().Done():
-			key, value := li.toIndex.Pop()
-			if key == nil {
-				continue
-			}
-
-			indexedKey, indexedValue := li.wrapper.Wrap(key, value)
-			if indexedKey == "" {
-				log.Errorf("no wrapper registered for key: %s", string(key))
-				continue
-			}
-			keysToAck = append(keysToAck, key)
-			valuesToIndex[indexedKey] = indexedValue
-
-			// Don't ack more than the max at a time.
-			if len(keysToAck) >= maxBatchSize || len(valuesToIndex) >= maxBatchSize {
-				li.flush(keysToAck, valuesToIndex)
-				keysToAck = keysToAck[:0]
-				valuesToIndex = make(map[string]interface{})
-			}
+			li.consumeFromQueue()
 		}
 	}
 }
 
-func (li *lazyImpl) flush(keysToAck [][]byte, valuesToIndex map[string]interface{}) {
-	li.indexItems(valuesToIndex)
-	li.ackKeys(keysToAck)
+func (li *lazyImpl) consumeFromQueue() {
+	for li.toIndex.Length() > 0 {
+		key, value, signal := li.toIndex.Pop()
+		if key == nil && signal == nil {
+			return
+		}
+
+		if key != nil {
+			li.handleKeyValue(key, value)
+		} else {
+			li.buff.AddSignalToSend(signal)
+		}
+
+		// Don't ack more than the max at a time.
+		if li.buff.IsFull() {
+			li.flush()
+		}
+	}
+}
+
+func (li *lazyImpl) handleKeyValue(key []byte, value proto.Message) {
+	indexedKey, indexedValue := li.wrapper.Wrap(key, value)
+	if indexedKey == "" {
+		log.Errorf("no wrapper registered for key: %s", key)
+		return
+	}
+	li.buff.AddKeyToAck(key)
+	li.buff.AddValueToIndex(indexedKey, indexedValue)
+}
+
+func (li *lazyImpl) flush() {
+	// Index values in the buffer.
+	if len(li.buff.ValuesToIndex()) > 0 {
+		li.indexItems(li.buff.ValuesToIndex())
+		li.ackKeys(li.buff.KeysToAck())
+	}
+	// Send signals in the buffer.
+	if len(li.buff.SignalsToSend()) > 0 {
+		li.sendSignals(li.buff.SignalsToSend())
+	}
+	li.buff.Reset()
 }
 
 func (li *lazyImpl) indexItems(itemsToIndex map[string]interface{}) {
@@ -136,12 +149,18 @@ func (li *lazyImpl) ackKeys(keysToAck [][]byte) {
 	}
 }
 
+func (li *lazyImpl) sendSignals(signals []*concurrency.Signal) {
+	for _, signal := range signals {
+		signal.Signal()
+	}
+}
+
 // Helper for printing key values.
 type printableKeys [][]byte
 
 func (pk printableKeys) String() string {
 	keys := make([]string, 0, len(pk))
-	for _, key := range keys {
+	for _, key := range pk {
 		keys = append(keys, string(key))
 	}
 	return strings.Join(keys, ", ")

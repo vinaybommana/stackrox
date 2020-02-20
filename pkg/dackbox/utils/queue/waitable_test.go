@@ -9,7 +9,7 @@ import (
 )
 
 func TestWaitableQueue(t *testing.T) {
-	q := NewWaitableQueue(NewQueue())
+	q := NewWaitableQueue()
 
 	input := [][]byte{
 		[]byte("id1"),
@@ -24,7 +24,7 @@ func TestWaitableQueue(t *testing.T) {
 
 	var results [][]byte
 	for q.Length() > 0 {
-		k, _ := q.Pop()
+		k, _, _ := q.Pop()
 		results = append(results, k)
 	}
 	assert.Equal(t, input, results)
@@ -36,7 +36,7 @@ func TestWaitableQueue(t *testing.T) {
 
 	results = [][]byte{}
 	for q.Length() > 0 {
-		k, _ := q.Pop()
+		k, _, _ := q.Pop()
 		results = append(results, k)
 	}
 
@@ -44,7 +44,7 @@ func TestWaitableQueue(t *testing.T) {
 }
 
 func TestWaitableQueueConcurrent(t *testing.T) {
-	q := NewWaitableQueue(NewQueue())
+	q := NewWaitableQueue()
 
 	input := [][]byte{
 		[]byte("id1"),
@@ -53,41 +53,30 @@ func TestWaitableQueueConcurrent(t *testing.T) {
 		[]byte("id4"),
 	}
 
-	assertableSignal := concurrency.NewSignal()
 	var results [][]byte
 	go func() {
-		for len(results) < 4 {
+		for len(results) < 5 {
 			// Wait for q to have values.
 			<-q.NotEmpty().Done()
 
 			// Pop the next value.
-			k, _ := q.Pop()
-			results = append(results, k)
-			assertableSignal.Signal()
+			k, _, s := q.Pop()
+			if k != nil {
+				results = append(results, k)
+			} else if s != nil {
+				s.Signal()
+			}
 		}
 	}()
 
 	// Add values to the queue.
 	q.Push(input[0], nil)
 	q.Push(input[1], nil)
-
-	// Wait for the q to empty.
-	select {
-	case <-time.After(time.Second):
-		assert.Fail(t, "assertable never returned")
-	case <-q.Empty().Done():
-	}
-
-	// Add more values to the queue.
 	q.Push(input[2], nil)
 	q.Push(input[3], nil)
 
-	// Wait for the q to empty again.
-	select {
-	case <-time.After(time.Second):
-		assert.Fail(t, "assertable never returned")
-	case <-q.Empty().Done():
-	}
+	assertableSignal := concurrency.NewSignal()
+	q.PushSignal(&assertableSignal)
 
 	// Wait for the thread building the results to be done.
 	select {

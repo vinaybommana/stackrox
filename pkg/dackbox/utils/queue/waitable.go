@@ -6,69 +6,91 @@ import (
 	"github.com/stackrox/rox/pkg/sync"
 )
 
+// AcceptsKeyValue is an interface that accepts a key and it's proto value for processing.
+type AcceptsKeyValue interface {
+	Push(key []byte, value proto.Message)
+}
+
 // WaitableQueue is a thread safe queue with an extra provided function that allows you to wait for a value to pop.
 type WaitableQueue interface {
-	Queue
+	Push(key []byte, value proto.Message)
+	PushSignal(signal *concurrency.Signal)
+
+	Pop() ([]byte, proto.Message, *concurrency.Signal)
+
+	Length() int
 
 	NotEmpty() concurrency.Waitable
-	Empty() concurrency.Waitable
 }
 
 // NewWaitableQueue return a new instance of a WaitableQueue.
-func NewWaitableQueue(base Queue) WaitableQueue {
+func NewWaitableQueue() WaitableQueue {
 	return &waitableQueueImpl{
+		base:        newInternalQueue(),
 		notEmptySig: concurrency.NewSignal(),
-		base:        base,
 	}
 }
 
 type waitableQueueImpl struct {
-	lock        sync.Mutex
-	emptySig    concurrency.Signal
+	lock sync.Mutex
+
+	base        internalQueue
 	notEmptySig concurrency.Signal
-	base        Queue
 }
 
 func (q *waitableQueueImpl) NotEmpty() concurrency.Waitable {
 	return q.notEmptySig.WaitC()
 }
 
-func (q *waitableQueueImpl) Empty() concurrency.Waitable {
-	return q.emptySig.WaitC()
+func (q *waitableQueueImpl) Push(key []byte, value proto.Message) {
+	q.push(queuedItem{
+		key:   key,
+		value: value,
+	})
 }
 
-func (q *waitableQueueImpl) Push(key []byte, value proto.Message) {
+func (q *waitableQueueImpl) PushSignal(signal *concurrency.Signal) {
+	q.push(queuedItem{
+		signal: signal,
+	})
+}
+
+func (q *waitableQueueImpl) push(qi queuedItem) {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 
 	q.notEmptySig.Signal()
-	q.emptySig.Reset()
 
-	q.base.Push(key, value)
+	q.base.push(qi)
 }
 
-func (q *waitableQueueImpl) Pop() (key []byte, value proto.Message) {
+func (q *waitableQueueImpl) Pop() ([]byte, proto.Message, *concurrency.Signal) {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 
-	key, value = q.base.Pop()
-	if q.base.Length() == 0 {
-		q.notEmptySig.Reset()
-		q.emptySig.Signal()
+	qiInter := q.base.pop()
+	if qiInter == nil {
+		return nil, nil, nil
 	}
-	return key, value
-}
 
-func (q *waitableQueueImpl) Contains(key []byte) bool {
-	q.lock.Lock()
-	defer q.lock.Unlock()
+	if q.base.length() == 0 {
+		q.notEmptySig.Reset()
+	}
 
-	return q.base.Contains(key)
+	qi := qiInter.(queuedItem)
+	return qi.key, qi.value, qi.signal
 }
 
 func (q *waitableQueueImpl) Length() int {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 
-	return q.base.Length()
+	return q.base.length()
+}
+
+// Helper class that holds a value with a signal.
+type queuedItem struct {
+	key    []byte
+	value  proto.Message
+	signal *concurrency.Signal
 }

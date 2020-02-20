@@ -11,7 +11,6 @@ import (
 	"github.com/stackrox/rox/pkg/badgerhelper"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/dackbox"
-	"github.com/stackrox/rox/pkg/dackbox/utils/queue"
 	"github.com/stackrox/rox/pkg/testutils"
 	"github.com/stretchr/testify/suite"
 )
@@ -26,7 +25,6 @@ type ImageStoreTestSuite struct {
 	db    *badger.DB
 	dir   string
 	dacky *dackbox.DackBox
-	dirty queue.Queue
 
 	store      store.Store
 	cveStorage cveStore.Store
@@ -39,8 +37,7 @@ func (suite *ImageStoreTestSuite) SetupSuite() {
 		suite.FailNowf("failed to create DB: %+v", err.Error())
 	}
 
-	suite.dirty = queue.NewQueue()
-	suite.dacky, err = dackbox.NewDackBox(suite.db, suite.dirty, []byte("graph"), []byte("dirty"), []byte("valid"))
+	suite.dacky, err = dackbox.NewDackBox(suite.db, nil, []byte("graph"), []byte("dirty"), []byte("valid"))
 	if err != nil {
 		suite.FailNowf("failed to create counter: %+v", err.Error())
 	}
