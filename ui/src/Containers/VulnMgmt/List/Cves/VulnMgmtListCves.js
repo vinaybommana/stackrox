@@ -68,7 +68,7 @@ export function getCveTableColumns(workflowState) {
         },
         {
             Header: `Fixable`,
-            headerClassName: `w-20 text-center ${defaultHeaderClassName}`,
+            headerClassName: `w-20 text-center ${nonSortableHeaderClassName}`,
             className: `w-20 ${defaultColumnClassName}`,
             // eslint-disable-next-line
             Cell: ({ original, pdf }) => {
@@ -81,7 +81,8 @@ export function getCveTableColumns(workflowState) {
             },
             accessor: 'isFixable',
             id: 'isFixable',
-            sortField: cveSortFields.FIXABLE
+            sortField: cveSortFields.FIXABLE,
+            sortable: false
         },
         {
             Header: `CVSS Score`,
