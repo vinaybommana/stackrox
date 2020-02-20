@@ -1,5 +1,4 @@
 import cloneDeep from 'lodash/cloneDeep';
-import uniqBy from 'lodash/uniqBy';
 
 import entityRelationships from 'modules/entityRelationships';
 import generateURL from 'modules/URLGenerator';
@@ -28,31 +27,45 @@ export class WorkflowEntity {
 
 // Returns true if stack provided makes sense
 export function isStackValid(stack) {
-    const existingEntityTypes = uniqBy(stack, 'entityType');
-
-    // if the stack is smaller or equal to two entity types, it is always valid
-    if (Object.keys(existingEntityTypes).length <= 2) return true;
-
     // stack is invalid when the stack is in one of three states:
     //
     // 1) entity -> (entity parent list) -> entity parent -> nav away
     // 2) entity -> (entity matches list) -> match entity -> nav away
     // 3) entity -> ... -> same entity (nav away)
 
-    let isParentState;
-    let isMatchState;
-    let isDuplicateState;
+    let isParentState = false;
+    let isMatchState = false;
+    let isDuplicateState = false;
 
     const entityTypeMap = {};
+    let entityTypeCount = 0;
 
     stack.forEach((entity, i) => {
         const { entityType, entityId } = entity;
 
+        // checking if the entity type already exists in the map
         if (entityTypeMap[entityType]) {
-            isDuplicateState = !!entityTypeMap[entityType];
+            if (entityId) {
+                // if there is an entityId for the current entity, it's a duplicate if an entity exists for that type
+                isDuplicateState = !!entityTypeMap[entityType].hasEntity;
+            } else {
+                // else if the current entity is a list, it's a duplicate if an entity or list for that type preexists.
+                // we're using !! to force a truthy value here since hasEntity and hasList can be undefined
+                isDuplicateState =
+                    !!entityTypeMap[entityType].hasEntity || !!entityTypeMap[entityType].hasList;
+            }
         }
+        if (!entityTypeMap[entityType]) {
+            entityTypeCount += 1;
+            entityTypeMap[entityType] = {};
+        }
+        if (entityId) {
+            entityTypeMap[entityType].hasEntity = true;
+        } else {
+            entityTypeMap[entityType].hasList = true;
+        }
+
         if (i > 0) {
-            entityTypeMap[entityType] = entityId;
             const { entityType: prevType } = stack[i - 1];
             if (prevType !== entityType) {
                 if (!isParentState) {
@@ -81,7 +94,9 @@ export function isStackValid(stack) {
         }
         return false;
     });
-    return !isParentState && !isMatchState && !isDuplicateState;
+    // if there is a duplicate element in the stack, it's always invalid
+    // else if the stack is smaller or equal to two entity types, it is valid regardless of relationship type
+    return !isDuplicateState && (entityTypeCount <= 2 || (!isParentState && !isMatchState));
 }
 
 // Resets the current state based on minimal parameters

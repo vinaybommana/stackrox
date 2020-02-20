@@ -141,145 +141,158 @@ describe('WorkflowState', () => {
         ]);
     });
 
-    it('pushes a parent relationship onto the stack', () => {
-        // parent relationship (from entity page)
-        let workflowState = new WorkflowState(useCases.VULN_MANAGEMENT, [
-            new WorkflowEntity(entityTypes.DEPLOYMENT, entityId1)
-        ]);
+    describe('WorkflowState parent relationship logic', () => {
+        it('pushes a parent relationship onto the stack', () => {
+            // parent relationship (from entity page)
+            let workflowState = new WorkflowState(useCases.VULN_MANAGEMENT, [
+                new WorkflowEntity(entityTypes.DEPLOYMENT, entityId1)
+            ]);
 
-        expect(workflowState.pushList(entityTypes.NAMESPACE).stateStack).toEqual([
-            { t: entityTypes.DEPLOYMENT, i: entityId1 },
-            { t: entityTypes.NAMESPACE }
-        ]);
+            expect(workflowState.pushList(entityTypes.NAMESPACE).stateStack).toEqual([
+                { t: entityTypes.DEPLOYMENT, i: entityId1 },
+                { t: entityTypes.NAMESPACE }
+            ]);
 
-        // parent relationship (from list page)
-        workflowState = new WorkflowState(useCases.VULN_MANAGEMENT, [
-            new WorkflowEntity(entityTypes.DEPLOYMENT),
-            new WorkflowEntity(entityTypes.DEPLOYMENT, entityId1)
-        ]);
-        expect(workflowState.pushList(entityTypes.NAMESPACE).stateStack).toEqual([
-            { t: entityTypes.DEPLOYMENT },
-            { t: entityTypes.DEPLOYMENT, i: entityId1 },
-            { t: entityTypes.NAMESPACE }
-        ]);
+            // parent relationship (from list page)
+            workflowState = new WorkflowState(useCases.VULN_MANAGEMENT, [
+                new WorkflowEntity(entityTypes.DEPLOYMENT),
+                new WorkflowEntity(entityTypes.DEPLOYMENT, entityId1)
+            ]);
+            expect(workflowState.pushList(entityTypes.NAMESPACE).stateStack).toEqual([
+                { t: entityTypes.DEPLOYMENT },
+                { t: entityTypes.DEPLOYMENT, i: entityId1 },
+                { t: entityTypes.NAMESPACE }
+            ]);
+        });
+
+        it('pushes a parent relationship onto the stack and overflows from list page', () => {
+            // parent relationship + 1 (list page)
+            let workflowState = new WorkflowState(useCase, [
+                new WorkflowEntity(entityTypes.DEPLOYMENT),
+                new WorkflowEntity(entityTypes.DEPLOYMENT, entityId1),
+                new WorkflowEntity(entityTypes.NAMESPACE),
+                new WorkflowEntity(entityTypes.NAMESPACE, entityId2),
+                new WorkflowEntity(entityTypes.SECRET),
+                new WorkflowEntity(entityTypes.SECRET, entityId3)
+            ]);
+            expect(workflowState.pushList(entityTypes.DEPLOYMENT).stateStack).toEqual([
+                { t: entityTypes.SECRET, i: entityId3 },
+                { t: entityTypes.DEPLOYMENT }
+            ]);
+
+            // parent relationship + 1 (list page)
+            workflowState = new WorkflowState(useCase, [
+                new WorkflowEntity(entityTypes.CLUSTER),
+                new WorkflowEntity(entityTypes.CLUSTER, entityId1),
+                new WorkflowEntity(entityTypes.IMAGE),
+                new WorkflowEntity(entityTypes.IMAGE, entityId2),
+                new WorkflowEntity(entityTypes.DEPLOYMENT, entityId3)
+            ]);
+            expect(workflowState.pushList(entityTypes.SERVICE_ACCOUNT).stateStack).toEqual([
+                { t: entityTypes.DEPLOYMENT, i: entityId3 },
+                { t: entityTypes.SERVICE_ACCOUNT }
+            ]);
+
+            // deployments -> dep -> cluster -> namespaces (should nav away)
+            workflowState = new WorkflowState(useCases.VULN_MANAGEMENT, [
+                new WorkflowEntity(entityTypes.DEPLOYMENT),
+                new WorkflowEntity(entityTypes.DEPLOYMENT, entityId1),
+                new WorkflowEntity(entityTypes.CLUSTER, entityId2)
+            ]);
+            expect(workflowState.pushList(entityTypes.NAMESPACE).stateStack).toEqual([
+                { t: entityTypes.CLUSTER, i: entityId2 },
+                { t: entityTypes.NAMESPACE }
+            ]);
+        });
+
+        it('pushes a parent relationship onto the stack and overflows from entity page', () => {
+            // parent relationship + 1 (entity page)
+            let workflowState = new WorkflowState(useCase, [
+                new WorkflowEntity(entityTypes.DEPLOYMENT, entityId1),
+                new WorkflowEntity(entityTypes.NAMESPACE, entityId2),
+                new WorkflowEntity(entityTypes.SECRET, entityId3)
+            ]);
+
+            expect(workflowState.pushList(entityTypes.DEPLOYMENT).stateStack).toEqual([
+                { t: entityTypes.SECRET, i: entityId3 },
+                { t: entityTypes.DEPLOYMENT }
+            ]);
+
+            // parent relationship + 1 (entity page)
+            workflowState = new WorkflowState(useCase, [
+                new WorkflowEntity(entityTypes.CLUSTER, entityId1),
+                new WorkflowEntity(entityTypes.IMAGE, entityId2),
+                new WorkflowEntity(entityTypes.DEPLOYMENT, entityId3)
+            ]);
+            expect(workflowState.pushList(entityTypes.SERVICE_ACCOUNT).stateStack).toEqual([
+                { t: entityTypes.DEPLOYMENT, i: entityId3 },
+                { t: entityTypes.SERVICE_ACCOUNT }
+            ]);
+        });
     });
 
-    it('pushes a parent relationship onto the stack and overflows stack properly', () => {
-        // parent relationship + 1 (entity page)
-        let workflowState = new WorkflowState(useCase, [
-            new WorkflowEntity(entityTypes.DEPLOYMENT, entityId1),
-            new WorkflowEntity(entityTypes.NAMESPACE, entityId2),
-            new WorkflowEntity(entityTypes.SECRET, entityId3)
-        ]);
+    describe('WorkflowState matches relationship logic', () => {
+        it('pushes a matches relationship onto the stack', () => {
+            // matches relationship (entity page)
+            let workflowState = new WorkflowState(useCases.VULN_MANAGEMENT, [
+                new WorkflowEntity(entityTypes.DEPLOYMENT, entityId1)
+            ]);
+            expect(
+                workflowState.pushRelatedEntity(entityTypes.POLICY, entityId2).stateStack
+            ).toEqual([
+                { t: entityTypes.DEPLOYMENT, i: entityId1 },
+                { t: entityTypes.POLICY, i: entityId2 }
+            ]);
 
-        expect(workflowState.pushList(entityTypes.DEPLOYMENT).stateStack).toEqual([
-            { t: entityTypes.SECRET, i: entityId3 },
-            { t: entityTypes.DEPLOYMENT }
-        ]);
+            // matches relationship (list page)
+            workflowState = new WorkflowState(useCases.VULN_MANAGEMENT, [
+                new WorkflowEntity(entityTypes.DEPLOYMENT),
+                new WorkflowEntity(entityTypes.DEPLOYMENT, entityId1)
+            ]);
+            expect(
+                workflowState.pushRelatedEntity(entityTypes.POLICY, entityId2).stateStack
+            ).toEqual([
+                { t: entityTypes.DEPLOYMENT },
+                { t: entityTypes.DEPLOYMENT, i: entityId1 },
+                { t: entityTypes.POLICY, i: entityId2 }
+            ]);
+        });
 
-        // parent relationship + 1 (list page)
-        workflowState = new WorkflowState(useCase, [
-            new WorkflowEntity(entityTypes.DEPLOYMENT),
-            new WorkflowEntity(entityTypes.DEPLOYMENT, entityId1),
-            new WorkflowEntity(entityTypes.NAMESPACE),
-            new WorkflowEntity(entityTypes.NAMESPACE, entityId2),
-            new WorkflowEntity(entityTypes.SECRET),
-            new WorkflowEntity(entityTypes.SECRET, entityId3)
-        ]);
-        expect(workflowState.pushList(entityTypes.DEPLOYMENT).stateStack).toEqual([
-            { t: entityTypes.SECRET, i: entityId3 },
-            { t: entityTypes.DEPLOYMENT }
-        ]);
+        it('images -> image -> deployment should not nav away', () => {
+            const workflowState = new WorkflowState(useCases.VULN_MANAGEMENT, [
+                new WorkflowEntity(entityTypes.IMAGE),
+                new WorkflowEntity(entityTypes.IMAGE, entityId1)
+            ]);
+            expect(workflowState.pushList(entityTypes.DEPLOYMENT).stateStack).toEqual([
+                { t: entityTypes.IMAGE },
+                { t: entityTypes.IMAGE, i: entityId1 },
+                { t: entityTypes.DEPLOYMENT }
+            ]);
+        });
 
-        // parent relationship + 1 (entity page)
-        workflowState = new WorkflowState(useCase, [
-            new WorkflowEntity(entityTypes.CLUSTER, entityId1),
-            new WorkflowEntity(entityTypes.IMAGE, entityId2),
-            new WorkflowEntity(entityTypes.DEPLOYMENT, entityId3)
-        ]);
-        expect(workflowState.pushList(entityTypes.SERVICE_ACCOUNT).stateStack).toEqual([
-            { t: entityTypes.DEPLOYMENT, i: entityId3 },
-            { t: entityTypes.SERVICE_ACCOUNT }
-        ]);
+        it('cves -> cve -> deployment should not nav away (from table count link as well)', () => {
+            const workflowState = new WorkflowState(useCases.VULN_MANAGEMENT, [
+                new WorkflowEntity(entityTypes.CVE),
+                new WorkflowEntity(entityTypes.CVE, entityId1)
+            ]);
+            expect(workflowState.pushList(entityTypes.DEPLOYMENT).stateStack).toEqual([
+                { t: entityTypes.CVE },
+                { t: entityTypes.CVE, i: entityId1 },
+                { t: entityTypes.DEPLOYMENT }
+            ]);
+        });
 
-        // parent relationship + 1 (list page)
-        workflowState = new WorkflowState(useCase, [
-            new WorkflowEntity(entityTypes.CLUSTER),
-            new WorkflowEntity(entityTypes.CLUSTER, entityId1),
-            new WorkflowEntity(entityTypes.IMAGE),
-            new WorkflowEntity(entityTypes.IMAGE, entityId2),
-            new WorkflowEntity(entityTypes.DEPLOYMENT, entityId3)
-        ]);
-        expect(workflowState.pushList(entityTypes.SERVICE_ACCOUNT).stateStack).toEqual([
-            { t: entityTypes.DEPLOYMENT, i: entityId3 },
-            { t: entityTypes.SERVICE_ACCOUNT }
-        ]);
-
-        // deployments -> dep -> cluster -> namespaces (should nav away)
-        workflowState = new WorkflowState(useCases.VULN_MANAGEMENT, [
-            new WorkflowEntity(entityTypes.DEPLOYMENT),
-            new WorkflowEntity(entityTypes.DEPLOYMENT, entityId1),
-            new WorkflowEntity(entityTypes.CLUSTER, entityId2)
-        ]);
-        expect(workflowState.pushList(entityTypes.NAMESPACE).stateStack).toEqual([
-            { t: entityTypes.CLUSTER, i: entityId2 },
-            { t: entityTypes.NAMESPACE }
-        ]);
-    });
-
-    it('pushes a matches relationship onto the stack', () => {
-        // matches relationship (entity page)
-        let workflowState = new WorkflowState(useCases.VULN_MANAGEMENT, [
-            new WorkflowEntity(entityTypes.DEPLOYMENT, entityId1)
-        ]);
-        expect(workflowState.pushRelatedEntity(entityTypes.POLICY, entityId2).stateStack).toEqual([
-            { t: entityTypes.DEPLOYMENT, i: entityId1 },
-            { t: entityTypes.POLICY, i: entityId2 }
-        ]);
-
-        // matches relationship (list page)
-        workflowState = new WorkflowState(useCases.VULN_MANAGEMENT, [
-            new WorkflowEntity(entityTypes.DEPLOYMENT),
-            new WorkflowEntity(entityTypes.DEPLOYMENT, entityId1)
-        ]);
-        expect(workflowState.pushRelatedEntity(entityTypes.POLICY, entityId2).stateStack).toEqual([
-            { t: entityTypes.DEPLOYMENT },
-            { t: entityTypes.DEPLOYMENT, i: entityId1 },
-            { t: entityTypes.POLICY, i: entityId2 }
-        ]);
-
-        // images -> image -> deployment should not nav away
-        workflowState = new WorkflowState(useCases.VULN_MANAGEMENT, [
-            new WorkflowEntity(entityTypes.IMAGE),
-            new WorkflowEntity(entityTypes.IMAGE, entityId1)
-        ]);
-        expect(workflowState.pushList(entityTypes.DEPLOYMENT).stateStack).toEqual([
-            { t: entityTypes.IMAGE },
-            { t: entityTypes.IMAGE, i: entityId1 },
-            { t: entityTypes.DEPLOYMENT }
-        ]);
-
-        // cves -> cve -> deployment should not nav away (from table count link as well)
-        workflowState = new WorkflowState(useCases.VULN_MANAGEMENT, [
-            new WorkflowEntity(entityTypes.CVE),
-            new WorkflowEntity(entityTypes.CVE, entityId1)
-        ]);
-        expect(workflowState.pushList(entityTypes.DEPLOYMENT).stateStack).toEqual([
-            { t: entityTypes.CVE },
-            { t: entityTypes.CVE, i: entityId1 },
-            { t: entityTypes.DEPLOYMENT }
-        ]);
-
-        // components -> images link in table count shoudl not nav away
-        workflowState = new WorkflowState(useCases.VULN_MANAGEMENT, [
-            new WorkflowEntity(entityTypes.COMPONENT),
-            new WorkflowEntity(entityTypes.COMPONENT, entityId1)
-        ]);
-        expect(workflowState.pushList(entityTypes.IMAGE).stateStack).toEqual([
-            { t: entityTypes.COMPONENT },
-            { t: entityTypes.COMPONENT, i: entityId1 },
-            { t: entityTypes.IMAGE }
-        ]);
+        it('components -> images link in table count should not nav away', () => {
+            const workflowState = new WorkflowState(useCases.VULN_MANAGEMENT, [
+                new WorkflowEntity(entityTypes.COMPONENT),
+                new WorkflowEntity(entityTypes.COMPONENT, entityId1)
+            ]);
+            expect(workflowState.pushList(entityTypes.IMAGE).stateStack).toEqual([
+                { t: entityTypes.COMPONENT },
+                { t: entityTypes.COMPONENT, i: entityId1 },
+                { t: entityTypes.IMAGE }
+            ]);
+        });
     });
 
     it('pushes a matches relationship onto the stack and overflows stack properly', () => {
@@ -418,50 +431,77 @@ describe('WorkflowState', () => {
         ]);
     });
 
-    it('pushes a related entity onto the stack and overflows stack properly', () => {
-        // parents relationship + 1 (entity page)
-        let workflowState = new WorkflowState(useCase, [
-            new WorkflowEntity(entityTypes.IMAGE, entityId1),
-            new WorkflowEntity(entityTypes.DEPLOYMENT, entityId2),
-            new WorkflowEntity(entityTypes.NAMESPACE, entityId3)
-        ]);
-        expect(workflowState.pushRelatedEntity(entityTypes.CLUSTER, entityId2).stateStack).toEqual([
-            { t: entityTypes.CLUSTER, i: entityId2 }
-        ]);
+    describe('WorkflowState pushRelatedEntity overflow logic', () => {
+        it('overflows stack properly when pushing a related entity onto parent in stack', () => {
+            // parents relationship + 1 (entity page)
+            let workflowState = new WorkflowState(useCase, [
+                new WorkflowEntity(entityTypes.IMAGE, entityId1),
+                new WorkflowEntity(entityTypes.DEPLOYMENT, entityId2),
+                new WorkflowEntity(entityTypes.NAMESPACE, entityId3)
+            ]);
+            expect(
+                workflowState.pushRelatedEntity(entityTypes.CLUSTER, entityId2).stateStack
+            ).toEqual([{ t: entityTypes.CLUSTER, i: entityId2 }]);
 
-        // parents relationship + 1 (list page)
-        workflowState = new WorkflowState(useCase, [
-            new WorkflowEntity(entityTypes.IMAGE),
-            new WorkflowEntity(entityTypes.IMAGE, entityId1),
-            new WorkflowEntity(entityTypes.DEPLOYMENT),
-            new WorkflowEntity(entityTypes.DEPLOYMENT, entityId2),
-            new WorkflowEntity(entityTypes.NAMESPACE, entityId3)
-        ]);
-        expect(workflowState.pushRelatedEntity(entityTypes.CLUSTER, entityId2).stateStack).toEqual([
-            { t: entityTypes.CLUSTER, i: entityId2 }
-        ]);
+            // parents relationship + 1 (list page)
+            workflowState = new WorkflowState(useCase, [
+                new WorkflowEntity(entityTypes.IMAGE),
+                new WorkflowEntity(entityTypes.IMAGE, entityId1),
+                new WorkflowEntity(entityTypes.DEPLOYMENT),
+                new WorkflowEntity(entityTypes.DEPLOYMENT, entityId2),
+                new WorkflowEntity(entityTypes.NAMESPACE, entityId3)
+            ]);
+            expect(
+                workflowState.pushRelatedEntity(entityTypes.CLUSTER, entityId2).stateStack
+            ).toEqual([{ t: entityTypes.CLUSTER, i: entityId2 }]);
+        });
 
-        // matches relationship + 1 (entity page)
-        workflowState = new WorkflowState(useCase, [
-            new WorkflowEntity(entityTypes.NAMESPACE, entityId1),
-            new WorkflowEntity(entityTypes.POLICY, entityId2),
-            new WorkflowEntity(entityTypes.DEPLOYMENT, entityId3)
-        ]);
-        expect(workflowState.pushRelatedEntity(entityTypes.CLUSTER, entityId1).stateStack).toEqual([
-            { t: entityTypes.CLUSTER, i: entityId1 }
-        ]);
+        it('overflows stack properly when pushing a related entity onto matches in stack', () => {
+            // matches relationship + 1 (entity page)
+            let workflowState = new WorkflowState(useCase, [
+                new WorkflowEntity(entityTypes.NAMESPACE, entityId1),
+                new WorkflowEntity(entityTypes.POLICY, entityId2),
+                new WorkflowEntity(entityTypes.DEPLOYMENT, entityId3)
+            ]);
+            expect(
+                workflowState.pushRelatedEntity(entityTypes.CLUSTER, entityId1).stateStack
+            ).toEqual([{ t: entityTypes.CLUSTER, i: entityId1 }]);
 
-        // matches relationship + 1 (list page)
-        workflowState = new WorkflowState(useCase, [
-            new WorkflowEntity(entityTypes.NAMESPACE),
-            new WorkflowEntity(entityTypes.NAMESPACE, entityId1),
-            new WorkflowEntity(entityTypes.POLICY, entityId2),
-            new WorkflowEntity(entityTypes.DEPLOYMENT),
-            new WorkflowEntity(entityTypes.DEPLOYMENT, entityId3)
-        ]);
-        expect(workflowState.pushRelatedEntity(entityTypes.CLUSTER, entityId1).stateStack).toEqual([
-            { t: entityTypes.CLUSTER, i: entityId1 }
-        ]);
+            // matches relationship + 1 (list page)
+            workflowState = new WorkflowState(useCase, [
+                new WorkflowEntity(entityTypes.NAMESPACE),
+                new WorkflowEntity(entityTypes.NAMESPACE, entityId1),
+                new WorkflowEntity(entityTypes.POLICY, entityId2),
+                new WorkflowEntity(entityTypes.DEPLOYMENT),
+                new WorkflowEntity(entityTypes.DEPLOYMENT, entityId3)
+            ]);
+            expect(
+                workflowState.pushRelatedEntity(entityTypes.CLUSTER, entityId1).stateStack
+            ).toEqual([{ t: entityTypes.CLUSTER, i: entityId1 }]);
+        });
+
+        it('overflows stack properly when pushing a duplicate entity onto stack', () => {
+            // duplicate entity type on stack (list page)
+            let workflowState = new WorkflowState(useCases.VULN_MANAGEMENT, [
+                new WorkflowEntity(entityTypes.CVE),
+                new WorkflowEntity(entityTypes.CVE, entityId1),
+                new WorkflowEntity(entityTypes.IMAGE),
+                new WorkflowEntity(entityTypes.IMAGE, entityId2)
+            ]);
+            expect(workflowState.pushRelatedEntity(entityTypes.CVE, entityId3).stateStack).toEqual([
+                { t: entityTypes.CVE, i: entityId3 }
+            ]);
+
+            // duplicate entity type on stack (entity page)
+            workflowState = new WorkflowState(useCases.VULN_MANAGEMENT, [
+                new WorkflowEntity(entityTypes.CVE, entityId1),
+                new WorkflowEntity(entityTypes.IMAGE),
+                new WorkflowEntity(entityTypes.IMAGE, entityId2)
+            ]);
+            expect(workflowState.pushRelatedEntity(entityTypes.CVE, entityId3).stateStack).toEqual([
+                { t: entityTypes.CVE, i: entityId3 }
+            ]);
+        });
     });
 
     it('pushes a duplicate entity onto the stack and overflows stack properly', () => {
