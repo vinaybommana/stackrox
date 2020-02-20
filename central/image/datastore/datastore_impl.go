@@ -15,6 +15,7 @@ import (
 	"github.com/stackrox/rox/central/role/resources"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/batcher"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/debug"
 	"github.com/stackrox/rox/pkg/errorhelpers"
@@ -23,7 +24,10 @@ import (
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/sac"
 	pkgSearch "github.com/stackrox/rox/pkg/search"
-	"github.com/stackrox/rox/pkg/txn"
+)
+
+const (
+	imageBatchSize = 500
 )
 
 var (
@@ -172,7 +176,7 @@ func (ds *datastoreImpl) GetImagesBatch(ctx context.Context, shas []string) ([]*
 	if ok, err := imagesSAC.ReadAllowed(ctx); err != nil {
 		return nil, err
 	} else if ok {
-		imgs, err = ds.storage.GetImagesBatch(shas)
+		imgs, _, err = ds.storage.GetImagesBatch(shas)
 		if err != nil {
 			return nil, err
 		}
@@ -226,7 +230,10 @@ func (ds *datastoreImpl) UpsertImage(ctx context.Context, image *storage.Image) 
 	if features.Dackbox.Enabled() {
 		return nil
 	}
-	return ds.indexer.AddImage(image)
+	if err := ds.indexer.AddImage(image); err != nil {
+		return err
+	}
+	return ds.storage.AckKeysIndexed(image.GetId())
 }
 
 func (ds *datastoreImpl) DeleteImages(ctx context.Context, ids ...string) error {
@@ -257,6 +264,7 @@ func (ds *datastoreImpl) DeleteImages(ctx context.Context, ids ...string) error 
 		}
 		if !features.Dackbox.Enabled() {
 			errorList.AddError(ds.indexer.DeleteImage(id))
+			errorList.AddError(ds.storage.AckKeysIndexed(id))
 		}
 		if err := ds.risks.RemoveRisk(deleteRiskCtx, id, storage.RiskSubjectType_IMAGE); err != nil {
 			return err
@@ -306,46 +314,90 @@ func merge(mergeTo *storage.Image, mergeWith *storage.Image) (updated bool) {
 	return
 }
 
-func (ds *datastoreImpl) buildIndex() error {
-	if features.Dackbox.Enabled() {
-		return nil
-	}
-
-	defer debug.FreeOSMemory()
-	log.Info("[STARTUP] Determining if image db/indexer reconciliation is needed")
-
-	dbTxNum, err := ds.storage.GetTxnCount()
-	if err != nil {
-		return err
-	}
-	indexerTxNum := ds.indexer.GetTxnCount()
-
-	if !txn.ReconciliationNeeded(dbTxNum, indexerTxNum) {
-		log.Info("[STARTUP] Reconciliation for images is not needed")
-		return nil
-	}
-	log.Info("[STARTUP] Indexing images")
-
-	if err := ds.indexer.ResetIndex(); err != nil {
-		return err
-	}
+func (ds *datastoreImpl) fullReindex() error {
+	log.Info("[STARTUP] Reindexing all images")
 
 	images, err := ds.storage.GetImages()
 	if err != nil {
 		return err
 	}
-	if err := ds.indexer.AddImages(images); err != nil {
+	log.Infof("[STARTUP] Found %d images to index", len(images))
+	imageBatcher := batcher.New(len(images), imageBatchSize)
+	for start, end, valid := imageBatcher.Next(); valid; start, end, valid = imageBatcher.Next() {
+		if err := ds.indexer.AddImages(images[start:end]); err != nil {
+			return err
+		}
+		log.Infof("[STARTUP] Successfully indexed %d/%d images", end, len(images))
+	}
+	log.Infof("[STARTUP] Successfully indexed %d images", len(images))
+
+	// Clear the keys because we just re-indexed everything
+	keys, err := ds.storage.GetKeysToIndex()
+	if err != nil {
+		return err
+	}
+	if err := ds.storage.AckKeysIndexed(keys...); err != nil {
 		return err
 	}
 
-	if err := ds.storage.IncTxnCount(); err != nil {
-		return err
-	}
-	if err := ds.indexer.SetTxnCount(dbTxNum + 1); err != nil {
+	// Write out that initial indexing is complete
+	if err := ds.indexer.MarkInitialIndexingComplete(); err != nil {
 		return err
 	}
 
-	log.Info("[STARTUP] Successfully indexed images")
+	return nil
+}
+
+func (ds *datastoreImpl) buildIndex() error {
+	if features.Dackbox.Enabled() {
+		return nil
+	}
+	defer debug.FreeOSMemory()
+	needsFullIndexing, err := ds.indexer.NeedsInitialIndexing()
+	if err != nil {
+		return err
+	}
+	if needsFullIndexing {
+		return ds.fullReindex()
+	}
+
+	log.Info("[STARTUP] Determining if image db/indexer reconciliation is needed")
+
+	imagesToIndex, err := ds.storage.GetKeysToIndex()
+	if err != nil {
+		return errors.Wrap(err, "error retrieving keys to index")
+	}
+
+	log.Infof("[STARTUP] Found %d Images to index", len(imagesToIndex))
+
+	imageBatcher := batcher.New(len(imagesToIndex), imageBatchSize)
+	for start, end, valid := imageBatcher.Next(); valid; start, end, valid = imageBatcher.Next() {
+		images, missingIndices, err := ds.storage.GetImagesBatch(imagesToIndex[start:end])
+		if err != nil {
+			return err
+		}
+		if err := ds.indexer.AddImages(images); err != nil {
+			return err
+		}
+
+		if len(missingIndices) > 0 {
+			idsToRemove := make([]string, 0, len(missingIndices))
+			for _, missingIdx := range missingIndices {
+				idsToRemove = append(idsToRemove, imagesToIndex[start:end][missingIdx])
+			}
+			if err := ds.indexer.DeleteImages(idsToRemove); err != nil {
+				return err
+			}
+		}
+
+		// Ack keys so that even if central restarts, we don't need to reindex them again
+		if err := ds.storage.AckKeysIndexed(imagesToIndex[start:end]...); err != nil {
+			return err
+		}
+		log.Infof("[STARTUP] Successfully indexed %d/%d images", end, len(imagesToIndex))
+	}
+
+	log.Info("[STARTUP] Successfully indexed all out of sync images")
 	return nil
 }
 

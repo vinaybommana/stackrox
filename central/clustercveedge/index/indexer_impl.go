@@ -3,12 +3,13 @@
 package index
 
 import (
+	"bytes"
+	bleve "github.com/blevesearch/bleve"
 	mappings "github.com/stackrox/rox/central/clustercveedge/mappings"
 	metrics "github.com/stackrox/rox/central/metrics"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	storage "github.com/stackrox/rox/generated/storage"
 	batcher "github.com/stackrox/rox/pkg/batcher"
-	blevehelper "github.com/stackrox/rox/pkg/blevehelper"
 	ops "github.com/stackrox/rox/pkg/metrics"
 	search "github.com/stackrox/rox/pkg/search"
 	blevesearch "github.com/stackrox/rox/pkg/search/blevesearch"
@@ -20,7 +21,7 @@ const batchSize = 5000
 const resourceName = "ClusterCVEEdge"
 
 type indexerImpl struct {
-	index *blevehelper.BleveWrapper
+	index bleve.Index
 }
 
 type clusterCVEEdgeWrapper struct {
@@ -30,7 +31,7 @@ type clusterCVEEdgeWrapper struct {
 
 func (b *indexerImpl) AddClusterCVEEdge(clustercveedge *storage.ClusterCVEEdge) error {
 	defer metrics.SetIndexOperationDurationTime(time.Now(), ops.Add, "ClusterCVEEdge")
-	if err := b.index.Index.Index(clustercveedge.GetId(), &clusterCVEEdgeWrapper{
+	if err := b.index.Index(clustercveedge.GetId(), &clusterCVEEdgeWrapper{
 		ClusterCVEEdge: clustercveedge,
 		Type:           v1.SearchCategory_CLUSTER_VULN_EDGE.String(),
 	}); err != nil {
@@ -87,12 +88,19 @@ func (b *indexerImpl) DeleteClusterCVEEdges(ids []string) error {
 	return nil
 }
 
-func (b *indexerImpl) ResetIndex() error {
-	defer metrics.SetIndexOperationDurationTime(time.Now(), ops.Reset, "ClusterCVEEdge")
-	return blevesearch.ResetIndex(v1.SearchCategory_CLUSTER_VULN_EDGE, b.index.Index)
+func (b *indexerImpl) MarkInitialIndexingComplete() error {
+	return b.index.SetInternal([]byte(resourceName), []byte("old"))
+}
+
+func (b *indexerImpl) NeedsInitialIndexing() (bool, error) {
+	data, err := b.index.GetInternal([]byte(resourceName))
+	if err != nil {
+		return false, err
+	}
+	return !bytes.Equal([]byte("old"), data), nil
 }
 
 func (b *indexerImpl) Search(q *v1.Query, opts ...blevesearch.SearchOption) ([]search.Result, error) {
 	defer metrics.SetIndexOperationDurationTime(time.Now(), ops.Search, "ClusterCVEEdge")
-	return blevesearch.RunSearchRequest(v1.SearchCategory_CLUSTER_VULN_EDGE, q, b.index.Index, mappings.OptionsMap, opts...)
+	return blevesearch.RunSearchRequest(v1.SearchCategory_CLUSTER_VULN_EDGE, q, b.index, mappings.OptionsMap, opts...)
 }

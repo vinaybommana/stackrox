@@ -123,23 +123,26 @@ func (b *storeImpl) GetImage(id string) (image *storage.Image, exists bool, err 
 }
 
 // GetImagesBatch returns images with given ids.
-func (b *storeImpl) GetImagesBatch(digests []string) ([]*storage.Image, error) {
+func (b *storeImpl) GetImagesBatch(digests []string) ([]*storage.Image, []int, error) {
 	defer metrics.SetBadgerOperationDurationTime(time.Now(), ops.GetMany, "Image")
 
 	branch := b.dacky.NewReadOnlyTransaction()
 	defer branch.Discard()
 
 	var images []*storage.Image
-	for _, id := range digests {
+	var missingIndices []int
+	for idx, id := range digests {
 		image, err := b.readImage(branch, id)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		if image != nil {
 			images = append(images, image)
+		} else {
+			missingIndices = append(missingIndices, idx)
 		}
 	}
-	return images, nil
+	return images, missingIndices, nil
 }
 
 // Upsert writes and image to the DB, overwriting previous data.
@@ -439,4 +442,13 @@ func gatherKeysForImage(txn *dackbox.Transaction, id string) (*imageKeySet, erro
 	// Generate a set of all the keys.
 	ret.allKeys = sortedkeys.Sort(allKeys)
 	return ret, nil
+}
+
+func (b *storeImpl) AckKeysIndexed(keys ...string) error {
+	return nil
+}
+
+func (b *storeImpl) GetKeysToIndex() ([]string, error) {
+	// DackBox handles indexing
+	return nil, nil
 }

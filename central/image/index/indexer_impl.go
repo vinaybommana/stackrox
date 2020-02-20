@@ -1,10 +1,12 @@
 package index
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/document"
 	"github.com/blevesearch/bleve/mapping"
 	"github.com/pkg/errors"
@@ -12,7 +14,6 @@ import (
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/batcher"
-	"github.com/stackrox/rox/pkg/blevehelper"
 	ops "github.com/stackrox/rox/pkg/metrics"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/blevesearch"
@@ -25,7 +26,7 @@ const batchSize = 5000
 const resourceName = "Image"
 
 type indexerImpl struct {
-	index *blevehelper.BleveWrapper
+	index bleve.Index
 }
 
 type imageWrapper struct {
@@ -127,10 +128,10 @@ func (b *indexerImpl) AddImage(image *storage.Image) error {
 		Image: image,
 		Type:  v1.SearchCategory_IMAGES.String(),
 	}
-	if err := b.index.Index.Index(image.GetId(), wrapper); err != nil {
+	if err := b.index.Index(image.GetId(), wrapper); err != nil {
 		return err
 	}
-	return b.index.IncTxnCount()
+	return nil
 }
 
 func (b *indexerImpl) AddImages(images []*storage.Image) error {
@@ -145,7 +146,7 @@ func (b *indexerImpl) AddImages(images []*storage.Image) error {
 			return err
 		}
 	}
-	return b.index.IncTxnCount()
+	return nil
 }
 
 func (b *indexerImpl) processBatch(images []*storage.Image) error {
@@ -166,7 +167,7 @@ func (b *indexerImpl) DeleteImage(id string) error {
 	if err := b.index.Delete(id); err != nil {
 		return err
 	}
-	return b.index.IncTxnCount()
+	return nil
 }
 
 func (b *indexerImpl) DeleteImages(ids []string) error {
@@ -178,23 +179,22 @@ func (b *indexerImpl) DeleteImages(ids []string) error {
 	if err := b.index.Batch(batch); err != nil {
 		return err
 	}
-	return b.index.IncTxnCount()
+	return nil
 }
 
-func (b *indexerImpl) GetTxnCount() uint64 {
-	return b.index.GetTxnCount()
+func (b *indexerImpl) MarkInitialIndexingComplete() error {
+	return b.index.SetInternal([]byte(resourceName), []byte("old"))
 }
 
-func (b *indexerImpl) ResetIndex() error {
-	defer metrics.SetIndexOperationDurationTime(time.Now(), ops.Reset, "Image")
-	return blevesearch.ResetIndex(v1.SearchCategory_IMAGES, b.index.Index)
+func (b *indexerImpl) NeedsInitialIndexing() (bool, error) {
+	data, err := b.index.GetInternal([]byte(resourceName))
+	if err != nil {
+		return false, err
+	}
+	return !bytes.Equal([]byte("old"), data), nil
 }
 
 func (b *indexerImpl) Search(q *v1.Query, opts ...blevesearch.SearchOption) ([]search.Result, error) {
 	defer metrics.SetIndexOperationDurationTime(time.Now(), ops.Search, "Image")
-	return blevesearch.RunSearchRequest(v1.SearchCategory_IMAGES, q, b.index.Index, mappings.OptionsMap, opts...)
-}
-
-func (b *indexerImpl) SetTxnCount(seq uint64) error {
-	return b.index.SetTxnCount(seq)
+	return blevesearch.RunSearchRequest(v1.SearchCategory_IMAGES, q, b.index, mappings.OptionsMap, opts...)
 }

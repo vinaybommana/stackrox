@@ -275,16 +275,6 @@ func (b *StoreImpl) collectDeploymentKeys(id string) [][]byte {
 	return allKeys
 }
 
-// GetTxnCount returns the transaction count.
-func (b *StoreImpl) GetTxnCount() (txNum uint64, err error) {
-	return 0, nil
-}
-
-// IncTxnCount increments the transaction count.
-func (b *StoreImpl) IncTxnCount() error {
-	return nil
-}
-
 func convertDeploymentToListDeployment(d *storage.Deployment) *storage.ListDeployment {
 	return &storage.ListDeployment{
 		Id:        d.GetId(),
@@ -296,4 +286,14 @@ func convertDeploymentToListDeployment(d *storage.Deployment) *storage.ListDeplo
 		Created:   d.GetCreated(),
 		Priority:  d.GetPriority(),
 	}
+}
+
+// AckKeysIndexed is a stub for the store interface
+func (b *StoreImpl) AckKeysIndexed(keys ...string) error {
+	return nil
+}
+
+// GetKeysToIndex is a stub for the store interface
+func (b *StoreImpl) GetKeysToIndex() ([]string, error) {
+	return nil, nil
 }

@@ -2,11 +2,11 @@ package datastore
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/stackrox/rox/central/alert/datastore/internal/index"
 	"github.com/stackrox/rox/central/alert/datastore/internal/search"
 	"github.com/stackrox/rox/central/alert/datastore/internal/store"
@@ -24,7 +24,6 @@ import (
 	searchCommon "github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/paginated"
 	"github.com/stackrox/rox/pkg/sync"
-	"github.com/stackrox/rox/pkg/txn"
 )
 
 var (
@@ -130,7 +129,10 @@ func (ds *datastoreImpl) UpsertAlert(ctx context.Context, alert *storage.Alert) 
 	if err := ds.storage.UpsertAlert(alert); err != nil {
 		return err
 	}
-	return ds.indexer.AddListAlert(convert.AlertToListAlert(alert))
+	if err := ds.indexer.AddListAlert(convert.AlertToListAlert(alert)); err != nil {
+		return err
+	}
+	return ds.storage.AckKeysIndexed(alert.GetId())
 }
 
 // UpdateAlert updates an alert in storage and in the indexer
@@ -217,6 +219,10 @@ func (ds *datastoreImpl) DeleteAlerts(ctx context.Context, ids ...string) error 
 	if err := ds.indexer.DeleteListAlerts(ids); err != nil {
 		errorList.AddError(err)
 	}
+	if err := ds.storage.AckKeysIndexed(ids...); err != nil {
+		errorList.AddError(err)
+	}
+
 	return errorList.ToError()
 }
 
@@ -225,42 +231,24 @@ func (ds *datastoreImpl) updateAlertNoLock(alert *storage.Alert) error {
 	if err := ds.storage.UpsertAlert(alert); err != nil {
 		return err
 	}
-	return ds.indexer.AddListAlert(convert.AlertToListAlert(alert))
+	if err := ds.indexer.AddListAlert(convert.AlertToListAlert(alert)); err != nil {
+		return err
+	}
+	return ds.storage.AckKeysIndexed(alert.GetId())
 }
 
 func hasSameScope(o1, o2 sac.NamespaceScopedObject) bool {
 	return o1.GetClusterId() == o2.GetClusterId() && o1.GetNamespace() == o2.GetNamespace()
 }
 
-func (ds *datastoreImpl) buildIndex() error {
-	defer debug.FreeOSMemory()
-
-	log.Info("[STARTUP] Determining if alert db/indexer reconciliation is needed")
-	indexerTxNum := ds.indexer.GetTxnCount()
-
-	dbTxNum, err := ds.storage.GetTxnCount()
-	if err != nil {
-		return err
-	}
-
-	if !txn.ReconciliationNeeded(dbTxNum, indexerTxNum) {
-		log.Info("[STARTUP] Reconciliation for alerts is not needed")
-		return nil
-	}
-
-	log.Info("[STARTUP] Reconciling DB and Indexer by indexing alerts")
-
-	if err := ds.indexer.ResetIndex(); err != nil {
-		return err
-	}
-
-	defer debug.FreeOSMemory()
+func (ds *datastoreImpl) fullReindex() error {
+	log.Info("[STARTUP] Reindexing all alerts")
 
 	alertIDs, err := ds.storage.GetAlertIDs()
 	if err != nil {
 		return err
 	}
-
+	log.Infof("[STARTUP] Found %d alerts to index", len(alertIDs))
 	alertBatcher := batcher.New(len(alertIDs), alertBatchSize)
 	for start, end, valid := alertBatcher.Next(); valid; start, end, valid = alertBatcher.Next() {
 		listAlerts, _, err := ds.storage.GetListAlerts(alertIDs[start:end])
@@ -270,17 +258,75 @@ func (ds *datastoreImpl) buildIndex() error {
 		if err := ds.indexer.AddListAlerts(listAlerts); err != nil {
 			return err
 		}
+		log.Infof("[STARTUP] Successfully indexed %d/%d alerts", end, len(alertIDs))
 	}
+	log.Infof("[STARTUP] Successfully indexed %d alerts", len(alertIDs))
 
-	log.Info("[STARTUP] Successfully indexed all alerts")
-
-	if err := ds.storage.IncTxnCount(); err != nil {
+	// Clear the keys because we just re-indexed everything
+	keys, err := ds.storage.GetKeysToIndex()
+	if err != nil {
 		return err
 	}
-	if err := ds.indexer.SetTxnCount(dbTxNum + 1); err != nil {
+	if err := ds.storage.AckKeysIndexed(keys...); err != nil {
 		return err
 	}
 
+	// Write out that initial indexing is complete
+	if err := ds.indexer.MarkInitialIndexingComplete(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ds *datastoreImpl) buildIndex() error {
+	defer debug.FreeOSMemory()
+
+	needsFullIndexing, err := ds.indexer.NeedsInitialIndexing()
+	if err != nil {
+		return err
+	}
+	if needsFullIndexing {
+		return ds.fullReindex()
+	}
+
+	log.Info("[STARTUP] Determining if alert db/indexer reconciliation is needed")
+	keysToIndex, err := ds.storage.GetKeysToIndex()
+	if err != nil {
+		return errors.Wrap(err, "error retrieving keys to index from store")
+	}
+
+	log.Infof("[STARTUP] Found %d Alerts to index", len(keysToIndex))
+
+	defer debug.FreeOSMemory()
+
+	alertBatcher := batcher.New(len(keysToIndex), alertBatchSize)
+	for start, end, valid := alertBatcher.Next(); valid; start, end, valid = alertBatcher.Next() {
+		listAlerts, missingIndices, err := ds.storage.GetListAlerts(keysToIndex[start:end])
+		if err != nil {
+			return err
+		}
+		if err := ds.indexer.AddListAlerts(listAlerts); err != nil {
+			return err
+		}
+
+		if len(missingIndices) > 0 {
+			idsToRemove := make([]string, 0, len(missingIndices))
+			for _, missingIdx := range missingIndices {
+				idsToRemove = append(idsToRemove, keysToIndex[start:end][missingIdx])
+			}
+			if err := ds.indexer.DeleteListAlerts(idsToRemove); err != nil {
+				return err
+			}
+		}
+		// Ack keys so that even if central restarts, we don't need to reindex them again
+		if err := ds.storage.AckKeysIndexed(keysToIndex[start:end]...); err != nil {
+			return err
+		}
+		log.Infof("[STARTUP] Successfully indexed %d/%d alerts", end, len(keysToIndex))
+	}
+
+	log.Info("[STARTUP] Successfully indexed all out of sync alerts")
 	return nil
 }
 

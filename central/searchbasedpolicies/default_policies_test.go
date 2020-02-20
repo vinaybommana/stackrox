@@ -212,7 +212,7 @@ func (suite *DefaultPoliciesTestSuite) mustAddIndicator(deploymentID, name, args
 			Uid:          uid,
 		},
 	}
-	err := suite.processDataStore.AddProcessIndicator(suite.setupCtx, indicator)
+	err := suite.processDataStore.AddProcessIndicators(suite.setupCtx, indicator)
 	suite.NoError(err)
 	return indicator
 }

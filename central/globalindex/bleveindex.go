@@ -18,7 +18,6 @@ import (
 	complianceMapping "github.com/stackrox/rox/central/compliance/search"
 	"github.com/stackrox/rox/central/globalindex/mapping"
 	v1 "github.com/stackrox/rox/generated/api/v1"
-	"github.com/stackrox/rox/pkg/blevehelper"
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/search"
 )
@@ -98,33 +97,32 @@ func initializeIndices(scorchPath string) (bleve.Index, error) {
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		globalIndex, err = bleve.OpenUsing(scorchPath, kvconfig)
-		if err != nil {
-			log.Errorf("Error opening Bleve index: %v. Removing index and retrying from scratch...", err)
-			if globalIndex != nil {
-				_ = globalIndex.Close()
-			}
-			if err := os.RemoveAll(scorchPath); err != nil {
-				log.Panicf("error removing scorch path: %v", err)
-			}
-			return initializeIndices(scorchPath)
-		}
-
-		// This implies that the index mapping has changed and therefore we should reindex everything
-		// This can only happen on upgrades
-		if !compareMappings(globalIndex.Mapping(), mapping.GetIndexMapping()) {
-			log.Info("[STARTUP] Found new index mapping. Removing index and rebuilding")
-			if err := globalIndex.Close(); err != nil {
-				log.Errorf("error closing global index: %v", err)
-			}
-			if err := os.RemoveAll(scorchPath); err != nil {
-				log.Errorf("error removing scorch path: %v", err)
-			}
-			return initializeIndices(scorchPath)
-		}
+		return globalIndex, nil
 	}
-	globalIndex.SetName(blevehelper.GlobalIndexName)
+	globalIndex, err := bleve.OpenUsing(scorchPath, kvconfig)
+	if err != nil {
+		log.Errorf("Error opening Bleve index: %v. Removing index and retrying from scratch...", err)
+		if globalIndex != nil {
+			_ = globalIndex.Close()
+		}
+		if err := os.RemoveAll(scorchPath); err != nil {
+			log.Panicf("error removing scorch path: %v", err)
+		}
+		return initializeIndices(scorchPath)
+	}
+
+	// This implies that the index mapping has changed and therefore we should reindex everything
+	// This can only happen on upgrades
+	if !compareMappings(globalIndex.Mapping(), mapping.GetIndexMapping()) {
+		log.Info("[STARTUP] Found new index mapping. Removing index and rebuilding")
+		if err := globalIndex.Close(); err != nil {
+			log.Errorf("error closing global index: %v", err)
+		}
+		if err := os.RemoveAll(scorchPath); err != nil {
+			log.Errorf("error removing scorch path: %v", err)
+		}
+		return initializeIndices(scorchPath)
+	}
 
 	return globalIndex, nil
 }
