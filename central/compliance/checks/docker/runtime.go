@@ -405,7 +405,7 @@ func utsNamespace(ctx framework.ComplianceContext, container types.ContainerJSON
 }
 
 func usersInContainer(ctx framework.ComplianceContext, container types.ContainerJSON) {
-	if container.Config != nil && (container.Config.User == "" || container.Config.User == "root") {
+	if container.Config != nil && (container.Config.User == "" || container.Config.User == "root" || container.Config.User == "0") {
 		framework.Failf(ctx, "Container %q is running as the root user", container.Name)
 	} else {
 		framework.Passf(ctx, "Container %q is running as the user %q", container.Name, container.Config.User)
