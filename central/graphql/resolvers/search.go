@@ -141,6 +141,8 @@ func (resolver *Resolver) getAutoCompleteSearchers() map[v1.SearchCategory]searc
 		v1.SearchCategory_SERVICE_ACCOUNTS: resolver.ServiceAccountsDataStore,
 		v1.SearchCategory_ROLES:            resolver.K8sRoleStore,
 		v1.SearchCategory_ROLEBINDINGS:     resolver.K8sRoleBindingStore,
+		v1.SearchCategory_IMAGE_COMPONENTS: resolver.ImageComponentDataStore,
+		v1.SearchCategory_VULNERABILITIES:  resolver.CVEDataStore,
 	}
 
 	return searchers
@@ -160,6 +162,8 @@ func (resolver *Resolver) getSearchFuncs() map[v1.SearchCategory]searchService.S
 		v1.SearchCategory_SERVICE_ACCOUNTS: resolver.ServiceAccountsDataStore.SearchServiceAccounts,
 		v1.SearchCategory_ROLES:            resolver.K8sRoleStore.SearchRoles,
 		v1.SearchCategory_ROLEBINDINGS:     resolver.K8sRoleBindingStore.SearchRoleBindings,
+		v1.SearchCategory_IMAGE_COMPONENTS: resolver.ImageComponentDataStore.SearchImageComponents,
+		v1.SearchCategory_VULNERABILITIES:  resolver.CVEDataStore.SearchCVEs,
 	}
 
 	return searchfuncs

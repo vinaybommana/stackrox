@@ -81,11 +81,15 @@ func (o *optionsMapImpl) Merge(o1 OptionsMap) OptionsMap {
 }
 
 // CombineOptionsMaps does the same thing as Merge, but creates a new map without modifying any inputs.
-func CombineOptionsMaps(o1, o2 OptionsMap) OptionsMap {
-	new := OptionsMapFromMap(o1.PrimaryCategory(), make(map[FieldLabel]*v1.SearchField))
-	new.Merge(o1)
-	new.Merge(o2)
-	return new
+func CombineOptionsMaps(os ...OptionsMap) OptionsMap {
+	if len(os) == 0 {
+		return nil
+	}
+	ret := OptionsMapFromMap(os[0].PrimaryCategory(), make(map[FieldLabel]*v1.SearchField))
+	for _, o := range os {
+		ret.Merge(o)
+	}
+	return ret
 }
 
 // OptionsMapFromMap constructs an OptionsMap object from the given map.

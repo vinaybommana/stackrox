@@ -26,6 +26,7 @@ import (
 	secretOptions "github.com/stackrox/rox/central/secret/mappings"
 	serviceAccountOptions "github.com/stackrox/rox/central/serviceaccount/mappings"
 	v1 "github.com/stackrox/rox/generated/api/v1"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/blevesearch"
 	"github.com/stackrox/rox/pkg/search/options/deployments"
@@ -85,13 +86,38 @@ func singleTermAnalyzer() map[string]interface{} {
 
 // GetEntityOptionsMap is a mapping from search categories to the options
 func GetEntityOptionsMap() map[v1.SearchCategory]search.OptionsMap {
+	// Images in dackbox support an expanded set of search options
+	imageSearchOptions := imageMapping.OptionsMap
+	if features.Dackbox.Enabled() {
+		imageSearchOptions = search.CombineOptionsMaps(
+			imageMapping.OptionsMap,
+			imageComponentEdgeMapping.OptionsMap,
+			imageComponentMapping.OptionsMap,
+			componentVulnEdgeMapping.OptionsMap,
+			cveMapping.OptionsMap,
+		)
+	}
+	componentSearchOptions := search.CombineOptionsMaps(
+		imageComponentMapping.OptionsMap,
+		imageComponentEdgeMapping.OptionsMap,
+		componentVulnEdgeMapping.OptionsMap,
+		imageMapping.OptionsMap,
+		cveMapping.OptionsMap,
+	)
+	cveSearchOptions := search.CombineOptionsMaps(
+		cveMapping.OptionsMap,
+		componentVulnEdgeMapping.OptionsMap,
+		imageComponentMapping.OptionsMap,
+		imageComponentEdgeMapping.OptionsMap,
+		imageMapping.OptionsMap,
+	)
+
 	// EntityOptionsMap is a mapping from search categories to the options map for that category.
 	// search document maps are also built off this map
-
 	entityOptionsMap := map[v1.SearchCategory]search.OptionsMap{
 		v1.SearchCategory_ALERTS:               alertMapping.OptionsMap,
 		v1.SearchCategory_DEPLOYMENTS:          deployments.OptionsMap,
-		v1.SearchCategory_IMAGES:               imageMapping.OptionsMap,
+		v1.SearchCategory_IMAGES:               imageSearchOptions,
 		v1.SearchCategory_POLICIES:             policyMapping.OptionsMap,
 		v1.SearchCategory_SECRETS:              secretOptions.OptionsMap,
 		v1.SearchCategory_PROCESS_INDICATORS:   processindicators.OptionsMap,
@@ -106,10 +132,10 @@ func GetEntityOptionsMap() map[v1.SearchCategory]search.OptionsMap {
 		v1.SearchCategory_ROLEBINDINGS:         roleBindingOptions.OptionsMap,
 		v1.SearchCategory_SERVICE_ACCOUNTS:     serviceAccountOptions.OptionsMap,
 		v1.SearchCategory_SUBJECTS:             subjectMapping.OptionsMap,
-		v1.SearchCategory_VULNERABILITIES:      cveMapping.OptionsMap,
+		v1.SearchCategory_VULNERABILITIES:      cveSearchOptions,
 		v1.SearchCategory_COMPONENT_VULN_EDGE:  componentVulnEdgeMapping.OptionsMap,
 		v1.SearchCategory_IMAGE_COMPONENT_EDGE: imageComponentEdgeMapping.OptionsMap,
-		v1.SearchCategory_IMAGE_COMPONENTS:     imageComponentMapping.OptionsMap,
+		v1.SearchCategory_IMAGE_COMPONENTS:     componentSearchOptions,
 	}
 
 	return entityOptionsMap

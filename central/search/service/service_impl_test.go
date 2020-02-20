@@ -8,10 +8,12 @@ import (
 	"github.com/golang/mock/gomock"
 	alertMocks "github.com/stackrox/rox/central/alert/datastore/mocks"
 	clusterDataStoreMocks "github.com/stackrox/rox/central/cluster/datastore/mocks"
+	cveMocks "github.com/stackrox/rox/central/cve/datastore/mocks"
 	deploymentDatastore "github.com/stackrox/rox/central/deployment/datastore"
 	deploymentMocks "github.com/stackrox/rox/central/deployment/datastore/mocks"
 	"github.com/stackrox/rox/central/globalindex"
 	imageMocks "github.com/stackrox/rox/central/image/datastore/mocks"
+	componentMocks "github.com/stackrox/rox/central/imagecomponent/datastore/mocks"
 	namespaceMocks "github.com/stackrox/rox/central/namespace/datastore/mocks"
 	nodeMocks "github.com/stackrox/rox/central/node/globaldatastore/mocks"
 	policyDatastore "github.com/stackrox/rox/central/policy/datastore"
@@ -74,6 +76,8 @@ func TestSearchFuncs(t *testing.T) {
 		WithRoleStore(roleMocks.NewMockDataStore(mockCtrl)).
 		WithRoleBindingStore(roleBindingsMocks.NewMockDataStore(mockCtrl)).
 		WithClusterDataStore(clusterDataStoreMocks.NewMockDataStore(mockCtrl)).
+		WithCVEDataStore(cveMocks.NewMockDataStore(mockCtrl)).
+		WithComponentDataStore(componentMocks.NewMockDataStore(mockCtrl)).
 		WithAggregator(nil).
 		Build()
 
@@ -147,6 +151,8 @@ func TestAutocomplete(t *testing.T) {
 		WithRoleStore(roleMocks.NewMockDataStore(mockCtrl)).
 		WithRoleBindingStore(roleBindingsMocks.NewMockDataStore(mockCtrl)).
 		WithClusterDataStore(clusterDataStoreMocks.NewMockDataStore(mockCtrl)).
+		WithCVEDataStore(cveMocks.NewMockDataStore(mockCtrl)).
+		WithComponentDataStore(componentMocks.NewMockDataStore(mockCtrl)).
 		WithAggregator(nil).
 		Build().(*serviceImpl)
 
@@ -225,6 +231,8 @@ func TestAutocompleteForEnums(t *testing.T) {
 		WithRoleStore(roleMocks.NewMockDataStore(mockCtrl)).
 		WithRoleBindingStore(roleBindingsMocks.NewMockDataStore(mockCtrl)).
 		WithClusterDataStore(clusterDataStoreMocks.NewMockDataStore(mockCtrl)).
+		WithCVEDataStore(cveMocks.NewMockDataStore(mockCtrl)).
+		WithComponentDataStore(componentMocks.NewMockDataStore(mockCtrl)).
 		WithAggregator(nil).
 		Build().(*serviceImpl)
 
