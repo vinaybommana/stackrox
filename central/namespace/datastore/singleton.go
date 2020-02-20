@@ -20,7 +20,7 @@ var (
 
 func initialize() {
 	storage := store.New(globaldb.GetGlobalDB())
-	indexer := index.New(globalindex.GetGlobalIndex())
+	indexer := index.New(globalindex.GetGlobalTmpIndex())
 
 	var err error
 	as, err = New(storage, dackbox.GetGlobalDackBox(), indexer, deploymentDataStore.Singleton(), ranking.NamespaceRanker())

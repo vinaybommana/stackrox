@@ -25,7 +25,7 @@ var (
 
 func initialize() {
 	storage := store.New(globaldb.GetGlobalDB())
-	indexer := index.New(globalindex.GetGlobalIndex())
+	indexer := index.New(globalindex.GetGlobalTmpIndex())
 
 	var err error
 	ad, err = New(storage,
