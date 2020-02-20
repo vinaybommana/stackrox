@@ -155,14 +155,13 @@ func initializeBucket(dacky *dackbox.DackBox, indexQ queue.WaitableQueue, needsR
 		}
 	}
 	if len(keys) == 0 {
-		log.Errorf("no keys to reindex in bucket: %s", string(bucket))
+		log.Infof("no keys to reindex in bucket: %s", string(bucket))
 	} else {
-		log.Errorf("indexing %d keys in bucket: %s", len(keys), string(bucket))
+		log.Infof("indexing %d keys in bucket: %s", len(keys), string(bucket))
 	}
 
 	// Push them into the indexing queue.
 	for _, key := range keys {
-		log.Errorf("indexing %s in bucket: %s", key, string(bucket))
 		msg, err := reader.ReadIn(key, txn)
 		if err != nil {
 			return err
