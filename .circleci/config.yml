@@ -178,7 +178,8 @@ waitForAPI: &waitForAPI
         export API_HOSTNAME=$(./scripts/k8s/get-lb-ip.sh)
         export API_PORT=443
       fi
-      export METADATA_URL="https://${API_HOSTNAME}:${API_PORT}/v1/metadata"
+      export API_ENDPOINT="${API_HOSTNAME}:${API_PORT}"
+      export METADATA_URL="https://${API_ENDPOINT}/v1/metadata"
       echo "METADATA_URL is set to ${METADATA_URL}"
       set +e
       SUCCESS=0
@@ -197,7 +198,7 @@ waitForAPI: &waitForAPI
       fi
       cci-export API_HOSTNAME "$API_HOSTNAME"
       cci-export API_PORT "$API_PORT"
-      cci-export API_ENDPOINT "${API_HOSTNAME}:${API_PORT}"
+      cci-export API_ENDPOINT "${API_ENDPOINT}"
 
 waitForSensorK8s: &waitForSensorK8s
   run:
@@ -245,8 +246,7 @@ runUIE2E: &runUIE2E
         export UI_BASE_URL="https://localhost:3000"
       else
         if [[ "${LOAD_BALANCER}" == "lb" ]]; then
-          LB_IP=$(./scripts/k8s/get-lb-ip.sh)
-          sudo sh -c "echo >>/etc/hosts ${LB_IP} central-lb"
+          sudo sh -c "echo >>/etc/hosts ${API_HOSTNAME} central-lb"
           export UI_BASE_URL="https://central-lb:443"
         else
           export UI_BASE_URL="https://localhost:${LOCAL_PORT}"
@@ -2003,7 +2003,7 @@ jobs:
       - run:
           name: Restore DB
           command: |
-            roxctl -e "${API_HOSTNAME}:${API_PORT}" -p "${ROX_PASSWORD}" central db restore \
+            roxctl -e "${API_ENDPOINT}" -p "${ROX_PASSWORD}" central db restore \
               --file ./qa-tests-backend/artifacts/upgrade-tests/v2.4.16.4/stackrox_db_2019_03_01_03_48_45.zip \
               --timeout 1m
 
@@ -2044,7 +2044,7 @@ jobs:
       - run:
           name: Install license key
           command: |
-            roxctl -e "${API_HOSTNAME}:${API_PORT}" central license add --license="$ROX_LICENSE_KEY"
+            roxctl -e "${API_ENDPOINT}" central license add --license="$ROX_LICENSE_KEY"
             sleep 3
 
       - *waitForAPI
@@ -2080,13 +2080,13 @@ jobs:
       - run:
           name: Back up and restore the DB
           command: |
-            roxctl -e "${API_HOSTNAME}:${API_PORT}" -p "${ROX_PASSWORD}" central db backup \
+            roxctl -e "${API_ENDPOINT}" -p "${ROX_PASSWORD}" central db backup \
               --output /tmp/stackrox-db.zip \
               --timeout 1m
 
             ls -lh /tmp/stackrox-db.zip
 
-            roxctl -e "${API_HOSTNAME}:${API_PORT}" -p "${ROX_PASSWORD}" central db restore \
+            roxctl -e "${API_ENDPOINT}" -p "${ROX_PASSWORD}" central db restore \
               --file /tmp/stackrox-db.zip \
               --timeout 1m
             sleep 5
@@ -2115,7 +2115,7 @@ jobs:
             proxy_pid=$!
             sleep 5
 
-            roxctl -e "${API_HOSTNAME}:${API_PORT}" -p "${ROX_PASSWORD}" sensor generate k8s \
+            roxctl -e "${API_ENDPOINT}" -p "${ROX_PASSWORD}" sensor generate k8s \
               --image "${MAIN_IMAGE_REPO:-docker.io/stackrox/main}" \
               --collector-image "${COLLECTOR_IMAGE_REPO:-docker.io/stackrox/collector}" \
               --name remote-new
@@ -2124,7 +2124,7 @@ jobs:
               | sed -E 's@^.*/CN=SENSOR_SERVICE: ([^/]+)/.*$@\1@g')"
             ROX_UPGRADE_PROCESS_ID=3b2cbf78-d35a-4c2c-b67b-e37f805c14da \
                 ROX_CLUSTER_ID="$CLUSTER_ID" \
-                ROX_CENTRAL_ENDPOINT="${API_HOSTNAME}:${API_PORT}" \
+                ROX_CENTRAL_ENDPOINT="${API_ENDPOINT}" \
                 ROX_MTLS_CA_FILE="$(pwd)/sensor-remote-new/ca.pem" \
                 ROX_MTLS_CERT_FILE="$(pwd)/sensor-remote-new/sensor-cert.pem" \
                 ROX_MTLS_KEY_FILE="$(pwd)/sensor-remote-new/sensor-key.pem" \
@@ -2146,7 +2146,7 @@ jobs:
               | sed -E 's@^.*/CN=SENSOR_SERVICE: ([^/]+)/.*$@\1@g')"
             ROX_UPGRADE_PROCESS_ID=3b2cbf78-d35a-4c2c-b67b-e37f805c14da \
                 ROX_CLUSTER_ID="$CLUSTER_ID" \
-                ROX_CENTRAL_ENDPOINT="${API_HOSTNAME}:${API_PORT}" \
+                ROX_CENTRAL_ENDPOINT="${API_ENDPOINT}" \
                 ROX_MTLS_CA_FILE="$(pwd)/sensor-remote-new/ca.pem" \
                 ROX_MTLS_CERT_FILE="$(pwd)/sensor-remote-new/sensor-cert.pem" \
                 ROX_MTLS_KEY_FILE="$(pwd)/sensor-remote-new/sensor-key.pem" \
@@ -2168,7 +2168,7 @@ jobs:
               | sed -E 's@^.*/CN=SENSOR_SERVICE: ([^/]+)/.*$@\1@g')"
             ROX_UPGRADE_PROCESS_ID=3b2cbf78-d35a-4c2c-b67b-e37f805c14da \
                 ROX_CLUSTER_ID="$CLUSTER_ID" \
-                ROX_CENTRAL_ENDPOINT="${API_HOSTNAME}:${API_PORT}" \
+                ROX_CENTRAL_ENDPOINT="${API_ENDPOINT}" \
                 ROX_MTLS_CA_FILE="$(pwd)/sensor-remote-new/ca.pem" \
                 ROX_MTLS_CERT_FILE="$(pwd)/sensor-remote-new/sensor-cert.pem" \
                 ROX_MTLS_KEY_FILE="$(pwd)/sensor-remote-new/sensor-key.pem" \
