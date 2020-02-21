@@ -19,18 +19,26 @@ type SearcherSpec struct {
 // NewSearcher returns a searcher that applies search terms to the first input index that supports the term.
 // If no index supports the term, then the search will return an error.
 func NewSearcher(specs ...SearcherSpec) search.Searcher {
+	optMaps := make([]search.OptionsMap, 0, len(specs))
+	for _, spec := range specs {
+		optMaps = append(optMaps, spec.Options)
+	}
 	return paginated.Paginated(&compoundSearcherImpl{
-		specs: specs,
+		specs:    specs,
+		combined: search.CombineOptionsMaps(optMaps...),
 	})
 }
 
 type compoundSearcherImpl struct {
-	specs []SearcherSpec
+	specs    []SearcherSpec
+	combined search.OptionsMap
 }
 
 // Search constructs and executes the necessary queries on the searchers that the compound searcher is configured to
 // use.
 func (cs *compoundSearcherImpl) Search(ctx context.Context, q *v1.Query) ([]search.Result, error) {
+	q, _ = search.FilterQueryWithMap(q, cs.combined)
+
 	// Construct a tree that matches subqueries with specifications.
 	req, err := build(q, cs.specs)
 	if err != nil {
