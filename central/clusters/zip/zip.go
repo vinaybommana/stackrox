@@ -115,10 +115,6 @@ func getDefaultCertCA() (*zip.File, error) {
 	keyFile := filepath.Join(tlsconfig.DefaultCertPath, tlsconfig.TLSKeyFileName)
 
 	if filesExist, err := fileutils.AllExist(certFile, keyFile); err != nil || !filesExist {
-		if !filesExist {
-			return nil, nil
-		}
-
 		return nil, err
 	}
 
