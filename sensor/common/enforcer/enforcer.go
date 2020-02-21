@@ -49,8 +49,49 @@ func (e *enforcer) ResponsesC() <-chan *central.MsgFromSensor {
 	return nil
 }
 
-func (e *enforcer) ProcessAlertResults(action central.ResourceAction, stage storage.LifecycleStage, alertResults *central.AlertResults) {
+func generateDeploymentEnforcement(a *storage.Alert) *central.DeploymentEnforcement {
+	return &central.DeploymentEnforcement{
+		DeploymentId:   a.GetDeployment().GetId(),
+		DeploymentName: a.GetDeployment().GetName(),
+		DeploymentType: a.GetDeployment().GetType(),
+		Namespace:      a.GetDeployment().GetNamespace(),
+		AlertId:        a.GetId(),
+		PolicyName:     a.GetPolicy().GetName(),
+	}
+}
 
+func (e *enforcer) ProcessAlertResults(action central.ResourceAction, stage storage.LifecycleStage, alertResults *central.AlertResults) {
+	if action != central.ResourceAction_CREATE_RESOURCE {
+		return
+	}
+	for _, a := range alertResults.GetAlerts() {
+		if a.GetEnforcement().GetAction() == storage.EnforcementAction_UNSET_ENFORCEMENT {
+			continue
+		}
+		switch stage {
+		case storage.LifecycleStage_DEPLOY:
+			e.actionsC <- &central.SensorEnforcement{
+				Enforcement: a.GetEnforcement().Action,
+				Resource: &central.SensorEnforcement_Deployment{
+					Deployment: generateDeploymentEnforcement(a),
+				},
+			}
+		case storage.LifecycleStage_RUNTIME:
+			if numProcesses := len(a.GetProcessViolation().GetProcesses()); numProcesses != 1 {
+				log.Errorf("Runtime alert on policy %q and deployment %q has %d process violations. Expected only 1", a.GetPolicy().GetName(), a.GetDeployment().GetName(), numProcesses)
+				continue
+			}
+			e.actionsC <- &central.SensorEnforcement{
+				Enforcement: a.GetEnforcement().Action,
+				Resource: &central.SensorEnforcement_ContainerInstance{
+					ContainerInstance: &central.ContainerInstanceEnforcement{
+						PodId:                 a.GetProcessViolation().GetProcesses()[0].GetPodId(),
+						DeploymentEnforcement: generateDeploymentEnforcement(a),
+					},
+				},
+			}
+		}
+	}
 }
 
 func (e *enforcer) ProcessMessage(msg *central.MsgToSensor) error {
