@@ -14,6 +14,7 @@ View the full documentation at https://tailwindcss.com.
 
 */
 
+const customFormsPlugin = require('@tailwindcss/custom-forms');
 const getGradientClasses = require('./tailwind-plugins/gradient');
 const getGridClasses = require('./tailwind-plugins/grid');
 const getObjectFitClasses = require('./tailwind-plugins/object-fit');
@@ -590,15 +591,22 @@ module.exports = {
         zIndex: ['responsive', 'hover', 'first-child', 'last-child', 'before', 'after']
     },
     plugins: [
+        customFormsPlugin,
         function addvariant({ addVariant, e }) {
             addVariant('first-child', ({ modifySelectors, separator }) => {
-                modifySelectors(({ className }) => `.${e(`fc${separator}${className}`)} > *:first-child`);
+                modifySelectors(
+                    ({ className }) => `.${e(`fc${separator}${className}`)} > *:first-child`
+                );
             });
             addVariant('last-child', ({ modifySelectors, separator }) => {
-                modifySelectors(({ className }) => `.${e(`lc${separator}${className}`)} > *:last-child`);
+                modifySelectors(
+                    ({ className }) => `.${e(`lc${separator}${className}`)} > *:last-child`
+                );
             });
             addVariant('before', ({ modifySelectors, separator }) => {
-                modifySelectors(({ className }) => `.${e(`before${separator}${className}`)}:before`);
+                modifySelectors(
+                    ({ className }) => `.${e(`before${separator}${className}`)}:before`
+                );
             });
             addVariant('after', ({ modifySelectors, separator }) => {
                 modifySelectors(({ className }) => `.${e(`after${separator}${className}`)}:after`);

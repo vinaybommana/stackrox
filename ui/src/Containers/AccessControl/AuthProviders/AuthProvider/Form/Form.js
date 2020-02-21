@@ -8,6 +8,7 @@ import { FieldArray, reduxForm } from 'redux-form';
 import Labeled from 'Components/Labeled';
 import ReduxSelectField from 'Components/forms/ReduxSelectField';
 import CollapsibleCard from 'Components/CollapsibleCard';
+import { getAuthProviderLabelByValue } from 'constants/accessControl';
 import RuleGroups from './RuleGroups';
 import CreateRoleModal from './CreateRoleModal';
 import ConfigurationFormFields from './ConfigurationFormFields';
@@ -72,8 +73,10 @@ class Form extends Component {
                     </CollapsibleCard>
                     <div className="mt-4">
                         <CollapsibleCard
-                            // Use the "type" here because the user usually hasn't typed a name yet.
-                            title={`2. Assign StackRox roles to your ${initialValues.type} users`}
+                            // Use the "type" here because the user usually hasn't typed a c yet.
+                            title={`2. Assign StackRox roles to your ${getAuthProviderLabelByValue(
+                                initialValues.type
+                            )} users`}
                             titleClassName="border-b px-1 border-warning-300 leading-normal cursor-pointer flex justify-between items-center bg-warning-200 hover:border-warning-400"
                         >
                             <div className="p-2">

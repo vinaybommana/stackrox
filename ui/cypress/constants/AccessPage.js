@@ -22,9 +22,7 @@ export const selectors = {
         clientSecretLabel: 'p:contains("Client Secret")',
         doNotUseClientSecretCheckbox: 'input[name="config.do_not_use_client_secret"]',
         clientSecretInput: 'input[name="config.client_secret"]',
-        callbackModeDropDown:
-            '[data-test-id="auth-provider-panel"] .react-select__dropdown-indicator:first',
-        fragmentOption: '.react-select__menu-list > div:contains("Fragment")',
-        httpPostOption: '.react-select__menu-list > div:contains("Fragment")'
+        fragmentCallbackRadio: '#fragment-radio',
+        httpPostCallbackRadio: '#post-radio'
     }
 };

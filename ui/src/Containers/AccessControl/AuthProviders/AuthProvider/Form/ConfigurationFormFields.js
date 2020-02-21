@@ -8,9 +8,9 @@ import Labeled from 'Components/Labeled';
 import FormFieldLabel from 'Components/forms/FormFieldLabel';
 import ReduxTextField from 'Components/forms/ReduxTextField';
 import ReduxPasswordField from 'Components/forms/ReduxPasswordField';
-import ReduxSelectField from 'Components/forms/ReduxSelectField';
 import ReduxTextAreaField from 'Components/forms/ReduxTextAreaField';
 import ReduxCheckboxField from 'Components/forms/ReduxCheckboxField';
+import ReduxRadioField from 'Components/forms/ReduxRadioField';
 
 const baseURL = `${window.location.protocol}//${window.location.host}`;
 const oidcFragmentCallbackURL = `${baseURL}/auth/response/oidc`;
@@ -102,15 +102,28 @@ const OidcFormFields = ({ disabled, configValues, change }) => {
         <>
             <CommonFields disabled={disabled} />
             <Labeled label={<FormFieldLabel text="Callback Mode" required />}>
-                <ReduxSelectField
-                    name="config.mode"
-                    options={[
-                        { value: 'fragment', label: 'Fragment' },
-                        { value: 'post', label: 'HTTP POST' }
-                    ]}
-                    disabled={disabled}
-                    onChange={onModeChange}
-                />
+                <div className="flex">
+                    <label htmlFor="post-radio" className="flex items-center">
+                        <ReduxRadioField
+                            name="config.mode"
+                            value="post"
+                            id="post-radio"
+                            disabled={disabled}
+                            onChange={onModeChange}
+                        />
+                        <span className="ml-1">HTTP POST</span>
+                    </label>
+                    <label htmlFor="fragment-radio" className="flex items-center ml-6">
+                        <ReduxRadioField
+                            name="config.mode"
+                            value="fragment"
+                            id="fragment-radio"
+                            disabled={disabled}
+                            onChange={onModeChange}
+                        />
+                        <span className="ml-1">Fragment</span>
+                    </label>
+                </div>
             </Labeled>
             <Labeled label={<FormFieldLabel text="Issuer" required />}>
                 <ReduxTextField
@@ -125,26 +138,38 @@ const OidcFormFields = ({ disabled, configValues, change }) => {
             <FeatureEnabled featureFlag={featureFlags.ROX_REFRESH_TOKENS}>
                 {clientSecret}
             </FeatureEnabled>
-            <Note header="if required by your IdP, use the following callback URLs:">
+            <Note
+                header={
+                    <span>
+                        if required by your IdP, use the following callback URL for{' '}
+                        <span className="font-700">
+                            {configValues.mode === 'fragment' ? 'Fragment' : 'HTTP POST'}
+                        </span>{' '}
+                        mode:
+                    </span>
+                }
+            >
                 <ul className="pl-4 mt-2 leading-loose">
-                    <li>
-                        For <span className="font-700">Fragment</span> mode:{' '}
-                        <a
-                            className="text-tertiary-800 hover:text-tertiary-900"
-                            href={oidcFragmentCallbackURL}
-                        >
-                            {oidcFragmentCallbackURL}
-                        </a>
-                    </li>
-                    <li>
-                        For <span className="font-700">HTTP POST</span> mode:{' '}
-                        <a
-                            className="text-tertiary-800 hover:text-tertiary-900"
-                            href={oidcPostCallbackURL}
-                        >
-                            {oidcPostCallbackURL}
-                        </a>
-                    </li>
+                    {configValues.mode === 'fragment' && (
+                        <li>
+                            <a
+                                className="text-tertiary-800 hover:text-tertiary-900"
+                                href={oidcFragmentCallbackURL}
+                            >
+                                {oidcFragmentCallbackURL}
+                            </a>
+                        </li>
+                    )}
+                    {configValues.mode === 'post' && (
+                        <li>
+                            <a
+                                className="text-tertiary-800 hover:text-tertiary-900"
+                                href={oidcPostCallbackURL}
+                            >
+                                {oidcPostCallbackURL}
+                            </a>
+                        </li>
+                    )}
                 </ul>
             </Note>
         </>
@@ -154,14 +179,14 @@ const OidcFormFields = ({ disabled, configValues, change }) => {
 const Auth0FormFields = ({ disabled }) => (
     <>
         <CommonFields />
-        <Labeled label="Auth0 Tenant">
+        <Labeled label={<FormFieldLabel text="Auth0 Tenant" required />}>
             <ReduxTextField
                 name="config.issuer"
                 placeholder="your-tenant.auth0.com"
                 disabled={disabled}
             />
         </Labeled>
-        <Labeled label="Client ID">
+        <Labeled label={<FormFieldLabel text="Client ID" required />}>
             <ReduxTextField name="config.client_id" disabled={disabled} />
         </Labeled>
         <Note header="if required by your IdP, use the following callback URL:">
@@ -179,63 +204,79 @@ const Auth0FormFields = ({ disabled }) => (
     </>
 );
 
-const SamlFormFields = ({ disabled }) => (
+const SamlFormFields = ({ disabled, configValues }) => (
     <>
         <CommonFields />
-        <Labeled label="ServiceProvider Issuer">
+        <Labeled label={<FormFieldLabel text="ServiceProvider Issuer" required />}>
             <ReduxTextField
                 name="config.sp_issuer"
                 placeholder="https://prevent.stackrox.io/"
                 disabled={disabled}
             />
         </Labeled>
-        <div className="w-full mb-5">
-            <div className="border-b border-base-400 border-dotted flex pb-2">
-                Option 1: Dynamic Configuration
-            </div>
+        <div className="flex border-b border-base-400 border-dotted pb-2 w-full mb-5">
+            <label htmlFor="dynamic-config-radio" className="flex items-center">
+                <ReduxRadioField
+                    name="config.type"
+                    value="dynamic"
+                    id="dynamic-config-radio"
+                    disabled={disabled}
+                />
+                <span className="ml-1">Option 1: Dynamic Configuration</span>
+            </label>
+            <label htmlFor="static-config-radio" className="flex items-center ml-6">
+                <ReduxRadioField
+                    name="config.type"
+                    value="static"
+                    id="static-config-radio"
+                    disabled={disabled}
+                />
+                <span className="ml-1">Option 2: Static Configuration</span>
+            </label>
         </div>
-        <Labeled label="IdP Metadata URL">
-            <ReduxTextField
-                name="config.idp_metadata_url"
-                placeholder="https://idp.example.com/metadata"
-                disabled={disabled}
-            />
-        </Labeled>
-        <div className="w-full mb-5">
-            <div className="border-b border-base-400 border-dotted flex pb-2">
-                Option 2: Static Configuration
-            </div>
-        </div>
-        <Labeled label="IdP Issuer">
-            <ReduxTextField
-                name="config.idp_issuer"
-                placeholder="https://idp.example.com/"
-                disabled={disabled}
-            />
-        </Labeled>
-        <Labeled label="IdP SSO URL">
-            <ReduxTextField
-                name="config.idp_sso_url"
-                placeholder="https://idp.example.com/login"
-                disabled={disabled}
-            />
-        </Labeled>
-        <Labeled label="Name/ID Format">
-            <ReduxTextField
-                name="config.idp_nameid_format"
-                placeholder="urn:oasis:names:tc:SAML:1.1:nameid-format:persistent"
-                disabled={disabled}
-            />
-        </Labeled>
-        <Labeled label="IdP Certificate (PEM)">
-            <ReduxTextAreaField
-                name="config.idp_cert_pem"
-                placeholder={
-                    '-----BEGIN CERTIFICATE-----\nYour certificate data\n-----END CERTIFICATE-----'
-                }
-                disabled={disabled}
-            />
-        </Labeled>
+        {configValues.type === 'dynamic' && (
+            <Labeled label={<FormFieldLabel text="IdP Metadata URL" required />}>
+                <ReduxTextField
+                    name="config.idp_metadata_url"
+                    placeholder="https://idp.example.com/metadata"
+                    disabled={disabled}
+                />
+            </Labeled>
+        )}
+        {configValues.type === 'static' && (
+            <>
+                <Labeled label={<FormFieldLabel text="IdP Issuer" required />}>
+                    <ReduxTextField
+                        name="config.idp_issuer"
+                        placeholder="https://idp.example.com/"
+                        disabled={disabled}
+                    />
+                </Labeled>
+                <Labeled label={<FormFieldLabel text="IdP SSO URL" required />}>
+                    <ReduxTextField
+                        name="config.idp_sso_url"
+                        placeholder="https://idp.example.com/login"
+                        disabled={disabled}
+                    />
+                </Labeled>
+                <Labeled label="Name/ID Format">
+                    <ReduxTextField
+                        name="config.idp_nameid_format"
+                        placeholder="urn:oasis:names:tc:SAML:1.1:nameid-format:persistent"
+                        disabled={disabled}
+                    />
+                </Labeled>
+                <Labeled label={<FormFieldLabel text="IdP Certificate (PEM)" required />}>
+                    <ReduxTextAreaField
+                        name="config.idp_cert_pem"
+                        placeholder={
+                            '-----BEGIN CERTIFICATE-----\nYour certificate data\n-----END CERTIFICATE-----'
+                        }
+                        disabled={disabled}
+                    />
+                </Labeled>
+            </>
+        )}
         <Note header="if required by your IdP, use the following Assertion Consumer Service (ACS) URL:">
             <ul className="pl-4 mt-2 leading-loose">
                 <li>
@@ -251,7 +292,7 @@ const SamlFormFields = ({ disabled }) => (
 const UserPkiFormFields = ({ disabled }) => (
     <>
         <CommonFields />
-        <Labeled label="CA Certificates (PEM)">
+        <Labeled label={<FormFieldLabel text="CA Certificates (PEM)" required />}>
             <ReduxTextAreaField
                 name="config.keys"
                 placeholder={

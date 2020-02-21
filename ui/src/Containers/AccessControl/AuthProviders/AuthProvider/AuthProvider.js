@@ -11,6 +11,7 @@ import Panel, { headerClassName } from 'Components/Panel';
 import Button from 'Containers/AccessControl/AuthProviders/AuthProvider/Button';
 import Form from 'Containers/AccessControl/AuthProviders/AuthProvider/Form/Form';
 import Details from 'Containers/AccessControl/AuthProviders/AuthProvider/Details';
+import { getAuthProviderLabelByValue } from 'constants/accessControl';
 
 class AuthProvider extends Component {
     static propTypes = {
@@ -50,6 +51,9 @@ class AuthProvider extends Component {
         );
         if (!ROX_REFRESH_TOKENS) return initialValues;
 
+        // TODO-ivan: eventually logic for different auth provider type should live
+        // with the form component that renders form for the corresponding auth provider
+        // type, probably makes sense to refactor after moving away from redux-form
         if (initialValues.type === 'oidc') {
             const alteredConfig = { ...initialValues.config };
 
@@ -67,6 +71,15 @@ class AuthProvider extends Component {
             // clean-up obfuscated value if any as we don't need to show it
             alteredConfig.client_secret = '';
 
+            return {
+                ...initialValues,
+                config: alteredConfig
+            };
+        }
+        if (initialValues.type === 'saml') {
+            const alteredConfig = { ...initialValues.config };
+            // unless static config values are present, assume dynamic configuration is selected
+            alteredConfig.type = alteredConfig.idp_issuer ? 'static' : 'dynamic';
             return {
                 ...initialValues,
                 config: alteredConfig
@@ -101,6 +114,22 @@ class AuthProvider extends Component {
 
             // finally delete client only values
             delete alteredConfig.clientOnly;
+
+            return {
+                ...values,
+                config: alteredConfig
+            };
+        }
+        if (values.type === 'saml') {
+            const alteredConfig = { ...values.config };
+            if (alteredConfig.type === 'dynamic') {
+                ['idp_issuer', 'idp_sso_url', 'idp_nameid_format', 'idp_cert_pem'].forEach(
+                    p => delete alteredConfig[p]
+                );
+            } else if (alteredConfig.type === 'static') {
+                delete alteredConfig.idp_metadata_url;
+            }
+            delete alteredConfig.type; // that was UI only field
 
             return {
                 ...values,
@@ -188,7 +217,9 @@ class AuthProvider extends Component {
         } else {
             headerText = selectedAuthProvider.name
                 ? `"${selectedAuthProvider.name}" Auth Provider`
-                : `Create New ${selectedAuthProvider.type} Auth Provider`;
+                : `Create New ${getAuthProviderLabelByValue(
+                      selectedAuthProvider.type
+                  )} Auth Provider`;
             const buttonText = selectedAuthProvider.active ? 'Edit Roles' : 'Edit Provider';
             headerComponents = (
                 <Button

@@ -20,8 +20,8 @@ const Details = props => {
         );
     }
 
-    const title = `1. ${name} Configuration`;
-    const propsTitle = `2. Assign StackRox roles to your ${name} users`;
+    const title = `1. "${name}" Configuration`;
+    const propsTitle = `2. StackRox roles assigned to your "${name}" users`;
     return (
         <div className="w-full justify-between overflow-auto">
             {warning}

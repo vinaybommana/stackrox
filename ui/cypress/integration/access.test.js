@@ -26,7 +26,7 @@ describe('Access Control Page', () => {
                 selectors.authProviders.newAuth0Option
             );
             cy.get(selectors.authProviders.newAuthProviderPanel).contains(
-                'Create New auth0 Auth Provider'
+                'Create New Auth0 Auth Provider'
             );
         });
 
@@ -35,7 +35,7 @@ describe('Access Control Page', () => {
                 selectors.authProviders.newOidcOption
             );
             cy.get(selectors.authProviders.newAuthProviderPanel).contains(
-                'Create New oidc Auth Provider'
+                'Create New OpenID Connect Auth Provider'
             );
 
             // client secret should be marked as required as HTTP POST should be default callback
@@ -46,16 +46,14 @@ describe('Access Control Page', () => {
             cy.get(selectors.authProviders.clientSecretInput).should('not.be.disabled');
 
             // select Fragment
-            cy.get(selectors.authProviders.callbackModeDropDown).click();
-            cy.get(selectors.authProviders.fragmentOption).click();
+            cy.get(selectors.authProviders.fragmentCallbackRadio).check();
 
             // client secret fields will get disabled
             cy.get(selectors.authProviders.doNotUseClientSecretCheckbox).should('be.disabled');
             cy.get(selectors.authProviders.clientSecretInput).should('be.disabled');
 
             // select HTTP POST back
-            cy.get(selectors.authProviders.callbackModeDropDown).click();
-            cy.get(selectors.authProviders.httpPostOption).click();
+            cy.get(selectors.authProviders.httpPostCallbackRadio).check();
 
             // opt out from client secret usage
             cy.get(selectors.authProviders.doNotUseClientSecretCheckbox).check();
