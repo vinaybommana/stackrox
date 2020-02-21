@@ -57,16 +57,21 @@ const ViolationFindings = ({ data, message }) => {
                         })}
                     </ul>
                 </Widget>
-                <div className="s-1 sy-2 bg-base-100 m-4 rounded shadow">
-                    <FeatureEnabled featureFlag={knownBackendFlags.ROX_ANALYST_NOTES_UI}>
-                        <AnalystComments type="Violation" className="" />
-                    </FeatureEnabled>
-                </div>
-                <div className="sx-2 sy-1 bg-base-100 m-4 rounded shadow">
-                    <FeatureEnabled featureFlag={knownBackendFlags.ROX_ANALYST_NOTES_UI}>
-                        <AnalystTags type="Violation" className="h-full" />
-                    </FeatureEnabled>
-                </div>
+
+                {knownBackendFlags.ROX_ANALYST_NOTES_UI === true && (
+                    <div>
+                        <div className="s-1 sy-2 bg-base-100 m-4 rounded shadow">
+                            <FeatureEnabled featureFlag={knownBackendFlags.ROX_ANALYST_NOTES_UI}>
+                                <AnalystComments type="Violation" className="" />
+                            </FeatureEnabled>
+                        </div>
+                        <div className="sx-2 sy-1 bg-base-100 m-4 rounded shadow">
+                            <FeatureEnabled featureFlag={knownBackendFlags.ROX_ANALYST_NOTES_UI}>
+                                <AnalystTags type="Violation" className="h-full" />
+                            </FeatureEnabled>
+                        </div>
+                    </div>
+                )}
             </div>
         );
     } else {

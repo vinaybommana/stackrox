@@ -1,7 +1,6 @@
 import React from 'react';
 import { workflowEntityPropTypes, workflowEntityDefaultProps } from 'constants/entityPageProps';
 import useCases from 'constants/useCaseTypes';
-import queryService from 'modules/queryService';
 import entityTypes from 'constants/entityTypes';
 import { defaultCountKeyMap } from 'constants/workflowPages.constants';
 import gql from 'graphql-tag';
@@ -10,8 +9,9 @@ import { VULN_CVE_LIST_FRAGMENT } from 'Containers/VulnMgmt/VulnMgmt.fragments';
 import VulnMgmtImageOverview from './VulnMgmtImageOverview';
 import EntityList from '../../List/VulnMgmtList';
 import {
-    getPolicyQueryVar,
-    tryUpdateQueryWithVulMgmtPolicyClause
+    vulMgmtPolicyQuery,
+    tryUpdateQueryWithVulMgmtPolicyClause,
+    getScopeQuery
 } from '../VulnMgmtPolicyQueryUtil';
 
 const VulnMgmtImage = ({ entityId, entityListType, search, entityContext, sort, page }) => {
@@ -64,13 +64,13 @@ const VulnMgmtImage = ({ entityId, entityListType, search, entityContext, sort, 
 
     function getListQuery(listFieldName, fragmentName, fragment) {
         return gql`
-        query getImage${entityListType}($id: ID!, $pagination: Pagination, $query: String${getPolicyQueryVar(
-            entityListType
-        )}) {
+        query getImage${entityListType}($id: ID!, $pagination: Pagination, $query: String, $policyQuery: String, $scopeQuery: String) {
             result: image(sha: $id) {
                 id
                 ${defaultCountKeyMap[entityListType]}(query: $query)
                 ${listFieldName}(query: $query, pagination: $pagination) { ...${fragmentName} }
+                unusedVarSink(query: $policyQuery)
+                unusedVarSink(query: $scopeQuery)
             }
         }
         ${fragment}
@@ -81,7 +81,8 @@ const VulnMgmtImage = ({ entityId, entityListType, search, entityContext, sort, 
         variables: {
             id: entityId,
             query: tryUpdateQueryWithVulMgmtPolicyClause(entityListType, search),
-            policyQuery: queryService.objectToWhereClause({ Category: 'Vulnerability Management' })
+            ...vulMgmtPolicyQuery,
+            scopeQuery: getScopeQuery(entityContext)
         }
     };
 

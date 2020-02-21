@@ -19,6 +19,7 @@ import { workflowListPropTypes, workflowListDefaultProps } from 'constants/entit
 import { clusterSortFields } from 'constants/sortFields';
 import { LIST_PAGE_SIZE } from 'constants/workflowPages.constants';
 import removeEntityContextColumns from 'utils/tableUtils';
+import { vulMgmtPolicyQuery } from '../../Entity/VulnMgmtPolicyQueryUtil';
 
 export const defaultClusterSort = [
     // @TODO, uncomment the primary sort field for Clusters, after its available for backend pagination/sorting
@@ -36,9 +37,16 @@ export const defaultClusterSort = [
 // eslint-disable-next-line
 const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
     const query = gql`
-        query getClusters($query: String, $policyQuery: String, $pagination: Pagination) {
+        query getClusters(
+            $query: String
+            $policyQuery: String
+            $scopeQuery: String
+            $pagination: Pagination
+        ) {
             results: clusters(query: $query, pagination: $pagination) {
                 ...clusterFields
+                unusedVarSink(query: $policyQuery)
+                unusedVarSink(query: $scopeQuery)
             }
             count: clusterCount(query: $query)
         }
@@ -49,9 +57,7 @@ const VulnMgmtClusters = ({ selectedRowId, search, sort, page, data }) => {
     const tableSort = sort || defaultClusterSort;
     const queryOptions = {
         variables: {
-            policyQuery: queryService.objectToWhereClause({
-                Category: 'Vulnerability Management'
-            }),
+            ...vulMgmtPolicyQuery,
             query: queryService.objectToWhereClause(search),
             // @TODO: delete the following line
             //        and uncomment the line after that, once Clusters pagination is fixed on the back end

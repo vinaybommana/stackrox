@@ -3,18 +3,21 @@ import gql from 'graphql-tag';
 
 import useCases from 'constants/useCaseTypes';
 import { workflowEntityPropTypes, workflowEntityDefaultProps } from 'constants/entityPageProps';
-import queryService from 'modules/queryService';
 import entityTypes from 'constants/entityTypes';
 import { defaultCountKeyMap } from 'constants/workflowPages.constants';
 import WorkflowEntityPage from 'Containers/Workflow/WorkflowEntityPage';
 import { VULN_CVE_LIST_FRAGMENT } from 'Containers/VulnMgmt/VulnMgmt.fragments';
 import VulnMgmtNamespaceOverview from './VulnMgmtNamespaceOverview';
 import EntityList from '../../List/VulnMgmtList';
-import { getPolicyQueryVar, getQueryVar } from '../VulnMgmtPolicyQueryUtil';
+import {
+    vulMgmtPolicyQuery,
+    tryUpdateQueryWithVulMgmtPolicyClause,
+    getScopeQuery
+} from '../VulnMgmtPolicyQueryUtil';
 
 const VulnMgmtNamespace = ({ entityId, entityListType, search, sort, page, entityContext }) => {
     const overviewQuery = gql`
-        query getNamespace($id: ID!, $policyQuery: String, $query: String) {
+        query getNamespace($id: ID!, $query: String, $policyQuery: String, $scopeQuery: String) {
             result: namespace(id: $id) {
                 metadata {
                     priority
@@ -32,20 +35,20 @@ const VulnMgmtNamespace = ({ entityId, entityListType, search, sort, page, entit
                         id
                         name
                         description
-                        policyStatus
-                        latestViolation
+                        policyStatus(query: $scopeQuery)
+                        latestViolation(query: $scopeQuery)
                         severity
-                        deploymentCount(query: $query)
+                        deploymentCount(query: $scopeQuery)
                         lifecycleStages
                         enforcementActions
                     }
                 }
                 policyCount(query: $policyQuery)
                 vulnCount
-                deploymentCount: numDeployments 
+                deploymentCount 
                 imageCount 
-                componentCount(query: $query)
-                vulnerabilities: vulns(query: $query) {
+                componentCount
+                vulnerabilities: vulns {
                     ...cveFields
                 }
             }
@@ -55,17 +58,15 @@ const VulnMgmtNamespace = ({ entityId, entityListType, search, sort, page, entit
 
     function getListQuery(listFieldName, fragmentName, fragment) {
         return gql`
-        query getNamespace${entityListType}($id: ID!, $pagination: Pagination, $query: String${getPolicyQueryVar(
-            entityListType
-        )}) {
+        query getNamespace${entityListType}($id: ID!, $pagination: Pagination, $query: String, $policyQuery: String, $scopeQuery: String) {
             result: namespace(id: $id) {
                 metadata {
                     id
                 }
-                ${defaultCountKeyMap[entityListType]}(query: ${getQueryVar(entityListType)})
-                ${listFieldName}(query: ${getQueryVar(
-            entityListType
-        )}, pagination: $pagination) { ...${fragmentName} }
+                ${defaultCountKeyMap[entityListType]}(query: $query)
+                ${listFieldName}(query: $query, pagination: $pagination) { ...${fragmentName} }
+                unusedVarSink(query: $policyQuery)
+                unusedVarSink(query: $scopeQuery)
             }
         }
         ${fragment}
@@ -73,13 +74,12 @@ const VulnMgmtNamespace = ({ entityId, entityListType, search, sort, page, entit
     }
     const newEntityContext = { ...entityContext, [entityTypes.NAMESPACE]: entityId };
 
-    const entityContextObj = queryService.entityContextToQueryObject(newEntityContext);
-
     const queryOptions = {
         variables: {
             id: entityId,
-            query: queryService.objectToWhereClause({ ...search, ...entityContextObj }),
-            policyQuery: queryService.objectToWhereClause({ Category: 'Vulnerability Management' })
+            query: tryUpdateQueryWithVulMgmtPolicyClause(entityListType, search, newEntityContext),
+            ...vulMgmtPolicyQuery,
+            scopeQuery: getScopeQuery(entityContext)
         }
     };
 

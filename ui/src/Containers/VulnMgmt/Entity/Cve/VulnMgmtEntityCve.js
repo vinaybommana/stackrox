@@ -1,7 +1,6 @@
 import React from 'react';
 import { workflowEntityPropTypes, workflowEntityDefaultProps } from 'constants/entityPageProps';
 import useCases from 'constants/useCaseTypes';
-import queryService from 'modules/queryService';
 import entityTypes from 'constants/entityTypes';
 import { defaultCountKeyMap } from 'constants/workflowPages.constants';
 import gql from 'graphql-tag';
@@ -9,8 +8,9 @@ import WorkflowEntityPage from 'Containers/Workflow/WorkflowEntityPage';
 import VulnMgmtCveOverview from './VulnMgmtCveOverview';
 import VulnMgmtList from '../../List/VulnMgmtList';
 import {
-    getPolicyQueryVar,
-    tryUpdateQueryWithVulMgmtPolicyClause
+    vulMgmtPolicyQuery,
+    tryUpdateQueryWithVulMgmtPolicyClause,
+    getScopeQuery
 } from '../VulnMgmtPolicyQueryUtil';
 
 const VulmMgmtCve = ({ entityId, entityListType, search, entityContext, sort, page }) => {
@@ -51,13 +51,13 @@ const VulmMgmtCve = ({ entityId, entityListType, search, entityContext, sort, pa
 
     function getListQuery(listFieldName, fragmentName, fragment) {
         return gql`
-        query getCve${entityListType}($id: ID!, $pagination: Pagination, $query: String${getPolicyQueryVar(
-            entityListType
-        )}) {
+        query getCve${entityListType}($id: ID!, $pagination: Pagination, $query: String, $policyQuery: String, $scopeQuery: String) {
             result: vulnerability(id: $id) {
                 id
                 ${defaultCountKeyMap[entityListType]}(query: $query)
                 ${listFieldName}(query: $query, pagination: $pagination) { ...${fragmentName} }
+                unusedVarSink(query: $policyQuery)
+                unusedVarSink(query: $scopeQuery)
             }
         }
         ${fragment}
@@ -68,7 +68,8 @@ const VulmMgmtCve = ({ entityId, entityListType, search, entityContext, sort, pa
         variables: {
             id: entityId,
             query: tryUpdateQueryWithVulMgmtPolicyClause(entityListType, search, entityContext),
-            policyQuery: queryService.objectToWhereClause({ Category: 'Vulnerability Management' })
+            ...vulMgmtPolicyQuery,
+            scopeQuery: getScopeQuery(entityContext)
         }
     };
 

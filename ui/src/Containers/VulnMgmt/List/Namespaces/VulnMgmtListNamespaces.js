@@ -19,6 +19,7 @@ import { NAMESPACE_LIST_FRAGMENT } from 'Containers/VulnMgmt/VulnMgmt.fragments'
 import { workflowListPropTypes, workflowListDefaultProps } from 'constants/entityPageProps';
 import removeEntityContextColumns from 'utils/tableUtils';
 import { namespaceSortFields } from 'constants/sortFields';
+import { vulMgmtPolicyQuery } from '../../Entity/VulnMgmtPolicyQueryUtil';
 
 export const defaultNamespaceSort = [
     // @TODO, uncomment the primary sort field for Namespaces, after its available for backend pagination/sorting
@@ -190,9 +191,15 @@ export function getNamespaceTableColumns(workflowState) {
 
 const VulnMgmtNamespaces = ({ selectedRowId, search, sort, page, data, totalResults }) => {
     const query = gql`
-        query getNamespaces($query: String, $policyQuery: String, $pagination: Pagination) {
+        query getNamespaces(
+            $query: String
+            $policyQuery: String
+            $scopeQuery: String
+            $pagination: Pagination
+        ) {
             results: namespaces(query: $query, pagination: $pagination) {
                 ...namespaceFields
+                unusedVarSink(query: $policyQuery)
             }
             count: namespaceCount(query: $query)
         }
@@ -202,9 +209,7 @@ const VulnMgmtNamespaces = ({ selectedRowId, search, sort, page, data, totalResu
     const queryOptions = {
         variables: {
             query: queryService.objectToWhereClause(search),
-            policyQuery: queryService.objectToWhereClause({
-                Category: 'Vulnerability Management'
-            }),
+            ...vulMgmtPolicyQuery,
             pagination: queryService.getPagination(tableSort, page, LIST_PAGE_SIZE)
         }
     };

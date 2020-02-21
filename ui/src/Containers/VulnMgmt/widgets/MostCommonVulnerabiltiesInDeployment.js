@@ -5,6 +5,7 @@ import { useQuery } from 'react-apollo';
 import gql from 'graphql-tag';
 import sortBy from 'lodash/sortBy';
 
+import queryService from 'modules/queryService';
 import workflowStateContext from 'Containers/workflowStateContext';
 import { getVulnerabilityChips } from 'utils/vulnerabilityUtils';
 
@@ -46,7 +47,13 @@ const processData = (data, workflowState, deploymentId, limit) => {
 };
 
 const MostCommonVulnerabiltiesInDeployment = ({ deploymentId, limit }) => {
-    const { loading, data = {} } = useQuery(MOST_COMMON_VULNERABILITIES);
+    const { loading, data = {} } = useQuery(MOST_COMMON_VULNERABILITIES, {
+        variables: {
+            query: queryService.objectToWhereClause({
+                'Deployment ID': deploymentId
+            })
+        }
+    });
 
     let content = <Loader />;
 

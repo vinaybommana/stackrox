@@ -206,7 +206,7 @@ const VulnMgmtPolicies = ({
     const [bulkActionPolicyIds, setBulkActionPolicyIds] = useState([]);
 
     const POLICIES_QUERY = gql`
-        query getPolicies($policyQuery: String, $pagination: Pagination) {
+        query getPolicies($policyQuery: String, $scopeQuery: String, $pagination: Pagination) {
             results: policies(query: $policyQuery, pagination: $pagination) {
                 ...unscopedPolicyFields
             }

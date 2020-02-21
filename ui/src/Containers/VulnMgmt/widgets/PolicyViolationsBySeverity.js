@@ -19,12 +19,13 @@ import entityTypes from 'constants/entityTypes';
 import { CLIENT_SIDE_SEARCH_OPTIONS as SEARCH_OPTIONS } from 'constants/searchOptions';
 import { getPercentage } from 'utils/mathUtils';
 import NoResultsMessage from 'Components/NoResultsMessage';
+import { getScopeQuery } from '../Entity/VulnMgmtPolicyQueryUtil';
 
 const passingLinkColor = 'var(--base-500)';
 const passingChartColor = 'var(--base-400)';
 
 const POLICIES_QUERY = gql`
-    query policyViolationsBySeverity($query: String, $policyQuery: String) {
+    query policyViolationsBySeverity($query: String, $policyQuery: String, $scopeQuery: String) {
         deployments(query: $query) {
             id
             name
@@ -33,11 +34,11 @@ const POLICIES_QUERY = gql`
                 name
                 categories
                 description
-                policyStatus
+                policyStatus(query: $scopeQuery)
                 lastUpdated
-                latestViolation
+                latestViolation(query: $scopeQuery)
                 severity
-                deploymentCount
+                deploymentCount(query: $scopeQuery)
                 lifecycleStages
                 enforcementActions
             }
@@ -61,13 +62,15 @@ function getCategorySeverity(category, violationsByCategory) {
     return severityColorMap[severityEntry[0]];
 }
 
-const PolicyViolationsBySeverity = ({ entityContext }) => {
+const PolicyViolationsBySeverity = ({ entityContext, policyContext }) => {
     const { loading, data = {} } = useQuery(POLICIES_QUERY, {
         variables: {
             query: queryService.entityContextToQueryString(entityContext),
             policyQuery: queryService.objectToWhereClause({
+                ...queryService.entityContextToQueryObject(policyContext),
                 Category: 'Vulnerability Management'
-            })
+            }),
+            scopeQuery: policyContext[entityTypes.POLICY] ? '' : getScopeQuery(policyContext)
         }
     });
 
@@ -264,11 +267,13 @@ const PolicyViolationsBySeverity = ({ entityContext }) => {
 };
 
 PolicyViolationsBySeverity.propTypes = {
-    entityContext: PropTypes.shape({})
+    entityContext: PropTypes.shape({}),
+    policyContext: PropTypes.shape({})
 };
 
 PolicyViolationsBySeverity.defaultProps = {
-    entityContext: {}
+    entityContext: {},
+    policyContext: {}
 };
 
 export default PolicyViolationsBySeverity;

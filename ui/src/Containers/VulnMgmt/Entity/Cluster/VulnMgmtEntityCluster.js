@@ -5,16 +5,19 @@ import useCases from 'constants/useCaseTypes';
 import { entityComponentPropTypes, entityComponentDefaultProps } from 'constants/entityPageProps';
 import entityTypes from 'constants/entityTypes';
 import { defaultCountKeyMap } from 'constants/workflowPages.constants';
-import queryService from 'modules/queryService';
 import { VULN_CVE_LIST_FRAGMENT } from 'Containers/VulnMgmt/VulnMgmt.fragments';
 import WorkflowEntityPage from 'Containers/Workflow/WorkflowEntityPage';
-import { getPolicyQueryVar, getQueryVar } from '../VulnMgmtPolicyQueryUtil';
+import {
+    vulMgmtPolicyQuery,
+    getScopeQuery,
+    tryUpdateQueryWithVulMgmtPolicyClause
+} from '../VulnMgmtPolicyQueryUtil';
 import VulnMgmtClusterOverview from './VulnMgmtClusterOverview';
 import EntityList from '../../List/VulnMgmtList';
 
 const VulmMgmtEntityCluster = ({ entityId, entityListType, search, sort, page, entityContext }) => {
     const overviewQuery = gql`
-        query getCluster($id: ID!, $policyQuery: String, $query: String) {
+        query getCluster($id: ID!, $query: String, $policyQuery: String, $scopeQuery: String) {
             result: cluster(id: $id) {
                 id
                 name
@@ -25,10 +28,10 @@ const VulmMgmtEntityCluster = ({ entityId, entityListType, search, sort, page, e
                         id
                         name
                         description
-                        policyStatus(query: $query)
-                        latestViolation(query: $query)
+                        policyStatus(query: $scopeQuery)
+                        latestViolation(query: $scopeQuery)
                         severity
-                        deploymentCount(query: $query)
+                        deploymentCount(query: $scopeQuery)
                         lifecycleStages
                         enforcementActions
                     }
@@ -59,46 +62,29 @@ const VulmMgmtEntityCluster = ({ entityId, entityListType, search, sort, page, e
         // @TODO: remove this hack after we are able to search for k8s vulns
         const parsedListFieldName =
             search && search['Vulnerability Type'] ? 'vulns: k8sVulns' : listFieldName;
-        const queryVar = getQueryVar(entityListType);
 
         return gql`
-        query getCluster${entityListType}($id: ID!, $pagination: Pagination, $query: String${getPolicyQueryVar(
-            entityListType
-        )}) {
+        query getCluster_${entityListType}($id: ID!, $pagination: Pagination, $query: String, $policyQuery: String, $scopeQuery: String) {
             result: cluster(id: $id) {
                 id
-                ${defaultCountKeyMap[entityListType]}(query: ${queryVar})
-                ${parsedListFieldName}(query: ${queryVar}, pagination: $pagination) { ...${fragmentName} }
+                ${defaultCountKeyMap[entityListType]}(query: $query)
+                ${parsedListFieldName}(query: $query, pagination: $pagination) { ...${fragmentName} }
+                unusedVarSink(query: $policyQuery)
+                unusedVarSink(query: $scopeQuery)
             }
         }
         ${fragment}
     `;
     }
 
-    const entityContextObj = queryService.entityContextToQueryObject(entityContext);
-
     const queryOptions = {
         variables: {
             id: entityId,
-            query: queryService.objectToWhereClause({ ...search, ...entityContextObj }),
-            policyQuery: queryService.objectToWhereClause({ Category: 'Vulnerability Management' })
+            query: tryUpdateQueryWithVulMgmtPolicyClause(entityListType, search, entityContext),
+            ...vulMgmtPolicyQuery,
+            scopeQuery: getScopeQuery(entityContext)
         }
     };
-
-    // @TODO: improve the handling of query vs. policyQuery in the UI Workflow
-    //   more info: because Vuln Mgmt requires Policy sub-queries to be filtered by "Category": "Vulnerability Management"
-    //   we added a separate query var for just policies, where needed
-    //   but it doesn't play well with the initial implementation of backend pagination,
-    //   hence, this hack below to limit to only the overview and entities where it is needed
-    if (
-        !entityListType ||
-        entityListType === entityTypes.DEPLOYMENT ||
-        entityListType === entityTypes.NAMESPACE
-    ) {
-        queryOptions.variables.policyQuery = queryService.objectToWhereClause({
-            Category: 'Vulnerability Management'
-        });
-    }
 
     return (
         <WorkflowEntityPage

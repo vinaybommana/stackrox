@@ -11,6 +11,7 @@ import WorkflowEntityPage from 'Containers/Workflow/WorkflowEntityPage';
 import queryService from 'modules/queryService';
 import VulnMgmtPolicyOverview from './VulnMgmtPolicyOverview';
 import VulnMgmtList from '../../List/VulnMgmtList';
+import { getScopeQuery, vulMgmtPolicyQuery } from '../VulnMgmtPolicyQueryUtil';
 
 const VulmMgmtEntityPolicy = ({
     entityId,
@@ -21,10 +22,10 @@ const VulmMgmtEntityPolicy = ({
     page,
     setRefreshTrigger
 }) => {
-    const queryVarParam = entityContext[entityTypes.POLICY] ? '' : '(query: $query)';
-    const queryVarConcat = entityContext[entityTypes.POLICY] ? '' : ', query: $query';
+    const queryVarParam = entityContext[entityTypes.POLICY] ? '' : '(query: $scopeQuery)';
+    const queryVarConcat = entityContext[entityTypes.POLICY] ? '' : ', query: $scopeQuery';
     const overviewQuery = gql`
-        query getPolicy($id: ID!, $query: String) {
+        query getPolicy($id: ID!, $scopeQuery: String) {
             result: policy(id: $id) {
                 id
                 name
@@ -175,26 +176,26 @@ const VulmMgmtEntityPolicy = ({
         // @TODO: rethink entity context and when it accumulates entity info -- currently it holds info from list -> selected row, but not when you
         // hit the external link and view it as an entity page
         return gql`
-        query getPolicy${entityListType}($id: ID!, $pagination: Pagination, $query: String) {
+        query getPolicy${entityListType}($id: ID!, $pagination: Pagination, $query: String, $policyQuery: String, $scopeQuery: String) {
             result: policy(id: $id) {
                 id
                 ${defaultCountKeyMap[entityListType]}${queryVarParam}
                 ${listFieldName}(pagination: $pagination${queryVarConcat}) { ...${fragmentName} }
+                unusedVarSink(query: $policyQuery)
+                unusedVarSink(query: $scopeQuery)
+                unusedVarSink(query: $query)
             }
         }
         ${fragment}
     `;
     }
 
-    const entityContextQuery = queryService.entityContextToQueryObject(entityContext);
-
     const queryOptions = {
         variables: {
             id: entityId,
-            query: queryService.objectToWhereClause({ ...search, ...entityContextQuery }),
-            policyQuery: queryService.objectToWhereClause({
-                Category: 'Vulnerability Management'
-            })
+            query: queryService.objectToWhereClause({ ...search }),
+            ...vulMgmtPolicyQuery,
+            scopeQuery: getScopeQuery(entityContext)
         }
     };
 

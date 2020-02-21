@@ -28,7 +28,6 @@ import { updateCveSuppressedState } from 'services/VulnerabilitiesService';
 import removeEntityContextColumns from 'utils/tableUtils';
 import { doesSearchContain } from 'utils/searchUtils';
 import { cveSortFields } from 'constants/sortFields';
-
 import { VULN_CVE_LIST_FRAGMENT } from 'Containers/VulnMgmt/VulnMgmt.fragments';
 
 import CveBulkActionDialogue from './CveBulkActionDialogue';

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/graph-gophers/graphql-go"
+	"github.com/stackrox/rox/central/graphql/resolvers/loaders"
 	"github.com/stackrox/rox/central/metrics"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	pkgMetrics "github.com/stackrox/rox/pkg/metrics"
@@ -110,6 +111,10 @@ func (resolver *policyResolver) Deployments(ctx context.Context, args PaginatedQ
 		return nil, err
 	}
 
+	if resolver.data.GetDisabled() {
+		return nil, nil
+	}
+
 	deploymentFilterQuery, err := args.AsV1QueryOrEmpty()
 	if err != nil {
 		return nil, err
@@ -124,11 +129,15 @@ func (resolver *policyResolver) Deployments(ctx context.Context, args PaginatedQ
 	}
 
 	deploymentQuery := search.NewConjunctionQuery(
-		search.NewQueryBuilder().AddDocIDs(deploymentIDs...).ProtoQuery(),
+		search.NewQueryBuilder().AddExactMatches(search.DeploymentID, deploymentIDs...).ProtoQuery(),
 		deploymentFilterQuery)
 	deploymentQuery.Pagination = pagination
 
-	return resolver.root.wrapDeployments(resolver.root.DeploymentDataStore.SearchRawDeployments(ctx, deploymentQuery))
+	deploymentLoader, err := loaders.GetDeploymentLoader(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return resolver.root.wrapDeployments(deploymentLoader.FromQuery(ctx, deploymentQuery))
 }
 
 // DeploymentCount returns the count of all deployments that this policy applies to
@@ -139,7 +148,7 @@ func (resolver *policyResolver) DeploymentCount(ctx context.Context, args RawQue
 		return 0, err
 	}
 
-	resolvers, err := resolver.root.Deployments(ctx, PaginatedQuery{Query: args.Query})
+	resolvers, err := resolver.Deployments(ctx, PaginatedQuery{Query: args.Query})
 	if err != nil {
 		return 0, err
 	}

@@ -35,10 +35,10 @@ export const CLUSTER_LIST_FRAGMENT = gql`
         namespaceCount
         deploymentCount
         # policyCount(query: $policyQuery) # see https://stack-rox.atlassian.net/browse/ROX-4080
-        policyStatus(query: $policyQuery) {
+        policyStatus(query: $scopeQuery) {
             status
         }
-        latestViolation(query: $policyQuery)
+        latestViolation(query: $scopeQuery)
         priority
     }
 `;
@@ -101,7 +101,7 @@ export const DEPLOYMENT_LIST_FRAGMENT = gql`
         }
         # policyCount(query: $policyQuery) # see https://stack-rox.atlassian.net/browse/ROX-4080
         # failingPolicyCount(query: $policyQuery) # see https://stack-rox.atlassian.net/browse/ROX-4080
-        policyStatus(query: $query)
+        policyStatus(query: $scopeQuery)
         clusterName
         clusterId
         namespace
@@ -110,7 +110,7 @@ export const DEPLOYMENT_LIST_FRAGMENT = gql`
         serviceAccountID
         secretCount
         imageCount
-        latestViolation(query: $query)
+        latestViolation(query: $scopeQuery)
         priority
     }
 `;
@@ -236,10 +236,10 @@ export const NAMESPACE_LIST_FRAGMENT = gql`
         deploymentCount
         imageCount(query: $query)
         # policyCount(query: $policyQuery) # see https://stack-rox.atlassian.net/browse/ROX-4080
-        policyStatus(query: $policyQuery) {
+        policyStatus(query: $scopeQuery) {
             status
         }
-        latestViolation(query: $policyQuery)
+        latestViolation(query: $scopeQuery)
     }
 `;
 
@@ -260,9 +260,9 @@ export const POLICY_LIST_FRAGMENT_CORE = gql`
 export const UNSCOPED_POLICY_LIST_FRAGMENT = gql`
     fragment unscopedPolicyFields on Policy {
         ...corePolicyFields
-        deploymentCount
-        latestViolation
-        policyStatus
+        deploymentCount(query: $scopeQuery)
+        latestViolation(query: $scopeQuery)
+        policyStatus(query: $scopeQuery)
     }
     ${POLICY_LIST_FRAGMENT_CORE}
 `;
@@ -270,9 +270,9 @@ export const UNSCOPED_POLICY_LIST_FRAGMENT = gql`
 export const POLICY_LIST_FRAGMENT = gql`
     fragment policyFields on Policy {
         ...corePolicyFields
-        deploymentCount(query: $query)
-        latestViolation(query: $query)
-        policyStatus(query: $query)
+        deploymentCount(query: $scopeQuery)
+        latestViolation(query: $scopeQuery)
+        policyStatus(query: $scopeQuery)
     }
     ${POLICY_LIST_FRAGMENT_CORE}
 `;

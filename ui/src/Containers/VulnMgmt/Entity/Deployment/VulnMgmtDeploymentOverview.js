@@ -107,7 +107,8 @@ const VulnMgmtDeploymentOverview = ({ data, entityContext }) => {
         </React.Fragment>
     ];
 
-    const newEntityContext = { ...entityContext, [entityTypes.DEPLOYMENT]: id };
+    const newEntityContext = { [entityTypes.DEPLOYMENT]: id };
+    const policyScope = { ...entityContext };
     const cveActions = (
         <FixableCveExportButton
             disabled={!fixableCves || !fixableCves.length}
@@ -178,7 +179,10 @@ const VulnMgmtDeploymentOverview = ({ data, entityContext }) => {
                             />
                         </div>
                         <div className="s-1">
-                            <PolicyViolationsBySeverity entityContext={newEntityContext} />
+                            <PolicyViolationsBySeverity
+                                entityContext={newEntityContext}
+                                policyContext={policyScope}
+                            />
                         </div>
                         <div className="s-1">
                             <CvesByCvssScore entityContext={newEntityContext} />
