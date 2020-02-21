@@ -13,6 +13,7 @@ import (
 	"github.com/stackrox/rox/generated/internalapi/central"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/auth/permissions"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/grpc/authz"
 	"github.com/stackrox/rox/pkg/grpc/authz/perrpc"
 	"github.com/stackrox/rox/pkg/grpc/authz/user"
@@ -99,14 +100,16 @@ func bulkUpdate(keys []*storage.ProcessWhitelistKey, parallelFunc func(*storage.
 }
 
 func (s *serviceImpl) sendWhitelistToSensor(pw *storage.ProcessWhitelist) {
-	err := s.connectionManager.SendMessage(pw.GetKey().GetClusterId(), &central.MsgToSensor{
-		Msg: &central.MsgToSensor_WhitelistSync{
-			WhitelistSync: &central.WhitelistSync{
-				Whitelists: []*storage.ProcessWhitelist{pw},
-			}},
-	})
-	if err != nil {
-		log.Errorf("Error sending process whitelist to cluster %q: %v", pw.GetKey().GetClusterId(), err)
+	if features.SensorBasedDetection.Enabled() {
+		err := s.connectionManager.SendMessage(pw.GetKey().GetClusterId(), &central.MsgToSensor{
+			Msg: &central.MsgToSensor_WhitelistSync{
+				WhitelistSync: &central.WhitelistSync{
+					Whitelists: []*storage.ProcessWhitelist{pw},
+				}},
+		})
+		if err != nil {
+			log.Errorf("Error sending process whitelist to cluster %q: %v", pw.GetKey().GetClusterId(), err)
+		}
 	}
 }
 

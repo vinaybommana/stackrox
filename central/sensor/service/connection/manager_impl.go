@@ -255,10 +255,12 @@ func (m *manager) SendMessage(clusterID string, msg *central.MsgToSensor) error 
 	m.connectionsByClusterIDMutex.RLock()
 	defer m.connectionsByClusterIDMutex.RUnlock()
 
-	connection, ok := m.connectionsByClusterID[clusterID]
+	connAndUpgradeCtrl, ok := m.connectionsByClusterID[clusterID]
 	if !ok {
 		return errors.Errorf("no cluster %q connection exists", clusterID)
 	}
-
-	return connection.connection.InjectMessage(concurrency.Never(), msg)
+	if connAndUpgradeCtrl.connection == nil {
+		return errors.Errorf("no valid cluster %q connection", clusterID)
+	}
+	return connAndUpgradeCtrl.connection.InjectMessage(concurrency.Never(), msg)
 }
