@@ -284,7 +284,7 @@ const TopRiskyEntitiesByVulnerabilities = ({
             .filter(datum => datum.vulns && datum.vulns.length > 0)
             .map(result => {
                 const entityId = result.id || result.metadata.id;
-                const vulnCount = result.vulns.length;
+                const vulnCount = result?.vulnCounter?.all?.total;
                 const url = workflowState.pushRelatedEntity(selectedEntityType, entityId).toUrl();
                 const avgSeverity = getAverageSeverity(result.vulns);
                 const color = severityColorMap[getSeverityByCvss(avgSeverity)];
@@ -356,10 +356,10 @@ const TopRiskyEntitiesByVulnerabilities = ({
             content = (
                 <Scatterplot
                     data={results}
-                    xMultiple={5}
+                    lowerX={0}
+                    xMultiple={20}
                     yMultiple={5}
-                    shouldPadX
-                    yAxisTitle="Average CVSS Score"
+                    yAxisTitle="Weighted CVSS Score"
                     xAxisTitle="Critical Vulnerabilities & Exposures"
                     legendData={!small ? severityColorLegend : []}
                 />
