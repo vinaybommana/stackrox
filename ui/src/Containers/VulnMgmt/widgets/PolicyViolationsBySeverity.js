@@ -19,13 +19,12 @@ import entityTypes from 'constants/entityTypes';
 import { CLIENT_SIDE_SEARCH_OPTIONS as SEARCH_OPTIONS } from 'constants/searchOptions';
 import { getPercentage } from 'utils/mathUtils';
 import NoResultsMessage from 'Components/NoResultsMessage';
-import { getScopeQuery } from '../Entity/VulnMgmtPolicyQueryUtil';
 
 const passingLinkColor = 'var(--base-500)';
 const passingChartColor = 'var(--base-400)';
 
 const POLICIES_QUERY = gql`
-    query policyViolationsBySeverity($query: String, $policyQuery: String, $scopeQuery: String) {
+    query policyViolationsBySeverity($query: String, $policyQuery: String) {
         deployments(query: $query) {
             id
             name
@@ -34,11 +33,11 @@ const POLICIES_QUERY = gql`
                 name
                 categories
                 description
-                policyStatus(query: $scopeQuery)
+                policyStatus(query: $query)
                 lastUpdated
-                latestViolation(query: $scopeQuery)
+                latestViolation(query: $query)
                 severity
-                deploymentCount(query: $scopeQuery)
+                deploymentCount(query: $query)
                 lifecycleStages
                 enforcementActions
             }
@@ -62,15 +61,13 @@ function getCategorySeverity(category, violationsByCategory) {
     return severityColorMap[severityEntry[0]];
 }
 
-const PolicyViolationsBySeverity = ({ entityContext, policyContext }) => {
+const PolicyViolationsBySeverity = ({ entityContext }) => {
     const { loading, data = {} } = useQuery(POLICIES_QUERY, {
         variables: {
             query: queryService.entityContextToQueryString(entityContext),
             policyQuery: queryService.objectToWhereClause({
-                ...queryService.entityContextToQueryObject(policyContext),
                 Category: 'Vulnerability Management'
-            }),
-            scopeQuery: policyContext[entityTypes.POLICY] ? '' : getScopeQuery(policyContext)
+            })
         }
     });
 

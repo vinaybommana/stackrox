@@ -118,8 +118,8 @@ const VulnMgmtImageOverview = ({ data, entityContext }) => {
             />
         );
     }
-
-    const newEntityContext = { ...entityContext, [entityTypes.IMAGE]: data.id };
+    const currentEntity = { [entityTypes.IMAGE]: data.id };
+    const newEntityContext = { ...entityContext, ...currentEntity };
     const cveActions = (
         <FixableCveExportButton
             disabled={!fixableCves || !fixableCves.length}
@@ -142,12 +142,12 @@ const VulnMgmtImageOverview = ({ data, entityContext }) => {
                             />
                         </div>
                         <div className="s-1">
-                            <CvesByCvssScore entityContext={newEntityContext} />
+                            <CvesByCvssScore entityContext={currentEntity} />
                         </div>
                         <div className="s-1">
                             <TopRiskiestImagesAndComponents
                                 limit={5}
-                                entityContext={newEntityContext}
+                                entityContext={currentEntity}
                             />
                         </div>
                     </div>

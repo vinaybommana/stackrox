@@ -106,9 +106,8 @@ const VulnMgmtDeploymentOverview = ({ data, entityContext }) => {
             <StatusChip status={policyStatus} />
         </React.Fragment>
     ];
-
-    const newEntityContext = { [entityTypes.DEPLOYMENT]: id };
-    const policyScope = { ...entityContext };
+    const currentEntity = { [entityTypes.DEPLOYMENT]: id };
+    const newEntityContext = { ...entityContext, ...currentEntity };
     const cveActions = (
         <FixableCveExportButton
             disabled={!fixableCves || !fixableCves.length}
@@ -179,16 +178,13 @@ const VulnMgmtDeploymentOverview = ({ data, entityContext }) => {
                             />
                         </div>
                         <div className="s-1">
-                            <PolicyViolationsBySeverity
-                                entityContext={newEntityContext}
-                                policyContext={policyScope}
-                            />
+                            <PolicyViolationsBySeverity entityContext={currentEntity} />
                         </div>
                         <div className="s-1">
-                            <CvesByCvssScore entityContext={newEntityContext} />
+                            <CvesByCvssScore entityContext={currentEntity} />
                         </div>
                         <div className="s-1">
-                            <RecentlyDetectedVulnerabilities entityContext={newEntityContext} />
+                            <RecentlyDetectedVulnerabilities entityContext={currentEntity} />
                         </div>
                         <div className="s-1">
                             <MostCommonVulnerabiltiesInDeployment deploymentId={id} />
@@ -196,7 +192,7 @@ const VulnMgmtDeploymentOverview = ({ data, entityContext }) => {
                         <div className="s-1">
                             <TopRiskiestImagesAndComponents
                                 limit={5}
-                                entityContext={newEntityContext}
+                                entityContext={currentEntity}
                             />
                         </div>
                     </div>

@@ -103,7 +103,8 @@ const VulnMgmtClusterOverview = ({ data, entityContext }) => {
         </React.Fragment>
     ];
 
-    const newEntityContext = { ...entityContext, [entityTypes.CLUSTER]: id };
+    const currentEntity = { [entityTypes.CLUSTER]: id };
+    const newEntityContext = { ...entityContext, ...currentEntity };
     const cveActions = (
         <FixableCveExportButton
             disabled={!fixableCves || !fixableCves.length}
@@ -133,26 +134,26 @@ const VulnMgmtClusterOverview = ({ data, entityContext }) => {
                                     entityTypes.DEPLOYMENT,
                                     entityTypes.IMAGE
                                 ]}
-                                entityContext={newEntityContext}
+                                entityContext={currentEntity}
                                 small
                             />
                         </div>
                         <div className="s-1">
                             <RecentlyDetectedVulnerabilities
                                 limit={OVERVIEW_LIMIT}
-                                entityContext={newEntityContext}
+                                entityContext={currentEntity}
                             />
                         </div>
                         <div className="s-1">
                             <TopRiskiestImagesAndComponents
                                 limit={OVERVIEW_LIMIT}
-                                entityContext={newEntityContext}
+                                entityContext={currentEntity}
                             />
                         </div>
                         <div className="s-1">
                             <DeploymentsWithMostSeverePolicyViolations
                                 limit={OVERVIEW_LIMIT}
-                                entityContext={newEntityContext}
+                                entityContext={currentEntity}
                             />
                         </div>
                     </div>

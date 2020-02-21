@@ -63,7 +63,8 @@ function VulnMgmtComponentOverview({ data, entityContext }) {
         exportCvesAsCsv(csvName, stateWithFixable);
     }
 
-    const newEntityContext = { ...entityContext, [entityTypes.COMPONENT]: id };
+    const currentEntity = { [entityTypes.COMPONENT]: id };
+    const newEntityContext = { ...entityContext, ...currentEntity };
     const cveActions = (
         <FixableCveExportButton
             disabled={!fixableCVEs || !fixableCVEs.length}
@@ -86,9 +87,7 @@ function VulnMgmtComponentOverview({ data, entityContext }) {
                             />
                         </div>
                         <div className="s-1">
-                            <CvesByCvssScore
-                                entityContext={{ ...entityContext, [entityTypes.COMPONENT]: id }}
-                            />
+                            <CvesByCvssScore entityContext={currentEntity} />
                         </div>
                     </div>
                 </CollapsibleSection>

@@ -85,7 +85,8 @@ const VulnMgmtNamespaceOverview = ({ data, entityContext }) => {
         </React.Fragment>
     ];
 
-    const newEntityContext = { ...entityContext, [entityTypes.NAMESPACE]: id };
+    const currentEntity = { [entityTypes.NAMESPACE]: id };
+    const newEntityContext = { ...entityContext, ...currentEntity };
     const cveActions = (
         <FixableCveExportButton
             disabled={!fixableCves || !fixableCves.length}
@@ -112,19 +113,19 @@ const VulnMgmtNamespaceOverview = ({ data, entityContext }) => {
                             <TopRiskyEntitiesByVulnerabilities
                                 defaultSelection={entityTypes.DEPLOYMENT}
                                 riskEntityTypes={[entityTypes.DEPLOYMENT, entityTypes.IMAGE]}
-                                entityContext={newEntityContext}
+                                entityContext={currentEntity}
                                 small
                             />
                         </div>
                         <div className="s-1">
-                            <RecentlyDetectedVulnerabilities entityContext={newEntityContext} />
+                            <RecentlyDetectedVulnerabilities entityContext={currentEntity} />
                         </div>
                         <div className="s-1">
-                            <TopRiskiestImagesAndComponents entityContext={newEntityContext} />
+                            <TopRiskiestImagesAndComponents entityContext={currentEntity} />
                         </div>
                         <div className="s-1">
                             <DeploymentsWithMostSeverePolicyViolations
-                                entityContext={newEntityContext}
+                                entityContext={currentEntity}
                             />
                         </div>
                     </div>
