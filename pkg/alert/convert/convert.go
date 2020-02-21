@@ -75,6 +75,7 @@ func ToAlertDeployment(deployment *storage.Deployment) *storage.Alert_Deployment
 		Name:        deployment.GetName(),
 		Type:        deployment.GetType(),
 		Namespace:   deployment.GetNamespace(),
+		NamespaceId: deployment.GetNamespaceId(),
 		Labels:      deployment.GetLabels(),
 		ClusterId:   deployment.GetClusterId(),
 		ClusterName: deployment.GetClusterName(),

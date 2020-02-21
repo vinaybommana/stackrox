@@ -48,6 +48,7 @@ func registerGeneratedTypes(builder generator.SchemaBuilder) {
 		"labels: [Label!]!",
 		"name: String!",
 		"namespace: String!",
+		"namespaceId: String!",
 		"type: String!",
 	}))
 	utils.Must(builder.AddType("Alert_Deployment_Container", []string{
@@ -1267,6 +1268,11 @@ func (resolver *alert_DeploymentResolver) Name(ctx context.Context) string {
 
 func (resolver *alert_DeploymentResolver) Namespace(ctx context.Context) string {
 	value := resolver.data.GetNamespace()
+	return value
+}
+
+func (resolver *alert_DeploymentResolver) NamespaceId(ctx context.Context) string {
+	value := resolver.data.GetNamespaceId()
 	return value
 }
 
