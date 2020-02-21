@@ -68,7 +68,7 @@ var keysForeachOptions = badgerhelper.ForEachOptions{
 func (rc *readerImpl) ReadKeysIn(prefix []byte, dackTxn *dackbox.Transaction) ([][]byte, error) {
 	var ret [][]byte
 	err := badgerhelper.BucketKeyForEach(dackTxn.BadgerTxn(), prefix, keysForeachOptions, func(k []byte) error {
-		ret = append(ret, k)
+		ret = append(ret, append([]byte{}, k...))
 		return nil
 	})
 	return ret, err
