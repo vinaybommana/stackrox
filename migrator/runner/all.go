@@ -21,6 +21,7 @@ import (
 	_ "github.com/stackrox/rox/migrator/migrations/m_24_to_m_25_update_policy_texts"
 	_ "github.com/stackrox/rox/migrator/migrations/m_25_to_m_26_starttls_auth"
 	_ "github.com/stackrox/rox/migrator/migrations/m_26_to_m_27_prune_orphaned_process_whitelists"
+	_ "github.com/stackrox/rox/migrator/migrations/m_27_to_m_28_dackbox"
 	_ "github.com/stackrox/rox/migrator/migrations/m_2_to_3_network_flows_in_badger"
 	_ "github.com/stackrox/rox/migrator/migrations/m_3_to_4_cluster_spec_to_status"
 	_ "github.com/stackrox/rox/migrator/migrations/m_4_to_5_auth_provider_default_group"

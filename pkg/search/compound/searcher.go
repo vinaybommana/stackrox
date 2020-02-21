@@ -10,9 +10,10 @@ import (
 
 // SearcherSpec specifies a searcher for the compound searcher to use.
 type SearcherSpec struct {
-	IsDefault bool
-	Searcher  search.Searcher
-	Options   search.OptionsMap
+	IsDefault   bool
+	DropHandled bool
+	Searcher    search.Searcher
+	Options     search.OptionsMap
 }
 
 // NewSearcher returns a searcher that applies search terms to the first input index that supports the term.

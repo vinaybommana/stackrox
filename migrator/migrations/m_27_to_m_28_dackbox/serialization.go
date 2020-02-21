@@ -1,4 +1,4 @@
-package sortedkeys
+package m27tom28
 
 import (
 	"encoding/binary"
@@ -28,7 +28,7 @@ func Unmarshal(marshalled []byte) (SortedKeys, error) {
 
 // Marshal marshals the sorted keys.
 func (sk SortedKeys) Marshal() []byte {
-	var marshalled []byte
+	marshalled := make([]byte, 0, len(sk)*4)
 	encodedLength := make([]byte, 2)
 	for _, key := range sk {
 		encodeLength(len(key), encodedLength)

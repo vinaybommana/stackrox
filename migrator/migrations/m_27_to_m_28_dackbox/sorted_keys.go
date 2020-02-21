@@ -1,4 +1,4 @@
-package sortedkeys
+package m27tom28
 
 import (
 	"bytes"
@@ -9,17 +9,17 @@ import (
 // by badger). Optimized for a small number of keys stored together.
 type SortedKeys [][]byte
 
-// Sort sorts an input list of keys to create a sorted keys. If you know the keys are already sorted, you can simply
+// SortedCopy sorts an input list of keys to create a sorted keys. If you know the keys are already sorted, you can simply
 // cast like SortedKeys(keys) instead of using Sort().
-func Sort(in [][]byte) SortedKeys {
-	if len(in) == 0 {
-		return in
-	}
+func SortedCopy(in [][]byte) SortedKeys {
 	ret := make([][]byte, len(in))
 	copy(ret, in)
 	sort.Slice(ret, func(i, j int) bool {
 		return bytes.Compare(ret[i], ret[j]) < 0
 	})
+	if len(ret) <= 1 {
+		return ret
+	}
 	// dedupe values
 	deduped := ret[:1]
 	dedIdx := 0
@@ -96,45 +96,6 @@ func (sk SortedKeys) Union(other SortedKeys) SortedKeys {
 	return newKeys
 }
 
-// Difference removes all of the keys in other from the received set of keys.
-func (sk SortedKeys) Difference(other SortedKeys) SortedKeys {
-	newKeys := make([][]byte, 0, len(sk))
-	otherIdx := 0
-	for _, elem := range sk {
-		for otherIdx < len(other) && bytes.Compare(other[otherIdx], elem) < 0 {
-			otherIdx++
-		}
-		if otherIdx >= len(other) || !bytes.Equal(other[otherIdx], elem) {
-			newKeys = append(newKeys, elem)
-		}
-	}
-	return newKeys
-}
-
-// Intersect creates a new set with only the overlapping keys.
-func (sk SortedKeys) Intersect(other SortedKeys) SortedKeys {
-	newKeys := make([][]byte, 0, len(sk))
-	otherIdx := 0
-	thisIdx := 0
-	thisInBounds := thisIdx < len(sk)
-	otherInBounds := otherIdx < len(other)
-	for thisInBounds && otherInBounds {
-		cmp := bytes.Compare(sk[thisIdx], other[otherIdx])
-		if cmp == 0 {
-			newKeys = append(newKeys, sk[thisIdx])
-			otherIdx++
-			thisIdx++
-		} else if cmp > 0 {
-			otherIdx++
-		} else {
-			thisIdx++
-		}
-		thisInBounds = thisIdx < len(sk)
-		otherInBounds = otherIdx < len(other)
-	}
-	return newKeys
-}
-
 // Does a binary search for where key fits into the sorted list, returns true in the second param if it is already present.
 func (sk SortedKeys) positionOf(key []byte) (int, bool) {
 	if len(sk) == 0 {
@@ -151,7 +112,8 @@ func (sk SortedKeys) positionOf(key []byte) (int, bool) {
 
 func (sk SortedKeys) insertAt(key []byte, idx int) SortedKeys {
 	ret := make([][]byte, 0, len(sk)+1)
-	ret = append(append(ret, sk[:idx]...), key)
+	ret = append(ret, sk[:idx]...)
+	ret = append(ret, key)
 	if len(sk) == idx {
 		return ret // no values after the insertion index.
 	}
