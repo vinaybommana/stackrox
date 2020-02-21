@@ -4,14 +4,20 @@ import (
 	"context"
 	"testing"
 
+	"github.com/blevesearch/bleve"
+	"github.com/dgraph-io/badger"
 	"github.com/golang/mock/gomock"
+	deploymentDackBox "github.com/stackrox/rox/central/deployment/dackbox"
 	"github.com/stackrox/rox/central/deployment/datastore"
+	deploymentIndex "github.com/stackrox/rox/central/deployment/index"
 	"github.com/stackrox/rox/central/globalindex"
 	riskDatastoreMocks "github.com/stackrox/rox/central/risk/datastore/mocks"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/dackbox"
+	"github.com/stackrox/rox/pkg/dackbox/indexer"
+	"github.com/stackrox/rox/pkg/dackbox/utils/queue"
 	"github.com/stackrox/rox/pkg/grpc/testutils"
 	filterMocks "github.com/stackrox/rox/pkg/process/filter/mocks"
 	"github.com/stackrox/rox/pkg/sac"
@@ -118,8 +124,8 @@ func TestLabelsMap(t *testing.T) {
 			bleveIndex, err := globalindex.MemOnlyIndex()
 			require.NoError(t, err)
 
-			dacky, err := dackbox.NewDackBox(badgerDB, nil, []byte("graph"), []byte("dirty"), []byte("valid"))
-			require.NoError(t, err)
+			dacky, registry, indexingQ := testDackBoxInstance(t, badgerDB, bleveIndex)
+			registry.RegisterWrapper(deploymentDackBox.Bucket, deploymentIndex.Wrapper{})
 
 			deploymentsDS, err := datastore.NewBadger(dacky, concurrency.NewKeyFence(), badgerDB, bleveIndex, nil, nil, nil, nil, mockRiskDatastore, nil, mockFilter)
 			require.NoError(t, err)
@@ -127,6 +133,10 @@ func TestLabelsMap(t *testing.T) {
 			for _, deployment := range c.deployments {
 				assert.NoError(t, deploymentsDS.UpsertDeployment(ctx, deployment))
 			}
+
+			indexingDone := concurrency.NewSignal()
+			indexingQ.PushSignal(&indexingDone)
+			indexingDone.Wait()
 
 			results, err := deploymentsDS.Search(ctx, queryForLabels())
 			assert.NoError(t, err)
@@ -136,4 +146,16 @@ func TestLabelsMap(t *testing.T) {
 			assert.ElementsMatch(t, c.expectedValues, actualValues)
 		})
 	}
+}
+
+func testDackBoxInstance(t *testing.T, db *badger.DB, index bleve.Index) (*dackbox.DackBox, indexer.WrapperRegistry, queue.WaitableQueue) {
+	indexingQ := queue.NewWaitableQueue()
+	dacky, err := dackbox.NewDackBox(db, indexingQ, []byte("graph"), []byte("dirty"), []byte("valid"))
+	require.NoError(t, err)
+
+	reg := indexer.NewWrapperRegistry()
+	lazy := indexer.NewLazy(indexingQ, reg, index, dacky.AckIndexed)
+	lazy.Start()
+
+	return dacky, reg, indexingQ
 }

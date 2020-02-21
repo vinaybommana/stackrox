@@ -317,3 +317,122 @@ func (mr *MockRWGraphMockRecorder) deleteTo(to interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "deleteTo", reflect.TypeOf((*MockRWGraph)(nil).deleteTo), to)
 }
+
+// MockDiscardableRGraph is a mock of DiscardableRGraph interface
+type MockDiscardableRGraph struct {
+	ctrl     *gomock.Controller
+	recorder *MockDiscardableRGraphMockRecorder
+}
+
+// MockDiscardableRGraphMockRecorder is the mock recorder for MockDiscardableRGraph
+type MockDiscardableRGraphMockRecorder struct {
+	mock *MockDiscardableRGraph
+}
+
+// NewMockDiscardableRGraph creates a new mock instance
+func NewMockDiscardableRGraph(ctrl *gomock.Controller) *MockDiscardableRGraph {
+	mock := &MockDiscardableRGraph{ctrl: ctrl}
+	mock.recorder = &MockDiscardableRGraphMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockDiscardableRGraph) EXPECT() *MockDiscardableRGraphMockRecorder {
+	return m.recorder
+}
+
+// HasRefsFrom mocks base method
+func (m *MockDiscardableRGraph) HasRefsFrom(from []byte) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HasRefsFrom", from)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// HasRefsFrom indicates an expected call of HasRefsFrom
+func (mr *MockDiscardableRGraphMockRecorder) HasRefsFrom(from interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasRefsFrom", reflect.TypeOf((*MockDiscardableRGraph)(nil).HasRefsFrom), from)
+}
+
+// HasRefsTo mocks base method
+func (m *MockDiscardableRGraph) HasRefsTo(to []byte) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HasRefsTo", to)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// HasRefsTo indicates an expected call of HasRefsTo
+func (mr *MockDiscardableRGraphMockRecorder) HasRefsTo(to interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasRefsTo", reflect.TypeOf((*MockDiscardableRGraph)(nil).HasRefsTo), to)
+}
+
+// CountRefsFrom mocks base method
+func (m *MockDiscardableRGraph) CountRefsFrom(from []byte) int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountRefsFrom", from)
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// CountRefsFrom indicates an expected call of CountRefsFrom
+func (mr *MockDiscardableRGraphMockRecorder) CountRefsFrom(from interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountRefsFrom", reflect.TypeOf((*MockDiscardableRGraph)(nil).CountRefsFrom), from)
+}
+
+// CountRefsTo mocks base method
+func (m *MockDiscardableRGraph) CountRefsTo(to []byte) int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountRefsTo", to)
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// CountRefsTo indicates an expected call of CountRefsTo
+func (mr *MockDiscardableRGraphMockRecorder) CountRefsTo(to interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountRefsTo", reflect.TypeOf((*MockDiscardableRGraph)(nil).CountRefsTo), to)
+}
+
+// GetRefsFrom mocks base method
+func (m *MockDiscardableRGraph) GetRefsFrom(from []byte) [][]byte {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRefsFrom", from)
+	ret0, _ := ret[0].([][]byte)
+	return ret0
+}
+
+// GetRefsFrom indicates an expected call of GetRefsFrom
+func (mr *MockDiscardableRGraphMockRecorder) GetRefsFrom(from interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRefsFrom", reflect.TypeOf((*MockDiscardableRGraph)(nil).GetRefsFrom), from)
+}
+
+// GetRefsTo mocks base method
+func (m *MockDiscardableRGraph) GetRefsTo(to []byte) [][]byte {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRefsTo", to)
+	ret0, _ := ret[0].([][]byte)
+	return ret0
+}
+
+// GetRefsTo indicates an expected call of GetRefsTo
+func (mr *MockDiscardableRGraphMockRecorder) GetRefsTo(to interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRefsTo", reflect.TypeOf((*MockDiscardableRGraph)(nil).GetRefsTo), to)
+}
+
+// Discard mocks base method
+func (m *MockDiscardableRGraph) Discard() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Discard")
+}
+
+// Discard indicates an expected call of Discard
+func (mr *MockDiscardableRGraphMockRecorder) Discard() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Discard", reflect.TypeOf((*MockDiscardableRGraph)(nil).Discard))
+}

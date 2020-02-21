@@ -20,6 +20,7 @@ import (
 	"github.com/stackrox/rox/pkg/badgerhelper"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/dackbox"
+	"github.com/stackrox/rox/pkg/features"
 	filterMocks "github.com/stackrox/rox/pkg/process/filter/mocks"
 	"github.com/stackrox/rox/pkg/sac"
 	"github.com/stackrox/rox/pkg/search"
@@ -44,6 +45,9 @@ type searcherSuite struct {
 }
 
 func TestSearcher(t *testing.T) {
+	if features.Dackbox.Enabled() {
+		return
+	}
 	suite.Run(t, new(searcherSuite))
 }
 

@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/blevesearch/bleve"
+	"github.com/dgraph-io/badger"
 	protoTypes "github.com/gogo/protobuf/types"
 	"github.com/golang/mock/gomock"
 	alertDatastore "github.com/stackrox/rox/central/alert/datastore"
@@ -12,10 +14,14 @@ import (
 	clusterDatastoreMocks "github.com/stackrox/rox/central/cluster/datastore/mocks"
 	configDatastore "github.com/stackrox/rox/central/config/datastore"
 	configDatastoreMocks "github.com/stackrox/rox/central/config/datastore/mocks"
+	deploymentDackBox "github.com/stackrox/rox/central/deployment/dackbox"
 	deploymentDatastore "github.com/stackrox/rox/central/deployment/datastore"
+	deploymentIndex "github.com/stackrox/rox/central/deployment/index"
 	"github.com/stackrox/rox/central/globalindex"
+	imageDackBox "github.com/stackrox/rox/central/image/dackbox"
 	imageDatastore "github.com/stackrox/rox/central/image/datastore"
 	imageDatastoreMocks "github.com/stackrox/rox/central/image/datastore/mocks"
+	imageIndex "github.com/stackrox/rox/central/image/index"
 	componentsMocks "github.com/stackrox/rox/central/imagecomponent/datastore/mocks"
 	networkFlowDatastoreMocks "github.com/stackrox/rox/central/networkflow/datastore/mocks"
 	processIndicatorDatastoreMocks "github.com/stackrox/rox/central/processindicator/datastore/mocks"
@@ -27,6 +33,8 @@ import (
 	"github.com/stackrox/rox/pkg/alert/convert"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/dackbox"
+	"github.com/stackrox/rox/pkg/dackbox/indexer"
+	"github.com/stackrox/rox/pkg/dackbox/utils/queue"
 	"github.com/stackrox/rox/pkg/images/types"
 	filterMocks "github.com/stackrox/rox/pkg/process/filter/mocks"
 	"github.com/stackrox/rox/pkg/protoconv"
@@ -110,7 +118,7 @@ func newDeployment(imageIDs ...string) *storage.Deployment {
 	}
 }
 
-func generateImageDataStructures(ctx context.Context, t *testing.T) (alertDatastore.DataStore, configDatastore.DataStore, imageDatastore.DataStore, deploymentDatastore.DataStore) {
+func generateImageDataStructures(ctx context.Context, t *testing.T) (alertDatastore.DataStore, configDatastore.DataStore, imageDatastore.DataStore, deploymentDatastore.DataStore, queue.WaitableQueue) {
 	db := testutils.BadgerDBForT(t)
 
 	bleveIndex, err := globalindex.MemOnlyIndex()
@@ -123,8 +131,9 @@ func generateImageDataStructures(ctx context.Context, t *testing.T) (alertDatast
 	mockRiskDatastore.EXPECT().SearchRawRisks(gomock.Any(), gomock.Any()).AnyTimes()
 	mockRiskDatastore.EXPECT().RemoveRisk(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 
-	dacky, err := dackbox.NewDackBox(db, nil, []byte("graph"), []byte("dirty"), []byte("valid"))
-	require.NoError(t, err)
+	dacky, registry, indexingQ := testDackBoxInstance(t, db, bleveIndex)
+	registry.RegisterWrapper(deploymentDackBox.Bucket, deploymentIndex.Wrapper{})
+	registry.RegisterWrapper(imageDackBox.Bucket, imageIndex.Wrapper{})
 
 	// Initialize real datastore
 	images, err := imageDatastore.NewBadger(dacky, concurrency.NewKeyFence(), db, bleveIndex, true, mockComponentDatastore, mockRiskDatastore, ranking.NewRanker())
@@ -146,7 +155,7 @@ func generateImageDataStructures(ctx context.Context, t *testing.T) (alertDatast
 	deployments, err := deploymentDatastore.NewBadger(dacky, concurrency.NewKeyFence(), db, bleveIndex, nil, mockProcessDataStore, mockWhitelistDataStore, nil, mockRiskDatastore, nil, mockFilter)
 	require.NoError(t, err)
 
-	return mockAlertDatastore, mockConfigDatastore, images, deployments
+	return mockAlertDatastore, mockConfigDatastore, images, deployments, indexingQ
 }
 
 func generateAlertDataStructures(ctx context.Context, t *testing.T) (alertDatastore.DataStore, configDatastore.DataStore, imageDatastore.DataStore, deploymentDatastore.DataStore) {
@@ -271,7 +280,7 @@ func TestImagePruning(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			// Get all of the image constructs because I update the time within the store
 			// So to test need to update them separately
-			alerts, config, images, deployments := generateImageDataStructures(ctx, t)
+			alerts, config, images, deployments, indexQ := generateImageDataStructures(ctx, t)
 
 			gc := newGarbageCollector(alerts, images, nil, deployments, nil, nil, nil, config).(*garbageCollectorImpl)
 
@@ -283,6 +292,10 @@ func TestImagePruning(t *testing.T) {
 				image.Id = types.NewDigest(image.Id).Digest()
 				require.NoError(t, images.UpsertImage(ctx, image))
 			}
+
+			indexingDone := concurrency.NewSignal()
+			indexQ.PushSignal(&indexingDone)
+			indexingDone.Wait()
 
 			conf, err := config.GetConfig(ctx)
 			require.NoError(t, err, "failed to get config")
@@ -770,4 +783,16 @@ func TestRemoveOrphanedNetworkFlows(t *testing.T) {
 			gci.removeOrphanedNetworkFlows(c.deployments)
 		})
 	}
+}
+
+func testDackBoxInstance(t *testing.T, db *badger.DB, index bleve.Index) (*dackbox.DackBox, indexer.WrapperRegistry, queue.WaitableQueue) {
+	indexingQ := queue.NewWaitableQueue()
+	dacky, err := dackbox.NewDackBox(db, indexingQ, []byte("graph"), []byte("dirty"), []byte("valid"))
+	require.NoError(t, err)
+
+	reg := indexer.NewWrapperRegistry()
+	lazy := indexer.NewLazy(indexingQ, reg, index, dacky.AckIndexed)
+	lazy.Start()
+
+	return dacky, reg, indexingQ
 }

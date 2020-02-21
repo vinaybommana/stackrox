@@ -8,7 +8,6 @@ import (
 	"github.com/pkg/errors"
 	componentCVEEdgeIndexer "github.com/stackrox/rox/central/componentcveedge/index"
 	cveIndexer "github.com/stackrox/rox/central/cve/index"
-	globalDackBox "github.com/stackrox/rox/central/globaldb/dackbox"
 	"github.com/stackrox/rox/central/image/datastore/internal/search"
 	"github.com/stackrox/rox/central/image/datastore/internal/store"
 	badgerStore "github.com/stackrox/rox/central/image/datastore/internal/store/badger"
@@ -47,12 +46,12 @@ type DataStore interface {
 	Exists(ctx context.Context, id string) (bool, error)
 }
 
-func newDatastore(storage store.Store, bleveIndex bleve.Index, noUpdateTimestamps bool, imageComponents imageComponentDS.DataStore, risks riskDS.DataStore, imageRanker *ranking.Ranker) (DataStore, error) {
+func newDatastore(dacky *dackbox.DackBox, storage store.Store, bleveIndex bleve.Index, noUpdateTimestamps bool, imageComponents imageComponentDS.DataStore, risks riskDS.DataStore, imageRanker *ranking.Ranker) (DataStore, error) {
 	var searcher search.Searcher
 	indexer := imageIndexer.New(bleveIndex)
 	if features.Dackbox.Enabled() {
 		searcher = search.New(storage,
-			globalDackBox.GetGlobalDackBox(),
+			dacky,
 			cveIndexer.New(bleveIndex),
 			componentCVEEdgeIndexer.New(bleveIndex),
 			componentIndexer.New(bleveIndex),
@@ -88,5 +87,5 @@ func NewBadger(dacky *dackbox.DackBox, keyFence concurrency.KeyFence, db *badger
 	} else {
 		storage = badgerStore.New(db, noUpdateTimestamps)
 	}
-	return newDatastore(storage, bleveIndex, noUpdateTimestamps, imageComponents, risks, imageRanker)
+	return newDatastore(dacky, storage, bleveIndex, noUpdateTimestamps, imageComponents, risks, imageRanker)
 }

@@ -48,7 +48,7 @@ func Searcher(searcher search.Searcher, filters ...Filter) search.Searcher {
 
 		allFiltered, err := ApplySACFilters(ctx, search.ResultsToIDs(results), filters...)
 		if err != nil {
-			return results, err
+			return nil, err
 		}
 
 		filteredResults := results[:0]

@@ -143,7 +143,9 @@ func TestReconcileCVEsInDB(t *testing.T) {
 	cvesToUpsert := []converter.ClusterCVEParts{
 		{
 			CVE: &storage.CVE{
-				Id: "CVE-1",
+				Id:   "CVE-1",
+				Link: "https://nvd.nist.gov/vuln/detail/CVE-1",
+				Type: storage.CVE_K8S_CVE,
 			},
 			Children: []converter.EdgeParts{
 				{
@@ -160,7 +162,9 @@ func TestReconcileCVEsInDB(t *testing.T) {
 		},
 		{
 			CVE: &storage.CVE{
-				Id: "CVE-2",
+				Id:   "CVE-2",
+				Link: "https://nvd.nist.gov/vuln/detail/CVE-2",
+				Type: storage.CVE_K8S_CVE,
 			},
 			Children: []converter.EdgeParts{
 				{
@@ -174,7 +178,9 @@ func TestReconcileCVEsInDB(t *testing.T) {
 		},
 		{
 			CVE: &storage.CVE{
-				Id: "CVE-3",
+				Id:   "CVE-3",
+				Link: "https://nvd.nist.gov/vuln/detail/CVE-3",
+				Type: storage.CVE_K8S_CVE,
 			},
 			Children: []converter.EdgeParts{
 				{

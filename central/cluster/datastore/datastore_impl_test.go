@@ -20,6 +20,7 @@ import (
 	connectionMocks "github.com/stackrox/rox/central/sensor/service/connection/mocks"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/concurrency"
+	graphMocks "github.com/stackrox/rox/pkg/dackbox/graph/mocks"
 	"github.com/stackrox/rox/pkg/sac"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stretchr/testify/suite"
@@ -49,6 +50,7 @@ type ClusterDataStoreTestSuite struct {
 	riskDataStore       *riskMocks.MockDataStore
 	mockCtrl            *gomock.Controller
 	notifierMock        *notifierMocks.MockProcessor
+	mockProvider        *graphMocks.MockProvider
 }
 
 func (suite *ClusterDataStoreTestSuite) SetupTest() {
@@ -73,6 +75,7 @@ func (suite *ClusterDataStoreTestSuite) SetupTest() {
 	suite.riskDataStore = riskMocks.NewMockDataStore(suite.mockCtrl)
 	suite.connMgr = connectionMocks.NewMockManager(suite.mockCtrl)
 	suite.notifierMock = notifierMocks.NewMockProcessor(suite.mockCtrl)
+	suite.mockProvider = graphMocks.NewMockProvider(suite.mockCtrl)
 
 	suite.nodeDataStore.EXPECT().GetAllClusterNodeStores(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 
@@ -80,14 +83,18 @@ func (suite *ClusterDataStoreTestSuite) SetupTest() {
 	suite.indexer.EXPECT().AddClusters(nil).Return(nil)
 
 	var err error
-	suite.clusterDataStore, err = New(suite.clusters,
+	suite.clusterDataStore, err = New(
+		suite.clusters,
 		suite.indexer,
 		suite.alertDataStore,
 		suite.deploymentDataStore,
 		suite.nodeDataStore,
 		suite.secretDataStore,
 		suite.connMgr,
-		suite.notifierMock, nil, ranking.NewRanker())
+		suite.notifierMock,
+		suite.mockProvider,
+		ranking.NewRanker(),
+	)
 	suite.NoError(err)
 }
 

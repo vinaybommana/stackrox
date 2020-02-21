@@ -5,12 +5,16 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/blevesearch/bleve"
+	"github.com/dgraph-io/badger"
 	"github.com/golang/mock/gomock"
 	alertMocks "github.com/stackrox/rox/central/alert/datastore/mocks"
 	clusterDataStoreMocks "github.com/stackrox/rox/central/cluster/datastore/mocks"
 	cveMocks "github.com/stackrox/rox/central/cve/datastore/mocks"
+	deploymentDackBox "github.com/stackrox/rox/central/deployment/dackbox"
 	deploymentDatastore "github.com/stackrox/rox/central/deployment/datastore"
 	deploymentMocks "github.com/stackrox/rox/central/deployment/datastore/mocks"
+	deploymentIndex "github.com/stackrox/rox/central/deployment/index"
 	"github.com/stackrox/rox/central/globalindex"
 	imageMocks "github.com/stackrox/rox/central/image/datastore/mocks"
 	componentMocks "github.com/stackrox/rox/central/imagecomponent/datastore/mocks"
@@ -29,6 +33,8 @@ import (
 	"github.com/stackrox/rox/generated/set"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/dackbox"
+	"github.com/stackrox/rox/pkg/dackbox/indexer"
+	"github.com/stackrox/rox/pkg/dackbox/utils/queue"
 	"github.com/stackrox/rox/pkg/fixtures"
 	filterMocks "github.com/stackrox/rox/pkg/process/filter/mocks"
 	"github.com/stackrox/rox/pkg/sac"
@@ -101,8 +107,8 @@ func TestAutocomplete(t *testing.T) {
 	testDB := testutils.BadgerDBForT(t)
 	defer utils.IgnoreError(testDB.Close)
 
-	dacky, err := dackbox.NewDackBox(testDB, nil, []byte("graph"), []byte("dirty"), []byte("valid"))
-	require.NoError(t, err)
+	dacky, registry, indexingQ := testDackBoxInstance(t, testDB, idx)
+	registry.RegisterWrapper(deploymentDackBox.Bucket, deploymentIndex.Wrapper{})
 
 	mockIndicators := mocks.NewMockDataStore(mockCtrl)
 	// This gets called as a side effect of `UpsertDeployment`.
@@ -137,6 +143,10 @@ func TestAutocomplete(t *testing.T) {
 	deploymentName2.Name = "name12"
 	deploymentName2.Labels = map[string]string{"hello": "hi", "hey": "ho"}
 	require.NoError(t, deploymentDS.UpsertDeployment(allAccessCtx, deploymentName2))
+
+	finishedIndexing := concurrency.NewSignal()
+	indexingQ.PushSignal(&finishedIndexing)
+	finishedIndexing.Wait()
 
 	service := NewBuilder().
 		WithAlertStore(alertMocks.NewMockDataStore(mockCtrl)).
@@ -240,4 +250,16 @@ func TestAutocompleteForEnums(t *testing.T) {
 	results, err := service.autocomplete(ctx, fmt.Sprintf("%s:", search.Severity), []v1.SearchCategory{v1.SearchCategory_POLICIES})
 	require.NoError(t, err)
 	assert.Equal(t, []string{fixtures.GetPolicy().GetSeverity().String()}, results)
+}
+
+func testDackBoxInstance(t *testing.T, db *badger.DB, index bleve.Index) (*dackbox.DackBox, indexer.WrapperRegistry, queue.WaitableQueue) {
+	indexingQ := queue.NewWaitableQueue()
+	dacky, err := dackbox.NewDackBox(db, indexingQ, []byte("graph"), []byte("dirty"), []byte("valid"))
+	require.NoError(t, err)
+
+	reg := indexer.NewWrapperRegistry()
+	lazy := indexer.NewLazy(indexingQ, reg, index, dacky.AckIndexed)
+	lazy.Start()
+
+	return dacky, reg, indexingQ
 }
