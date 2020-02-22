@@ -435,7 +435,15 @@ func startGRPCServer(factory serviceFactory) {
 		log.Panicf("Could not parse plaintext endpoints specification: %v", err)
 	}
 	if err := config.PlaintextEndpoints.Validate(); err != nil {
-		log.Panicf("Could not validate plaintext endpoints specificaton: %v", err)
+		log.Panicf("Could not validate plaintext endpoints specification: %v", err)
+	}
+
+	if err := config.SecureEndpoints.AddFromParsedSpec(env.SecureEndpoints.Setting()); err != nil {
+		log.Panicf("Could not parse secure endpoints specification: %v", err)
+	}
+
+	if err := config.SecureEndpoints.Validate(); err != nil {
+		log.Panicf("Could not validate secure endpoints specification: %v", err)
 	}
 
 	server := pkgGRPC.NewAPI(config)

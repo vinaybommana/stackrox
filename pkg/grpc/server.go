@@ -212,6 +212,7 @@ type Config struct {
 	PublicEndpoint string
 
 	PlaintextEndpoints EndpointsConfig
+	SecureEndpoints    EndpointsConfig
 
 	GRPCMetrics metrics.GRPCMetrics
 	HTTPMetrics metrics.HTTPMetrics
@@ -365,6 +366,35 @@ func (a *apiImpl) muxer(localConn *grpc.ClientConn) http.Handler {
 	return mux
 }
 
+func endpointsFromConfig(cfg EndpointsConfig, httpHandler http.Handler, grpcServer *grpc.Server, tlsConf *tls.Config) []endpointServersConfig {
+	var endpointSrvCfgs []endpointServersConfig
+	for _, endpoint := range cfg.MultiplexedEndpoints {
+		endpointSrvCfgs = append(endpointSrvCfgs, endpointServersConfig{
+			httpHandler: httpHandler,
+			grpcServer:  grpcServer,
+			endpoint:    endpoint,
+			tlsConf:     tlsConf,
+		})
+	}
+
+	for _, endpoint := range cfg.HTTPEndpoints {
+		endpointSrvCfgs = append(endpointSrvCfgs, endpointServersConfig{
+			httpHandler: httpHandler,
+			endpoint:    endpoint,
+			tlsConf:     tlsConf,
+		})
+	}
+
+	for _, endpoint := range cfg.GRPCEndpoints {
+		endpointSrvCfgs = append(endpointSrvCfgs, endpointServersConfig{
+			grpcServer: grpcServer,
+			endpoint:   endpoint,
+			tlsConf:    tlsConf,
+		})
+	}
+	return endpointSrvCfgs
+}
+
 func (a *apiImpl) run(startedSig *concurrency.Signal) {
 	tlsConf, err := a.config.TLS.TLSConfig()
 	if err != nil {
@@ -410,29 +440,11 @@ func (a *apiImpl) run(startedSig *concurrency.Signal) {
 		},
 	}
 
-	for _, plaintextEndpoint := range a.config.PlaintextEndpoints.MultiplexedEndpoints {
-		endpointSrvCfgs = append(endpointSrvCfgs, endpointServersConfig{
-			httpHandler: httpHandler,
-			grpcServer:  grpcServer,
-			endpoint:    plaintextEndpoint,
-		})
-	}
+	secureEndpointSrvCfgs := endpointsFromConfig(a.config.SecureEndpoints, httpHandler, grpcServer, tlsConf)
+	endpointSrvCfgs = append(endpointSrvCfgs, secureEndpointSrvCfgs...)
 
-	if len(a.config.PlaintextEndpoints.HTTPEndpoints) > 0 {
-		for _, plaintextEndpoint := range a.config.PlaintextEndpoints.HTTPEndpoints {
-			endpointSrvCfgs = append(endpointSrvCfgs, endpointServersConfig{
-				httpHandler: httpHandler,
-				endpoint:    plaintextEndpoint,
-			})
-		}
-	}
-
-	for _, plaintextEndpoint := range a.config.PlaintextEndpoints.GRPCEndpoints {
-		endpointSrvCfgs = append(endpointSrvCfgs, endpointServersConfig{
-			grpcServer: grpcServer,
-			endpoint:   plaintextEndpoint,
-		})
-	}
+	plaintextEndpointSrvCfgs := endpointsFromConfig(a.config.PlaintextEndpoints, httpHandler, grpcServer, nil)
+	endpointSrvCfgs = append(endpointSrvCfgs, plaintextEndpointSrvCfgs...)
 
 	var allSrvAndLiss []serverAndListener
 	for _, endpointCfg := range endpointSrvCfgs {
