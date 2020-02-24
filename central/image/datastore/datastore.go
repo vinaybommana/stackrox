@@ -66,8 +66,10 @@ func newDatastore(dacky *dackbox.DackBox, storage store.Store, bleveIndex bleve.
 		return nil, err
 	}
 
-	if err := ds.initializeRankers(); err != nil {
-		return nil, errors.Wrap(err, "failed to initialize ranker")
+	if features.Dackbox.Enabled() {
+		if err := ds.initializeRankers(); err != nil {
+			return nil, errors.Wrap(err, "failed to initialize ranker")
+		}
 	}
 
 	return ds, nil

@@ -16,6 +16,7 @@ import (
 	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/fixtures"
 	"github.com/stackrox/rox/pkg/sac"
+	"github.com/stackrox/rox/pkg/testutils"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -171,6 +172,22 @@ func (suite *ImageDataStoreTestSuite) TestNewImageAddedWithScanStats() {
 
 	err := suite.datastore.UpsertImage(suite.hasWriteCtx, newImage)
 	suite.NoError(err)
+}
+
+func (suite *ImageDataStoreTestSuite) TestDeleteImagesWithoutDackBox() {
+	isolator := testutils.NewEnvIsolator(suite.T())
+	isolator.Setenv(features.Dackbox.EnvVar(), "false")
+	defer isolator.RestoreAll()
+
+	suite.mockStore.EXPECT().Delete("id1").Return(nil)
+	suite.mockIndexer.EXPECT().DeleteImage("id1").Return(nil)
+	suite.mockStore.EXPECT().AckKeysIndexed("id1")
+
+	suite.mockStore.EXPECT().Delete("id2").Return(nil)
+	suite.mockIndexer.EXPECT().DeleteImage("id2").Return(nil)
+	suite.mockStore.EXPECT().AckKeysIndexed("id2")
+
+	suite.NoError(suite.datastore.DeleteImages(suite.hasWriteCtx, "id1", "id2"))
 }
 
 func TestImageReindexSuite(t *testing.T) {

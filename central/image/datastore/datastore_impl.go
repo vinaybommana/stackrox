@@ -252,11 +252,6 @@ func (ds *datastoreImpl) DeleteImages(ctx context.Context, ids ...string) error 
 			sac.ResourceScopeKeys(resources.Risk),
 		))
 
-	components, err := ds.components.Search(ctx, pkgSearch.NewQueryBuilder().AddExactMatches(pkgSearch.ImageSHA, ids...).ProtoQuery())
-	if err != nil {
-		return err
-	}
-
 	for _, id := range ids {
 		if err := ds.storage.Delete(id); err != nil {
 			errorList.AddError(err)
@@ -265,21 +260,29 @@ func (ds *datastoreImpl) DeleteImages(ctx context.Context, ids ...string) error 
 		if !features.Dackbox.Enabled() {
 			errorList.AddError(ds.indexer.DeleteImage(id))
 			errorList.AddError(ds.storage.AckKeysIndexed(id))
-		}
-		if err := ds.risks.RemoveRisk(deleteRiskCtx, id, storage.RiskSubjectType_IMAGE); err != nil {
-			return err
+		} else {
+			if err := ds.risks.RemoveRisk(deleteRiskCtx, id, storage.RiskSubjectType_IMAGE); err != nil {
+				return err
+			}
 		}
 	}
 
-	remainingComponents, err := ds.components.Search(ctx, pkgSearch.NewQueryBuilder().AddExactMatches(pkgSearch.ImageSHA, ids...).ProtoQuery())
-	if err != nil {
-		return err
-	}
-
-	deletedComponents := pkgSearch.ResultsToIDSet(components).Difference(pkgSearch.ResultsToIDSet(remainingComponents))
-	for _, deletedComponent := range deletedComponents.AsSlice() {
-		if err := ds.risks.RemoveRisk(deleteRiskCtx, deletedComponent, storage.RiskSubjectType_IMAGE_COMPONENT); err != nil {
+	if features.Dackbox.Enabled() {
+		components, err := ds.components.Search(ctx, pkgSearch.NewQueryBuilder().AddExactMatches(pkgSearch.ImageSHA, ids...).ProtoQuery())
+		if err != nil {
 			return err
+		}
+
+		remainingComponents, err := ds.components.Search(ctx, pkgSearch.NewQueryBuilder().AddExactMatches(pkgSearch.ImageSHA, ids...).ProtoQuery())
+		if err != nil {
+			return err
+		}
+
+		deletedComponents := pkgSearch.ResultsToIDSet(components).Difference(pkgSearch.ResultsToIDSet(remainingComponents))
+		for _, deletedComponent := range deletedComponents.AsSlice() {
+			if err := ds.risks.RemoveRisk(deleteRiskCtx, deletedComponent, storage.RiskSubjectType_IMAGE_COMPONENT); err != nil {
+				return err
+			}
 		}
 	}
 	return errorList.ToError()
