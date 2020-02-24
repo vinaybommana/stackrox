@@ -21,16 +21,16 @@ message Image {
 
     // TODO: Remove when migration is in place, we should get this from relationship instead
     oneof set_components {
-        int32 components                   = 7 [(gogoproto.moretags) = "search:\"Component Count,store\""];
+        int32 components                   = 7 [(gogoproto.moretags) = "search:\"Component Count,store,hidden\""];
     }
 
     // TODO: Remove when migration is in place, we should get this from relationship instead
     oneof set_cves {
-        int32 cves                         = 8 [(gogoproto.moretags) = "search:\"CVE Count,store\""];
+        int32 cves                         = 8 [(gogoproto.moretags) = "search:\"CVE Count,store,hidden\""];
     }
     // TODO: Remove when migration is in place, we should get this from relationship instead
     oneof set_fixable {
-        int32 fixable_cves                 = 9 [(gogoproto.moretags) = "search:\"Fixable CVE Count,store\""];
+        int32 fixable_cves                 = 9 [(gogoproto.moretags) = "search:\"Fixable CVE Count,store,hidden\""];
     }
 
     google.protobuf.Timestamp last_updated = 5 [(gogoproto.moretags) = "search:\"Last Updated,hidden\""];
