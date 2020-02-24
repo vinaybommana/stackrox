@@ -43,13 +43,28 @@ func (p *planner) GenerateExecutionPlan(desired []k8sutil.Object) (*ExecutionPla
 	for _, desiredObj := range desired {
 		ref := k8sobjects.RefOf(desiredObj)
 		currObj := currObjMap[ref]
+
 		log.Infof("Testing object %v", ref)
 		if currObj == nil {
 			plan.Creations = append(plan.Creations, desiredObj)
-		} else if !p.objectsAreEqual(currObj, desiredObj) && (currObj.GetAnnotations()[common.LastUpgradeIDAnnotationKey] != p.ctx.ProcessID()) != p.rollback {
-			plan.Updates = append(plan.Updates, desiredObj)
 		} else {
-			log.Infof("Skipping update of object %v as it is unchanged or was already updated", ref)
+			// We need to store this here because objectsAreEqual clobbers the resource version and annotations.
+			currObjResourceVersion := currObj.GetResourceVersion()
+			lastModifiedByThisProcessID := currObj.GetAnnotations()[common.LastUpgradeIDAnnotationKey] == p.ctx.ProcessID()
+
+			objectsAreEqual := p.objectsAreEqual(currObj, desiredObj)
+
+			// We don't update if the objects are equal.
+			// If the objects are not equal, we check if the object was already modified during this upgrade.
+			// If it was, we skip the update.
+			// If we're rolling back, though, we DO the update ONLY if it was modified during this upgrade.
+			if !objectsAreEqual && lastModifiedByThisProcessID == p.rollback {
+				desiredObj.SetResourceVersion(currObjResourceVersion)
+				plan.Updates = append(plan.Updates, desiredObj)
+			} else {
+				log.Infof("Skipping update of object %v as it is unchanged or was already updated. Objects are equal: %v; last modified by this process ID: %v, rollback: %v",
+					ref, objectsAreEqual, lastModifiedByThisProcessID, p.rollback)
+			}
 		}
 		delete(currObjMap, ref)
 	}
