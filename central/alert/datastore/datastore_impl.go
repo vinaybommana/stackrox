@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/stackrox/rox/central/alert/datastore/internal/commentsstore"
 	"github.com/stackrox/rox/central/alert/datastore/internal/index"
 	"github.com/stackrox/rox/central/alert/datastore/internal/search"
 	"github.com/stackrox/rox/central/alert/datastore/internal/store"
@@ -39,10 +40,11 @@ const (
 // datastoreImpl is a transaction script with methods that provide the domain logic for CRUD uses cases for Alert
 // objects.
 type datastoreImpl struct {
-	storage    store.Store
-	indexer    index.Indexer
-	searcher   search.Searcher
-	keyedMutex *concurrency.KeyedMutex
+	storage         store.Store
+	commentsStorage commentsstore.Store
+	indexer         index.Indexer
+	searcher        search.Searcher
+	keyedMutex      *concurrency.KeyedMutex
 }
 
 func (ds *datastoreImpl) Search(ctx context.Context, q *v1.Query) ([]searchCommon.Result, error) {
@@ -224,6 +226,50 @@ func (ds *datastoreImpl) DeleteAlerts(ctx context.Context, ids ...string) error 
 	}
 
 	return errorList.ToError()
+}
+
+func (ds *datastoreImpl) GetAlertComments(ctx context.Context, alertID string) (comments []*storage.Comment, err error) {
+	_, exists, err := ds.GetAlert(ctx, alertID)
+	if err != nil || !exists {
+		return nil, err
+	}
+
+	return ds.commentsStorage.GetCommentsForAlert(alertID)
+}
+
+func (ds *datastoreImpl) AddAlertComment(ctx context.Context, request *storage.Comment) (string, error) {
+	alert, exists, err := ds.GetAlert(ctx, request.GetResourceId())
+	if err != nil || !exists {
+		return "", err
+	}
+	if ok, err := alertSAC.WriteAllowed(ctx, sac.KeyForNSScopedObj(alert.GetDeployment())...); err != nil || !ok {
+		return "", errors.New("permission denied")
+	}
+
+	return ds.commentsStorage.AddAlertComment(request)
+}
+
+func (ds *datastoreImpl) UpdateAlertComment(ctx context.Context, request *storage.Comment) error {
+	alert, exists, err := ds.GetAlert(ctx, request.GetResourceId())
+	if err != nil || !exists {
+		return err
+	}
+	if ok, err := alertSAC.WriteAllowed(ctx, sac.KeyForNSScopedObj(alert.GetDeployment())...); err != nil || !ok {
+		return errors.New("permission denied")
+	}
+
+	return ds.commentsStorage.UpdateAlertComment(request)
+}
+
+func (ds *datastoreImpl) RemoveAlertComment(ctx context.Context, request *storage.Comment) error {
+	alert, exists, err := ds.GetAlert(ctx, request.GetResourceId())
+	if err != nil || !exists {
+		return err
+	}
+	if ok, err := alertSAC.WriteAllowed(ctx, sac.KeyForNSScopedObj(alert.GetDeployment())...); err != nil || !ok {
+		return errors.New("permission denied")
+	}
+	return ds.commentsStorage.RemoveAlertComment(request)
 }
 
 func (ds *datastoreImpl) updateAlertNoLock(alert *storage.Alert) error {

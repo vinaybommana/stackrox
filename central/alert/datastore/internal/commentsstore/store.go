@@ -1,4 +1,4 @@
-package store
+package commentsstore
 
 import (
 	bolt "github.com/etcd-io/bbolt"

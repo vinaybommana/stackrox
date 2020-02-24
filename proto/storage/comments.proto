@@ -2,7 +2,9 @@ syntax = "proto3";
 
 option go_package = "storage";
 option java_package = "io.stackrox.proto.storage";
+
 import "google/protobuf/timestamp.proto";
+import "protobuf/gogoproto/gogo.proto";
 
 package storage;
 
@@ -10,7 +12,7 @@ message Comment {
     string resource_type                    = 1;
     string resource_id                      = 2;
     string comment_id                       = 3;
-    string comment_message                          = 4;
+    string comment_message                  = 4;
     message User {
         string id    = 1;
         string name  = 2;
