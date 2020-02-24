@@ -205,13 +205,6 @@ func (b *storeImpl) writeImageParts(parts *ImageParts, iTime *protoTypes.Timesta
 	dackTxn := b.dacky.NewTransaction()
 	defer dackTxn.Discard()
 
-	if err := imageDackBox.Upserter.UpsertIn(nil, parts.image, dackTxn); err != nil {
-		return err
-	}
-	if err := imageDackBox.ListUpserter.UpsertIn(nil, parts.listImage, dackTxn); err != nil {
-		return err
-	}
-
 	var componentKeys [][]byte
 	for _, componentData := range parts.children {
 		componentKey, err := b.writeComponentParts(dackTxn, &componentData, iTime)
@@ -221,6 +214,13 @@ func (b *storeImpl) writeImageParts(parts *ImageParts, iTime *protoTypes.Timesta
 		componentKeys = append(componentKeys, componentKey)
 	}
 
+	if err := imageDackBox.Upserter.UpsertIn(nil, parts.image, dackTxn); err != nil {
+		return err
+	}
+	if err := imageDackBox.ListUpserter.UpsertIn(nil, parts.listImage, dackTxn); err != nil {
+		return err
+	}
+
 	if err := dackTxn.Graph().SetRefs(imageDackBox.KeyFunc(parts.image), componentKeys); err != nil {
 		return err
 	}
@@ -228,14 +228,6 @@ func (b *storeImpl) writeImageParts(parts *ImageParts, iTime *protoTypes.Timesta
 }
 
 func (b *storeImpl) writeComponentParts(txn *dackbox.Transaction, parts *ComponentParts, iTime *protoTypes.Timestamp) ([]byte, error) {
-	componentKey := componentDackBox.KeyFunc(parts.component)
-	if err := imageComponentEdgeDackBox.Upserter.UpsertIn(nil, parts.edge, txn); err != nil {
-		return nil, err
-	}
-	if err := componentDackBox.Upserter.UpsertIn(nil, parts.component, txn); err != nil {
-		return nil, err
-	}
-
 	var cveKeys [][]byte
 	for _, cveData := range parts.children {
 		cveKey, err := b.writeCVEParts(txn, &cveData, iTime)
@@ -243,6 +235,14 @@ func (b *storeImpl) writeComponentParts(txn *dackbox.Transaction, parts *Compone
 			return nil, err
 		}
 		cveKeys = append(cveKeys, cveKey)
+	}
+
+	componentKey := componentDackBox.KeyFunc(parts.component)
+	if err := imageComponentEdgeDackBox.Upserter.UpsertIn(nil, parts.edge, txn); err != nil {
+		return nil, err
+	}
+	if err := componentDackBox.Upserter.UpsertIn(nil, parts.component, txn); err != nil {
+		return nil, err
 	}
 
 	if err := txn.Graph().SetRefs(componentKey, cveKeys); err != nil {
