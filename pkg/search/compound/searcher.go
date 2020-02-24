@@ -37,7 +37,13 @@ type compoundSearcherImpl struct {
 // Search constructs and executes the necessary queries on the searchers that the compound searcher is configured to
 // use.
 func (cs *compoundSearcherImpl) Search(ctx context.Context, q *v1.Query) ([]search.Result, error) {
+	// Filter unsupported fields.
+	p := q.GetPagination()
 	q, _ = search.FilterQueryWithMap(q, cs.combined)
+	if q == nil {
+		q = search.EmptyQuery()
+	}
+	q.Pagination = p
 
 	// Construct a tree that matches subqueries with specifications.
 	req, err := build(q, cs.specs)
