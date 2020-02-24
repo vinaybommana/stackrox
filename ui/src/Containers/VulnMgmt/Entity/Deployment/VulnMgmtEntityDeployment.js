@@ -22,13 +22,12 @@ const VulmMgmtDeployment = ({ entityId, entityListType, search, entityContext, s
                 id
                 priority
                 policyStatus(query: $policyQuery)
-
                 failingPolicies(query: $policyQuery) {
                     id
                     name
                     description
-                    policyStatus
-                    latestViolation
+                    policyStatus(query: $scopeQuery)
+                    latestViolation(query: $scopeQuery)
                     severity
                     lifecycleStages
                     enforcementActions

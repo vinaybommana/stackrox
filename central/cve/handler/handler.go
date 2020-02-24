@@ -143,14 +143,14 @@ func CSVHandler() http.HandlerFunc {
 		for _, d := range vulnResolvers {
 			dataRow := cveRow{}
 			dataRow.cveID = d.Cve(ctx)
-			isFixable, err := d.IsFixable(ctx)
+			rawQuery := getCVEQuery(dataRow.cveID)
+			isFixable, err := d.IsFixable(ctx, rawQuery)
 			utils.Must(err)
 			dataRow.fixable = strconv.FormatBool(isFixable)
 			dataRow.cvssScore = fmt.Sprintf("%.2f (%s)", d.Cvss(ctx), d.ScoreVersion(ctx))
 			envImpact, err := d.EnvImpact(ctx)
 			utils.Must(err)
 			dataRow.envImpact = fmt.Sprintf("%.2f", envImpact*100)
-			rawQuery := getCVEQuery(dataRow.cveID)
 			dataRow.impactScore = fmt.Sprintf("%.2f", d.ImpactScore(ctx))
 			deploymentCount, err := d.DeploymentCount(ctx, rawQuery)
 			utils.Must(err)

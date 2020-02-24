@@ -16,7 +16,7 @@ import {
 
 const VulnMgmtImage = ({ entityId, entityListType, search, entityContext, sort, page }) => {
     const overviewQuery = gql`
-        query getImage($id: ID!, $query: String) {
+        query getImage($id: ID!, $query: String, $scopeQuery: String) {
             result: image(sha: $id) {
                 id
                 lastUpdated

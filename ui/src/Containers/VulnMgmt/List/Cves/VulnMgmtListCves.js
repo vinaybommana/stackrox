@@ -232,7 +232,7 @@ const VulnMgmtCves = ({
     const workflowState = useContext(workflowStateContext);
 
     const CVES_QUERY = gql`
-        query getCves($query: String, $pagination: Pagination) {
+        query getCves($query: String, $scopeQuery: String, $pagination: Pagination) {
             results: vulnerabilities(query: $query, pagination: $pagination) {
                 ...cveFields
             }
@@ -247,6 +247,7 @@ const VulnMgmtCves = ({
     const queryOptions = {
         variables: {
             query: queryService.objectToWhereClause(search),
+            scopeQuery: '',
             cachebuster: refreshTrigger,
             pagination: queryService.getPagination(tableSort, page, LIST_PAGE_SIZE)
         }

@@ -22,8 +22,8 @@ func init() {
 			"vectors: EmbeddedVulnerabilityVectors",
 			"link: String!",
 			"summary: String!",
-			"fixedByVersion: String!",
-			"isFixable: Boolean!",
+			"fixedByVersion(query: String): String!",
+			"isFixable(query: String): Boolean!",
 			"lastScanned: Time",
 			"createdAt: Time",
 			"components(query: String, pagination: Pagination): [EmbeddedImageScanComponent!]!",
@@ -61,8 +61,8 @@ type VulnerabilityResolver interface {
 	EnvImpact(ctx context.Context) (float64, error)
 	ImpactScore(ctx context.Context) float64
 	ScoreVersion(ctx context.Context) string
-	FixedByVersion(ctx context.Context) (string, error)
-	IsFixable(ctx context.Context) (bool, error)
+	FixedByVersion(ctx context.Context, args RawQuery) (string, error)
+	IsFixable(ctx context.Context, args RawQuery) (bool, error)
 	PublishedOn(ctx context.Context) (*graphql.Time, error)
 	CreatedAt(ctx context.Context) (*graphql.Time, error)
 	LastScanned(ctx context.Context) (*graphql.Time, error)

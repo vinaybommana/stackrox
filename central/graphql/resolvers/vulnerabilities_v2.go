@@ -128,8 +128,13 @@ func (resolver *cVEResolver) Cve(ctx context.Context) string {
 }
 
 // IsFixable returns whether vulnerability is fixable by any component.
-func (resolver *cVEResolver) IsFixable(ctx context.Context) (bool, error) {
-	fixableCVEQuery := search.NewConjunctionQuery(
+func (resolver *cVEResolver) IsFixable(ctx context.Context, args RawQuery) (bool, error) {
+	q, err := args.AsV1QueryOrEmpty()
+	if err != nil {
+		return false, err
+	}
+
+	fixableCVEQuery := search.NewConjunctionQuery(q,
 		search.NewQueryBuilder().AddExactMatches(search.CVE, resolver.data.GetId()).ProtoQuery(),
 		search.NewQueryBuilder().AddBools(search.Fixable, true).ProtoQuery(),
 	)
@@ -369,7 +374,11 @@ func (resolver *cVEResolver) cveQuery() *v1.Query {
 // version instead.
 
 // FixedByVersion returns the version of the parent component that removes this CVE.
-func (resolver *cVEResolver) FixedByVersion(ctx context.Context) (string, error) {
+func (resolver *cVEResolver) FixedByVersion(ctx context.Context, args RawQuery) (string, error) {
+	_, err := args.AsV1QueryOrEmpty()
+	if err != nil {
+		return "", err
+	}
 	return "", nil
 }
 

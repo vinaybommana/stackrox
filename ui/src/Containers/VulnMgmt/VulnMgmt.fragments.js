@@ -52,8 +52,8 @@ export const VULN_CVE_LIST_FRAGMENT = gql`
         envImpact
         impactScore
         summary
-        fixedByVersion
-        isFixable
+        fixedByVersion(query: $scopeQuery)
+        isFixable(query: $scopeQuery)
         createdAt
         publishedOn
         deploymentCount(query: $query)
@@ -91,7 +91,7 @@ export const DEPLOYMENT_LIST_FRAGMENT = gql`
         vulnerabilities: vulns {
             cve
             cvss
-            isFixable
+            isFixable(query: $scopeQuery)
         }
         deployAlerts {
             policy {

@@ -15,7 +15,7 @@ import {
 
 const VulnMgmtComponent = ({ entityId, entityListType, search, entityContext, sort, page }) => {
     const overviewQuery = gql`
-        query getComponent($id: ID!, $query: String) {
+        query getComponent($id: ID!, $query: String, $scopeQuery: String) {
             result: component(id: $id) {
                 id
                 name

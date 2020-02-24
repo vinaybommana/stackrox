@@ -98,7 +98,13 @@ func (resolver *Resolver) k8sVulnerabilitiesV1(ctx context.Context, args Paginat
 	resolvers, err := paginationWrapper{
 		pv: pagination,
 	}.paginate(k8sVulnerabilities(ctx, resolver, query))
-	return resolvers.([]VulnerabilityResolver), err
+	vulnRes := resolvers.([]*EmbeddedVulnerabilityResolver)
+
+	ret := make([]VulnerabilityResolver, 0, len(vulnRes))
+	for _, resolver := range vulnRes {
+		ret = append(ret, resolver)
+	}
+	return ret, err
 }
 
 func (resolver *Resolver) istioVulnerabilityV1(ctx context.Context, args idQuery) (VulnerabilityResolver, error) {
@@ -125,7 +131,13 @@ func (resolver *Resolver) istioVulnerabilitiesV1(ctx context.Context, args Pagin
 	resolvers, err := paginationWrapper{
 		pv: pagination,
 	}.paginate(istioVulnerabilities(ctx, resolver, query))
-	return resolvers.([]VulnerabilityResolver), err
+	vulnRes := resolvers.([]*EmbeddedVulnerabilityResolver)
+
+	ret := make([]VulnerabilityResolver, 0, len(vulnRes))
+	for _, resolver := range vulnRes {
+		ret = append(ret, resolver)
+	}
+	return ret, err
 }
 
 func (resolver *Resolver) vulnCounterV1(ctx context.Context, args RawQuery) (*VulnerabilityCounterResolver, error) {
@@ -277,12 +289,12 @@ func (evr *EmbeddedVulnerabilityResolver) ScoreVersion(ctx context.Context) stri
 }
 
 // FixedByVersion returns the version of the parent component that removes this CVE.
-func (evr *EmbeddedVulnerabilityResolver) FixedByVersion(ctx context.Context) (string, error) {
+func (evr *EmbeddedVulnerabilityResolver) FixedByVersion(ctx context.Context, _ RawQuery) (string, error) {
 	return evr.data.GetFixedBy(), nil
 }
 
 // IsFixable returns whether or not a component with a fix exists.
-func (evr *EmbeddedVulnerabilityResolver) IsFixable(ctx context.Context) (bool, error) {
+func (evr *EmbeddedVulnerabilityResolver) IsFixable(ctx context.Context, _ RawQuery) (bool, error) {
 	return evr.data.GetFixedBy() != "", nil
 }
 

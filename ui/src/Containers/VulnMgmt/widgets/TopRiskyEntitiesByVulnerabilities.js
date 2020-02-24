@@ -72,7 +72,7 @@ const TopRiskyEntitiesByVulnerabilities = ({
         fragment vulnFields on EmbeddedVulnerability {
             cve
             cvss
-            isFixable
+            isFixable(query: $scopeQuery)
             severity
         }
     `;
@@ -80,6 +80,7 @@ const TopRiskyEntitiesByVulnerabilities = ({
         query topRiskyDeployments(
             $query: String
             $vulnQuery: String
+            $scopeQuery: String
             $entityPagination: Pagination
             $vulnPagination: Pagination
         ) {
@@ -106,6 +107,7 @@ const TopRiskyEntitiesByVulnerabilities = ({
     const CLUSTER_QUERY = gql`
         query topRiskyClusters(
             $query: String
+            $scopeQuery: String
             $vulnQuery: String
             $entityPagination: Pagination
             $vulnPagination: Pagination
@@ -131,6 +133,7 @@ const TopRiskyEntitiesByVulnerabilities = ({
     const NAMESPACE_QUERY = gql`
         query topRiskyNamespaces(
             $query: String
+            $scopeQuery: String
             $vulnQuery: String
             $entityPagination: Pagination
             $vulnPagination: Pagination
@@ -159,6 +162,7 @@ const TopRiskyEntitiesByVulnerabilities = ({
     const IMAGE_QUERY = gql`
         query topRiskyImages(
             $query: String
+            $scopeQuery: String
             $vulnQuery: String
             $entityPagination: Pagination
             $vulnPagination: Pagination
@@ -186,6 +190,7 @@ const TopRiskyEntitiesByVulnerabilities = ({
     const COMPONENT_QUERY = gql`
         query topRiskyComponents(
             $query: String
+            $scopeQuery: String
             $vulnQuery: String
             $entityPagination: Pagination
             $vulnPagination: Pagination
@@ -324,7 +329,8 @@ const TopRiskyEntitiesByVulnerabilities = ({
             },
             WIDGET_PAGINATION_START_OFFSET,
             VULN_COUNT
-        )
+        ),
+        scopeQuery: queryService.entityContextToQueryString(entityContext)
     };
     const { data, loading, error } = useQuery(query, { variables });
 

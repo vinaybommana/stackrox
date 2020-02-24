@@ -16,7 +16,11 @@ import NoResultsMessage from 'Components/NoResultsMessage';
 import { cveSortFields } from 'constants/sortFields';
 
 export const RECENTLY_DETECTED_VULNERABILITIES = gql`
-    query recentlyDetectedVulnerabilities($query: String, $pagination: Pagination) {
+    query recentlyDetectedVulnerabilities(
+        $query: String
+        $scopeQuery: String
+        $pagination: Pagination
+    ) {
         results: vulnerabilities(query: $query, pagination: $pagination) {
             id: cve
             cve
@@ -24,7 +28,7 @@ export const RECENTLY_DETECTED_VULNERABILITIES = gql`
             scoreVersion
             deploymentCount
             imageCount
-            isFixable
+            isFixable(query: $scopeQuery)
             envImpact
             lastScanned
             summary
@@ -55,6 +59,7 @@ const RecentlyDetectedVulnerabilities = ({ entityContext, search, limit }) => {
     const { loading, data = {} } = useQuery(RECENTLY_DETECTED_VULNERABILITIES, {
         variables: {
             query,
+            scopeQuery: queryService.objectToWhereClause(entityContextObject),
             pagination: queryService.getPagination(
                 {
                     id: cveSortFields.CVE_CREATED_TIME,

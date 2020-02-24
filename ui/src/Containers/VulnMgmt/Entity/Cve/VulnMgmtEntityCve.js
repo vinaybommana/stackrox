@@ -15,7 +15,7 @@ import {
 
 const VulmMgmtCve = ({ entityId, entityListType, search, entityContext, sort, page }) => {
     const overviewQuery = gql`
-        query getCve($id: ID!, $query: String) {
+        query getCve($id: ID!, $query: String, $scopeQuery: String) {
             result: vulnerability(id: $id) {
                 id: cve
                 cve
@@ -39,8 +39,8 @@ const VulmMgmtCve = ({ entityId, entityListType, search, entityContext, sort, pa
                 publishedOn
                 lastModified
                 summary
-                fixedByVersion
-                isFixable
+                fixedByVersion(query: $scopeQuery)
+                isFixable(query: $scopeQuery)
                 createdAt
                 componentCount(query: $query)
                 imageCount(query: $query)
