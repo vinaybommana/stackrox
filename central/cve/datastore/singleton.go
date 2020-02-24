@@ -40,7 +40,7 @@ func initialize() {
 		imageComponentEdgeIndexer.New(globalindex.GetGlobalIndex()),
 		imageIndexer.New(globalindex.GetGlobalIndex()),
 		deploymentIndexer.New(globalindex.GetGlobalIndex()),
-		clusterIndexer.New(globalindex.GetGlobalIndex()))
+		clusterIndexer.New(globalindex.GetGlobalTmpIndex()))
 
 	ds, err = New(storage, cveIndexer.New(globalindex.GetGlobalIndex()), searcher)
 	utils.Must(err)
