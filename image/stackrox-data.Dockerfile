@@ -3,7 +3,7 @@ ARG ALPINE_MIRROR=sjc.edge.kernel.org
 
 RUN mkdir /stackrox-data
 
-RUN wget -O product-docs.tgz https://storage.googleapis.com/doc-bundles/03c318a8759d13e8ed7611bccd6618dde60d768a345ff3c0a870e60c53bcfbe9/0.0.0-340-g7d56b8b9.tgz && \
+RUN wget -O product-docs.tgz https://storage.googleapis.com/doc-bundles/03c318a8759d13e8ed7611bccd6618dde60d768a345ff3c0a870e60c53bcfbe9/0.0.0-344-g54ad36db.tgz && \
     tar xzf product-docs.tgz && \
     mv public /stackrox-data/product-docs && \
     ls /stackrox-data/product-docs/index.html && \
