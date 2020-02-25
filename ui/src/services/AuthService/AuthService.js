@@ -2,6 +2,7 @@ import store from 'store';
 
 import { isBackendFeatureFlagEnabled, knownBackendFlags } from 'utils/featureFlags';
 import axios from 'services/instance';
+import queryString from 'qs';
 import { fetchFeatureFlags } from 'services/FeatureFlagsService';
 import AccessTokenManager from './AccessTokenManager';
 import addTokenRefreshInterceptors, {
@@ -173,6 +174,20 @@ export const getAndClearRequestedLocation = () => {
     store.remove(requestedLocationKey);
     return location;
 };
+
+/**
+ * Logs user in using the provided credentials for basic auth.
+ * @returns {Promise} promise which is fulfilled when the request is complete or gets rejected with the error from the server.
+ */
+export function loginWithBasicAuth(username, password, authProvider) {
+    const basicAuthPseudoToken = queryString.stringify({ username, password });
+    return exchangeAuthToken(basicAuthPseudoToken, authProvider.type, authProvider.id).then(
+        ({ token }) => {
+            storeAccessToken(token);
+            window.location = getAndClearRequestedLocation() || '/';
+        }
+    );
+}
 
 const BEARER_TOKEN_PREFIX = `Bearer `;
 

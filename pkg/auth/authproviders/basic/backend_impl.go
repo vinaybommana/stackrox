@@ -2,13 +2,13 @@ package basic
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/stackrox/rox/pkg/auth/authproviders"
 	"github.com/stackrox/rox/pkg/auth/tokens"
 	"github.com/stackrox/rox/pkg/grpc/authn"
@@ -16,8 +16,6 @@ import (
 	"github.com/stackrox/rox/pkg/grpc/requestinfo"
 	"github.com/stackrox/rox/pkg/httputil"
 	"github.com/stackrox/rox/pkg/monoclock"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 const (
@@ -32,6 +30,8 @@ const (
 type backendImpl struct {
 	urlPathPrefix string
 	monoClock     monoclock.MonoClock
+
+	basicAuthMgr *basic.Manager
 }
 
 func (p *backendImpl) OnEnable(provider authproviders.Provider) {
@@ -41,7 +41,20 @@ func (p *backendImpl) OnDisable(provider authproviders.Provider) {
 }
 
 func (p *backendImpl) ExchangeToken(ctx context.Context, externalRawToken, state string) (*authproviders.AuthResponse, string, error) {
-	return nil, "", status.Error(codes.Unimplemented, "basic auth provider does not implement ExchangeToken")
+	urlValues, err := url.ParseQuery(externalRawToken)
+	if err != nil {
+		return nil, "", errors.Wrap(err, "failed to parse credentials form data")
+	}
+	username, password := urlValues.Get("username"), urlValues.Get("password")
+	id, err := p.basicAuthMgr.IdentityForCreds(username, password, nil)
+	if err != nil {
+		return nil, "", errors.Wrap(err, "failed to authenticate")
+	}
+
+	return &authproviders.AuthResponse{
+		Claims:     id.AsExternalUser(),
+		Expiration: time.Now().Add(defaultTTL),
+	}, state, nil
 }
 
 func (p *backendImpl) LoginURL(clientState string, _ *requestinfo.RequestInfo) string {
@@ -67,10 +80,11 @@ func (p *backendImpl) RefreshURL() string {
 	return ""
 }
 
-func newBackend(urlPathPrefix string) (*backendImpl, error) {
+func newBackend(urlPathPrefix string, basicAuthMgr *basic.Manager) (*backendImpl, error) {
 	backendImpl := &backendImpl{
 		urlPathPrefix: urlPathPrefix,
 		monoClock:     monoclock.New(),
+		basicAuthMgr:  basicAuthMgr,
 	}
 	return backendImpl, nil
 }

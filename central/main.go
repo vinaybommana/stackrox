@@ -385,7 +385,9 @@ func startGRPCServer(factory serviceFactory) {
 		log.Panicf("Could not initialize auth provider registry: %v", err)
 	}
 
-	basicAuthProvider := userpass.RegisterAuthProviderOrPanic(authProviderRegisteringCtx, registry)
+	basicAuthMgr := userpass.CreateManager()
+
+	basicAuthProvider := userpass.RegisterAuthProviderOrPanic(authProviderRegisteringCtx, basicAuthMgr, registry)
 
 	serviceMTLSExtractor, err := service.NewExtractor()
 	if err != nil {
@@ -400,7 +402,7 @@ func startGRPCServer(factory serviceFactory) {
 	idExtractors := []authn.IdentityExtractor{
 		serviceMTLSExtractor, // internal services
 		tokenbased.NewExtractor(roleDataStore.Singleton(), jwt.ValidatorSingleton()), // JWT tokens
-		userpass.IdentityExtractorOrPanic(basicAuthProvider),
+		userpass.IdentityExtractorOrPanic(basicAuthMgr, basicAuthProvider),
 		serviceTokenExtractor,
 		authnUserpki.NewExtractor(tlsconfig.ManagerInstance()),
 	}
