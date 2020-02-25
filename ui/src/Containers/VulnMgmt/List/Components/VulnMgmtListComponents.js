@@ -150,9 +150,10 @@ export function getComponentTableColumns(workflowState) {
 
 const VulnMgmtComponents = ({ selectedRowId, search, sort, page, data, totalResults }) => {
     const query = gql`
-        query getComponents($query: String, $pagination: Pagination) {
+        query getComponents($query: String, $scopeQuery: String, $pagination: Pagination) {
             results: components(query: $query, pagination: $pagination) {
                 ...componentFields
+                unusedVarSink(query: $scopeQuery)
             }
             count: componentCount(query: $query)
         }
@@ -162,6 +163,7 @@ const VulnMgmtComponents = ({ selectedRowId, search, sort, page, data, totalResu
     const queryOptions = {
         variables: {
             query: queryService.objectToWhereClause(search),
+            scopeQuery: '',
             pagination: queryService.getPagination(tableSort, page, LIST_PAGE_SIZE)
         }
     };

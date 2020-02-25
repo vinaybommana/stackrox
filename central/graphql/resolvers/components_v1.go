@@ -165,8 +165,8 @@ func (eicr *EmbeddedImageScanComponentResolver) Source(ctx context.Context) stri
 }
 
 // Location returns the location of the component.
-func (eicr *EmbeddedImageScanComponentResolver) Location(ctx context.Context) string {
-	return eicr.data.GetLocation()
+func (eicr *EmbeddedImageScanComponentResolver) Location(ctx context.Context, _ RawQuery) (string, error) {
+	return eicr.data.GetLocation(), nil
 }
 
 // RiskScore returns the risk score of the component.

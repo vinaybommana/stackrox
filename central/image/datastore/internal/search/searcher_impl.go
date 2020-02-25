@@ -4,15 +4,12 @@ import (
 	"context"
 
 	componentCVEEdgeMappings "github.com/stackrox/rox/central/componentcveedge/mappings"
-	cveDackBox "github.com/stackrox/rox/central/cve/dackbox"
 	cveMappings "github.com/stackrox/rox/central/cve/mappings"
 	"github.com/stackrox/rox/central/dackbox"
 	pkgDeploymentSAC "github.com/stackrox/rox/central/deployment/sac"
-	imageDackBox "github.com/stackrox/rox/central/image/dackbox"
 	"github.com/stackrox/rox/central/image/datastore/internal/store"
 	"github.com/stackrox/rox/central/image/index"
 	pkgImageSAC "github.com/stackrox/rox/central/image/sac"
-	componentDackBox "github.com/stackrox/rox/central/imagecomponent/dackbox"
 	componentMappings "github.com/stackrox/rox/central/imagecomponent/mappings"
 	imageComponentEdgeMappings "github.com/stackrox/rox/central/imagecomponentedge/mappings"
 	"github.com/stackrox/rox/central/role/resources"
@@ -165,26 +162,16 @@ func getCompoundImageSearcher(graphProvider idspace.GraphProvider,
 	componentCVEEdgeToComponentSearcher := idspace.TransformIDs(componentCVEEdgeSearcher, idspace.NewEdgeToParentTransformer())
 	return compound.NewSearcher([]compound.SearcherSpec{
 		{
-			Searcher: idspace.TransformIDs(cveSearcher, idspace.NewBackwardGraphTransformer(graphProvider,
-				[][]byte{cveDackBox.Bucket,
-					componentDackBox.Bucket,
-					imageDackBox.Bucket,
-				})),
-			Options: cveMappings.OptionsMap,
+			Searcher: idspace.TransformIDs(cveSearcher, idspace.NewBackwardGraphTransformer(graphProvider, dackbox.CVEToImagePath.Path)),
+			Options:  cveMappings.OptionsMap,
 		},
 		{
-			Searcher: idspace.TransformIDs(componentCVEEdgeToComponentSearcher, idspace.NewBackwardGraphTransformer(graphProvider,
-				[][]byte{componentDackBox.Bucket,
-					imageDackBox.Bucket,
-				})),
-			Options: componentCVEEdgeMappings.OptionsMap,
+			Searcher: idspace.TransformIDs(componentCVEEdgeToComponentSearcher, idspace.NewBackwardGraphTransformer(graphProvider, dackbox.ComponentToImagePath.Path)),
+			Options:  componentCVEEdgeMappings.OptionsMap,
 		},
 		{
-			Searcher: idspace.TransformIDs(componentSearcher, idspace.NewBackwardGraphTransformer(graphProvider,
-				[][]byte{componentDackBox.Bucket,
-					imageDackBox.Bucket,
-				})),
-			Options: componentMappings.OptionsMap,
+			Searcher: idspace.TransformIDs(componentSearcher, idspace.NewBackwardGraphTransformer(graphProvider, dackbox.ComponentToImagePath.Path)),
+			Options:  componentMappings.OptionsMap,
 		},
 		{
 			Searcher: idspace.TransformIDs(imageComponentEdgeSearcher, idspace.NewEdgeToParentTransformer()),

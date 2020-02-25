@@ -272,8 +272,8 @@ func (eicr *imageComponentResolver) componentQuery() *v1.Query {
 // version instead.
 
 // Location returns the location of the component.
-func (eicr *imageComponentResolver) Location(ctx context.Context) string {
-	return ""
+func (eicr *imageComponentResolver) Location(ctx context.Context, _ RawQuery) (string, error) {
+	return "", nil
 }
 
 // LayerIndex is the index in the parent image.

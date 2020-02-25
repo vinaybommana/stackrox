@@ -36,6 +36,8 @@ var (
 	defaultSortOption = &v1.QuerySortOption{
 		Field: search.CVE.String(),
 	}
+
+	deploymentOnlyOptionsMap = search.Difference(deploymentMappings.OptionsMap, imageMappings.OptionsMap)
 )
 
 type searcherImpl struct {
@@ -183,7 +185,7 @@ func getCompoundCVESearcher(graphProvider idspace.GraphProvider,
 		},
 		{
 			Searcher: idspace.TransformIDs(deploymentSearcher, idspace.NewForwardGraphTransformer(graphProvider, dackbox.DeploymentToCVE.Path)),
-			Options:  deploymentMappings.OptionsMap,
+			Options:  deploymentOnlyOptionsMap,
 		},
 		{
 			Searcher: idspace.TransformIDs(imageSearcher, idspace.NewForwardGraphTransformer(graphProvider, dackbox.ImageToCVEPath.Path)),

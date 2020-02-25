@@ -168,7 +168,7 @@ export const VULN_COMPONENT_LIST_FRAGMENT = gql`
         id
         name
         version
-        location
+        location(query: $scopeQuery)
         source
         vulnCounter {
             all {
