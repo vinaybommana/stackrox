@@ -1,8 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
+
 import { useTheme } from 'Containers/ThemeProvider';
 import Loader from 'Components/Loader';
+import TileContent from 'Components/TileContent';
 
 export const POSITION = {
     FIRST: 'first',
@@ -42,31 +44,13 @@ const TileLink = ({
     const content = loading ? (
         <Loader className="text-base-100" message="" transparent />
     ) : (
-        <div className="flex flex-col text-center">
-            {superText && (
-                <div
-                    className="text-3xl tracking-widest pb-1 text-base-600"
-                    data-testid="tileLinkSuperText"
-                >
-                    {superText}
-                </div>
-            )}
-            <div
-                className="flex items-center font-600 font-condensed text-base-600 uppercase justify-center"
-                data-test-id="tile-link-value"
-            >
-                {text} {icon && <div className="ml-1">{icon}</div>}
-            </div>
-            {subText && (
-                <div
-                    className={`${
-                        short ? 'text-xs' : 'text-sm pt-1'
-                    } tracking-wide font-condensed font-600`}
-                >
-                    {subText}
-                </div>
-            )}
-        </div>
+        <TileContent
+            superText={superText}
+            text={text}
+            icon={icon}
+            subText={subText}
+            short={short}
+        />
     );
     let classes = '';
     const positionClasses = `flex flex-col items-center justify-center py-2 border-2 rounded min-w-20 px-2 lg:px-4  ${

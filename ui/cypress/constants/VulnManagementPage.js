@@ -46,7 +46,7 @@ export const sidePanelListEntityPageSelectors = {
     sidePanelTableBodyRows: '[data-test-id="side-panel"] .rt-tbody .rt-tr',
     parentEntityInfoHeader: '[data-test-id="breadcrumb-link-text"] > a',
     childEntityInfoHeader: '[data-test-id="breadcrumb-link-text"] > span',
-    tileLinkText: '[data-testid="tileLinkSuperText"]',
+    tileLinkText: '[data-test-id="tileLinkSuperText"]',
     tileLinkValue: '[data-test-id="tile-link-value"]',
     imageTileLink: '[data-test-id="IMAGE-tile-link"]',
     namespaceTileLink: '[data-test-id="NAMESPACE-tile-link"]',
@@ -102,7 +102,7 @@ const linkSelectors = {
     fixableCvesLink: '[data-testid="fixableCvesLink"]',
     tileLinks: "[data-test-id='tile-link']",
     tileLinkValue: "[data-test-id='tile-link-value']",
-    tileLinkSuperText: '[data-testid="tileLinkSuperText"]',
+    tileLinkSuperText: '[data-test-id="tileLinkSuperText"]',
     deploymentTileLink: "[data-test-id='DEPLOYMENT-tile-link']",
     policyTileLink: "[data-test-id='POLICY-tile-link']"
 };
