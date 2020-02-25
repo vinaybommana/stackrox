@@ -159,6 +159,10 @@ func (resolver *policyResolver) DeploymentCount(ctx context.Context, args RawQue
 // PolicyStatus returns the policy statusof this policy
 func (resolver *policyResolver) PolicyStatus(ctx context.Context, args RawQuery) (string, error) {
 	defer metrics.SetGraphQLOperationDurationTime(time.Now(), pkgMetrics.Policies, "PolicyStatus")
+	if resolver.data.GetDisabled() {
+		return "", nil
+	}
+
 	q, err := args.AsV1QueryOrEmpty()
 	if err != nil {
 		return "", err

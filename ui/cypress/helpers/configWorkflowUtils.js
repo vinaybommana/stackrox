@@ -6,6 +6,7 @@ export const renderListAndSidePanel = (entity, entityName = null) => {
     cy.visit(url.list[entity]);
     cy.wait(1000);
     cy.get(`${configManagementSelectors.tableRows}${entityName ? `:contains(${entityName})` : ''}`)
+        .not(configManagementSelectors.disabledTableRows)
         .find(configManagementSelectors.tableCells)
         .eq(1)
         .click({ force: true });
@@ -27,6 +28,7 @@ export const hasCountWidgetsFor = entities => {
 export const clickOnCountWidget = (entity, type) => {
     cy.get(`${configManagementSelectors.countWidgets}:contains('${capitalize(entity)}')`)
         .find(configManagementSelectors.countWidgetValue)
+
         .click({ force: true });
 
     if (type === 'side-panel') {
