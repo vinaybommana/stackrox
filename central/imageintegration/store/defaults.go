@@ -42,6 +42,18 @@ var DefaultImageIntegrations = []*storage.ImageIntegration{
 		},
 	},
 	{
+		Id:         "6d7fc3f3-03d0-4b61-bf9f-34982a77bd56",
+		Name:       "Public GKE GCR",
+		Type:       "docker",
+		Categories: []storage.ImageIntegrationCategory{storage.ImageIntegrationCategory_REGISTRY},
+		IntegrationConfig: &storage.ImageIntegration_Docker{
+			Docker: &storage.DockerConfig{
+				Endpoint: "gke.gcr.io",
+			},
+		},
+		SkipTestIntegration: true, // /v2 endpoint is not implemented
+	},
+	{
 		Id:         "e50087f1-6840-4d15-aeca-21ba636f0878",
 		Name:       "Public Quay.io",
 		Type:       "quay",
