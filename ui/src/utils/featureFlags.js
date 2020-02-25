@@ -14,7 +14,8 @@ export const knownBackendFlags = {
     ROX_EVENT_TIMELINE_UI: 'ROX_EVENT_TIMELINE_UI',
     ROX_TELEMETRY: 'ROX_TELEMETRY',
     ROX_DIAGNOSTIC_BUNDLE: 'ROX_DIAGNOSTIC_BUNDLE',
-    ROX_REFRESH_TOKENS: 'ROX_REFRESH_TOKENS'
+    ROX_REFRESH_TOKENS: 'ROX_REFRESH_TOKENS',
+    ROX_NIST_800_53: 'ROX_NIST_800_53'
 };
 
 // isBackendFeatureFlagEnabled returns whether a feature flag retrieved from the backend is enabled.

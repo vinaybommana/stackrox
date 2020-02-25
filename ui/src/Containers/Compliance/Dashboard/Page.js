@@ -7,6 +7,8 @@ import StandardsAcrossEntity from 'Containers/Compliance/widgets/StandardsAcross
 import ComplianceByStandard from 'Containers/Compliance/widgets/ComplianceByStandard';
 import WaveBackground from 'images/wave-bg.svg';
 import WaveBackground2 from 'images/wave-bg-2.svg';
+import FeatureEnabled from 'Containers/FeatureEnabled';
+import { knownBackendFlags } from 'utils/featureFlags';
 import DashboardHeader from './Header';
 
 const ComplianceDashboardPage = () => {
@@ -86,6 +88,12 @@ const ComplianceDashboardPage = () => {
                         standardType={standardTypes.NIST_800_190}
                         className="pdf-page"
                     />
+                    <FeatureEnabled featureFlag={knownBackendFlags.ROX_NIST_800_53}>
+                        <ComplianceByStandard
+                            standardType={standardTypes.NIST_SP_800_53}
+                            className="pdf-page"
+                        />
+                    </FeatureEnabled>
                     <ComplianceByStandard
                         standardType={standardTypes.PCI_DSS_3_2}
                         className="pdf-page"

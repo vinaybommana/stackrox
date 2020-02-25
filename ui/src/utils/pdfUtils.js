@@ -1,6 +1,5 @@
 import toLower from 'lodash/toLower';
 import startCase from 'lodash/startCase';
-import entityToColumns from 'constants/tableColumns';
 import ReactDOMServer from 'react-dom/server';
 import flattenObject from 'utils/flattenObject';
 
@@ -89,9 +88,8 @@ const createPDFTable = (tableData, entityType, query, pdfId, tableColumns) => {
     } else if (query.standardId) {
         type = 'Standard';
     }
-    const columns = tableColumns || entityToColumns[query.standardId || entityType];
     if (tableData.length) {
-        const filteredColumns = columns.filter(
+        const filteredColumns = tableColumns.filter(
             ({ accessor, className }) =>
                 accessor && className !== 'hidden' && accessor !== 'id' && accessor !== 'checkbox'
         );
