@@ -448,7 +448,7 @@ version: 2.1
 executors:
   custom:
     docker:
-      - image: docker.io/stackrox/apollo-ci:0.2.10
+      - image: docker.io/stackrox/apollo-ci:snapshot-0.2.11-2-gacb11352a1
         auth:
           username: $DOCKER_IO_PULL_USERNAME
           password: $DOCKER_IO_PULL_PASSWORD
@@ -1570,6 +1570,7 @@ jobs:
       - *restoreGoModCache
       - setup-go-build-env
       - run:
+          no_output_timeout: 30m
           name: Ensure that generated files are up to date. (If this fails, run `make go-generated-srcs` and commit the result.)
           command: |
             git ls-files --others --exclude-standard >/tmp/untracked
@@ -1742,6 +1743,9 @@ jobs:
       - *restoreGoModCache
       - setup-go-build-env
       - *restoreGoBuildCache
+      - setup_remote_docker
+      - setup-dep-env:
+          docker-login: true
 
       - run:
           name: Build the main Go binaries
@@ -1778,6 +1782,8 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
+      - setup-dep-env:
+          docker-login: true
 
       - attach_workspace:
           at: /go/src/github.com/stackrox/rox

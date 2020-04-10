@@ -1,5 +1,9 @@
 ARG DATA_IMAGE_TAG=latest
+ARG BUILD_IMAGE=xxxxx
+
 FROM stackrox-data:$DATA_IMAGE_TAG AS data
+
+FROM $BUILD_IMAGE as builder
 
 FROM alpine:3.11
 ARG ALPINE_MIRROR=sjc.edge.kernel.org
@@ -7,6 +11,12 @@ LABEL "com.vendor"="StackRox (support@stackrox.com)"
 
 RUN echo http://${ALPINE_MIRROR}/alpine/v3.11/main > /etc/apk/repositories; \
     echo http://${ALPINE_MIRROR}/alpine/v3.11/community >> /etc/apk/repositories
+
+RUN apk add --update --no-cache zlib-dev bzip2-dev snappy-dev lz4-dev zstd-dev
+RUN mkdir -p /tmp/rocksdb
+
+COPY --from=builder /tmp/rocksdb/librocksdb.a /tmp/rocksdb/librocksdb.a
+COPY --from=builder /tmp/rocksdb/include /tmp/rocksdb/include
 
 RUN apk update && \
     apk add --no-cache \
@@ -70,3 +80,5 @@ RUN mkdir -p /stackrox/data && chown -R 4000:4000 /stackrox/data
 VOLUME /stackrox/data
 
 USER 4000:4000
+
+WORKDIR /

@@ -7,18 +7,21 @@ TAG=$(shell git describe --tags --abbrev=10 --dirty --long)
 ALPINE_MIRROR_BUILD_ARG := $(ALPINE_MIRROR:%=--build-arg ALPINE_MIRROR=%)
 
 export CGO_ENABLED DEFAULT_GOOS GOARCH GOTAGS GO111MODULE GOPRIVATE
-CGO_ENABLED := 0
+CGO_ENABLED := 1
 GOARCH := amd64
 DEFAULT_GOOS := linux
 GO111MODULE := on
 GOPRIVATE := github.com/stackrox
+BUILD_IMAGE := stackrox/main:rocksdb-builder-6.7.3-1
 
 GOBUILD := $(CURDIR)/scripts/go-build.sh
+
+LOCAL_CACHE_ARGS := "-v$(CURDIR)/linux-gocache:/linux-gocache"
 
 RELEASE_GOTAGS := release
 ifdef CI
 ifneq ($(CIRCLE_TAG),)
-GOTAGS := $(RELEASE_GOTAGS)
+GOTAGS := "$(RELEASE_GOTAGS)"
 TAG := $(CIRCLE_TAG)
 endif
 endif
@@ -320,11 +323,11 @@ build-prep: deps volatile-generated-srcs
 
 cli: build-prep
 ifdef CI
-	GOOS=darwin $(GOBUILD) ./roxctl
-	GOOS=linux $(GOBUILD) ./roxctl
-	GOOS=windows $(GOBUILD) ./roxctl
+	CGO_ENABLED=0 GOOS=darwin $(GOBUILD) ./roxctl
+	CGO_ENABLED=0 GOOS=linux $(GOBUILD) ./roxctl
+	CGO_ENABLED=0 GOOS=windows $(GOBUILD) ./roxctl
 else
-	GOOS=$(HOST_OS) $(GOBUILD) ./roxctl
+	CGO_ENABLED=0 GOOS=$(HOST_OS) $(GOBUILD) ./roxctl
 endif
 	# Copy the user's specific OS into gopath
 	cp bin/$(HOST_OS)/roxctl $(GOPATH)/bin/roxctl
@@ -338,16 +341,38 @@ bin/%/upgrader: build-prep
 bin/%/admission-control: build-prep
 	GOOS=$* $(GOBUILD) ./sensor/admission-control
 
+.PHONY: main-builder-image
+main-builder-image:
+	@echo "+ $@"
+	docker build -t $(BUILD_IMAGE) build/
+
 .PHONY: main-build
-main-build: build-prep
+main-build: build-prep main-build-dockerized
+
+.PHONY: main-build-dockerized
+main-build-dockerized:
+	@echo "+ $@"
+ifdef CI
+	docker container create --name builder $(BUILD_IMAGE) make main-build-nodeps
+	docker cp $(GOPATH) builder:/
+	docker start -i builder
+	docker cp builder:/go/src/github.com/stackrox/rox/bin/linux bin/
+else
+	docker run $(LOCAL_CACHE_ARGS) -v $(GOPATH):/go $(BUILD_IMAGE) make main-build-nodeps
+endif
+
+.PHONY: main-build-nodeps
+main-build-nodeps:
 	@echo "+ $@"
 	@# PLEASE KEEP THE TWO LISTS BELOW IN SYNC.
 	@# The only exception is that `roxctl` should not be built in CI here, since it's built separately when in CI.
 	@# This isn't pretty, but it saves 30 seconds on every build, which seems worth it.
 ifdef CI
-	$(GOBUILD) central migrator sensor/kubernetes sensor/upgrader sensor/admission-control compliance/collection
+	$(GOBUILD) central migrator
+	CGO_ENABLED=0 $(GOBUILD) sensor/kubernetes sensor/upgrader sensor/admission-control compliance/collection
 else
-	$(GOBUILD) central migrator sensor/kubernetes sensor/upgrader sensor/admission-control compliance/collection roxctl
+	$(GOBUILD) central migrator
+	CGO_ENABLED=0 $(GOBUILD) sensor/kubernetes sensor/upgrader sensor/admission-control compliance/collection roxctl
 endif
 
 .PHONY: scale-build
@@ -457,7 +482,7 @@ deployer-image: build-prep
 # declare its dependencies explicitly.
 .PHONY: docker-build-main-image
 docker-build-main-image: copy-binaries-to-image-dir docker-build-data-image
-	docker build -t stackrox/main:$(TAG) --build-arg DATA_IMAGE_TAG=$(TAG) $(ALPINE_MIRROR_BUILD_ARG) image/
+	docker build -t stackrox/main:$(TAG) --build-arg BUILD_IMAGE=$(BUILD_IMAGE) --build-arg DATA_IMAGE_TAG=$(TAG) $(ALPINE_MIRROR_BUILD_ARG) image/
 	@echo "Built main image with tag: $(TAG)"
 	@echo "You may wish to:       export MAIN_IMAGE_TAG=$(TAG)"
 
