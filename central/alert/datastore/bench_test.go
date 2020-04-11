@@ -35,7 +35,7 @@ func benchmarkLoad(b *testing.B, s store.Store, c commentsStore.Store) {
 
 	for i := 0; i < 15000; i++ {
 		a := fixtures.GetAlertWithID(fmt.Sprintf("%d", i))
-		require.NoError(b, s.UpsertAlert(a))
+		require.NoError(b, s.Upsert(a))
 	}
 
 	log.Info("Successfully loaded the DB")
