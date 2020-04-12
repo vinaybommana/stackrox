@@ -1,20 +1,20 @@
-package badger
+package rocksdb
 
 import (
-	"github.com/dgraph-io/badger"
 	"github.com/stackrox/rox/central/networkflow/datastore/internal/store"
 	"github.com/stackrox/rox/central/networkflow/datastore/internal/store/common"
+	"github.com/tecbot/gorocksdb"
 )
 
 // NewClusterStore returns a new ClusterStore instance using the provided badger DB instance.
-func NewClusterStore(db *badger.DB) store.ClusterStore {
+func NewClusterStore(db *gorocksdb.DB) store.ClusterStore {
 	return &clusterStoreImpl{
 		db: db,
 	}
 }
 
 type clusterStoreImpl struct {
-	db *badger.DB
+	db *gorocksdb.DB
 }
 
 // GetFlowStore returns the FlowStore for the cluster ID, or nil if none exists.

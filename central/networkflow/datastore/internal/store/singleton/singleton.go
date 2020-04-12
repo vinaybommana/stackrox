@@ -4,6 +4,7 @@ import (
 	"github.com/stackrox/rox/central/globaldb"
 	"github.com/stackrox/rox/central/networkflow/datastore/internal/store"
 	"github.com/stackrox/rox/central/networkflow/datastore/internal/store/badger"
+	"github.com/stackrox/rox/central/networkflow/datastore/internal/store/common"
 	"github.com/stackrox/rox/pkg/sync"
 )
 
@@ -17,7 +18,7 @@ var (
 func Singleton() store.ClusterStore {
 	once.Do(func() {
 		instance = badger.NewClusterStore(globaldb.GetGlobalBadgerDB())
-		globaldb.RegisterBucket([]byte(badger.GlobalPrefix), "NetworkFlow")
+		globaldb.RegisterBucket([]byte(common.GlobalPrefix), "NetworkFlow")
 
 	})
 	return instance

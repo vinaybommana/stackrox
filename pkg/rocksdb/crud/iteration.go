@@ -17,11 +17,21 @@ func BucketForEach(db *gorocksdb.DB, opts *gorocksdb.ReadOptions, keyPrefix []by
 	return ForEachItemWithPrefix(db, opts, prefix, stripPrefix, do)
 }
 
+// DefaultForEachOverKeySet invokes a callback for all keys with the given prefix.
+func DefaultForEachOverKeySet(db *gorocksdb.DB, keyPrefix []byte, stripPrefix bool, do func(k []byte) error) error {
+	return ForEachOverKeySet(db, defaultIteratorOptions, keyPrefix, stripPrefix, do)
+}
+
 // ForEachOverKeySet invokes a callback for all keys with the given prefix.
 func ForEachOverKeySet(db *gorocksdb.DB, opts *gorocksdb.ReadOptions, keyPrefix []byte, stripPrefix bool, do func(k []byte) error) error {
 	return ForEachItemWithPrefix(db, opts, keyPrefix, stripPrefix, func(k, v []byte) error {
 		return do(k)
 	})
+}
+
+// DefaultForEachItemWithPrefix invokes ForEachItemWithPrefix with the default read options
+func DefaultForEachItemWithPrefix(db *gorocksdb.DB, keyPrefix []byte, stripPrefix bool, do func(k []byte, v []byte) error) error {
+	return ForEachItemWithPrefix(db, defaultIteratorOptions, keyPrefix, stripPrefix, do)
 }
 
 // ForEachItemWithPrefix invokes a callbacks for all key/item pairs with the given prefix.
