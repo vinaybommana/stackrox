@@ -134,16 +134,20 @@ func (suite *IndicatorDataStoreTestSuite) verifyIndicatorsAre(indicators ...*sto
 	}
 	suite.ElementsMatch(resultIDs, indicatorIDs)
 
-	boltResults, err := suite.storage.GetProcessIndicators()
+	var foundIndicators []*storage.ProcessIndicator
+	err = suite.storage.Walk(func(pi *storage.ProcessIndicator) error {
+		foundIndicators = append(foundIndicators, pi)
+		return nil
+	})
 	suite.NoError(err)
-	suite.Len(boltResults, len(indicators))
+
 	for _, ind := range indicators {
 		ind.DeploymentStateTs = 0
 	}
-	for _, ind := range boltResults {
+	for _, ind := range foundIndicators {
 		ind.DeploymentStateTs = 0
 	}
-	suite.ElementsMatch(boltResults, indicators)
+	suite.ElementsMatch(foundIndicators, indicators)
 }
 
 func getIndicators() (indicators []*storage.ProcessIndicator, repeatIndicator *storage.ProcessIndicator) {
@@ -619,7 +623,7 @@ func (suite *IndicatorDataStoreTestSuite) TestPruning() {
 
 func (suite *IndicatorDataStoreTestSuite) TestEnforcesGet() {
 	mockStore, _, _ := suite.setupDataStoreWithMocks()
-	mockStore.EXPECT().GetProcessIndicator(gomock.Any()).Return(&storage.ProcessIndicator{}, true, nil)
+	mockStore.EXPECT().Get(gomock.Any()).Return(&storage.ProcessIndicator{}, true, nil)
 
 	indicator, exists, err := suite.datastore.GetProcessIndicator(suite.hasNoneCtx, "hkjddjhk")
 	suite.NoError(err, "expected no error, should return nil without access")
@@ -631,13 +635,13 @@ func (suite *IndicatorDataStoreTestSuite) TestAllowsGet() {
 	mockStore, _, _ := suite.setupDataStoreWithMocks()
 	testIndicator := &storage.ProcessIndicator{}
 
-	mockStore.EXPECT().GetProcessIndicator(gomock.Any()).Return(testIndicator, true, nil)
+	mockStore.EXPECT().Get(gomock.Any()).Return(testIndicator, true, nil)
 	indicator, exists, err := suite.datastore.GetProcessIndicator(suite.hasReadCtx, "An Id")
 	suite.NoError(err, "expected no error trying to read with permissions")
 	suite.True(exists)
 	suite.Equal(testIndicator, indicator)
 
-	mockStore.EXPECT().GetProcessIndicator(gomock.Any()).Return(testIndicator, true, nil)
+	mockStore.EXPECT().Get(gomock.Any()).Return(testIndicator, true, nil)
 	indicator, exists, err = suite.datastore.GetProcessIndicator(suite.hasWriteCtx, "beef")
 	suite.NoError(err, "expected no error trying to read with permissions")
 	suite.True(exists)
@@ -646,7 +650,7 @@ func (suite *IndicatorDataStoreTestSuite) TestAllowsGet() {
 
 func (suite *IndicatorDataStoreTestSuite) TestEnforcesAdd() {
 	storeMock, indexMock, _ := suite.setupDataStoreWithMocks()
-	storeMock.EXPECT().AddProcessIndicators(gomock.Any()).Times(0)
+	storeMock.EXPECT().UpsertMany(gomock.Any()).Times(0)
 	indexMock.EXPECT().AddProcessIndicators(gomock.Any()).Times(0)
 
 	err := suite.datastore.AddProcessIndicators(suite.hasNoneCtx, &storage.ProcessIndicator{})
@@ -658,7 +662,7 @@ func (suite *IndicatorDataStoreTestSuite) TestEnforcesAdd() {
 
 func (suite *IndicatorDataStoreTestSuite) TestEnforcesAddMany() {
 	storeMock, indexMock, _ := suite.setupDataStoreWithMocks()
-	storeMock.EXPECT().AddProcessIndicators(gomock.Any()).Times(0)
+	storeMock.EXPECT().UpsertMany(gomock.Any()).Times(0)
 	indexMock.EXPECT().AddProcessIndicators(gomock.Any()).Times(0)
 
 	err := suite.datastore.AddProcessIndicators(suite.hasNoneCtx, &storage.ProcessIndicator{})
@@ -670,7 +674,7 @@ func (suite *IndicatorDataStoreTestSuite) TestEnforcesAddMany() {
 
 func (suite *IndicatorDataStoreTestSuite) TestAllowsAddMany() {
 	storeMock, indexMock, _ := suite.setupDataStoreWithMocks()
-	storeMock.EXPECT().AddProcessIndicators(gomock.Any()).Return(nil)
+	storeMock.EXPECT().UpsertMany(gomock.Any()).Return(nil)
 	indexMock.EXPECT().AddProcessIndicators(gomock.Any()).Return(nil)
 
 	storeMock.EXPECT().AckKeysIndexed("id").Return(nil)
@@ -693,7 +697,7 @@ func (suite *IndicatorDataStoreTestSuite) TestEnforcesRemoveByDeployment() {
 func (suite *IndicatorDataStoreTestSuite) TestAllowsRemoveByDeployment() {
 	storeMock, indexMock, searchMock := suite.setupDataStoreWithMocks()
 	searchMock.EXPECT().Search(gomock.Any(), gomock.Any()).Return([]search.Result{{ID: "jkldfjk"}}, nil)
-	storeMock.EXPECT().RemoveProcessIndicators(gomock.Any()).Return(nil)
+	storeMock.EXPECT().DeleteMany(gomock.Any()).Return(nil)
 	indexMock.EXPECT().DeleteProcessIndicators(gomock.Any()).Return(nil)
 
 	storeMock.EXPECT().AckKeysIndexed("jkldfjk").Return(nil)
@@ -716,7 +720,7 @@ func (suite *IndicatorDataStoreTestSuite) TestEnforcesRemoveByPod() {
 func (suite *IndicatorDataStoreTestSuite) TestAllowsRemoveByPod() {
 	storeMock, indexMock, searchMock := suite.setupDataStoreWithMocks()
 	searchMock.EXPECT().Search(gomock.Any(), gomock.Any()).Return([]search.Result{{ID: "jkldfjk"}}, nil)
-	storeMock.EXPECT().RemoveProcessIndicators(gomock.Any()).Return(nil)
+	storeMock.EXPECT().DeleteMany(gomock.Any()).Return(nil)
 	indexMock.EXPECT().DeleteProcessIndicators(gomock.Any()).Return(nil)
 
 	storeMock.EXPECT().AckKeysIndexed("jkldfjk").Return(nil)
@@ -727,7 +731,7 @@ func (suite *IndicatorDataStoreTestSuite) TestAllowsRemoveByPod() {
 
 func (suite *IndicatorDataStoreTestSuite) TestEnforcesRemoveByStaleContainers() {
 	storeMock, indexMock, _ := suite.setupDataStoreWithMocks()
-	storeMock.EXPECT().RemoveProcessIndicators(gomock.Any()).Times(0)
+	storeMock.EXPECT().DeleteMany(gomock.Any()).Times(0)
 	indexMock.EXPECT().DeleteProcessIndicators(gomock.Any()).Times(0)
 
 	deploy1 := &storage.Deployment{
@@ -749,7 +753,7 @@ func (suite *IndicatorDataStoreTestSuite) TestEnforcesRemoveByStaleContainers() 
 func (suite *IndicatorDataStoreTestSuite) TestAllowsRemoveByStaleContainers() {
 	storeMock, indexMock, searchMock := suite.setupDataStoreWithMocks()
 	searchMock.EXPECT().Search(gomock.Any(), gomock.Any()).Return([]search.Result{{ID: "jkldfjk"}}, nil)
-	storeMock.EXPECT().RemoveProcessIndicators(gomock.Any()).Return(nil)
+	storeMock.EXPECT().DeleteMany(gomock.Any()).Return(nil)
 	indexMock.EXPECT().DeleteProcessIndicators(gomock.Any()).Return(nil)
 
 	storeMock.EXPECT().AckKeysIndexed("jkldfjk").Return(nil)
@@ -764,7 +768,7 @@ func (suite *IndicatorDataStoreTestSuite) TestAllowsRemoveByStaleContainers() {
 
 func (suite *IndicatorDataStoreTestSuite) TestEnforcesRemoveByStaleContainersByPod() {
 	storeMock, indexMock, _ := suite.setupDataStoreWithMocks()
-	storeMock.EXPECT().RemoveProcessIndicators(gomock.Any()).Times(0)
+	storeMock.EXPECT().DeleteMany(gomock.Any()).Times(0)
 	indexMock.EXPECT().DeleteProcessIndicators(gomock.Any()).Times(0)
 
 	pod1 := &storage.Pod{
@@ -786,7 +790,7 @@ func (suite *IndicatorDataStoreTestSuite) TestEnforcesRemoveByStaleContainersByP
 func (suite *IndicatorDataStoreTestSuite) TestAllowsRemoveByStaleContainersByPod() {
 	storeMock, indexMock, searchMock := suite.setupDataStoreWithMocks()
 	searchMock.EXPECT().Search(gomock.Any(), gomock.Any()).Return([]search.Result{{ID: "jkldfjk"}}, nil)
-	storeMock.EXPECT().RemoveProcessIndicators(gomock.Any()).Return(nil)
+	storeMock.EXPECT().DeleteMany(gomock.Any()).Return(nil)
 	indexMock.EXPECT().DeleteProcessIndicators(gomock.Any()).Return(nil)
 
 	storeMock.EXPECT().AckKeysIndexed("jkldfjk").Return(nil)
@@ -835,7 +839,7 @@ func (suite *ProcessIndicatorReindexSuite) TestReconciliationPartialReindex() {
 
 	processes := []*storage.ProcessIndicator{pi1, pi2, pi3}
 
-	suite.storage.EXPECT().GetBatchProcessIndicators([]string{"A", "B", "C"}).Return(processes, nil, nil)
+	suite.storage.EXPECT().GetMany([]string{"A", "B", "C"}).Return(processes, nil, nil)
 	suite.indexer.EXPECT().AddProcessIndicators(processes).Return(nil)
 	suite.storage.EXPECT().AckKeysIndexed([]string{"A", "B", "C"}).Return(nil)
 
@@ -847,7 +851,7 @@ func (suite *ProcessIndicatorReindexSuite) TestReconciliationPartialReindex() {
 	suite.storage.EXPECT().GetKeysToIndex().Return([]string{"A", "B", "C"}, nil)
 	suite.indexer.EXPECT().NeedsInitialIndexing().Return(false, nil)
 
-	suite.storage.EXPECT().GetBatchProcessIndicators([]string{"A", "B", "C"}).Return(processes, []int{2}, nil)
+	suite.storage.EXPECT().GetMany([]string{"A", "B", "C"}).Return(processes, []int{2}, nil)
 	suite.indexer.EXPECT().AddProcessIndicators(processes).Return(nil)
 	suite.indexer.EXPECT().DeleteProcessIndicators([]string{"C"}).Return(nil)
 	suite.storage.EXPECT().AckKeysIndexed([]string{"A", "B", "C"}).Return(nil)

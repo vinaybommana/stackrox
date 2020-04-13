@@ -138,7 +138,7 @@ func (ds *datastoreImpl) SearchRawProcessIndicators(ctx context.Context, q *v1.Q
 }
 
 func (ds *datastoreImpl) GetProcessIndicator(ctx context.Context, id string) (*storage.ProcessIndicator, bool, error) {
-	indicator, exists, err := ds.storage.GetProcessIndicator(id)
+	indicator, exists, err := ds.storage.Get(id)
 	if err != nil || !exists {
 		return nil, false, err
 	}
@@ -157,7 +157,7 @@ func (ds *datastoreImpl) AddProcessIndicators(ctx context.Context, indicators ..
 		return sac.ErrPermissionDenied
 	}
 
-	err := ds.storage.AddProcessIndicators(indicators...)
+	err := ds.storage.UpsertMany(indicators)
 	if err != nil {
 		return err
 	}
@@ -183,7 +183,7 @@ func (ds *datastoreImpl) WalkAll(ctx context.Context, fn func(pi *storage.Proces
 		return sac.ErrPermissionDenied
 	}
 
-	return ds.storage.WalkAll(fn)
+	return ds.storage.Walk(fn)
 }
 
 func (ds *datastoreImpl) RemoveProcessIndicators(ctx context.Context, ids []string) error {
@@ -204,7 +204,7 @@ func (ds *datastoreImpl) removeIndicators(ids []string) error {
 	if len(ids) == 0 {
 		return nil
 	}
-	if err := ds.storage.RemoveProcessIndicators(ids); err != nil {
+	if err := ds.storage.DeleteMany(ids); err != nil {
 		return err
 	}
 	if err := ds.indexer.DeleteProcessIndicators(ids); err != nil {
@@ -328,12 +328,33 @@ func (ds *datastoreImpl) prunePeriodically() {
 	}
 }
 
+func (ds *datastoreImpl) getProcessInfoToArgs() (map[processindicator.ProcessWithContainerInfo][]processindicator.IDAndArgs, error) {
+	defer metrics.SetDatastoreFunctionDuration(time.Now(), "ProcessIndicator", "getProcessInfoToArgs")
+	processNamesToArgs := make(map[processindicator.ProcessWithContainerInfo][]processindicator.IDAndArgs)
+	err := ds.storage.Walk(func(pi *storage.ProcessIndicator) error {
+		info := processindicator.ProcessWithContainerInfo{
+			ContainerName: pi.GetContainerName(),
+			PodID:         pi.GetPodId(),
+			ProcessName:   pi.GetSignal().GetName(),
+		}
+		processNamesToArgs[info] = append(processNamesToArgs[info], processindicator.IDAndArgs{
+			ID:   pi.GetId(),
+			Args: pi.GetSignal().GetArgs(),
+		})
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return processNamesToArgs, nil
+}
+
 func (ds *datastoreImpl) prune() {
 	defer metrics.SetIndexOperationDurationTime(time.Now(), ops.Prune, "ProcessIndicator")
 	pruner := ds.prunerFactory.StartPruning()
 	defer pruner.Finish()
 
-	processInfoToArgs, err := ds.storage.GetProcessInfoToArgs()
+	processInfoToArgs, err := ds.getProcessInfoToArgs()
 	if err != nil {
 		log.Errorf("Error while pruning processes: couldn't retrieve process info to args: %s", err)
 		return
@@ -380,7 +401,7 @@ func (ds *datastoreImpl) fullReindex() error {
 
 	indicators := make([]*storage.ProcessIndicator, 0, maxBatchSize)
 	var count int
-	err := ds.storage.WalkAll(func(pi *storage.ProcessIndicator) error {
+	err := ds.storage.Walk(func(pi *storage.ProcessIndicator) error {
 		indicators = append(indicators, pi)
 		if len(indicators) == maxBatchSize {
 			if err := ds.indexer.AddProcessIndicators(indicators); err != nil {
@@ -438,7 +459,7 @@ func (ds *datastoreImpl) buildIndex() error {
 
 	processBatcher := batcher.New(len(processesToIndex), maxBatchSize)
 	for start, end, valid := processBatcher.Next(); valid; start, end, valid = processBatcher.Next() {
-		processes, missingIndices, err := ds.storage.GetBatchProcessIndicators(processesToIndex[start:end])
+		processes, missingIndices, err := ds.storage.GetMany(processesToIndex[start:end])
 		if err != nil {
 			return err
 		}
