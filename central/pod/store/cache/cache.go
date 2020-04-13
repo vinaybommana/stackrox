@@ -155,6 +155,6 @@ func (c *cachedStore) GetKeysToIndex() ([]string, error) {
 	return c.store.GetKeysToIndex()
 }
 
-func (c *cachedStore) GetKeys() ([]string, error) {
-	return c.store.GetKeys()
+func (c *cachedStore) GetIDs() ([]string, error) {
+	return c.store.GetIDs()
 }

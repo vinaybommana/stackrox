@@ -114,7 +114,7 @@ func (ds *datastoreImpl) buildIndex() error {
 func (ds *datastoreImpl) fullReindex() error {
 	log.Info("[STARTUP] Reindexing all pods")
 
-	podIDs, err := ds.podStore.GetKeys()
+	podIDs, err := ds.podStore.GetIDs()
 	if err != nil {
 		return err
 	}
@@ -309,5 +309,5 @@ func (ds *datastoreImpl) RemovePod(ctx context.Context, id string) error {
 }
 
 func (ds *datastoreImpl) GetPodIDs() ([]string, error) {
-	return ds.podStore.GetKeys()
+	return ds.podStore.GetIDs()
 }
