@@ -141,14 +141,24 @@ fast-sensor: deps
 	$(GOBUILD) sensor/kubernetes
 
 .PHONY: fast-central
-fast-central: deps
+fast-central:
 	@echo "+ $@"
 	$(GOBUILD) central
+
+.PHONY: fast-central-dockerized
+fast-central-dockerized: deps
+	@echo "+ $@"
+	docker run $(LOCAL_CACHE_ARGS) -v $(GOPATH):/go $(BUILD_IMAGE) make fast-central
+
+.PHONY: fast-sensor-dockerized
+fast-sensor-dockerized: deps
+	@echo "+ $@"
+	docker run $(LOCAL_CACHE_ARGS) -v $(GOPATH):/go $(BUILD_IMAGE) make fast-sensor
 
 # fast is a dev mode options when using local dev
 # it will automatically restart Central or Sensor if there are changes to the binary
 .PHONY: fast
-fast: fast-central fast-sensor
+fast: fast-central-dockerized fast-sensor-dockerized
 
 .PHONY: fmt
 fmt: blanks

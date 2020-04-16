@@ -11,6 +11,11 @@ func BucketKeyForEach(db *gorocksdb.DB, opts *gorocksdb.ReadOptions, keyPrefix [
 	return ForEachOverKeySet(db, opts, prefix, stripPrefix, do)
 }
 
+// DefaultBucketForEach runs BucketForEach with the default iterator options
+func DefaultBucketForEach(db *gorocksdb.DB, keyPrefix []byte, stripPrefix bool, do func(k, v []byte) error) error {
+	return BucketForEach(db, defaultIteratorOptions, keyPrefix, stripPrefix, do)
+}
+
 // BucketForEach iterates over a prefix with a key and value
 func BucketForEach(db *gorocksdb.DB, opts *gorocksdb.ReadOptions, keyPrefix []byte, stripPrefix bool, do func(k, v []byte) error) error {
 	prefix := dbhelper.AppendSeparator(keyPrefix)

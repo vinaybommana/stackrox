@@ -44,6 +44,9 @@ func init() {
 		InlineBucketInuse,
 		BadgerDBSize,
 		BoltDBSize,
+		RocksDBSize,
+		RocksDBPrefixSize,
+		RocksDBPrefixBytes,
 	)
 }
 
@@ -137,6 +140,27 @@ var (
 		Name:      "bolt_db_size",
 		Help:      "bytes being used by BoltDB",
 	})
+
+	RocksDBSize = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: metrics.PrometheusNamespace,
+		Subsystem: metrics.CentralSubsystem.String(),
+		Name:      "rockdb_db_size",
+		Help:      "bytes being used by RocksDB",
+	})
+
+	RocksDBPrefixSize = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: metrics.PrometheusNamespace,
+		Subsystem: metrics.CentralSubsystem.String(),
+		Name:      "rocksdb_prefix_size",
+		Help:      "RocksDB prefix size (equivalent to bolt bucket)",
+	}, []string{"Prefix", "Type"})
+
+	RocksDBPrefixBytes = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: metrics.PrometheusNamespace,
+		Subsystem: metrics.CentralSubsystem.String(),
+		Name:      "rocksdb_prefix_bytes",
+		Help:      "RocksDB prefix bytes (equivalent to bolt bucket)",
+	}, []string{"Prefix", "Type"})
 )
 
 // SetGaugeInt sets a value for a gauge from an int

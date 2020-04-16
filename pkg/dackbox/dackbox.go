@@ -7,9 +7,11 @@ import (
 	"github.com/stackrox/rox/pkg/dackbox/sortedkeys"
 	"github.com/stackrox/rox/pkg/dackbox/transactions"
 	badgerTxns "github.com/stackrox/rox/pkg/dackbox/transactions/badger"
+	"github.com/stackrox/rox/pkg/dackbox/transactions/rocksdb"
 	"github.com/stackrox/rox/pkg/dackbox/utils/queue"
 	"github.com/stackrox/rox/pkg/dbhelper"
 	"github.com/stackrox/rox/pkg/sync"
+	"github.com/tecbot/gorocksdb"
 )
 
 func newDackBox(dbFactory transactions.DBTransactionFactory, toIndex queue.AcceptsKeyValue, graphPrefix, dirtyPrefix, validPrefix []byte) (*DackBox, error) {
@@ -31,6 +33,11 @@ func newDackBox(dbFactory transactions.DBTransactionFactory, toIndex queue.Accep
 // NewDackBox returns a new DackBox object using the given DB and prefix for storing data and ids.
 func NewDackBox(db *badger.DB, toIndex queue.AcceptsKeyValue, graphPrefix, dirtyPrefix, validPrefix []byte) (*DackBox, error) {
 	return newDackBox(badgerTxns.NewBadgerWrapper(db), toIndex, graphPrefix, dirtyPrefix, validPrefix)
+}
+
+// NewRocksDBDackBox creates an instance of dackbox based on RocksDB
+func NewRocksDBDackBox(db *gorocksdb.DB, toIndex queue.AcceptsKeyValue, graphPrefix, dirtyPrefix, validPrefix []byte) (*DackBox, error) {
+	return newDackBox(rocksdb.NewRocksDBWrapper(db), toIndex, graphPrefix, dirtyPrefix, validPrefix)
 }
 
 // DackBox is the StackRox DB layer. It provides transactions consisting of both a KV layer, and an ID->[]ID map layer.

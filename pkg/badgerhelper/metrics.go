@@ -5,6 +5,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
+	"github.com/stackrox/rox/pkg/dbhelper"
 	"github.com/stackrox/rox/pkg/errorhelpers"
 	"github.com/stackrox/rox/pkg/metrics"
 )
@@ -39,7 +40,7 @@ func UpdateBadgerPrefixSizeMetric(db *badger.DB, prefix []byte, metricPrefix, ob
 	)
 	err := db.View(func(txn *badger.Txn) error {
 		var err error
-		count, bytes, err = CountWithBytes(txn, prefix)
+		count, bytes, err = CountWithBytes(txn, dbhelper.GetBucketKey(prefix, nil))
 		return err
 	})
 	if err != nil {
