@@ -5,12 +5,12 @@ import { Trash2 } from 'react-feather';
 import { FieldArray } from 'redux-form';
 
 import reduxFormPropTypes from 'constants/reduxFormPropTypes';
-import DRAG_DROP_TYPES from 'constants/dragDropTypes';
 import Button from 'Components/Button';
 import SectionHeaderInput from 'Components/SectionHeaderInput';
 import AndOrOperator from 'Components/AndOrOperator';
 import PolicyFieldCard from './PolicyFieldCard';
 import { policyConfiguration } from './descriptors';
+import { getPolicyCriteriaFieldKeys } from './utils';
 
 const getEmptyPolicyFieldCard = fieldKey => ({
     field_name: fieldKey.name,
@@ -25,17 +25,31 @@ const getEmptyPolicyFieldCard = fieldKey => ({
 });
 
 function PolicySection({ fields, header, removeSectionHandler }) {
-    const [, drop] = useDrop({
-        accept: DRAG_DROP_TYPES.KEY,
+    const allFields = fields.getAll();
+    const acceptedFields = getPolicyCriteriaFieldKeys(allFields);
+
+    const [{ isOver, canDrop }, drop] = useDrop({
+        accept: acceptedFields,
         drop: ({ fieldKey }) => {
             const newPolicyFieldCard = getEmptyPolicyFieldCard(fieldKey);
             fields.push(newPolicyFieldCard);
-        }
+        },
+        canDrop: ({ fieldKey }) => {
+            return !allFields.find(field => field.field_name === fieldKey.name);
+        },
+        collect: monitor => ({
+            isOver: monitor.isOver(),
+            canDrop: monitor.canDrop()
+        })
     });
 
     function removeFieldHandler(index) {
-        return () => fields.remove(index);
+        return () => {
+            fields.remove(index);
+        };
     }
+
+    const disabledDrop = !canDrop && isOver;
 
     return (
         <>
@@ -77,7 +91,11 @@ function PolicySection({ fields, header, removeSectionHandler }) {
                     })}
                     <div
                         ref={drop}
-                        className="bg-base-200 rounded border-2 border-base-300 border-dashed flex font-700 justify-center p-3 text-base-500 text-sm uppercase"
+                        className={`${
+                            disabledDrop
+                                ? 'bg-base-300 border-base-400'
+                                : 'bg-base-200 border-base-300'
+                        } rounded border-2 border-dashed flex font-700 justify-center p-3 text-base-500 text-sm uppercase`}
                     >
                         Drop a policy field inside
                     </div>

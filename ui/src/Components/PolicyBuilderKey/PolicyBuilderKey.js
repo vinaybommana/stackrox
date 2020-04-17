@@ -2,13 +2,11 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { useDrag } from 'react-dnd';
 
-import DRAG_DROP_TYPES from 'constants/dragDropTypes';
-
 function PolicyBuilderKey({ fieldKey }) {
     const { name } = fieldKey;
     // eslint-disable-next-line no-unused-vars
     const [collectedProps, drag] = useDrag({
-        item: { id: name, type: DRAG_DROP_TYPES.KEY, fieldKey }
+        item: { id: name, type: name, fieldKey }
     });
     return (
         <div

@@ -4,6 +4,7 @@ import {
     policyStatus
 } from 'Containers/Policies/Wizard/Form/descriptors';
 import removeEmptyFields from 'utils/removeEmptyFields';
+import { keyBy } from 'lodash';
 import { clientOnlyWhitelistFieldNames } from './whitelistFieldNames';
 
 function filterAndMapWhitelists(whitelists, filterFunc, mapFunc) {
@@ -168,4 +169,15 @@ export function getPolicyFormDataKeys() {
     const policyConfigurationKeys = mapDescriptorToKey(policyConfiguration.descriptor);
     const policyStatusKeys = mapDescriptorToKey(policyStatus.descriptor);
     return [...policyDetailsKeys, ...policyConfigurationKeys, ...policyStatusKeys];
+}
+
+export function getPolicyCriteriaFieldKeys(fields) {
+    const fieldNameMap = keyBy(fields, field => field.field_name);
+    const availableFieldKeys = [];
+    policyConfiguration.descriptor.forEach(field => {
+        if (!fieldNameMap[field.name]) {
+            availableFieldKeys.push(field.name);
+        }
+    });
+    return availableFieldKeys;
 }
