@@ -49,8 +49,8 @@ class ReconciliationTest extends BaseSpecification {
             reconciliationStatsForCluster = DevelopmentService.
                 getReconciliationStatsByCluster().getStatsList().find { it.clusterId == clusterId }
             assert reconciliationStatsForCluster
+            assert reconciliationStatsForCluster.getReconciliationDone()
         }
-        assert reconciliationStatsForCluster.getReconciliationDone()
         println "Reconciliation stats: ${reconciliationStatsForCluster.deletedObjectsByTypeMap}"
         for (def entry: reconciliationStatsForCluster.getDeletedObjectsByTypeMap().entrySet()) {
             def expectedMinDeletions = EXPECTED_MIN_DELETIONS_BY_KEY.get(entry.getKey())
