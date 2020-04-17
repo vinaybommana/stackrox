@@ -342,14 +342,11 @@ func (f defaultFactory) ServicesToRegister(registry authproviders.Registry) []pk
 		sensorService.New(connection.ManagerSingleton(), all.Singleton(), clusterDataStore.Singleton()),
 		licenseService.New(false, licenseSingletons.ManagerSingleton()),
 		backupRestoreService.Singleton(),
+		telemetryService.Singleton(),
 	}
 
 	if features.Dackbox.Enabled() {
 		servicesToRegister = append(servicesToRegister, cveService.Singleton())
-	}
-
-	if features.Telemetry.Enabled() {
-		servicesToRegister = append(servicesToRegister, telemetryService.Singleton())
 	}
 
 	autoTriggerUpgrades := sensorUpgradeConfigStore.Singleton().AutoTriggerSetting()

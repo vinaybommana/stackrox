@@ -2,8 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { formValues } from 'redux-form';
 
-import { knownBackendFlags as featureFlags } from 'utils/featureFlags';
-import FeatureEnabled from 'Containers/FeatureEnabled';
 import Labeled from 'Components/Labeled';
 import FormFieldLabel from 'Components/forms/FormFieldLabel';
 import ReduxTextField from 'Components/forms/ReduxTextField';
@@ -135,9 +133,7 @@ const OidcFormFields = ({ disabled, configValues, change }) => {
             <Labeled label={<FormFieldLabel text="Client ID" required />}>
                 <ReduxTextField name="config.client_id" disabled={disabled} />
             </Labeled>
-            <FeatureEnabled featureFlag={featureFlags.ROX_REFRESH_TOKENS}>
-                {clientSecret}
-            </FeatureEnabled>
+            {clientSecret}
             <Note
                 header={
                     <span>

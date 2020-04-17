@@ -25,7 +25,6 @@ import (
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/pkg/auth/permissions"
 	"github.com/stackrox/rox/pkg/errorhelpers"
-	"github.com/stackrox/rox/pkg/features"
 	grpcPkg "github.com/stackrox/rox/pkg/grpc"
 	"github.com/stackrox/rox/pkg/grpc/authz"
 	"github.com/stackrox/rox/pkg/grpc/authz/perrpc"
@@ -295,16 +294,11 @@ func (s *serviceImpl) CustomRoutes() []routes.CustomRoute {
 			Authorizer:    user.With(permissions.View(resources.DebugLogs)),
 			ServerHandler: http.HandlerFunc(s.getDebugDump),
 		},
-	}
-
-	if features.DiagnosticBundle.Enabled() {
-		customRoutes = append(customRoutes,
-			routes.CustomRoute{
-				Route:         "/api/extensions/diagnostics",
-				Authorizer:    user.With(permissions.View(resources.DebugLogs)),
-				ServerHandler: http.HandlerFunc(s.getDiagnosticDump),
-			},
-		)
+		{
+			Route:         "/api/extensions/diagnostics",
+			Authorizer:    user.With(permissions.View(resources.DebugLogs)),
+			ServerHandler: http.HandlerFunc(s.getDiagnosticDump),
+		},
 	}
 
 	return customRoutes

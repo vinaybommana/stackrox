@@ -62,12 +62,9 @@ func CreateSensor(client client.Interface, workloadHandler *fake.WorkloadManager
 		clusterstatus.NewUpdater(client.Kubernetes()),
 		complianceCommandHandler,
 		processSignals,
+		telemetry.NewCommandHandler(client.Kubernetes()),
 	}
 	components = append(components, extraComponents...)
-
-	if features.DiagnosticBundle.Enabled() || features.Telemetry.Enabled() {
-		components = append(components, telemetry.NewCommandHandler(client.Kubernetes()))
-	}
 
 	if admCtrlSettingsMgr != nil {
 		components = append(components, k8sadmctrl.NewConfigMapSettingsPersister(client.Kubernetes(), admCtrlSettingsMgr))

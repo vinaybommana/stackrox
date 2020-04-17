@@ -4,7 +4,6 @@ import { createStructuredSelector } from 'reselect';
 import { connect } from 'react-redux';
 
 import { selectors } from 'reducers';
-import { isBackendFeatureFlagEnabled, knownBackendFlags } from 'utils/featureFlags';
 
 import NoResultsMessage from 'Components/NoResultsMessage';
 import Panel, { headerClassName } from 'Components/Panel';
@@ -44,13 +43,6 @@ class AuthProvider extends Component {
     };
 
     transformInitialValues = initialValues => {
-        const ROX_REFRESH_TOKENS = isBackendFeatureFlagEnabled(
-            this.props.featureFlags,
-            knownBackendFlags.ROX_REFRESH_TOKENS,
-            false
-        );
-        if (!ROX_REFRESH_TOKENS) return initialValues;
-
         // TODO-ivan: eventually logic for different auth provider type should live
         // with the form component that renders form for the corresponding auth provider
         // type, probably makes sense to refactor after moving away from redux-form
@@ -89,13 +81,6 @@ class AuthProvider extends Component {
     };
 
     transformValuesBeforeSaving = values => {
-        const ROX_REFRESH_TOKENS = isBackendFeatureFlagEnabled(
-            this.props.featureFlags,
-            knownBackendFlags.ROX_REFRESH_TOKENS,
-            false
-        );
-        if (!ROX_REFRESH_TOKENS) return values;
-
         if (values.type === 'oidc') {
             const alteredConfig = { ...values.config };
 

@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 	v1 "github.com/stackrox/rox/generated/api/v1"
-	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/roxctl/common"
 	"github.com/stackrox/rox/roxctl/common/flags"
@@ -32,9 +31,8 @@ func Command() *cobra.Command {
 	}
 	c.AddCommand(LogLevelCommand())
 	c.AddCommand(DumpCommand())
-	if features.DiagnosticBundle.Enabled() {
-		c.AddCommand(DownloadDiagnosticsCommand())
-	}
+	c.AddCommand(DownloadDiagnosticsCommand())
+
 	flags.AddTimeout(c)
 	return c
 }

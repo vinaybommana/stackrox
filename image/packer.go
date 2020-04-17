@@ -13,7 +13,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/image/sensor"
-	"github.com/stackrox/rox/pkg/features"
 	rendererUtils "github.com/stackrox/rox/pkg/renderer/utils"
 	"github.com/stackrox/rox/pkg/templates"
 	"github.com/stackrox/rox/pkg/utils"
@@ -95,9 +94,6 @@ func mustGetSensorChart(box packr.Box, values map[string]interface{}, certs *sen
 // GetCentralChart returns the Helm chart for Central
 func GetCentralChart(overrides map[string]func() io.ReadCloser) *chart.Chart {
 	prefixes := []string{centralChartPrefix}
-	if features.DiagnosticBundle.Enabled() {
-		prefixes = append(prefixes, centralChartWithDiagnosticsPrefix)
-	}
 	return mustGetChart(K8sBox, overrides, prefixes...)
 }
 

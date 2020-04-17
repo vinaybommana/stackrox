@@ -1,9 +1,7 @@
 import store from 'store';
 
-import { isBackendFeatureFlagEnabled, knownBackendFlags } from 'utils/featureFlags';
 import axios from 'services/instance';
 import queryString from 'qs';
-import { fetchFeatureFlags } from 'services/FeatureFlagsService';
 import AccessTokenManager from './AccessTokenManager';
 import addTokenRefreshInterceptors, {
     doNotStallRequestConfig
@@ -94,27 +92,7 @@ export function deleteAuthProviders(authProviderIds) {
  * Access Token Operations
  */
 
-// TODO-ivan: kill this flag fetching code as soon as ROX_REFRESH_TOKENS is enabled by default
-let refreshTokensFlagCache = null;
-function isRefreshTokensFlagEnabled() {
-    if (refreshTokensFlagCache != null) return refreshTokensFlagCache;
-    return fetchFeatureFlags()
-        .then(({ response }) => {
-            const { featureFlags } = response;
-            refreshTokensFlagCache = isBackendFeatureFlagEnabled(
-                featureFlags,
-                knownBackendFlags.ROX_REFRESH_TOKENS,
-                null
-            );
-            return refreshTokensFlagCache;
-        })
-        .catch(() => false); // shouldn't happen theoretically, just don't cache
-}
-
 async function refreshAccessToken() {
-    const ROX_REFRESH_TOKENS = await isRefreshTokensFlagEnabled();
-    if (!ROX_REFRESH_TOKENS) throw new Error('Refresh tokens are not supported');
-
     return axios
         .post(tokenRefreshUrl, null, doNotStallRequestConfig)
         .then(({ data: { token, expiry } }) => ({ token, info: { expiry } }));
@@ -157,13 +135,10 @@ export function exchangeAuthToken(token, type, state) {
  * Terminates user's session with the backend and clears access token.
  */
 export async function logout() {
-    const ROX_REFRESH_TOKENS = await isRefreshTokensFlagEnabled();
-    if (ROX_REFRESH_TOKENS) {
-        try {
-            await axios.post(logoutUrl);
-        } catch (e) {
-            // regardless of the result proceed with token deletion
-        }
+    try {
+        await axios.post(logoutUrl);
+    } catch (e) {
+        // regardless of the result proceed with token deletion
     }
     accessTokenManager.clearToken();
 }

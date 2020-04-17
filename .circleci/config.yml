@@ -2199,8 +2199,6 @@ jobs:
       - ROX_VULN_MGMT_UI: true
       - ROX_ANALYST_NOTES_UI: true
       - ROX_BADGER_DB: true
-      - ROX_TELEMETRY: true
-      - ROX_DIAGNOSTIC_BUNDLE: true
       - ROX_EVENT_TIMELINE_UI: true
       - ROX_SENSOR_DETECTION: true
       - ROX_REQUIRED_IMAGE_LABEL_POLICY: true
@@ -2405,8 +2403,6 @@ jobs:
       - ROX_VULN_MGMT_UI: true
       - ROX_ANALYST_NOTES_UI: true
       - ROX_BADGER_DB: true
-      - ROX_TELEMETRY: true
-      - ROX_DIAGNOSTIC_BUNDLE: true
       - ROX_EVENT_TIMELINE_UI: true
       - ROX_SENSOR_DETECTION: true
       - ROX_REQUIRED_IMAGE_LABEL_POLICY: true
@@ -2479,8 +2475,6 @@ jobs:
       - ADMISSION_CONTROLLER: true
       - ADMISSION_CONTROLLER_UPDATES: true
       - ROX_BADGER_DB: true
-      - ROX_TELEMETRY: true
-      - ROX_DIAGNOSTIC_BUNDLE: true
       - ROX_SENSOR_DETECTION: true
       - ROX_ADMISSION_CONTROL_SERVICE: true
       - ROX_ADMISSION_CONTROL_ENFORCE_ON_UPDATE: true
@@ -2532,8 +2526,6 @@ jobs:
       - ADMISSION_CONTROLLER: true
       - ADMISSION_CONTROLLER_UPDATES: true
       - ROX_BADGER_DB: true
-      - ROX_TELEMETRY: true
-      - ROX_DIAGNOSTIC_BUNDLE: true
       - ROX_SENSOR_DETECTION: true
       - ROX_ADMISSION_CONTROL_SERVICE: true
       - ROX_ADMISSION_CONTROL_ENFORCE_ON_UPDATE: true
