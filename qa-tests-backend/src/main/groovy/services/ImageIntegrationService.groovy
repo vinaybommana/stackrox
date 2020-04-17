@@ -6,6 +6,8 @@ import io.stackrox.proto.api.v1.ImageIntegrationServiceGrpc
 import io.stackrox.proto.api.v1.ImageIntegrationServiceOuterClass
 import io.stackrox.proto.storage.ImageIntegrationOuterClass
 import io.stackrox.proto.storage.ImageIntegrationOuterClass.ImageIntegrationCategory
+import util.Env
+
 import util.Timer
 
 class ImageIntegrationService extends BaseService {
@@ -128,7 +130,7 @@ class ImageIntegrationService extends BaseService {
                         .addAllCategories(getIntegrationCategories(includeScanner))
                         .setDtr(ImageIntegrationOuterClass.DTRConfig.newBuilder()
                                 .setUsername("qa")
-                                .setPassword(System.getenv("DTR_REGISTRY_PASSWORD"))
+                                .setPassword(Env.get("DTR_REGISTRY_PASSWORD", ""))
                                 .setEndpoint("https://apollo-dtr.rox.systems/"))
                         .build()
 
@@ -143,7 +145,7 @@ class ImageIntegrationService extends BaseService {
                         .addAllCategories([ImageIntegrationCategory.REGISTRY])
                         .setDocker(ImageIntegrationOuterClass.DockerConfig.newBuilder()
                                 .setUsername("3e30919c-a552-4b1f-a67a-c68f8b32dad8")
-                                .setPassword(System.getenv("AZURE_REGISTRY_PASSWORD"))
+                                .setPassword(Env.mustGet("AZURE_REGISTRY_PASSWORD"))
                                 .setEndpoint("stackroxacr.azurecr.io"))
                         .build()
 
@@ -157,7 +159,7 @@ class ImageIntegrationService extends BaseService {
                         .setType("google")
                         .addAllCategories(getIntegrationCategories(includeScanner))
                         .setGoogle(ImageIntegrationOuterClass.GoogleConfig.newBuilder()
-                                .setServiceAccount(System.getenv("GOOGLE_CREDENTIALS_GCR_SCANNER"))
+                                .setServiceAccount(Env.mustGet("GOOGLE_CREDENTIALS_GCR_SCANNER"))
                                 .setEndpoint("us.gcr.io")
                                 .setProject("stackrox-ci"))
                         .build()
@@ -173,7 +175,7 @@ class ImageIntegrationService extends BaseService {
                         .addAllCategories(getIntegrationCategories(includeScanner))
                         .setQuay(ImageIntegrationOuterClass.QuayConfig.newBuilder()
                                 .setEndpoint("quay.io")
-                                .setOauthToken(System.getenv("QUAY_BEARER_TOKEN")))
+                                .setOauthToken(Env.mustGet("QUAY_BEARER_TOKEN")))
                         .build()
 
         return createImageIntegration(integration)

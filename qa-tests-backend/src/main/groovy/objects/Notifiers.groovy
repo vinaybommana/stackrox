@@ -6,6 +6,7 @@ import io.stackrox.proto.storage.NotifierOuterClass
 import io.stackrox.proto.storage.PolicyOuterClass.Policy
 import services.ClusterService
 import services.NotifierService
+import util.Env
 import util.MailService
 import util.SplunkUtil
 import util.Timer
@@ -50,7 +51,7 @@ class Notifier {
 
 class EmailNotifier extends Notifier {
     private final MailService mail =
-            new MailService("imap.gmail.com", "stackrox.qa@gmail.com", System.getenv("EMAIL_NOTIFIER_PASSWORD"))
+            new MailService("imap.gmail.com", "stackrox.qa@gmail.com", Env.mustGet("EMAIL_NOTIFIER_PASSWORD"))
 
     EmailNotifier(
             String integrationName = "Email Test",

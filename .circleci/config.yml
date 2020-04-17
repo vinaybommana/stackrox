@@ -970,8 +970,6 @@ commands:
           name: QA Automation Platform Part 1
           command: |
             export CLUSTER=K8S
-            export HOSTNAME="${API_HOSTNAME}"
-            export PORT="${API_PORT}"
             if [[ "${CIRCLE_BRANCH}" == "master" || -n "${CIRCLE_TAG}" ]]; then
               echo "On master, running all QA tests..."
               make -C qa-tests-backend test || touch FAIL
@@ -993,8 +991,6 @@ commands:
           name: QA Automation Platform Part 2
           command: |
             export CLUSTER=K8S
-            export HOSTNAME="${API_HOSTNAME}"
-            export PORT="${API_PORT}"
             make -C qa-tests-backend sensor-bounce-test
 
       - run:
@@ -1257,8 +1253,8 @@ commands:
           name: QA Automation Platform Part 1
           command: |
             export CLUSTER=OPENSHIFT
-            export HOSTNAME=localhost
-            export PORT=${LOCAL_PORT}
+            export API_HOSTNAME=localhost
+            export API_PORT=${LOCAL_PORT}
             if [[ "${CIRCLE_BRANCH}" == "master" || -n "${CIRCLE_TAG}" ]]; then
               echo "On master, running all QA tests..."
               make -C qa-tests-backend test || touch FAIL
@@ -1281,8 +1277,8 @@ commands:
           name: QA Automation Platform Part 2
           command: |
             export CLUSTER=OPENSHIFT
-            export HOSTNAME=localhost
-            export PORT="${LOCAL_PORT}"
+            export API_HOSTNAME=localhost
+            export API_PORT="${LOCAL_PORT}"
             make -C qa-tests-backend sensor-bounce-test
 
       - run:
@@ -2724,8 +2720,6 @@ jobs:
           name: Run upgrade tests
           command: |
             export CLUSTER=K8S
-            export HOSTNAME="${API_HOSTNAME}"
-            export PORT="${API_PORT}"
             make -C qa-tests-backend upgrade-test
 
       - *storeQATestResults
@@ -3034,8 +3028,8 @@ jobs:
           name: QA Automation Platform
           command: |
             export CLUSTER=K8S
-            export HOSTNAME=localhost
-            export PORT=${LOCAL_PORT}
+            export API_HOSTNAME=localhost
+            export API_PORT=${LOCAL_PORT}
             make -C qa-tests-backend test
 
       - *storeQATestResults
@@ -3142,8 +3136,8 @@ jobs:
           name: QA Automation Platform
           command: |
             export CLUSTER=K8S
-            export HOSTNAME=localhost
-            export PORT=${LOCAL_PORT}
+            export API_HOSTNAME=localhost
+            export API_PORT=${LOCAL_PORT}
             make -C qa-tests-backend test
 
       - *storeQATestResults

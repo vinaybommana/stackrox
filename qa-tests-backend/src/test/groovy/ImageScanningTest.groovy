@@ -12,6 +12,7 @@ import services.ImageService
 import services.PolicyService
 import spock.lang.Shared
 import spock.lang.Unroll
+import util.Env
 import util.Timer
 
 class ImageScanningTest extends BaseSpecification {
@@ -33,7 +34,7 @@ class ImageScanningTest extends BaseSpecification {
                     name: "quay",
                     namespace: Constants.ORCHESTRATOR_NAMESPACE,
                     username: "stackrox+circleci_apollo",
-                    password: System.getenv("QUAY_PASSWORD"),
+                    password: Env.mustGet("QUAY_PASSWORD"),
                     server: "https://quay.io"),
     ]
     @Shared

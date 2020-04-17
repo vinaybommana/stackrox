@@ -95,7 +95,7 @@ class BaseSpecification extends Specification {
     @Rule
     TestName name = new TestName()
     @Shared
-    boolean isTestrail = System.getenv("testrail")
+    boolean isTestrail = Env.get("testrail")
     @Shared
     TestRailconfig tc = new TestRailconfig()
     @Shared
