@@ -72,7 +72,7 @@ export const newClusterDefault = {
 // @TODO: add optional button text and func
 const upgradeStates = {
     UP_TO_DATE: {
-        displayValue: 'On the latest version',
+        displayValue: 'Up to date with Central version',
         type: 'current'
     },
     MANUAL_UPGRADE_REQUIRED: {

@@ -253,14 +253,14 @@ describe('cluster helpers', () => {
             expect(displayValue).toEqual(null);
         });
 
-        it('should return "On the latest version" if upgradeStatus -> upgradability is UP_TO_DATE', () => {
+        it('should return "Up to date with Central version" if upgradeStatus -> upgradability is UP_TO_DATE', () => {
             const testUpgradeStatus = {
                 upgradability: 'UP_TO_DATE'
             };
 
             const displayValue = parseUpgradeStatus(testUpgradeStatus);
 
-            const expected = { displayValue: 'On the latest version', type: 'current' };
+            const expected = { displayValue: 'Up to date with Central version', type: 'current' };
             expect(displayValue).toEqual(expected);
         });
 
