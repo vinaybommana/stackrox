@@ -63,7 +63,6 @@ type Loop interface {
 	ShortCircuit()
 	Stop()
 
-	ReprocessRisk()
 	ReprocessRiskForDeployments(deploymentIDs ...string)
 }
 
@@ -88,9 +87,14 @@ func newLoopWithDuration(connManager connection.Manager, enricher enricher.Image
 		deployments:       deployments,
 		deploymentRiskSet: set.NewStringSet(),
 
-		stopChan:  concurrency.NewSignal(),
-		stopped:   concurrency.NewSignal(),
-		shortChan: make(chan struct{}),
+		shortCircuitSig:   concurrency.NewSignal(),
+		stopSig:           concurrency.NewSignal(),
+		enrichmentStopped: concurrency.NewSignal(),
+		riskStopped:       concurrency.NewSignal(),
+
+		// Used for testing purposes
+		reprocessingStarted:  concurrency.NewSignal(),
+		reprocessingComplete: concurrency.NewSignal(),
 
 		connManager: connManager,
 		throttler:   throttle.NewDropThrottle(time.Second),
@@ -111,16 +115,16 @@ type loopImpl struct {
 	deploymentRiskTicker        *time.Ticker
 	deploymenRiskTickerDuration time.Duration
 
-	shortChan chan struct{}
-	stopChan  concurrency.Signal
-	stopped   concurrency.Signal
+	shortCircuitSig   concurrency.Signal
+	stopSig           concurrency.Signal
+	riskStopped       concurrency.Signal
+	enrichmentStopped concurrency.Signal
+	// used for testing
+	reprocessingStarted  concurrency.Signal
+	reprocessingComplete concurrency.Signal
 
 	connManager connection.Manager
 	throttler   throttle.DropThrottle
-}
-
-func (l *loopImpl) ReprocessRisk() {
-	l.throttler.Run(func() { l.sendDeployments(true, 0) })
 }
 
 func (l *loopImpl) ReprocessRiskForDeployments(deploymentIDs ...string) {
@@ -133,17 +137,21 @@ func (l *loopImpl) ReprocessRiskForDeployments(deploymentIDs ...string) {
 func (l *loopImpl) Start() {
 	l.enrichAndDetectTicker = time.NewTicker(l.enrichAndDetectTickerDuration)
 	l.deploymentRiskTicker = time.NewTicker(l.deploymenRiskTickerDuration)
-	go l.loop()
+	go l.riskLoop()
+	go l.enrichLoop()
 }
 
 // Stop stops the enrich and detect loop.
 func (l *loopImpl) Stop() {
-	l.stopChan.Signal()
-	l.stopped.Wait()
+	l.stopSig.Signal()
+	l.riskStopped.Wait()
+	l.enrichmentStopped.Wait()
 }
 
 func (l *loopImpl) ShortCircuit() {
-	go l.reprocessImagesAndResyncDeployments(enricher.UseCachesIfPossible)
+	// Signal that we should run a short circuited reprocessing. If the signal is already triggered, then the current
+	// signal is effectively deduped
+	l.shortCircuitSig.Signal()
 }
 
 func (l *loopImpl) sendDeployments(riskOnly bool, injectionPeriod time.Duration, deploymentIDs ...string) {
@@ -210,9 +218,9 @@ func (l *loopImpl) sendDeployments(riskOnly bool, injectionPeriod time.Duration,
 	}
 }
 
-func (l *loopImpl) reprocessImage(id string, sema *semaphore.Weighted, wg *sync.WaitGroup, fetchOpts enricher.FetchOption) {
+func (l *loopImpl) reprocessImage(id string, sema *semaphore.Weighted, wg *concurrency.WaitGroup, fetchOpts enricher.FetchOption) {
 	defer sema.Release(1)
-	defer wg.Done()
+	defer wg.Add(-1)
 
 	image, exists, err := l.images.GetImage(getAndWriteImagesContext, id)
 	if err != nil {
@@ -253,7 +261,7 @@ func (l *loopImpl) getActiveImageIDs() ([]string, error) {
 }
 
 func (l *loopImpl) reprocessImagesAndResyncDeployments(fetchOpts enricher.FetchOption) {
-	if l.stopped.IsDone() {
+	if l.stopSig.IsDone() {
 		return
 	}
 	imageIDs, err := l.getActiveImageIDs()
@@ -263,21 +271,27 @@ func (l *loopImpl) reprocessImagesAndResyncDeployments(fetchOpts enricher.FetchO
 	}
 	log.Infof("Found %d images to rescan", len(imageIDs))
 	imageSemaphore := semaphore.NewWeighted(5)
-	var wg sync.WaitGroup
+
+	wg := concurrency.NewWaitGroup(0)
 	for _, imageID := range imageIDs {
 		wg.Add(1)
 		// Go over the image IDs
-		if err := imageSemaphore.Acquire(concurrency.AsContext(&l.stopChan), 1); err != nil {
+		if err := imageSemaphore.Acquire(concurrency.AsContext(&l.stopSig), 1); err != nil {
 			log.Errorf("context cancelled via stop: %v", err)
 			return
 		}
 		go l.reprocessImage(imageID, imageSemaphore, &wg, fetchOpts)
 	}
-	wg.Wait()
+	select {
+	case <-wg.Done():
+	case <-l.stopSig.Done():
+		log.Info("Stopping reprocessing due to stop signal")
+		return
+	}
 	log.Infof("Successfully reprocessed %d images. Reevaluating deployments...", len(imageIDs))
 	// Once the images have been rescanned, then reprocess the images
 	// This should not take a particular long period of time
-	if !l.stopped.IsDone() {
+	if !l.stopSig.IsDone() {
 		l.connManager.BroadcastMessage(&central.MsgToSensor{
 			Msg: &central.MsgToSensor_ReassessPolicies{
 				ReassessPolicies: &central.ReassessPolicies{},
@@ -286,22 +300,44 @@ func (l *loopImpl) reprocessImagesAndResyncDeployments(fetchOpts enricher.FetchO
 	}
 }
 
-func (l *loopImpl) loop() {
-	defer l.stopped.Signal()
+func (l *loopImpl) runReprocessing(fetchOpt enricher.FetchOption) {
+	l.reprocessingComplete.Reset()
+	l.reprocessingStarted.Signal()
+
+	l.reprocessImagesAndResyncDeployments(fetchOpt)
+
+	l.reprocessingStarted.Reset()
+	l.reprocessingComplete.Signal()
+}
+
+func (l *loopImpl) enrichLoop() {
 	defer l.enrichAndDetectTicker.Stop()
+	defer l.enrichmentStopped.Signal()
+
+	// Call runReprocessing with ForceRefetch on start to ensure that the metadata reflects any changes
+	// in the proto and to ensure that the images are pulling new scans on <= the reprocessing interval
+	l.runReprocessing(enricher.ForceRefetch)
+	for !l.stopSig.IsDone() {
+		select {
+		case <-l.stopSig.Done():
+			return
+		case <-l.shortCircuitSig.Done():
+			l.shortCircuitSig.Reset()
+			l.runReprocessing(enricher.UseCachesIfPossible)
+		case <-l.enrichAndDetectTicker.C:
+			l.runReprocessing(enricher.ForceRefetchScansOnly)
+		}
+	}
+}
+
+func (l *loopImpl) riskLoop() {
+	defer l.riskStopped.Signal()
 	defer l.deploymentRiskTicker.Stop()
 
-	// Call reprocessImagesAndResyncDeployments on start to try and ensure that the deployments are processed
-	// in <= the reprocessing interval
-	go l.reprocessImagesAndResyncDeployments(enricher.ForceRefetch)
-	for {
+	for !l.stopSig.IsDone() {
 		select {
-		case <-l.stopChan.Done():
+		case <-l.stopSig.Done():
 			return
-		case <-l.shortChan:
-			l.sendDeployments(false, 0)
-		case <-l.enrichAndDetectTicker.C:
-			l.reprocessImagesAndResyncDeployments(enricher.ForceRefetchScansOnly)
 		case <-l.deploymentRiskTicker.C:
 			l.deploymentRiskLock.Lock()
 			if l.deploymentRiskSet.Cardinality() > 0 {

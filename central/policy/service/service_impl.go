@@ -281,7 +281,7 @@ func (s *serviceImpl) ReassessPolicies(context.Context, *v1.Empty) (*v1.Empty, e
 	s.metadataCache.RemoveAll()
 	s.scanCache.RemoveAll()
 
-	go s.reprocessor.ShortCircuit()
+	s.reprocessor.ShortCircuit()
 	return &v1.Empty{}, nil
 }
 

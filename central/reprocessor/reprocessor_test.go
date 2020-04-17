@@ -45,7 +45,6 @@ func (suite *loopTestSuite) SetupTest() {
 	suite.mockManager = connectionMocks.NewMockManager(suite.mockCtrl)
 	suite.mockImage = imageMocks.NewMockDataStore(suite.mockCtrl)
 	suite.mockDeployment = deploymentMocks.NewMockDataStore(suite.mockCtrl)
-
 }
 
 func (suite *loopTestSuite) TearDownTest() {
@@ -66,63 +65,76 @@ func (suite *loopTestSuite) expectCalls(times int, allowMore bool) {
 	}), times)
 }
 
-func (suite *loopTestSuite) TestTimerDoesNotTick() {
-	loop := NewLoop(suite.mockManager, suite.mockEnricher, suite.mockDeployment, suite.mockImage)
-	loop.Start()
-	loop.Stop()
-	suite.mockManager.EXPECT().GetActiveConnections().MaxTimes(0)
+func (suite *loopTestSuite) waitForRun(loop *loopImpl, timeout time.Duration) bool {
+	if !concurrency.WaitWithTimeout(&loop.reprocessingStarted, timeout) {
+		return false
+	}
+	if !concurrency.WaitWithTimeout(&loop.reprocessingComplete, 100*time.Millisecond) {
+		return false
+	}
+	return true
 }
 
 func (suite *loopTestSuite) TestTimerTicksOnce() {
 	duration := 1 * time.Second // Need this to be long enough that the enrichAndDetectTicker won't get called twice during the test.
-	loop := newLoopWithDuration(suite.mockManager, suite.mockEnricher, suite.mockDeployment, suite.mockImage, duration, duration, duration)
+	loop := newLoopWithDuration(suite.mockManager, suite.mockEnricher, suite.mockDeployment, suite.mockImage, duration, duration, duration).(*loopImpl)
 	suite.expectCalls(2, false)
 	loop.Start()
-	time.Sleep(duration + 10*time.Millisecond)
+	// Wait for initial to complete
+	suite.True(suite.waitForRun(loop, 500*time.Millisecond))
+	// Wait for next tick
+	suite.True(suite.waitForRun(loop, duration+10*time.Millisecond))
+
 	loop.Stop()
 }
 
 func (suite *loopTestSuite) TestTimerTicksTwice() {
 	duration := 100 * time.Millisecond
-	loop := newLoopWithDuration(suite.mockManager, suite.mockEnricher, suite.mockDeployment, suite.mockImage, duration, duration, duration)
-	suite.expectCalls(2, true)
+	loop := newLoopWithDuration(suite.mockManager, suite.mockEnricher, suite.mockDeployment, suite.mockImage, duration, duration, duration).(*loopImpl)
+	suite.expectCalls(3, false)
 	loop.Start()
-	time.Sleep((2 * duration) + (10 * time.Millisecond))
+
+	paddedDuration := duration + 10*time.Millisecond
+	suite.True(suite.waitForRun(loop, paddedDuration))
+	suite.True(suite.waitForRun(loop, paddedDuration))
+	suite.True(suite.waitForRun(loop, paddedDuration))
 	loop.Stop()
 }
 
 func (suite *loopTestSuite) TestShortCircuitOnce() {
-	loop := NewLoop(suite.mockManager, suite.mockEnricher, suite.mockDeployment, suite.mockImage)
+	loop := NewLoop(suite.mockManager, suite.mockEnricher, suite.mockDeployment, suite.mockImage).(*loopImpl)
 	suite.expectCalls(2, false)
 	loop.Start()
-	go loop.ShortCircuit()
-	// Sleep for a little bit of time to allow the mock calls to go through, since they happen asynchronously.
-	time.Sleep(500 * time.Millisecond)
+
+	timeout := 100 * time.Millisecond
+	suite.True(suite.waitForRun(loop, timeout))
+	loop.ShortCircuit()
+	suite.True(suite.waitForRun(loop, timeout))
 	loop.Stop()
 }
 
 func (suite *loopTestSuite) TestShortCircuitTwice() {
-	loop := NewLoop(suite.mockManager, suite.mockEnricher, suite.mockDeployment, suite.mockImage)
-	suite.expectCalls(3, false)
+	loop := NewLoop(suite.mockManager, suite.mockEnricher, suite.mockDeployment, suite.mockImage).(*loopImpl)
+	suite.expectCalls(2, true)
 	loop.Start()
-	go loop.ShortCircuit()
-	go loop.ShortCircuit()
-	// Sleep for a little bit of time to allow the mock calls to go through, since they happen asynchronously.
-	time.Sleep(500 * time.Millisecond)
+	timeout := 100 * time.Millisecond
+	suite.True(suite.waitForRun(loop, timeout))
+	loop.ShortCircuit()
+	suite.True(suite.waitForRun(loop, timeout))
+	loop.ShortCircuit()
+	suite.True(suite.waitForRun(loop, timeout))
 	loop.Stop()
 }
 
 func (suite *loopTestSuite) TestStopWorks() {
-	loop := NewLoop(suite.mockManager, suite.mockEnricher, suite.mockDeployment, suite.mockImage)
-	suite.expectCalls(2, false)
+	loop := NewLoop(suite.mockManager, suite.mockEnricher, suite.mockDeployment, suite.mockImage).(*loopImpl)
+	suite.expectCalls(1, false)
 	loop.Start()
-	go loop.ShortCircuit()
-	time.Sleep(500 * time.Millisecond)
+	timeout := 100 * time.Millisecond
+	suite.True(suite.waitForRun(loop, timeout))
 	loop.Stop()
-	time.Sleep(100 * time.Millisecond)
-	go loop.ShortCircuit()
-	// Sleep for a little bit of time to allow the mock calls to go through, since they happen asynchronously.
-	time.Sleep(500 * time.Millisecond)
+	loop.ShortCircuit()
+	suite.False(suite.waitForRun(loop, timeout))
 }
 
 func TestGetActiveImageIDs(t *testing.T) {

@@ -147,7 +147,7 @@ func (s *serviceImpl) PutImageIntegration(ctx context.Context, request *storage.
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	go s.reprocessorLoop.ShortCircuit()
+	s.reprocessorLoop.ShortCircuit()
 	return &v1.Empty{}, nil
 }
 
@@ -172,7 +172,7 @@ func (s *serviceImpl) PostImageIntegration(ctx context.Context, request *storage
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	go s.reprocessorLoop.ShortCircuit()
+	s.reprocessorLoop.ShortCircuit()
 	return request, nil
 }
 
