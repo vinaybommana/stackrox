@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { scaleLinear } from 'd3-scale';
 
 import { getWidth } from 'utils/d3Utils';
@@ -16,6 +17,7 @@ const EventMarker = ({
     uid,
     reason,
     timestamp,
+    whitelisted,
     differenceInMilliseconds,
     translateX,
     translateY,
@@ -54,6 +56,7 @@ const EventMarker = ({
                     type={type}
                     uid={uid}
                     timestamp={timestamp}
+                    whitelisted={whitelisted}
                     width={size}
                 />
             )}
@@ -71,6 +74,27 @@ const EventMarker = ({
             )}
         </D3Anchor>
     );
+};
+
+EventMarker.propTypes = {
+    name: PropTypes.string.isRequired,
+    type: PropTypes.string.isRequired,
+    uid: PropTypes.string,
+    reason: PropTypes.string,
+    timestamp: PropTypes.string.isRequired,
+    whitelisted: PropTypes.bool,
+    differenceInMilliseconds: PropTypes.number.isRequired,
+    translateX: PropTypes.number.isRequired,
+    translateY: PropTypes.number.isRequired,
+    minTimeRange: PropTypes.number.isRequired,
+    maxTimeRange: PropTypes.number.isRequired,
+    size: PropTypes.number.isRequired
+};
+
+EventMarker.defaultProps = {
+    uid: null,
+    reason: null,
+    whitelisted: false
 };
 
 export default EventMarker;

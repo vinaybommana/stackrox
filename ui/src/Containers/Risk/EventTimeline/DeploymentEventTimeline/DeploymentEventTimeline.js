@@ -8,7 +8,6 @@ import queryService from 'modules/queryService';
 import Panel from 'Components/Panel';
 import TimelineGraph from 'Components/TimelineGraph';
 import Loader from 'Components/Loader';
-import EventTypeSelect from '../EventTypeSelect';
 import getPodEvents from './getPodEvents';
 import getLargestDifferenceInMilliseconds from '../eventTimelineUtils/getLargestDifferenceInMilliseconds';
 import { GET_DEPLOYMENT_EVENT_TIMELINE } from '../timelineQueries';
@@ -22,7 +21,7 @@ const DeploymentEventTimeline = ({
     id,
     goToNextView,
     selectedEventType,
-    selectEventType,
+    headerComponents,
     currentPage,
     pageSize,
     onPageChange
@@ -59,10 +58,6 @@ const DeploymentEventTimeline = ({
         numEvents
     )} across ${numTotalPods} ${pluralize('pod', numTotalPods)}`;
 
-    const headerComponents = (
-        <EventTypeSelect selectedEventType={selectedEventType} selectEventType={selectEventType} />
-    );
-
     const timelineData = getPodEvents(data.pods, selectedEventType);
     const absoluteMaxTimeRange = getLargestDifferenceInMilliseconds(timelineData);
 
@@ -85,7 +80,7 @@ DeploymentEventTimeline.propTypes = {
     id: PropTypes.string.isRequired,
     goToNextView: PropTypes.func.isRequired,
     selectedEventType: PropTypes.string.isRequired,
-    selectEventType: PropTypes.func.isRequired,
+    headerComponents: PropTypes.node.isRequired,
     currentPage: PropTypes.number.isRequired,
     pageSize: PropTypes.number.isRequired,
     onPageChange: PropTypes.func.isRequired

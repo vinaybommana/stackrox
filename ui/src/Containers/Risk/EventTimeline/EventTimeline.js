@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 
 import { eventTypes, rootTypes } from 'constants/timelineTypes';
 import NotFoundMessage from 'Components/NotFoundMessage';
+import TimelineLegend from 'Components/TimelineLegend';
+import EventTypeSelect from './EventTypeSelect';
 import DeploymentEventTimeline from './DeploymentEventTimeline';
 import PodEventTimeline from './PodEventTimeline';
 
@@ -51,6 +53,18 @@ const EventTimeline = ({ deploymentId }) => {
 
     const currentView = getCurrentView();
 
+    const headerComponents = (
+        <>
+            <EventTypeSelect
+                selectedEventType={selectedEventType}
+                selectEventType={selectEventType}
+            />
+            <div className="ml-3">
+                <TimelineLegend />
+            </div>
+        </>
+    );
+
     const Component = EventTimelineComponentMap[currentView.type];
     if (!Component)
         return (
@@ -66,7 +80,7 @@ const EventTimeline = ({ deploymentId }) => {
             goToNextView={goToNextView}
             goToPreviousView={goToPreviousView}
             selectedEventType={selectedEventType}
-            selectEventType={selectEventType}
+            headerComponents={headerComponents}
             currentPage={currentPage}
             pageSize={PAGE_SIZE}
             onPageChange={setPage}

@@ -11,7 +11,6 @@ import Panel from 'Components/Panel';
 import HeaderWithSubText from 'Components/HeaderWithSubText';
 import TimelineGraph from 'Components/TimelineGraph';
 import Loader from 'Components/Loader';
-import EventTypeSelect from '../EventTypeSelect';
 import { getPod, getContainerEvents } from './getContainerEvents';
 import getLargestDifferenceInMilliseconds from '../eventTimelineUtils/getLargestDifferenceInMilliseconds';
 import { GET_POD_EVENT_TIMELINE } from '../timelineQueries';
@@ -21,7 +20,7 @@ const PodEventTimeline = ({
     goToNextView,
     goToPreviousView,
     selectedEventType,
-    selectEventType,
+    headerComponents,
     currentPage,
     pageSize,
     onPageChange
@@ -57,10 +56,6 @@ const PodEventTimeline = ({
         </>
     );
 
-    const headerComponents = (
-        <EventTypeSelect selectedEventType={selectedEventType} selectEventType={selectEventType} />
-    );
-
     // Adding pagination for Grouped Container Instances required a substantial amount of work, so we're going with pagination on the frontend for now
     const paginatedContainers = getPaginatedList(data.containers, currentPage, pageSize);
     const timelineData = getContainerEvents(paginatedContainers, selectedEventType);
@@ -88,7 +83,7 @@ PodEventTimeline.propTypes = {
     goToNextView: PropTypes.func.isRequired,
     goToPreviousView: PropTypes.func.isRequired,
     selectedEventType: PropTypes.string.isRequired,
-    selectEventType: PropTypes.func.isRequired,
+    headerComponents: PropTypes.node.isRequired,
     currentPage: PropTypes.number.isRequired,
     pageSize: PropTypes.number.isRequired,
     onPageChange: PropTypes.func.isRequired

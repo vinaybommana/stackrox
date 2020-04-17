@@ -2,7 +2,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import { eventTypes } from 'constants/timelineTypes';
-import EventTooltip from '../EventTooltip';
+import EventTooltip from 'Components/TimelineGraph/EventsGraph/EventTooltip';
+import PolicyViolationIcon from './PolicyViolationIcon';
 
 const PolicyViolationEvent = ({ name, type, timestamp, width, height }) => {
     const elementHeight = height || width;
@@ -10,14 +11,8 @@ const PolicyViolationEvent = ({ name, type, timestamp, width, height }) => {
         // We wrap the tooltip within the specific event Components because the Tooltip Component
         // doesn't seem to work when wrapping it around the rendered html one level above. I suspect
         // it doesn't work because the D3Anchor renders a <g> while this renders an svg element
-        <EventTooltip type={type} name={name} timestamp={timestamp}>
-            <rect
-                data-testid="policy-violation-event"
-                fill="var(--primary-600)"
-                width={width}
-                height={elementHeight}
-                rx={3}
-            />
+        <EventTooltip name={name} type={type} timestamp={timestamp}>
+            <PolicyViolationIcon height={elementHeight} width={width} />
         </EventTooltip>
     );
 };
