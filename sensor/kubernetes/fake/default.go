@@ -15,7 +15,7 @@ var (
 		DeploymentWorkload: []deploymentWorkload{
 			{
 				DeploymentType: kubernetes.Deployment,
-				NumDeployments: 1,
+				NumDeployments: 1000,
 				PodWorkload: podWorkload{
 					NumPods:           5,
 					NumContainers:     3,
