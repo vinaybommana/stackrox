@@ -28,6 +28,7 @@ require (
 	github.com/docker/go-connections v0.4.0
 	github.com/docker/go-units v0.4.0
 	github.com/etcd-io/bbolt v1.3.3
+	github.com/evanphx/json-patch v4.2.0+incompatible
 	github.com/facebookincubator/nvdtools v0.1.4-0.20191024132624-1cb041402875
 	github.com/fullsailor/pkcs7 v0.0.0
 	github.com/ghodss/yaml v1.0.0
@@ -98,6 +99,7 @@ require (
 	k8s.io/apiserver v0.0.0-20191114103151-9ca1dc586682
 	k8s.io/client-go v7.0.0+incompatible
 	k8s.io/helm v2.14.0+incompatible
+	k8s.io/klog v0.4.0
 	k8s.io/kubectl v0.0.0-20191114113550-6123e1c827f7
 	sigs.k8s.io/yaml v1.1.0
 )
