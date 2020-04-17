@@ -11,7 +11,7 @@ class Env {
     private static final PROPERTIES_FILE = "qa-test-settings.properties"
 
     private static final DEFAULT_VALUES = [
-            "API_ENDPOINT": "localhost",
+            "API_HOSTNAME": "localhost",
             "API_PORT": "8000",
             "ROX_USERNAME": "admin",
     ]
