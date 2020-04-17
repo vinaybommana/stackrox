@@ -1,7 +1,9 @@
 import { normalize } from 'normalizr';
 import queryString from 'qs';
-import axios from './instance';
+import FileSaver from 'file-saver';
 
+import { addBrandedTimestampToString } from 'utils/dateUtils';
+import axios from './instance';
 import { policy as policySchema } from './schemas';
 
 const baseUrl = '/v1/policies';
@@ -243,4 +245,33 @@ export async function whitelistDeployments(policyId, deploymentNames) {
  */
 export function updatePolicyDisabledState(policyId, disabled) {
     return axios.patch(`${baseUrl}/${policyId}`, { disabled });
+}
+
+/**
+ * Send request to enable / disable policy with a given ID.
+ *
+ * @param {!string} policyId
+ * @param {!boolean} disabled if policy should be disabled
+ * @returns {Promise<AxiosResponse, Error>} fulfilled in case of success or rejected with an error
+ */
+export function exportPolicies(policyIds) {
+    return axios.post(`${baseUrl}/export`, { policyIds }).then(response => {
+        if (response?.data && response?.data?.policies?.length > 0) {
+            try {
+                const numSpaces = 4;
+                const stringData = JSON.stringify(response.data, null, numSpaces);
+                const filename = addBrandedTimestampToString('Exported_Policies');
+
+                const file = new Blob([stringData], {
+                    type: 'application/json'
+                });
+
+                FileSaver.saveAs(file, `${filename}.json`);
+            } catch (error) {
+                throw new Error(`Problem saving policy data: ${error}`);
+            }
+        } else {
+            throw new Error('No policy data returned for the specified ID');
+        }
+    });
 }

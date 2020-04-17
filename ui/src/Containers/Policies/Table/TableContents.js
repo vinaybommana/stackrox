@@ -1,21 +1,19 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
-import ReactRouterPropTypes from 'react-router-prop-types';
+import * as Icon from 'react-feather';
 import { connect } from 'react-redux';
+import { createStructuredSelector } from 'reselect';
+
 import { selectors } from 'reducers';
 import { actions as backendActions } from 'reducers/policies/backend';
-import { actions as pageActions } from 'reducers/policies/page';
 import { actions as tableActions } from 'reducers/policies/table';
 import { actions as wizardActions } from 'reducers/policies/wizard';
-import { createStructuredSelector } from 'reselect';
-import wizardStages from 'Containers/Policies/Wizard/wizardStages';
 
-import * as Icon from 'react-feather';
+import wizardStages from 'Containers/Policies/Wizard/wizardStages';
 import CheckboxTable from 'Components/CheckboxTable';
 import SeverityLabel from 'Components/SeverityLabel';
 import RowActionButton from 'Components/RowActionButton';
-import { toggleRow, toggleSelectAll } from 'utils/checkboxUtils';
 import {
     defaultColumnClassName,
     defaultHeaderClassName,
@@ -24,6 +22,7 @@ import {
 } from 'Components/Table';
 import { lifecycleStageLabels } from 'messages/common';
 import { sortAscii, sortSeverity, sortLifecycle } from 'sorters/sorters';
+import { toggleRow, toggleSelectAll } from 'utils/checkboxUtils';
 
 // TableContents are the policy rows.
 class TableContents extends Component {
@@ -36,15 +35,11 @@ class TableContents extends Component {
         wizardStage: PropTypes.string.isRequired,
         wizardPolicy: PropTypes.shape({}),
 
+        setSelectedPolicy: PropTypes.func.isRequired,
         updatePolicyDisabledState: PropTypes.func.isRequired,
-        selectPolicyId: PropTypes.func.isRequired,
         selectPolicyIds: PropTypes.func.isRequired,
-        openWizard: PropTypes.func.isRequired,
-        setWizardStage: PropTypes.func.isRequired,
         setWizardPolicyDisabled: PropTypes.func.isRequired,
-        deletePolicies: PropTypes.func.isRequired,
-
-        history: ReactRouterPropTypes.history.isRequired
+        deletePolicies: PropTypes.func.isRequired
     };
 
     static defaultProps = {
@@ -52,18 +47,7 @@ class TableContents extends Component {
     };
 
     setSelectedPolicy = policy => {
-        // Add policy to history.
-        const urlSuffix = `/${policy.id}`;
-        this.props.history.push({
-            pathname: `/main/policies${urlSuffix}`
-        });
-
-        // Select the policy so that it is highlighted in the table.
-        this.props.selectPolicyId(policy.id);
-
-        // Bring up the wizard with that policy.
-        this.props.setWizardStage(wizardStages.details);
-        this.props.openWizard();
+        this.props.setSelectedPolicy(policy.id);
     };
 
     toggleEnabledDisabledPolicy = ({ id, disabled }) => e => {
@@ -234,12 +218,9 @@ const mapStateToProps = createStructuredSelector({
 });
 
 const mapDispatchToProps = {
-    selectPolicyId: tableActions.selectPolicyId,
     selectPolicyIds: tableActions.selectPolicyIds,
     updatePolicyDisabledState: tableActions.updatePolicyDisabledState,
     deletePolicies: backendActions.deletePolicies,
-    openWizard: pageActions.openWizard,
-    setWizardStage: wizardActions.setWizardStage,
     setWizardPolicyDisabled: wizardActions.setWizardPolicyDisabled
 };
 

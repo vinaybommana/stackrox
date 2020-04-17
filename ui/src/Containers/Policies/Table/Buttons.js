@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 import ReactRouterPropTypes from 'react-router-prop-types';
 import { connect } from 'react-redux';
+import { Bell, BellOff, ChevronDown, Plus, RefreshCw, Trash2, Upload } from 'react-feather';
+
 import { selectors } from 'reducers';
 import { actions as backendActions } from 'reducers/policies/backend';
 import { actions as pageActions } from 'reducers/policies/page';
@@ -10,19 +12,18 @@ import { actions as wizardActions } from 'reducers/policies/wizard';
 import { createStructuredSelector } from 'reselect';
 import wizardStages from 'Containers/Policies/Wizard/wizardStages';
 import Menu from 'Components/Menu';
-
-import * as Icon from 'react-feather';
 import PanelButton from 'Components/PanelButton';
+import { knownBackendFlags } from 'utils/featureFlags';
+import FeatureEnabled from 'Containers/FeatureEnabled';
 import policyBulkActions from '../policyBulkActions';
 
 // Buttons are the buttons above the table rows.
 class Buttons extends Component {
     static propTypes = {
         selectedPolicyIds: PropTypes.arrayOf(PropTypes.string).isRequired,
-
+        startPolicyImport: PropTypes.func.isRequired,
         setPoliciesAction: PropTypes.func.isRequired,
         reassessPolicies: PropTypes.func.isRequired,
-
         wizardOpen: PropTypes.bool.isRequired,
         wizardPolicy: PropTypes.shape({
             id: PropTypes.string,
@@ -47,6 +48,10 @@ class Buttons extends Component {
         this.props.openWizard();
     };
 
+    startPolicyImport = () => {
+        this.props.startPolicyImport();
+    };
+
     openDialogue = policiesAction => {
         this.props.setPoliciesAction(policiesAction);
     };
@@ -58,18 +63,18 @@ class Buttons extends Component {
             {
                 label: 'Enable Notification',
                 onClick: () => this.openDialogue(policyBulkActions.enableNotification),
-                icon: <Icon.Bell className="h-4" />
+                icon: <Bell className="h-4" />
             },
             {
                 label: 'Disable Notification',
                 onClick: () => this.openDialogue(policyBulkActions.disableNotification),
-                icon: <Icon.BellOff className="h-4" />
+                icon: <BellOff className="h-4" />
             },
             {
                 label: 'Delete Policies',
                 onClick: () => this.openDialogue(policyBulkActions.deletePolicies),
                 className: 'border-t bg-alert-100 text-alert-700',
-                icon: <Icon.Trash2 className="h-4" />
+                icon: <Trash2 className="h-4" />
             }
         ];
 
@@ -82,7 +87,7 @@ class Buttons extends Component {
                         buttonContent={
                             <div className="flex items-center">
                                 Actions
-                                <Icon.ChevronDown className="ml-2 h-4 w-4 pointer-events-none" />
+                                <ChevronDown className="ml-2 h-4 w-4 pointer-events-none" />
                             </div>
                         }
                         options={bulkOperationOptions}
@@ -96,7 +101,7 @@ class Buttons extends Component {
                 )}
                 {selectionCount === 0 && (
                     <PanelButton
-                        icon={<Icon.RefreshCw className="h-4 w-4 ml-1" />}
+                        icon={<RefreshCw className="h-4 w-4 ml-1" />}
                         className="btn btn-base mr-2"
                         onClick={this.props.reassessPolicies}
                         tooltip="Manually enrich external data"
@@ -106,15 +111,28 @@ class Buttons extends Component {
                     </PanelButton>
                 )}
                 {selectionCount === 0 && (
-                    <PanelButton
-                        icon={<Icon.Plus className="h-4 w-4 ml-1" />}
-                        className="btn btn-base"
-                        onClick={this.addPolicy}
-                        disabled={buttonsDisabled}
-                        tooltip="Create a new policy"
-                    >
-                        New Policy
-                    </PanelButton>
+                    <>
+                        <FeatureEnabled featureFlag={knownBackendFlags.ROX_POLICY_IMPORT_EXPORT}>
+                            <PanelButton
+                                icon={<Upload className="h-4 w-4 ml-1" />}
+                                className="btn btn-base mr-2"
+                                onClick={this.startPolicyImport}
+                                disabled={buttonsDisabled}
+                                tooltip="Import a policy"
+                            >
+                                Import Policy
+                            </PanelButton>
+                        </FeatureEnabled>
+                        <PanelButton
+                            icon={<Plus className="h-4 w-4 ml-1" />}
+                            className="btn btn-base"
+                            onClick={this.addPolicy}
+                            disabled={buttonsDisabled}
+                            tooltip="Create a new policy"
+                        >
+                            New Policy
+                        </PanelButton>
+                    </>
                 )}
             </React.Fragment>
         );

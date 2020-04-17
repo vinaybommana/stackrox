@@ -1,16 +1,22 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import ReactRouterPropTypes from 'react-router-prop-types';
+import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
+
 import { selectors } from 'reducers';
 import { createSelector, createStructuredSelector } from 'reselect';
-import { actions } from 'reducers/policies/table';
+import { actions as pageActions } from 'reducers/policies/page';
+import { actions as tableActions } from 'reducers/policies/table';
+import { actions as wizardActions } from 'reducers/policies/wizard';
 
 import Panel from 'Components/Panel';
 import NoResultsMessage from 'Components/NoResultsMessage';
 import TablePagination from 'Components/TablePagination';
-
+import wizardStages from 'Containers/Policies/Wizard/wizardStages';
 import Buttons from 'Containers/Policies/Table/Buttons';
 import TableContents from 'Containers/Policies/Table/TableContents';
+import PolicyImportDialogue from 'Containers/Policies/Table/PolicyImportDialogue';
 
 // Table is the heading line with options to reasses and add a policy, as well as the underlying policy
 // rows.
@@ -20,8 +26,44 @@ class Table extends Component {
         policies: PropTypes.arrayOf(PropTypes.object).isRequired,
         page: PropTypes.number.isRequired,
         isViewFiltered: PropTypes.bool.isRequired,
+        setPage: PropTypes.func.isRequired,
+        selectPolicyId: PropTypes.func.isRequired,
+        setWizardStage: PropTypes.func.isRequired,
+        openWizard: PropTypes.func.isRequired,
+        history: ReactRouterPropTypes.history.isRequired
+    };
 
-        setPage: PropTypes.func.isRequired
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            showImportDialogue: false
+        };
+    }
+
+    setSelectedPolicy = policyId => {
+        // Add policy to history.
+        const urlSuffix = `/${policyId}`;
+        this.props.history.push({
+            pathname: `/main/policies${urlSuffix}`
+        });
+
+        // Select the policy so that it is highlighted in the table.
+        this.props.selectPolicyId(policyId);
+
+        // Bring up the wizard with that policy.
+        this.props.setWizardStage(wizardStages.details);
+        this.props.openWizard();
+    };
+
+    startPolicyImport = () => {
+        // eslint-disable-next-line no-console
+        console.log('open import dialog');
+        this.setState({ showImportDialogue: true });
+    };
+
+    closeImportDialogue = () => {
+        this.setState({ showImportDialogue: false });
     };
 
     pagination = (policies, page) => {
@@ -45,14 +87,17 @@ class Table extends Component {
 
         const headerComponents = (
             <>
-                <Buttons />
+                <Buttons startPolicyImport={this.startPolicyImport} />
                 {this.pagination(this.props.policies, this.props.page)}
+                {this.state.showImportDialogue && (
+                    <PolicyImportDialogue closeAction={this.closeImportDialogue} />
+                )}
             </>
         );
 
         return (
             <Panel header={this.getTableHeaderText()} headerComponents={headerComponents}>
-                <TableContents />
+                <TableContents setSelectedPolicy={this.setSelectedPolicy} />
             </Panel>
         );
     }
@@ -71,10 +116,15 @@ const mapStateToProps = createStructuredSelector({
 });
 
 const mapDispatchToProps = {
-    setPage: actions.setTablePage
+    selectPolicyId: tableActions.selectPolicyId,
+    setWizardStage: wizardActions.setWizardStage,
+    openWizard: pageActions.openWizard,
+    setPage: tableActions.setTablePage
 };
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(Table);
+export default withRouter(
+    connect(
+        mapStateToProps,
+        mapDispatchToProps
+    )(Table)
+);
