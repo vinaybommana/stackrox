@@ -50,7 +50,7 @@ type cacheValue struct {
 
 func (c *cacheValue) waitAndGet() *storage.Image {
 	c.signal.Wait()
-	return c.image.Clone()
+	return c.image
 }
 
 func (c *cacheValue) scanAndSet(svc v1.ImageServiceClient, ci *storage.ContainerImage, concurrentScanSemaphore *semaphore.Weighted) {
@@ -144,12 +144,16 @@ func (e *enricher) getImages(deployment *storage.Deployment) []*storage.Image {
 	images := make([]*storage.Image, len(deployment.GetContainers()))
 	for i := 0; i < len(deployment.GetContainers()); i++ {
 		imgResult := <-imageChan
-		image := imgResult.image
+
+		// This will ensure that when we change the name of the image
+		// that it will not cause a potential race condition
+		// cloning the full object is too expensive and also unnecessary
+		image := *imgResult.image
 		// Overwrite the image name as a workaround to the fact that we fetch the image by ID
 		// The ID may actually have many names that refer to it. e.g. busybox:latest and busybox:1.31 could have the
 		// exact same id
 		image.Name = deployment.Containers[imgResult.containerIdx].GetImage().GetName()
-		images[imgResult.containerIdx] = image
+		images[imgResult.containerIdx] = &image
 	}
 	return images
 }
