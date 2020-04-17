@@ -44,7 +44,7 @@ export const listSelectors = {
     componentCountLink: '[data-testid="componentCountLink"]',
     cveSuppressPanelButton: '[data-testid="panel-button-suppress-selected-cves"]',
     cveUnsuppressPanelButton: '[data-testid="panel-button-unsuppress-selected-cves"]',
-    suppressOneHourOption: '[data-testid="1 Hour"]',
+    suppressOneDayOption: '[data-testid="1 Day"]',
     suppressToggleViewPanelButton: '[data-testid="panel-button-toggle-suppressed-cves-view"]',
     cveUnsuppressRowButton: '[data-testid="row-action-unsuppress"]'
 };

@@ -8,7 +8,6 @@ export const timeWindows = [
 ];
 
 export const snoozeDurations = {
-    HOUR: '1 Hour',
     DAY: '1 Day',
     WEEK: '1 Week',
     MONTH: '1 Month',

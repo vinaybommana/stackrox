@@ -61,7 +61,7 @@ describe('CVEs list Page and its entity detail page,sub list  validations ', () 
                     .check({ force: true });
                 cy.get(selectors.cveSuppressPanelButton)
                     .click()
-                    .get(selectors.suppressOneHourOption)
+                    .get(selectors.suppressOneDayOption)
                     .click({ force: true });
 
                 // toggle to suppressed view

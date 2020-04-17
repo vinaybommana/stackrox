@@ -62,6 +62,16 @@ func TestUnsuppressCVEs(t *testing.T) {
 			Suppressed:     true,
 			SuppressExpiry: &types.Timestamp{Seconds: later},
 		},
+		{
+			Id:             "cve6",
+			Suppressed:     true,
+			SuppressExpiry: &types.Timestamp{Seconds: time.Now().Unix()},
+		},
+		{
+			Id:             "cve7",
+			Suppressed:     true,
+			SuppressExpiry: &types.Timestamp{Seconds: time.Now().Unix() + int64(24*time.Hour)},
+		},
 	}
 
 	db := testutils.BadgerDBForT(t)
