@@ -38,6 +38,7 @@ func init() {
 			"id: ID!",
 			"name: String!",
 			"timestamp: Time",
+			"args: String!",
 			"uid: Int!",
 			"parentUid: Int!",
 			"whitelisted: Boolean!",
@@ -147,6 +148,7 @@ type ProcessActivityEventResolver struct {
 	id               graphql.ID
 	name             string
 	timestamp        time.Time
+	args             string
 	uid              int32
 	parentUID        int32
 	canReadWhitelist bool
@@ -166,6 +168,11 @@ func (resolver *ProcessActivityEventResolver) Name() string {
 // Timestamp returns the event's timestamp.
 func (resolver *ProcessActivityEventResolver) Timestamp() *graphql.Time {
 	return &graphql.Time{Time: resolver.timestamp}
+}
+
+// Args returns the process's arguments.
+func (resolver *ProcessActivityEventResolver) Args() string {
+	return resolver.args
 }
 
 // UID returns the process's UID.
@@ -237,8 +244,9 @@ func (resolver *Resolver) getProcessActivityEvents(ctx context.Context, query *v
 		}
 		processEvents = append(processEvents, &ProcessActivityEventResolver{
 			id:               graphql.ID(indicator.GetId()),
-			name:             indicator.GetSignal().GetName(),
+			name:             indicator.GetSignal().GetExecFilePath(),
 			timestamp:        timestamp,
+			args:             indicator.GetSignal().GetArgs(),
 			uid:              int32(indicator.GetSignal().GetUid()),
 			parentUID:        parentUID,
 			canReadWhitelist: canReadWhitelist,

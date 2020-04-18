@@ -41,11 +41,11 @@ func TestContainerInstances(t *testing.T) {
 		// Expecting 1 process: nginx
 		require.Len(t, groupedContainers[0].Events, 1)
 		events := sliceutils.Map(groupedContainers[0].Events, func(event Event) string { return event.Name })
-		require.ElementsMatch(t, events, []string{"nginx"})
+		require.ElementsMatch(t, events, []string{"/usr/sbin/nginx"})
 		// Expecting 3 processes: sh, date, sleep
 		require.Len(t, groupedContainers[1].Events, 3)
 		events = sliceutils.Map(groupedContainers[1].Events, func(event Event) string { return event.Name })
-		require.ElementsMatch(t, events, []string{"sh", "date", "sleep"})
+		require.ElementsMatch(t, events, []string{"/bin/sh", "/bin/date", "/bin/sleep"})
 	})
 }
 

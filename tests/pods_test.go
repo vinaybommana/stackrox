@@ -56,7 +56,7 @@ func TestPod(t *testing.T) {
 		// Expecting 4 processes: nginx, sh, date, sleep
 		require.Len(t, events, 4)
 		eventNames := sliceutils.Map(events, func(event Event) string { return event.Name })
-		require.ElementsMatch(t, eventNames, []string{"date", "sh", "nginx", "sleep"})
+		require.ElementsMatch(t, eventNames, []string{"/bin/date", "/bin/sh", "/usr/sbin/nginx", "/bin/sleep"})
 	})
 }
 
