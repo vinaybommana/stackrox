@@ -11,7 +11,7 @@ describe('Risk Flow', () => {
     it('visa processor should be the top riskiest deployment', () => {
         cy.get(selectors.table.rows)
             .eq(0)
-            .get(selectors.table.columns)
+            .get(selectors.table.cells)
             .eq(0)
             .invoke('text')
             .then(value => {

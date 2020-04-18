@@ -9,18 +9,20 @@ const ProcessTags = ({ deploymentID, containerName, execFilePath, args }) => {
     const variables = { key: { deploymentID, containerName, execFilePath, args } };
 
     return (
-        <ProcessTagsSearchAutoComplete>
-            {({ isLoading, options, onInputChange, autoCompleteVariables }) => (
-                <AnalystTags
-                    type={ANALYST_NOTES_TYPES.PROCESS}
-                    variables={variables}
-                    autoComplete={options}
-                    autoCompleteVariables={autoCompleteVariables}
-                    isLoadingAutoComplete={isLoading}
-                    onInputChange={onInputChange}
-                />
-            )}
-        </ProcessTagsSearchAutoComplete>
+        <div data-testid="process-tags">
+            <ProcessTagsSearchAutoComplete>
+                {({ isLoading, options, onInputChange, autoCompleteVariables }) => (
+                    <AnalystTags
+                        type={ANALYST_NOTES_TYPES.PROCESS}
+                        variables={variables}
+                        autoComplete={options}
+                        autoCompleteVariables={autoCompleteVariables}
+                        isLoadingAutoComplete={isLoading}
+                        onInputChange={onInputChange}
+                    />
+                )}
+            </ProcessTagsSearchAutoComplete>
+        </div>
     );
 };
 

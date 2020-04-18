@@ -60,7 +60,11 @@ const CommentThread = ({
             comments.length > 0 || !!newComment ? (
                 <div className="p-3">
                     {sortedComments.slice(0, limit).map((comment, i) => (
-                        <div key={comment.id} className={i === 0 ? 'mt-0' : 'mt-3'}>
+                        <div
+                            key={comment.id}
+                            className={i === 0 ? 'mt-0' : 'mt-3'}
+                            data-testid="comment"
+                        >
                             <Comment
                                 comment={comment}
                                 onSave={onSave}
@@ -70,7 +74,10 @@ const CommentThread = ({
                         </div>
                     ))}
                     {!!newComment && (
-                        <div className={sortedComments.length === 0 ? 'mt-0' : 'mt-3'}>
+                        <div
+                            className={sortedComments.length === 0 ? 'mt-0' : 'mt-3'}
+                            data-testid="new-comment"
+                        >
                             <Comment
                                 comment={newComment}
                                 onSave={onSave}
@@ -110,6 +117,7 @@ const CommentThread = ({
                     icon={<PlusCircle className="text-primary-800 h-4 w-4 mr-1" />}
                     disabled={!!newComment || isDisabled}
                     onClick={addNewComment}
+                    dataTestId="new-comment-button"
                 />
             }
             open={defaultOpen}

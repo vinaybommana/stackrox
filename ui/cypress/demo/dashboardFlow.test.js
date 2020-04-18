@@ -107,7 +107,7 @@ describe('Dashboard Flow', () => {
                 .contains(policyCategory);
             cy.wait('@getAlertsForDevOpsBestPractices');
             cy.get(selectors.table.rows).each(($el, index) => {
-                cy.get(`${selectors.table.rows}:nth(${index}) ${selectors.table.columns}:nth(7)`)
+                cy.get(`${selectors.table.rows}:nth(${index}) ${selectors.table.cells}:nth(7)`)
                     .invoke('text')
                     .then(text => {
                         expect(text).to.match(/Multiple|DevOps Best Practices/);

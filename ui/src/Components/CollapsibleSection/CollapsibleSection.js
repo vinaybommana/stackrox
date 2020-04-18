@@ -24,7 +24,7 @@ const Content = posed.div({
     }
 });
 
-const CollapsibleSection = ({ title, children, headerComponents }) => {
+const CollapsibleSection = ({ title, children, headerComponents, dataTestId }) => {
     const [open, setOpen] = useState(true);
 
     function toggleOpen() {
@@ -38,7 +38,7 @@ const CollapsibleSection = ({ title, children, headerComponents }) => {
     );
 
     return (
-        <div className="border-b border-base-300">
+        <div className="border-b border-base-300" data-testid={dataTestId}>
             <header className="flex flex-1 w-full py-4">
                 <div className="flex flex-1">
                     <div className="flex px-4 py-1 text-base-600 rounded-r-sm font-700 text-xl items-center">
@@ -58,11 +58,13 @@ const CollapsibleSection = ({ title, children, headerComponents }) => {
 CollapsibleSection.propTypes = {
     title: PropTypes.string.isRequired,
     children: PropTypes.node.isRequired,
-    headerComponents: PropTypes.element
+    headerComponents: PropTypes.element,
+    dataTestId: PropTypes.string
 };
 
 CollapsibleSection.defaultProps = {
-    headerComponents: null
+    headerComponents: null,
+    dataTestId: null
 };
 
 export default CollapsibleSection;

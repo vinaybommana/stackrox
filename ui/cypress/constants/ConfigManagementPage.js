@@ -1,4 +1,8 @@
-export const baseURL = '/main/configmanagement';
+import scopeSelectors from '../helpers/scopeSelectors';
+import tableSelectors from '../selectors/table';
+import { violationTagsSelectors } from '../selectors/tags';
+
+const baseURL = '/main/configmanagement';
 
 export const url = {
     dashboard: baseURL,
@@ -96,8 +100,18 @@ export const entitySelectors = {
     deploymentsWithFailedPolicies: '[data-testid="deployments-with-failed-policies"]'
 };
 
+const sidePanelSelectors = {
+    policyFindingsSection: scopeSelectors('[data-testid="policy-findings-section"]', {
+        table: tableSelectors
+    }),
+    violationTags: violationTagsSelectors
+};
+
 export const selectors = {
     ...dashboardSelectors,
     ...listSelectors,
-    ...entitySelectors
+    ...entitySelectors,
+    // TODO-ivan: do the proper scoped definitions for the above
+    mainTable: scopeSelectors('[data-testid="panel"]', tableSelectors),
+    sidePanel1: scopeSelectors('[data-testid="side-panel"]', sidePanelSelectors)
 };

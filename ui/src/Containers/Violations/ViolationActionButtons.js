@@ -58,10 +58,7 @@ function ViolationActionButtons({ violation, setSelectedAlertId }) {
                     </Tooltip>
                 </div>
             )}
-            <Tooltip
-                content={<TooltipOverlay>Whitelist deployment</TooltipOverlay>}
-                overlayClassName="pointer-events-none text-center"
-            >
+            <Tooltip content={<TooltipOverlay>Whitelist deployment</TooltipOverlay>}>
                 <button
                     data-testid="whitelist-deployment-button"
                     type="button"

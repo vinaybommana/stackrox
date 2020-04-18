@@ -7,11 +7,13 @@ import AnalystComments from 'Containers/AnalystNotes/AnalystComments';
 const ViolationComments = ({ resourceId, isCollapsible }) => {
     const variables = { resourceId };
     return (
-        <AnalystComments
-            type={ANALYST_NOTES_TYPES.VIOLATION}
-            variables={variables}
-            isCollapsible={isCollapsible}
-        />
+        <div data-testid="violation-comments">
+            <AnalystComments
+                type={ANALYST_NOTES_TYPES.VIOLATION}
+                variables={variables}
+                isCollapsible={isCollapsible}
+            />
+        </div>
     );
 };
 

@@ -1,7 +1,10 @@
 import { selectors as tablePaginationSelectors } from './TablePagination';
-import sidePanelSelectors from '../selectors/panel';
+import panelSelectors from '../selectors/panel';
+import tableSelectors from '../selectors/table';
+import { violationTagsSelectors } from '../selectors/tags';
+import scopeSelectors from '../helpers/scopeSelectors';
 
-export const baseURL = '/main/vulnerability-management';
+const baseURL = '/main/vulnerability-management';
 
 export const url = {
     dashboard: baseURL,
@@ -28,6 +31,7 @@ export const listSelectors = {
     componentsRiskScoreCol: '.rt-table > .rt-tbody >div > div > div:nth-child(7)',
     cvesCvssScoreCol: '.rt-table > .rt-tbody > div > .rt-tr.-odd > div:nth-child(4) > div > span',
     tableRows: '.rt-tr',
+    tableCells: '.rt-td',
     tableBodyRows: '.rt-tbody .rt-tr',
     tableRowCheckbox: '[data-testid="checkbox-table-row-selector"]',
     tableColumn: '.rt-th.leading-normal > div',
@@ -120,13 +124,17 @@ const linkSelectors = {
     tileLinkSuperText: '[data-testid="tileLinkSuperText"]'
 };
 
-const sidepanelSelectors = {
+const sidePanelSelectors = {
     backButton: '[data-testid="sidepanelBackButton"]',
     entityIcon: '[data-testid="entity-icon"]',
     sidePanelExpandButton: '[data-testid = "external-link"]',
     getSidePanelTabLink: title => {
         return `[data-testid="tab"]:contains('${title}')`;
-    }
+    },
+    policyFindingsSection: scopeSelectors('[data-testid="policy-findings-section"]', {
+        table: tableSelectors
+    }),
+    violationTags: violationTagsSelectors
 };
 
 const policySidePanelSelectors = {
@@ -138,10 +146,13 @@ export const selectors = {
     ...dashboardSelectors,
     ...listSelectors,
     ...linkSelectors,
-    ...sidepanelSelectors,
+    ...sidePanelSelectors,
     ...sidePanelListEntityPageSelectors,
     ...policySidePanelSelectors,
     ...tablePaginationSelectors,
-    ...sidePanelSelectors,
-    ...vmHomePageSelectors
+    ...panelSelectors,
+    ...vmHomePageSelectors,
+    // TODO-ivan: unscrew everything above, it overrides each other etc., move to scoped definitions
+    mainTable: scopeSelectors('[data-testid="panel"]', tableSelectors),
+    sidePanel1: scopeSelectors(panelSelectors.sidePanel, sidePanelSelectors)
 };

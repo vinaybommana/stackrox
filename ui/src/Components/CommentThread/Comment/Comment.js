@@ -56,7 +56,9 @@ const Comment = ({ comment, onRemove, onSave, onClose, defaultEdit, isDisabled }
             } border rounded-lg p-2`}
         >
             <div className="flex flex-1">
-                <div className="text-primary-800 flex flex-1">{textHeader}</div>
+                <div className="text-primary-800 flex flex-1" data-testid="comment-header">
+                    {textHeader}
+                </div>
                 <CommentActionButtons
                     isEditing={isEditing}
                     isEditable={isEditable}
@@ -67,11 +69,11 @@ const Comment = ({ comment, onRemove, onSave, onClose, defaultEdit, isDisabled }
                     isDisabled={isDisabled}
                 />
             </div>
-            <div className="text-base-500 text-xs mt-1">
+            <div className="text-base-500 text-xs mt-1" data-testid="comment-subheader">
                 {createdTime && format(createdTime, dateTimeFormat)}{' '}
                 {isCommentUpdated && '(edited)'}
             </div>
-            <div className="mt-2 text-primary-800 leading-normal">
+            <div className="mt-2 text-primary-800 leading-normal" data-testid="comment-message">
                 {isEditing ? (
                     <CommentForm initialFormValues={initialFormValues} onSubmit={onSubmit} />
                 ) : (

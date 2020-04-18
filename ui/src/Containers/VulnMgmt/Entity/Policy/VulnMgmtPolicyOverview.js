@@ -306,7 +306,7 @@ const VulnMgmtPolicyOverview = ({ data, entityContext, setRefreshTrigger }) => {
                         </div>
                     </div>
                 </CollapsibleSection>
-                <CollapsibleSection title="Policy Findings">
+                <CollapsibleSection title="Policy Findings" dataTestId="policy-findings-section">
                     {policyFindingsContent}
                 </CollapsibleSection>
             </div>

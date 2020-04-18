@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import TableRows from 'Containers/AccessControl/Roles/Permissions/PermissionsMatrix/TableRows';
 
 const PermissionsMatrix = props => (
-    <table className="w-full overflow-auto mt-6">
+    <table className="w-full overflow-auto mt-6" data-testid="permissions-matrix">
         <thead>
             <tr className="border-b border-base-300">
                 <th className="text-lg text-left p-2 pl-0">Permissions</th>

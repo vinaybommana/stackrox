@@ -1,11 +1,11 @@
 import {
     url as violationsUrl,
     selectors as ViolationsPageSelectors
-} from '../constants/ViolationsPage';
-import { selectors as PoliciesPageSelectors } from '../constants/PoliciesPage';
-import * as api from '../constants/apiEndpoints';
-import selectors from '../constants/SearchPage';
-import withAuth from '../helpers/basicAuth';
+} from '../../constants/ViolationsPage';
+import { selectors as PoliciesPageSelectors } from '../../constants/PoliciesPage';
+import * as api from '../../constants/apiEndpoints';
+import { selectors as searchSelectors } from '../../constants/SearchPage';
+import withAuth from '../../helpers/basicAuth';
 
 describe('Violations page', () => {
     withAuth();
@@ -101,8 +101,8 @@ describe('Violations page', () => {
 
     it('should close the side panel on search filter', () => {
         cy.visit(violationsUrl);
-        cy.get(selectors.pageSearchInput).type('Cluster:{enter}', { force: true });
-        cy.get(selectors.pageSearchInput).type('remote{enter}', { force: true });
+        cy.get(searchSelectors.pageSearchInput).type('Cluster:{enter}', { force: true });
+        cy.get(searchSelectors.pageSearchInput).type('remote{enter}', { force: true });
         cy.get(ViolationsPageSelectors.panels)
             .eq(1)
             .should('not.be.visible');

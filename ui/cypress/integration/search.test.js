@@ -1,4 +1,4 @@
-import selectors from '../constants/SearchPage';
+import { selectors } from '../constants/SearchPage';
 import * as api from '../constants/apiEndpoints';
 import withAuth from '../helpers/basicAuth';
 

@@ -3,10 +3,16 @@ export const graphql = operationName => `api/graphql?opname=${operationName}`;
 export const alerts = {
     countsByCluster: 'v1/alerts/summary/counts?*group_by=CLUSTER*',
     countsByCategory: '/v1/alerts/summary/counts?*group_by=CATEGORY*',
-    alerts: '/v1/alerts?*',
+    alerts: '/v1/alerts?(\\?*)',
     alertById: '/v1/alerts/*',
     resolveAlert: '/v1/alerts/*/resolve',
-    alertscount: '/v1/alertscount?*'
+    alertscount: '/v1/alertscount?(\\?*)',
+    graphqlOps: {
+        getTags: 'getAlertTags',
+        tagsAutocomplete: 'autocomplete',
+        bulkAddAlertTags: 'bulkAddAlertTags',
+        getComments: 'getAlertComments'
+    }
 };
 
 export const clusters = {
@@ -18,13 +24,22 @@ export const risks = {
     // The * at the end exists because sometimes we add ?query= at the end.
     riskyDeployments: 'v1/deploymentswithprocessinfo*',
     getDeployment: 'v1/deployments/*',
-    getDeploymentWithRisk: 'v1/deploymentswithrisk/*'
+    getDeploymentWithRisk: 'v1/deploymentswithrisk/*',
+    graphqlOps: {
+        autocomplete: 'autocomplete',
+        getProcessTags: 'getProcessTags',
+        getProcessComments: 'getProcessComments'
+    }
 };
 
 export const search = {
     globalSearchWithResults: '/v1/search?query=Cluster:remote',
     globalSearchWithNoResults: '/v1/search?query=Cluster:',
-    options: '/v1/search/metadata/options*'
+    options: '/v1/search/metadata/options*',
+    autocomplete: 'v1/search/autocomplete*',
+    graphqlOps: {
+        autocomplete: 'autocomplete'
+    }
 };
 
 export const images = {
@@ -72,3 +87,17 @@ export const licenses = {
 };
 
 export const featureFlags = '/v1/featureflags';
+
+export const configMgmt = {
+    graphqlOps: {
+        policies: 'policies',
+        getPolicy: 'getPolicy'
+    }
+};
+
+export const vulnMgmt = {
+    graphqlOps: {
+        getPolicies: 'getPolicies',
+        getPolicy: 'getPolicy'
+    }
+};

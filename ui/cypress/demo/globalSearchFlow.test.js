@@ -1,4 +1,4 @@
-import searchSelectors from '../constants/SearchPage';
+import { selectors as searchSelectors } from '../constants/SearchPage';
 import { url as policiesURL } from '../constants/PoliciesPage';
 import { url as riskURL } from '../constants/RiskPage';
 import selectors from '../selectors/index';

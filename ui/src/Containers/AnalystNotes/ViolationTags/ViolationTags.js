@@ -9,19 +9,21 @@ const ViolationTags = ({ resourceId, isCollapsible }) => {
     const variables = { resourceId };
 
     return (
-        <ViolationTagsSearchAutoComplete>
-            {({ isLoading, options, autoCompleteVariables, onInputChange }) => (
-                <AnalystTags
-                    type={ANALYST_NOTES_TYPES.VIOLATION}
-                    variables={variables}
-                    isCollapsible={isCollapsible}
-                    autoComplete={options}
-                    autoCompleteVariables={autoCompleteVariables}
-                    isLoadingAutoComplete={isLoading}
-                    onInputChange={onInputChange}
-                />
-            )}
-        </ViolationTagsSearchAutoComplete>
+        <div data-testid="violation-tags">
+            <ViolationTagsSearchAutoComplete>
+                {({ isLoading, options, autoCompleteVariables, onInputChange }) => (
+                    <AnalystTags
+                        type={ANALYST_NOTES_TYPES.VIOLATION}
+                        variables={variables}
+                        isCollapsible={isCollapsible}
+                        autoComplete={options}
+                        autoCompleteVariables={autoCompleteVariables}
+                        isLoadingAutoComplete={isLoading}
+                        onInputChange={onInputChange}
+                    />
+                )}
+            </ViolationTagsSearchAutoComplete>
+        </div>
     );
 };
 

@@ -9,7 +9,6 @@ const CommentMessage = ({ message }) => {
         // create links for each URL string
         if (isValidURL(word)) {
             return (
-                // https://mathiasbynens.github.io/rel-noopener/ explains why we add the rel="noopener noreferrer" attribute
                 <a
                     href={word}
                     target="_blank"

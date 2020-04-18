@@ -1,9 +1,14 @@
+import scopeSelectors from '../helpers/scopeSelectors';
+
 export const url = '/main/access';
 
 export const selectors = {
     roles: '.rt-tr > .rt-td',
     permissionsPanel: 'div[data-testid=panel]:nth(1)',
     permissionsPanelHeader: 'div[data-testid=panel]:nth(1) div[data-testid=panel-header]',
+    permissionsMatrix: scopeSelectors('[data-testid="permissions-matrix"]', {
+        rowByPermission: permission => `tr:contains("${permission}")`
+    }),
     editButton: 'button:contains("Edit")',
     saveButton: 'button:contains("Save")',
     cancelButton: 'button:contains("Cancel")',

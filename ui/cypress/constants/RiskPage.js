@@ -1,3 +1,8 @@
+import tableSelectors from '../selectors/table';
+import { processTagsSelectors } from '../selectors/tags';
+import { processCommentsSelectors, commentsDialogSelectors } from '../selectors/comments';
+import scopeSelectors from '../helpers/scopeSelectors';
+
 export const url = '/main/risk';
 
 export const errorMessages = {
@@ -5,6 +10,20 @@ export const errorMessages = {
     riskNotFound: 'Risk not found',
     processNotFound: 'No processes discovered'
 };
+
+const sidePanelSelectors = scopeSelectors('[data-testid="panel"]:eq(1)', {
+    firstProcessCard: scopeSelectors('[data-testid="process-discovery-card"]:first', {
+        header: '[data-testid="process"]',
+        tags: processTagsSelectors,
+        comments: processCommentsSelectors
+    }),
+
+    riskIndicatorsTab: 'button[data-testid="tab"]:contains("Risk Indicators")',
+    deploymentDetailsTab: 'button[data-testid="tab"]:contains("Deployment Details")',
+    processDiscoveryTab: 'button[data-testid="tab"]:contains("Process Discovery")',
+
+    cancelButton: 'button[data-testid="cancel"]'
+});
 
 export const selectors = {
     risk: 'nav.left-navigation li:contains("Risk") a',
@@ -26,23 +45,14 @@ export const selectors = {
         items: 'div:contains("Mounts"):last + ul li div'
     },
     imageLink: 'div:contains("Image Name") + a',
-    table: {
-        header: '[data-testid="filtered-header"]',
-        column: {
-            priority: 'div.rt-th div:contains("Priority")'
-        },
-        row: {
-            firstRow: 'div.rt-tr-group:first-child div.rt-tr'
-        },
-        rows: 'div.rt-tr-group div.rt-tr',
-        columns: '.rt-td',
-        dataRows: '.rt-tbody .rt-tr-group .rt-tr'
-    },
+    table: scopeSelectors('[data-testid="panel"]:first', tableSelectors),
     collapsible: {
         card: '.Collapsible',
         header: '.Collapsible__trigger',
         body: '.Collapsible__contentInner'
     },
     suspiciousProcesses: "[data-testid='suspicious-process']",
-    networkNodeLink: '[data-testid="network-node-link"]'
+    networkNodeLink: '[data-testid="network-node-link"]',
+    sidePanel: sidePanelSelectors,
+    commentsDialog: commentsDialogSelectors
 };

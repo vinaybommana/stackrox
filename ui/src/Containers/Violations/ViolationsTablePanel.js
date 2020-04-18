@@ -55,6 +55,7 @@ function ViolationsTablePanelButtons({ setDialogue, checkedAlertIds, runtimeAler
                 {numCheckedAlertIds !== 0 && (
                     <PanelButton
                         icon={<Tag className="h-4 ml-1" />}
+                        dataTestId="bulk-add-tags-button"
                         className="btn btn-base ml-2"
                         onClick={showTagConfirmationDialog}
                         tooltip={`Add Tags for ${pluralize(

@@ -219,5 +219,9 @@ describe('Access Control Page', () => {
                 cy.wrap($input).should('have.attr', 'disabled');
             });
         });
+
+        it('should have AllComments permission', () => {
+            cy.get(selectors.permissionsMatrix.rowByPermission('AllComments')).should('exist');
+        });
     });
 });

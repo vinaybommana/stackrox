@@ -214,7 +214,10 @@ const Policy = ({ id, entityListType, entityId1, query, entityContext }) => {
                                 </Widget>
                             </div>
                         </CollapsibleSection>
-                        <CollapsibleSection title="Policy Findings">
+                        <CollapsibleSection
+                            title="Policy Findings"
+                            dataTestId="policy-findings-section"
+                        >
                             <div className="flex mb-4 pdf-page pdf-stretch">
                                 <PolicyFindings
                                     entityContext={entityContext}
