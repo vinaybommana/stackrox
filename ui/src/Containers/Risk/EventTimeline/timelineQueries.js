@@ -19,6 +19,46 @@ export const POD_FRAGMENT = gql`
     }
 `;
 
+export const POLICY_VIOLATION_EVENT_FRAGMENT = gql`
+    fragment policyViolationEventFields on PolicyViolationEvent {
+        type: __typename
+        id
+        name
+        timestamp
+    }
+`;
+
+export const PROCESS_ACTIVITY_EVENT_FRAGMENT = gql`
+    fragment processActivityEventFields on ProcessActivityEvent {
+        type: __typename
+        id
+        name
+        timestamp
+        uid
+        whitelisted
+    }
+`;
+
+export const RESTART_EVENT_FRAGMENT = gql`
+    fragment restartEventFields on ContainerRestartEvent {
+        type: __typename
+        id
+        name
+        timestamp
+    }
+`;
+
+export const TERMINATION_EVENT_FRAGMENT = gql`
+    fragment terminationEventFields on ContainerTerminationEvent {
+        type: __typename
+        id
+        name
+        timestamp
+        exitCode
+        reason
+    }
+`;
+
 export const GET_EVENT_TIMELINE_OVERVIEW = gql`
     query getEventTimelineOverview($deploymentId: ID!) {
         deployment(id: $deploymentId) {
@@ -40,35 +80,19 @@ export const GET_DEPLOYMENT_EVENT_TIMELINE = gql`
         pods(query: $podsQuery, pagination: $pagination) {
             ...podFields
             events {
-                type: __typename
-                ... on PolicyViolationEvent {
-                    id
-                    name
-                    timestamp
-                }
-                ... on ProcessActivityEvent {
-                    id
-                    name
-                    timestamp
-                    uid
-                }
-                ... on ContainerRestartEvent {
-                    id
-                    name
-                    timestamp
-                }
-                ... on ContainerTerminationEvent {
-                    id
-                    name
-                    timestamp
-                    exitCode
-                    reason
-                }
+                ...policyViolationEventFields
+                ...processActivityEventFields
+                ...restartEventFields
+                ...terminationEventFields
             }
         }
     }
     ${DEPLOYMENT_OVERVIEW_FRAGMENT}
     ${POD_FRAGMENT}
+    ${POLICY_VIOLATION_EVENT_FRAGMENT}
+    ${PROCESS_ACTIVITY_EVENT_FRAGMENT}
+    ${RESTART_EVENT_FRAGMENT}
+    ${TERMINATION_EVENT_FRAGMENT}
 `;
 
 export const GET_POD_EVENT_TIMELINE = gql`
@@ -81,32 +105,16 @@ export const GET_POD_EVENT_TIMELINE = gql`
             name
             startTime
             events {
-                type: __typename
-                ... on PolicyViolationEvent {
-                    id
-                    name
-                    timestamp
-                }
-                ... on ProcessActivityEvent {
-                    id
-                    name
-                    timestamp
-                    uid
-                }
-                ... on ContainerRestartEvent {
-                    id
-                    name
-                    timestamp
-                }
-                ... on ContainerTerminationEvent {
-                    id
-                    name
-                    timestamp
-                    exitCode
-                    reason
-                }
+                ...policyViolationEventFields
+                ...processActivityEventFields
+                ...restartEventFields
+                ...terminationEventFields
             }
         }
     }
     ${POD_FRAGMENT}
+    ${POLICY_VIOLATION_EVENT_FRAGMENT}
+    ${PROCESS_ACTIVITY_EVENT_FRAGMENT}
+    ${RESTART_EVENT_FRAGMENT}
+    ${TERMINATION_EVENT_FRAGMENT}
 `;
