@@ -22,7 +22,7 @@ function DetailsButtons({ wizardPolicy, setWizardStage, setWizardPolicy, addToas
     function exportOnePolicy() {
         const policiesToExport = [wizardPolicy.id];
         exportPolicies(policiesToExport).catch(err => {
-            addToast(`Could not delete all of the selected policies: ${err.message}`);
+            addToast(`Could not export the policy: ${err.message}`);
             setTimeout(removeToast, 5000);
         });
     }
@@ -51,6 +51,7 @@ function DetailsButtons({ wizardPolicy, setWizardStage, setWizardPolicy, addToas
                     className="btn btn-base mr-2"
                     onClick={exportOnePolicy}
                     tooltip="Export policy"
+                    dataTestId="single-policy-export"
                 >
                     Export
                 </PanelButton>

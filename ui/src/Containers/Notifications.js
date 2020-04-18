@@ -22,7 +22,7 @@ class Notifications extends Component {
     render() {
         return (
             <ToastContainer
-                toastClassName="font-sans text-base-600 text-base-100 font-600 bg-base-100"
+                toastClassName="toast-selector font-sans text-base-600 text-base-100 font-600 bg-base-100"
                 hideProgressBar
                 autoClose={3000}
             >

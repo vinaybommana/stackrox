@@ -333,4 +333,43 @@ describe('Policies page', () => {
         ).click(); // remove it
         savePolicy();
     });
+
+    describe('policy export', () => {
+        it('should start an API call to get the policy in the detail panel', () => {
+            cy.route({
+                method: 'POST',
+                url: 'v1/policies/export'
+            }).as('policyExport');
+
+            cy.get(selectors.tableFirstRow).click();
+
+            cy.url().then(href => {
+                const segments = href.split('/');
+                const policyId = segments[segments.length - 1];
+                cy.get(selectors.singlePolicyExportButton).click();
+
+                cy.wait('@policyExport')
+                    .its('request.body')
+                    .should('deep.equal', {
+                        policyIds: [policyId]
+                    });
+            });
+        });
+
+        it('should display an error when the export fails', () => {
+            cy.route({
+                method: 'POST',
+                url: 'v1/policies/export',
+                status: 400,
+                response: { message: 'Some policies could not be retrieved.' }
+            }).as('policyExport');
+
+            cy.get(selectors.tableFirstRow).click();
+            cy.get(selectors.singlePolicyExportButton).click();
+
+            cy.wait('@policyExport');
+
+            cy.get(selectors.toast).contains('Could not export the policy');
+        });
+    });
 });

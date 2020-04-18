@@ -4,6 +4,7 @@ export const selectors = {
     configure: 'nav.left-navigation li:contains("Platform Configuration") a',
     navLink: '.navigation-panel li:contains("System Policies") a',
     newPolicyButton: 'button:contains("New")',
+    singlePolicyExportButton: 'button[data-testid="single-policy-export"]',
     editPolicyButton: 'button:contains("Edit")',
     savePolicyButton: 'button:contains("Save")',
     nextButton: '.btn:contains("Next")',
@@ -74,7 +75,8 @@ export const selectors = {
         buildTile: '[data-testid="policy-enforcement-build-tile"]',
         deployTile: '[data-testid="policy-enforcement-deploy-tile"]',
         onOffToggle: '[data-testid="policy-enforcement-on-off"]'
-    }
+    },
+    toast: '.toast-selector'
 };
 
 export const text = {
