@@ -1,5 +1,30 @@
 export const graphql = operationName => `api/graphql?opname=${operationName}`;
 
+function searchObjToQuery(searchObj) {
+    let result = '';
+    Object.entries(searchObj).forEach(([searchCategory, searchValue], idx) => {
+        result = result.concat(`${idx ? '+' : ''}${searchCategory}:`);
+        if (Array.isArray(searchValue)) {
+            result = result.concat(searchValue.join(','));
+        } else {
+            result = result.concat(searchValue);
+        }
+    });
+    return encodeURI(result);
+}
+
+export const search = {
+    globalSearchWithResults: '/v1/search?query=Cluster:remote',
+    globalSearchWithNoResults: '/v1/search?query=Cluster:',
+    options: '/v1/search/metadata/options*',
+    autocomplete: 'v1/search/autocomplete*',
+    autocompleteBySearch: (searchObj, category) =>
+        `v1/search/autocomplete?query=${searchObjToQuery(searchObj)}&categories=${category}`,
+    graphqlOps: {
+        autocomplete: 'autocomplete'
+    }
+};
+
 export const alerts = {
     countsByCluster: 'v1/alerts/summary/counts?*group_by=CLUSTER*',
     countsByCategory: '/v1/alerts/summary/counts?*group_by=CATEGORY*',
@@ -7,6 +32,7 @@ export const alerts = {
     alertById: '/v1/alerts/*',
     resolveAlert: '/v1/alerts/*/resolve',
     alertscount: '/v1/alertscount?(\\?*)',
+    pageSearchAutocomplete: searchObj => search.autocompleteBySearch(searchObj, 'ALERTS'),
     graphqlOps: {
         getTags: 'getAlertTags',
         tagsAutocomplete: 'autocomplete',
@@ -29,16 +55,6 @@ export const risks = {
         autocomplete: 'autocomplete',
         getProcessTags: 'getProcessTags',
         getProcessComments: 'getProcessComments'
-    }
-};
-
-export const search = {
-    globalSearchWithResults: '/v1/search?query=Cluster:remote',
-    globalSearchWithNoResults: '/v1/search?query=Cluster:',
-    options: '/v1/search/metadata/options*',
-    autocomplete: 'v1/search/autocomplete*',
-    graphqlOps: {
-        autocomplete: 'autocomplete'
     }
 };
 

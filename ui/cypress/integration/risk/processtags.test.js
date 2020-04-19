@@ -97,8 +97,8 @@ describe('Risk Page Process Tags', () => {
         cy.get(selectors.sidePanel.firstProcessCard.tags.removeValueButton(tag)).click();
         cy.wait(['@getTags', '@tagsAutocomplete']);
 
-        cy.get(selectors.sidePanel.firstProcessCard.tags.values)
-            .contains(tag)
-            .should('not.exist');
+        cy.get(`${selectors.sidePanel.firstProcessCard.tags.values}:contains("${tag}")`).should(
+            'not.exist'
+        );
     });
 });

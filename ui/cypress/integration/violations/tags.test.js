@@ -128,8 +128,12 @@ describe('Violation Page: Tags', () => {
         cy.get(selectors.addTagsDialog.cancelButton).click();
 
         // check page search autocompletion
+        cy.route(api.alerts.pageSearchAutocomplete({ Tag: tag.charAt(0) })).as(
+            'pageSearchAutocomplete'
+        );
         cy.get(searchSelectors.pageSearchInput).type('Tag:{enter}');
         cy.get(searchSelectors.pageSearchInput).type(`${tag.charAt(0)}`);
+        cy.wait('@pageSearchAutocomplete');
         cy.get(searchSelectors.searchOptions).contains(tag);
     });
 
@@ -144,8 +148,6 @@ describe('Violation Page: Tags', () => {
         cy.get(selectors.sidePanel.tags.removeValueButton(tag)).click();
         cy.wait(['@getTags', '@tagsAutocomplete']);
 
-        cy.get(selectors.sidePanel.tags.values)
-            .contains(tag)
-            .should('not.exist');
+        cy.get(`${selectors.sidePanel.tags.values}:contains("${tag}")`).should('not.exist');
     });
 });
