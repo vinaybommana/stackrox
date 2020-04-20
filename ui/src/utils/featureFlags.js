@@ -15,6 +15,7 @@ export const knownBackendFlags = {
     ROX_POLICY_IMPORT_EXPORT: 'ROX_POLICY_IMPORT_EXPORT',
     ROX_ADMISSION_CONTROL_ENFORCE_ON_UPDATE: 'ROX_ADMISSION_CONTROL_ENFORCE_ON_UPDATE',
     ROX_BOOLEAN_POLICY_LOGIC: 'ROX_BOOLEAN_POLICY_LOGIC',
+    ROX_CUSTOM_ENDPOINTS: 'ROX_CUSTOM_ENDPOINTS',
 };
 
 // isBackendFeatureFlagEnabled returns whether a feature flag retrieved from the backend is enabled.
