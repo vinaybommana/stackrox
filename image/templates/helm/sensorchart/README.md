@@ -96,9 +96,11 @@ you use.
    StackRox Kubernetes Security Platform version you are using. For example, if
    you are using the StackRox Kubernetes Security Platform version 3.0.41,
    download the folder named `3.0.41`.
-1. From the downloaded folder, modify the `values.yaml` file based on your
-   environment. See the [Configuration](#configuration) section to understand the
-   available parameters.
+1. In the downloaded folder, create a new directory called `secrets`. 
+1. In the new `secrets` directory, copy the contents from the `secrets`
+   directory of the release from which you are upgrading. For example, if you
+   are upgrading from version 3.0.41.0 to 3.0.42.0, copy the contents of the
+   directory `3.0.41.0/secrets` into `3.0.42.0/secrets`.   
 1. Run the Helm upgrade command.
    - For Helm v2:
      ```
