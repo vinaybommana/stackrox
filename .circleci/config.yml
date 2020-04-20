@@ -381,8 +381,8 @@ storeK8sLogs: &storeK8sLogs
 
 storeProfilingResults: &storeProfilingResults
   store_artifacts:
-    path: /tmp/pprof
-    destination: pprof
+    path: /tmp/pprof.zip
+    destination: pprof.zip
 
 storeCypressResults: &storeCypressResults
   store_test_results:
@@ -2911,6 +2911,8 @@ jobs:
             mkdir /tmp/pprof
             # 30 min run so that we are confident that the run has completely finished
             ./scale/profiler/pprof.sh /tmp/pprof "${API_ENDPOINT}" 30
+            zip -r /tmp/pprof.zip /tmp/pprof
+
       - *storeProfilingResults
       - check-stackrox-logs
       - *connectToMonitoring
