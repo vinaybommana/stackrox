@@ -69,6 +69,7 @@ ObOdSTZUQI4TZOXOpJCpa97CnqroNi7RrT05JOfoe/DPmhoJmF4AUrnd/YUb8pgF
     @Unroll
     @Category([BAT])
     def "Verify create Email Integration (port #port, disable TLS=#disableTLS, startTLS=#startTLS)"() {
+        Assume.assumeTrue(false) // disable until we fix mailgun account limits
         given:
         "a configuration that is expected to work"
         EmailNotifier notifier = new EmailNotifier("Email Test", disableTLS, startTLS, port)
@@ -285,13 +286,14 @@ ObOdSTZUQI4TZOXOpJCpa97CnqroNi7RrT05JOfoe/DPmhoJmF4AUrnd/YUb8pgF
 
         type                    | notifierTypes
         "SLACK"                 | [new SlackNotifier()]
-        "EMAIL"                 | [new EmailNotifier()]
+        //"EMAIL"                 | [new EmailNotifier()]
         "JIRA"                  | [new JiraNotifier()]
         "TEAMS"                 | [new TeamsNotifier()]
         "GENERIC"               | [new GenericNotifier()]
 
         // Adding a SLACK, TEAMS, EMAIL notifier test so we still verify multiple notifiers
-        "SLACK, EMAIL, TEAMS"   | [new SlackNotifier(), new EmailNotifier(), new TeamsNotifier()]
+        //"SLACK, EMAIL, TEAMS"   | [new SlackNotifier(), new EmailNotifier(), new TeamsNotifier()]
+        "SLACK, TEAMS"   | [new SlackNotifier(), new TeamsNotifier()]
     }
 
     @Unroll
@@ -351,11 +353,13 @@ ObOdSTZUQI4TZOXOpJCpa97CnqroNi7RrT05JOfoe/DPmhoJmF4AUrnd/YUb8pgF
         type        | notifierTypes       |
                 deployment
 
+        /*
         "EMAIL"     | [new EmailNotifier()]       |
                 new Deployment()
                         .setName("policy-violation-email-notification")
                         .addLabel("app", "policy-violation-email-notification")
                         .setImage("nginx:latest")
+                        */
 
         "PAGERDUTY" | [new PagerDutyNotifier()]   |
                 new Deployment()
