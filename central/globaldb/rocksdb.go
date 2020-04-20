@@ -28,6 +28,7 @@ var (
 func NewRocksDB(path string) (*gorocksdb.DB, error) {
 	opts := gorocksdb.NewDefaultOptions()
 	opts.SetCreateIfMissing(true)
+	opts.SetCompression(gorocksdb.LZ4Compression)
 	return gorocksdb.OpenDb(opts, path)
 }
 
