@@ -893,6 +893,7 @@ commands:
             helm del --purge monitoring || true
             helm del --purge central || true
             helm del --purge scanner || true
+            helm del --purge sensor || true
 
   deploy-webhook-server:
     steps:
