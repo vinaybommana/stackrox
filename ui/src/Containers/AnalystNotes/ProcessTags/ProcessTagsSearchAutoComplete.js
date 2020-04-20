@@ -21,7 +21,7 @@ const ProcessTagsSearchAutoComplete = ({ children }) => {
 };
 
 ProcessTagsSearchAutoComplete.propTypes = {
-    children: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.node), PropTypes.node]).isRequired,
+    children: PropTypes.func.isRequired,
 };
 
 export default ProcessTagsSearchAutoComplete;
