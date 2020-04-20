@@ -40,17 +40,17 @@ FormPanel.propTypes = {
     initialValues: PropTypes.shape({}).isRequired,
     fieldGroups: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
     wizardPolicy: PropTypes.shape({
-        name: PropTypes.string
+        name: PropTypes.string,
     }).isRequired,
-    onClose: PropTypes.func.isRequired
+    onClose: PropTypes.func.isRequired,
 };
 
 FormPanel.defaultProps = {
-    header: ''
+    header: '',
 };
 
 const mapStateToProps = createStructuredSelector({
-    wizardPolicy: selectors.getWizardPolicy
+    wizardPolicy: selectors.getWizardPolicy,
 });
 
 export default reduxForm({ form: 'policyCreationForm' })(connect(mapStateToProps)(FormPanel));

@@ -27,7 +27,7 @@ const ProcessTags = ({ deploymentID, containerName, execFilePath, args }) => {
 };
 
 ProcessTags.propTypes = {
-    ...ProcessKeyProps
+    ...ProcessKeyProps,
 };
 
 export default ProcessTags;

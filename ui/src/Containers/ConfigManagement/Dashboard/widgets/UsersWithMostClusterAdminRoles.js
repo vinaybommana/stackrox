@@ -34,8 +34,8 @@ const UsersWithMostClusterAdminRoles = ({ match, location }) => {
             const newSubjects = { ...allSubjects };
 
             cluster.subjects
-                .filter(subject => subject.clusterAdmin)
-                .forEach(subject => {
+                .filter((subject) => subject.clusterAdmin)
+                .forEach((subject) => {
                     const { name } = subject.subject;
                     if (!allSubjects[name]) newSubjects[name] = 0;
 
@@ -45,7 +45,7 @@ const UsersWithMostClusterAdminRoles = ({ match, location }) => {
         }, {});
 
         return Object.entries(subjectCounts)
-            .map(entry => {
+            .map((entry) => {
                 const link = URLService.getURL(match, location)
                     .base(entityTypes.SUBJECT)
                     .push(entry[0])
@@ -55,9 +55,9 @@ const UsersWithMostClusterAdminRoles = ({ match, location }) => {
                     x: entry[1],
                     hint: {
                         title: entry[0],
-                        body: entry[1]
+                        body: entry[1],
                     },
-                    link
+                    link,
                 };
             })
             .sort((a, b) => b.x - a.x)
@@ -103,7 +103,7 @@ const UsersWithMostClusterAdminRoles = ({ match, location }) => {
 
 UsersWithMostClusterAdminRoles.propTypes = {
     match: ReactRouterPropTypes.match.isRequired,
-    location: ReactRouterPropTypes.location.isRequired
+    location: ReactRouterPropTypes.location.isRequired,
 };
 
 export default withRouter(UsersWithMostClusterAdminRoles);

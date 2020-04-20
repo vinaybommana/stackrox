@@ -7,7 +7,7 @@ export const types = {
     OPEN_WIZARD: 'policies/OPEN_WIZARD',
     CLOSE_WIZARD: 'policies/CLOSE_WIZARD',
     SET_POLICIES_ACTION: 'policies/SET_POLICIES_ACTION',
-    CLOSE_DIALOGUE: 'policies/CLOSE_DIALOGUE'
+    CLOSE_DIALOGUE: 'policies/CLOSE_DIALOGUE',
 };
 
 // Actions
@@ -16,8 +16,8 @@ export const types = {
 export const actions = {
     openWizard: () => ({ type: types.OPEN_WIZARD }),
     closeWizard: () => ({ type: types.CLOSE_WIZARD }),
-    setPoliciesAction: policiesAction => ({ type: types.SET_POLICIES_ACTION, policiesAction }),
-    closeDialogue: () => ({ type: types.CLOSE_DIALOGUE })
+    setPoliciesAction: (policiesAction) => ({ type: types.SET_POLICIES_ACTION, policiesAction }),
+    closeDialogue: () => ({ type: types.CLOSE_DIALOGUE }),
 };
 
 // Reducers
@@ -46,7 +46,7 @@ const policiesAction = (state = '', action) => {
 
 const reducer = combineReducers({
     wizardOpen,
-    policiesAction
+    policiesAction,
 });
 
 export default reducer;
@@ -55,11 +55,11 @@ export default reducer;
 // If adding a selector, you'll need to wire it through reducers/policies/reducer.js
 //---------------------------------------------------------------------------------
 
-const getWizardOpen = state => state.wizardOpen;
+const getWizardOpen = (state) => state.wizardOpen;
 
-const getPoliciesAction = state => state.policiesAction;
+const getPoliciesAction = (state) => state.policiesAction;
 
 export const selectors = {
     getWizardOpen,
-    getPoliciesAction
+    getPoliciesAction,
 };

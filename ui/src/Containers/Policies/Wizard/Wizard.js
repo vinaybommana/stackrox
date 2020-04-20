@@ -11,7 +11,7 @@ import WizardPanel from 'Containers/Policies/Wizard/WizardPanel';
 import {
     policyStatus,
     policyDetails,
-    policyConfiguration
+    policyConfiguration,
 } from 'Containers/Policies/Wizard/Form/descriptors';
 import { clientOnlyWhitelistFieldNames } from 'Containers/Policies/Wizard/Form/whitelistFieldNames';
 import { preFormatPolicyFields } from 'Containers/Policies/Wizard/Form/utils';
@@ -23,16 +23,13 @@ function Wizard({
     closeWizard,
     setWizardPolicy,
     selectPolicyId,
-    fieldGroups
+    fieldGroups,
 }) {
-    const onClose = useCallback(
-        () => {
-            closeWizard();
-            setWizardPolicy({ name: '' });
-            selectPolicyId('');
-        },
-        [closeWizard, setWizardPolicy, selectPolicyId]
-    );
+    const onClose = useCallback(() => {
+        closeWizard();
+        setWizardPolicy({ name: '' });
+        selectPolicyId('');
+    }, [closeWizard, setWizardPolicy, selectPolicyId]);
 
     if (!wizardOpen) return null;
 
@@ -51,43 +48,43 @@ function Wizard({
 
 Wizard.propTypes = {
     wizardPolicy: PropTypes.shape({
-        name: PropTypes.string
+        name: PropTypes.string,
     }),
     wizardOpen: PropTypes.bool.isRequired,
     closeWizard: PropTypes.func.isRequired,
     setWizardPolicy: PropTypes.func.isRequired,
     selectPolicyId: PropTypes.func.isRequired,
-    fieldGroups: PropTypes.arrayOf(PropTypes.shape({})).isRequired
+    fieldGroups: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
 };
 
 Wizard.defaultProps = {
-    wizardPolicy: null
+    wizardPolicy: null,
 };
 
 const getFieldGroups = createSelector(
     [selectors.getNotifiers, selectors.getImages, selectors.getPolicyCategories],
     (notifiers, images, policyCategories) => {
         const { descriptor } = policyDetails;
-        const policyDetailsFormFields = descriptor.map(field => {
-            const newField = Object.assign({}, field);
+        const policyDetailsFormFields = descriptor.map((field) => {
+            const newField = { ...field };
             let { options } = newField;
             switch (field.jsonpath) {
                 case 'categories':
-                    options = policyCategories.map(category => ({
+                    options = policyCategories.map((category) => ({
                         label: category,
-                        value: category
+                        value: category,
                     }));
                     break;
                 case clientOnlyWhitelistFieldNames.WHITELISTED_IMAGE_NAMES:
-                    options = images.map(image => ({
+                    options = images.map((image) => ({
                         label: image.name,
-                        value: image.name
+                        value: image.name,
                     }));
                     break;
                 case 'notifiers':
-                    options = notifiers.map(notifier => ({
+                    options = notifiers.map((notifier) => ({
                         label: notifier.name,
-                        value: notifier.id
+                        value: notifier.id,
                     }));
                     break;
                 default:
@@ -104,16 +101,13 @@ const getFieldGroups = createSelector(
 const mapStateToProps = createStructuredSelector({
     wizardPolicy: selectors.getWizardPolicy,
     wizardOpen: selectors.getWizardOpen,
-    fieldGroups: getFieldGroups
+    fieldGroups: getFieldGroups,
 });
 
 const mapDispatchToProps = {
     closeWizard: pageActions.closeWizard,
     selectPolicyId: tableActions.selectPolicyId,
-    setWizardPolicy: wizardActions.setWizardPolicy
+    setWizardPolicy: wizardActions.setWizardPolicy,
 };
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(Wizard);
+export default connect(mapStateToProps, mapDispatchToProps)(Wizard);

@@ -76,7 +76,7 @@ export default function Field({ field, name }) {
                 />
             );
         case 'group':
-            return field.jsonpaths.map(subField => {
+            return field.jsonpaths.map((subField) => {
                 const subFieldName = name ? `${name}.${subField.subpath}` : subField.jsonpath;
                 return <Field key={subField.jsonpath} name={subFieldName} field={subField} />;
             });
@@ -91,11 +91,11 @@ export default function Field({ field, name }) {
 
 Field.propsTypes = {
     field: PropTypes.shape({
-        type: PropTypes.string.isRequired
+        type: PropTypes.string.isRequired,
     }).isRequired,
-    name: PropTypes.string
+    name: PropTypes.string,
 };
 
 Field.defaultProps = {
-    name: ''
+    name: '',
 };

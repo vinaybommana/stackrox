@@ -1,7 +1,7 @@
 import {
     policyDetails,
     policyConfiguration,
-    policyStatus
+    policyStatus,
 } from 'Containers/Policies/Wizard/Form/descriptors';
 import removeEmptyFields from 'utils/removeEmptyFields';
 import { keyBy } from 'lodash';
@@ -13,41 +13,41 @@ function filterAndMapWhitelists(whitelists, filterFunc, mapFunc) {
 
 export function preFormatWhitelistField(policy) {
     const { whitelists } = policy;
-    const clientPolicy = Object.assign({}, policy);
+    const clientPolicy = { ...policy };
 
     clientPolicy[clientOnlyWhitelistFieldNames.WHITELISTED_IMAGE_NAMES] = filterAndMapWhitelists(
         whitelists,
-        o => o.image && o.image.name,
-        o => o.image.name
+        (o) => o.image && o.image.name,
+        (o) => o.image.name
     );
 
     clientPolicy[
         clientOnlyWhitelistFieldNames.WHITELISTED_DEPLOYMENT_SCOPES
     ] = filterAndMapWhitelists(
         whitelists,
-        o => o.deployment && (o.deployment.name || o.deployment.scope),
-        o => o.deployment
+        (o) => o.deployment && (o.deployment.name || o.deployment.scope),
+        (o) => o.deployment
     );
 
     return clientPolicy;
 }
 
 export function postFormatWhitelistField(policy) {
-    const serverPolicy = Object.assign({}, policy);
+    const serverPolicy = { ...policy };
     serverPolicy.whitelists = [];
 
     const whitelistedDeploymentScopes =
         policy[clientOnlyWhitelistFieldNames.WHITELISTED_DEPLOYMENT_SCOPES];
     if (whitelistedDeploymentScopes && whitelistedDeploymentScopes.length) {
         serverPolicy.whitelists = serverPolicy.whitelists.concat(
-            whitelistedDeploymentScopes.map(deployment => ({ deployment }))
+            whitelistedDeploymentScopes.map((deployment) => ({ deployment }))
         );
     }
 
     const whitelistedImageNames = policy[clientOnlyWhitelistFieldNames.WHITELISTED_IMAGE_NAMES];
     if (whitelistedImageNames && whitelistedImageNames.length > 0) {
         serverPolicy.whitelists = serverPolicy.whitelists.concat(
-            whitelistedImageNames.map(name => ({ image: { name } }))
+            whitelistedImageNames.map((name) => ({ image: { name } }))
         );
     }
 
@@ -55,14 +55,14 @@ export function postFormatWhitelistField(policy) {
 }
 
 export function postFormatLifecycleField(policy) {
-    const serverPolicy = Object.assign({}, policy);
+    const serverPolicy = { ...policy };
     if (policy.lifecycleStages && policy.lifecycleStages.length !== 0)
-        serverPolicy.lifecycleStages = policy.lifecycleStages.map(o => (o.value ? o.value : o));
+        serverPolicy.lifecycleStages = policy.lifecycleStages.map((o) => (o.value ? o.value : o));
     return serverPolicy;
 }
 
 export function postFormatEnforcementField(policy) {
-    const serverPolicy = Object.assign({}, policy);
+    const serverPolicy = { ...policy };
     if (policy.enforcementActions) {
         if (typeof policy.enforcementActions === 'string') {
             serverPolicy.enforcementActions = [policy.enforcementActions];
@@ -80,7 +80,7 @@ export function parseValueStr(value) {
     if (valueArr.length === 2) {
         return {
             key: valueArr[0],
-            value: valueArr[1]
+            value: valueArr[1],
         };
     }
     // for the Environment Variable policy criteria
@@ -88,11 +88,11 @@ export function parseValueStr(value) {
         return {
             source: valueArr[0],
             key: valueArr[1],
-            value: valueArr[2]
+            value: valueArr[2],
         };
     }
     return {
-        value
+        value,
     };
 }
 
@@ -161,7 +161,7 @@ export function formatPolicyFields(policy) {
 }
 
 export function mapDescriptorToKey(descriptor) {
-    return descriptor.map(obj => obj.jsonpath);
+    return descriptor.map((obj) => obj.jsonpath);
 }
 
 export function getPolicyFormDataKeys() {
@@ -172,9 +172,9 @@ export function getPolicyFormDataKeys() {
 }
 
 export function getPolicyCriteriaFieldKeys(fields) {
-    const fieldNameMap = keyBy(fields, field => field.field_name);
+    const fieldNameMap = keyBy(fields, (field) => field.field_name);
     const availableFieldKeys = [];
-    policyConfiguration.descriptor.forEach(field => {
+    policyConfiguration.descriptor.forEach((field) => {
         if (!fieldNameMap[field.name]) {
             availableFieldKeys.push(field.name);
         }

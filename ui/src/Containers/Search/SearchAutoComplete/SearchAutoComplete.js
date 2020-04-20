@@ -10,8 +10,8 @@ const SearchAutoComplete = ({ categories, query, children }) => {
     const { loading: isLoading, error, data } = useQuery(SEARCH_AUTOCOMPLETE_QUERY, {
         variables: {
             categories,
-            query
-        }
+            query,
+        },
     });
 
     const { hasErrors } = captureGraphQLErrors([error]);
@@ -31,11 +31,11 @@ const SearchAutoComplete = ({ categories, query, children }) => {
 
 SearchAutoComplete.propTypes = {
     categories: PropTypes.arrayOf(PropTypes.string).isRequired,
-    query: PropTypes.string
+    query: PropTypes.string,
 };
 
 SearchAutoComplete.defaultProps = {
-    query: ''
+    query: '',
 };
 
 export default SearchAutoComplete;

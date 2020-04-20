@@ -31,11 +31,11 @@ const PolicyViolationIcon = forwardRef(({ height, width }, ref) => {
 
 PolicyViolationIcon.propTypes = {
     width: PropTypes.number.isRequired,
-    height: PropTypes.number
+    height: PropTypes.number,
 };
 
 PolicyViolationIcon.defaultProps = {
-    height: null
+    height: null,
 };
 
 export default PolicyViolationIcon;

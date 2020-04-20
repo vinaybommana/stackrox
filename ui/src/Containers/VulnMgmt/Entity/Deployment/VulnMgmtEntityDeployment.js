@@ -12,7 +12,7 @@ import VulnMgmtDeploymentOverview from './VulnMgmtDeploymentOverview';
 import EntityList from '../../List/VulnMgmtList';
 import {
     vulMgmtPolicyQuery,
-    tryUpdateQueryWithVulMgmtPolicyClause
+    tryUpdateQueryWithVulMgmtPolicyClause,
 } from '../VulnMgmtPolicyQueryUtil';
 
 const VulmMgmtDeployment = ({
@@ -23,7 +23,7 @@ const VulmMgmtDeployment = ({
     sort,
     page,
     refreshTrigger,
-    setRefreshTrigger
+    setRefreshTrigger,
 }) => {
     const workflowState = useContext(workflowStateContext);
 
@@ -93,9 +93,9 @@ const VulmMgmtDeployment = ({
             cachebuster: refreshTrigger,
             scopeQuery: queryService.objectToWhereClause({
                 ...queryService.entityContextToQueryObject(fullEntityContext),
-                Category: 'Vulnerability Management'
-            })
-        }
+                Category: 'Vulnerability Management',
+            }),
+        },
     };
 
     return (

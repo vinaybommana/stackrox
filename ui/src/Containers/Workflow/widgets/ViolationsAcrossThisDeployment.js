@@ -28,8 +28,8 @@ const ViolationsAcrossThisDeployment = ({ deploymentID, policyID, message }) => 
     const variables = {
         query: queryService.objectToWhereClause({
             'Deployment ID': deploymentID,
-            'Policy ID': policyID
-        })
+            'Policy ID': policyID,
+        }),
     };
     return (
         <Query query={QUERY} variables={variables}>
@@ -45,7 +45,7 @@ const ViolationsAcrossThisDeployment = ({ deploymentID, policyID, message }) => 
 ViolationsAcrossThisDeployment.propTypes = {
     deploymentID: PropTypes.string.isRequired,
     policyID: PropTypes.string.isRequired,
-    message: PropTypes.string.isRequired
+    message: PropTypes.string.isRequired,
 };
 
 export default ViolationsAcrossThisDeployment;

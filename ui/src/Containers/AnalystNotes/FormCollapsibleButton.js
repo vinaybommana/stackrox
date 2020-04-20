@@ -15,10 +15,10 @@ const FormCollapsibleButton = ({
     deploymentID,
     containerName,
     execFilePath,
-    args
+    args,
 }) => {
     const { loading: isLoading, error, data = {} } = useQuery(GET_PROCESS_COMMENTS_TAGS_COUNT, {
-        variables: { key: { deploymentID, containerName, execFilePath, args } }
+        variables: { key: { deploymentID, containerName, execFilePath, args } },
     });
 
     captureGraphQLErrors([error]);
@@ -40,11 +40,11 @@ const FormCollapsibleButton = ({
 FormCollapsibleButton.propTypes = {
     isOpen: PropTypes.bool,
     onClick: PropTypes.func.isRequired,
-    ...ProcessKeyProps
+    ...ProcessKeyProps,
 };
 
 FormCollapsibleButton.defaultProps = {
-    isOpen: false
+    isOpen: false,
 };
 
 export default FormCollapsibleButton;

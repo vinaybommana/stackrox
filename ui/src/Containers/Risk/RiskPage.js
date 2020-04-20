@@ -14,8 +14,8 @@ const RiskPage = ({
     history,
     location: { pathname, search },
     match: {
-        params: { deploymentId }
-    }
+        params: { deploymentId },
+    },
 }) => {
     const workflowState = parseURL({ pathname, search });
 
@@ -24,7 +24,7 @@ const RiskPage = ({
 
     // Handle changes to the currently selected deployment.
     const setSelectedDeploymentId = useCallback(
-        newDeploymentId => {
+        (newDeploymentId) => {
             const newWorkflowState = newDeploymentId
                 ? workflowState.pushRelatedEntity(entityTypes.DEPLOYMENT, newDeploymentId)
                 : workflowState.pop();
@@ -38,8 +38,8 @@ const RiskPage = ({
 
     const searchQueryOptions = {
         variables: {
-            categories: [searchCategories.DEPLOYMENT]
-        }
+            categories: [searchCategories.DEPLOYMENT],
+        },
     };
     const { data: searchData } = useQuery(SEARCH_OPTIONS_QUERY, searchQueryOptions);
     const searchOptions = (searchData && searchData.searchOptions) || [];
@@ -79,7 +79,7 @@ const RiskPage = ({
 RiskPage.propTypes = {
     history: ReactRouterPropTypes.history.isRequired,
     location: ReactRouterPropTypes.location.isRequired,
-    match: ReactRouterPropTypes.match.isRequired
+    match: ReactRouterPropTypes.match.isRequired,
 };
 
 export default RiskPage;

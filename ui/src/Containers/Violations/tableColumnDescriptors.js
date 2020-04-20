@@ -14,7 +14,7 @@ import {
     wrapClassName,
     defaultHeaderClassName,
     defaultColumnClassName,
-    rtTrActionsClassName
+    rtTrActionsClassName,
 } from 'Components/Table';
 import ViolationActionButtons from './ViolationActionButtons';
 
@@ -25,7 +25,7 @@ function StringValueColumn({ value }) {
 }
 
 StringValueColumn.propTypes = {
-    value: PropTypes.string.isRequired
+    value: PropTypes.string.isRequired,
 };
 
 // Display the deployment status and name.
@@ -55,9 +55,9 @@ DeploymentColumn.propTypes = {
     original: PropTypes.shape({
         deployment: PropTypes.shape({
             inactive: PropTypes.bool.isRequired,
-            name: PropTypes.string.isRequired
-        }).isRequired
-    }).isRequired
+            name: PropTypes.string.isRequired,
+        }).isRequired,
+    }).isRequired,
 };
 
 // Display the policy description and name.
@@ -76,9 +76,9 @@ PolicyColumn.propTypes = {
     original: PropTypes.shape({
         policy: PropTypes.shape({
             description: PropTypes.string.isRequired,
-            name: PropTypes.string.isRequired
-        }).isRequired
-    }).isRequired
+            name: PropTypes.string.isRequired,
+        }).isRequired,
+    }).isRequired,
 };
 
 // Display the enforcement.
@@ -97,18 +97,18 @@ function EnforcementColumn({ original }) {
 EnforcementColumn.propTypes = {
     original: PropTypes.shape({
         lifecycleStage: PropTypes.string.isRequired,
-        enforcementCount: PropTypes.number.isRequired
-    }).isRequired
+        enforcementCount: PropTypes.number.isRequired,
+    }).isRequired,
 };
 
 // Display the severity.
 // /////////////////////
-const getSeverityClassName = severityValue => {
+const getSeverityClassName = (severityValue) => {
     const severityClassMapping = {
         Low: 'px-2 rounded-full bg-base-200 border-2 border-base-300 text-base-600',
         Medium: 'px-2 rounded-full bg-warning-200 border-2 border-warning-300 text-warning-800',
         High: 'px-2 rounded-full bg-caution-200 border-2 border-caution-300 text-caution-800',
-        Critical: 'px-2 rounded-full bg-alert-200 border-2 border-alert-300 text-alert-800'
+        Critical: 'px-2 rounded-full bg-alert-200 border-2 border-alert-300 text-alert-800',
     };
     const res = severityClassMapping[severityValue];
     if (res) return res;
@@ -121,7 +121,7 @@ function SeverityColumn({ value }) {
 }
 
 SeverityColumn.propTypes = {
-    value: PropTypes.string.isRequired
+    value: PropTypes.string.isRequired,
 };
 
 // Display the categories.
@@ -137,7 +137,7 @@ function CategoryColumn({ value }) {
 }
 
 CategoryColumn.propTypes = {
-    value: PropTypes.arrayOf(PropTypes.string).isRequired
+    value: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
 // Display the action buttons when hovered.
@@ -161,7 +161,7 @@ export default function getColumns(setSelectedAlertId) {
             searchField: 'Deployment',
             headerClassName: `w-1/6 left-checkbox-offset ${defaultHeaderClassName}`,
             className: `w-1/6 left-checkbox-offset ${wrapClassName} ${defaultColumnClassName}`,
-            Cell: DeploymentColumn
+            Cell: DeploymentColumn,
         },
         {
             Header: 'Cluster',
@@ -169,7 +169,7 @@ export default function getColumns(setSelectedAlertId) {
             searchField: 'Cluster',
             headerClassName: `w-1/7  ${defaultHeaderClassName}`,
             className: `w-1/7 ${wrapClassName} ${defaultColumnClassName}`,
-            Cell: StringValueColumn
+            Cell: StringValueColumn,
         },
         {
             Header: 'Namespace',
@@ -177,7 +177,7 @@ export default function getColumns(setSelectedAlertId) {
             searchField: 'Namespace',
             headerClassName: `w-1/7 ${defaultHeaderClassName}`,
             className: `w-1/7 ${wrapClassName} ${defaultColumnClassName}`,
-            Cell: StringValueColumn
+            Cell: StringValueColumn,
         },
         {
             Header: 'Policy',
@@ -185,7 +185,7 @@ export default function getColumns(setSelectedAlertId) {
             searchField: 'Policy',
             headerClassName: `w-1/6 ${defaultHeaderClassName}`,
             className: `w-1/6 ${wrapClassName} ${defaultColumnClassName}`,
-            Cell: PolicyColumn
+            Cell: PolicyColumn,
         },
         {
             Header: 'Enforced',
@@ -193,7 +193,7 @@ export default function getColumns(setSelectedAlertId) {
             searchField: 'Policy',
             headerClassName: `w-1/10  ${defaultHeaderClassName}`,
             className: `w-1/10 ${wrapClassName} ${defaultColumnClassName}`,
-            Cell: EnforcementColumn
+            Cell: EnforcementColumn,
         },
         {
             Header: 'Severity',
@@ -203,7 +203,7 @@ export default function getColumns(setSelectedAlertId) {
             className: `text-center ${wrapClassName} ${defaultColumnClassName}`,
             Cell: SeverityColumn,
             sortMethod: sortSeverity,
-            width: 90
+            width: 90,
         },
         {
             Header: 'Categories',
@@ -211,7 +211,7 @@ export default function getColumns(setSelectedAlertId) {
             searchField: 'Category',
             headerClassName: `w-1/10 ${defaultHeaderClassName}`,
             className: `w-1/10 ${wrapClassName} ${defaultColumnClassName}`,
-            Cell: CategoryColumn
+            Cell: CategoryColumn,
         },
         {
             Header: 'Lifecycle',
@@ -219,7 +219,7 @@ export default function getColumns(setSelectedAlertId) {
             searchField: 'Lifecycle Stage',
             headerClassName: `${defaultHeaderClassName}`,
             className: `${wrapClassName} ${defaultColumnClassName}`,
-            Cell: ({ value }) => lifecycleStageLabels[value]
+            Cell: ({ value }) => lifecycleStageLabels[value],
         },
         {
             Header: 'Time',
@@ -228,14 +228,14 @@ export default function getColumns(setSelectedAlertId) {
             headerClassName: `w-1/10 ${defaultHeaderClassName}`,
             className: `w-1/10 ${wrapClassName} ${defaultColumnClassName}`,
             Cell: ({ value }) => dateFns.format(value, dateTimeFormat),
-            sortMethod: sortDate
+            sortMethod: sortDate,
         },
         {
             Header: '',
             accessor: '',
             headerClassName: 'hidden',
             className: rtTrActionsClassName,
-            Cell: getActionButtonsColumn(setSelectedAlertId)
-        }
+            Cell: getActionButtonsColumn(setSelectedAlertId),
+        },
     ];
 }

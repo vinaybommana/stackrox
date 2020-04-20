@@ -29,18 +29,18 @@ ViolationsDetails.propTypes = {
     violationId: PropTypes.string.isRequired,
     violations: PropTypes.arrayOf(
         PropTypes.shape({
-            message: PropTypes.string.isRequired
+            message: PropTypes.string.isRequired,
         })
     ),
     processViolation: PropTypes.shape({
         message: PropTypes.string.isRequired,
-        processes: PropTypes.array.isRequired
-    })
+        processes: PropTypes.array.isRequired,
+    }),
 };
 
 ViolationsDetails.defaultProps = {
     violations: [],
-    processViolation: null
+    processViolation: null,
 };
 
 export default ViolationsDetails;

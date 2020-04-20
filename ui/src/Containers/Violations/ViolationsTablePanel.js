@@ -28,7 +28,7 @@ function ViolationsTablePanelTextHeader({ violationsCount, isViewFiltered, check
 ViolationsTablePanelTextHeader.propTypes = {
     violationsCount: PropTypes.number.isRequired,
     isViewFiltered: PropTypes.bool.isRequired,
-    checkedAlertIds: PropTypes.arrayOf(PropTypes.string).isRequired
+    checkedAlertIds: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
 function ViolationsTablePanelButtons({ setDialogue, checkedAlertIds, runtimeAlerts }) {
@@ -44,13 +44,13 @@ function ViolationsTablePanelButtons({ setDialogue, checkedAlertIds, runtimeAler
     }
 
     let checkedRuntimeAlerts = 0;
-    checkedAlertIds.forEach(id => {
+    checkedAlertIds.forEach((id) => {
         if (runtimeAlerts.has(id)) checkedRuntimeAlerts += 1;
     });
     const numCheckedAlertIds = checkedAlertIds.length;
     const whitelistCount = numCheckedAlertIds;
     return (
-        <React.Fragment>
+        <>
             <FeatureEnabled featureFlag={knownBackendFlags.ROX_ANALYST_NOTES_UI}>
                 {numCheckedAlertIds !== 0 && (
                     <PanelButton
@@ -90,7 +90,7 @@ function ViolationsTablePanelButtons({ setDialogue, checkedAlertIds, runtimeAler
                     {`Whitelist (${whitelistCount})`}
                 </PanelButton>
             )}
-        </React.Fragment>
+        </>
     );
 }
 
@@ -98,8 +98,8 @@ ViolationsTablePanelButtons.propTypes = {
     setDialogue: PropTypes.func.isRequired,
     checkedAlertIds: PropTypes.arrayOf(PropTypes.string).isRequired,
     runtimeAlerts: PropTypes.shape({
-        has: PropTypes.func.isRequired
-    }).isRequired
+        has: PropTypes.func.isRequired,
+    }).isRequired,
 };
 
 function ViolationsTablePanel({
@@ -114,7 +114,7 @@ function ViolationsTablePanel({
     currentPage,
     setCurrentPage,
     setSortOption,
-    runtimeAlerts
+    runtimeAlerts,
 }) {
     // Currently selected rows in the table.
     const headerTextComponent = (
@@ -173,12 +173,12 @@ ViolationsTablePanel.propTypes = {
     setCurrentPage: PropTypes.func.isRequired,
     setSortOption: PropTypes.func.isRequired,
     runtimeAlerts: PropTypes.shape({
-        has: PropTypes.func.isRequired
-    }).isRequired
+        has: PropTypes.func.isRequired,
+    }).isRequired,
 };
 
 ViolationsTablePanel.defaultProps = {
-    selectedAlertId: undefined
+    selectedAlertId: undefined,
 };
 
 export default ViolationsTablePanel;

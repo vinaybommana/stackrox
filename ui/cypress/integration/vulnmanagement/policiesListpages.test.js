@@ -24,9 +24,9 @@ describe('Policies list Page and its entity detail page , related entities sub l
             'Severity',
             'Deployments',
             // 'Lifecycle',
-            'Enforcement'
+            'Enforcement',
         ]);
-        cy.get(selectors.tableBodyColumn).each($el => {
+        cy.get(selectors.tableBodyColumn).each(($el) => {
             const columnValue = $el.text().toLowerCase();
             if (columnValue !== 'no deployments' && columnValue.includes('deployment'))
                 allChecksForEntities(url.list.policies, 'deployment');

@@ -99,24 +99,24 @@ Comment.propTypes = {
         user: PropTypes.shape({
             id: PropTypes.string.isRequired,
             name: PropTypes.string.isRequired,
-            email: PropTypes.string.isRequired
+            email: PropTypes.string.isRequired,
         }),
         createdTime: PropTypes.string,
         updatedTime: PropTypes.string,
         isEditable: PropTypes.bool,
-        isDeletable: PropTypes.bool
+        isDeletable: PropTypes.bool,
     }).isRequired,
     onRemove: PropTypes.func.isRequired,
     onSave: PropTypes.func.isRequired,
     onClose: PropTypes.func,
     defaultEdit: PropTypes.bool,
-    isDisabled: PropTypes.bool
+    isDisabled: PropTypes.bool,
 };
 
 Comment.defaultProps = {
     defaultEdit: false,
     onClose: () => {},
-    isDisabled: false
+    isDisabled: false,
 };
 
 export default Comment;

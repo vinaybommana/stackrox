@@ -28,8 +28,8 @@ function getPath(type, action) {
  */
 export function fetchIntegration(source) {
     const path = getPath(source, 'fetch');
-    return axios.get(path).then(response => ({
-        response: response.data
+    return axios.get(path).then((response) => ({
+        response: response.data,
     }));
 }
 
@@ -76,7 +76,7 @@ export function deleteIntegration(source, id) {
  * @returns {Promise<Object, Error>}
  */
 export function deleteIntegrations(source, ids = []) {
-    return Promise.all(ids.map(id => deleteIntegration(source, id)));
+    return Promise.all(ids.map((id) => deleteIntegration(source, id)));
 }
 
 /**

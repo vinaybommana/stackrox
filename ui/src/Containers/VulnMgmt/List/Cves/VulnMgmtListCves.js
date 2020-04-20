@@ -9,7 +9,7 @@ import { withRouter } from 'react-router-dom';
 import {
     defaultHeaderClassName,
     nonSortableHeaderClassName,
-    defaultColumnClassName
+    defaultColumnClassName,
 } from 'Components/Table';
 import RowActionButton from 'Components/RowActionButton';
 import RowActionMenu from 'Components/RowActionMenu';
@@ -40,8 +40,8 @@ import { getFilteredCVEColumns } from './ListCVEs.utils';
 export const defaultCveSort = [
     {
         id: cveSortFields.CVSS_SCORE,
-        desc: true
-    }
+        desc: true,
+    },
 ];
 
 export function getCveTableColumns(workflowState) {
@@ -50,13 +50,13 @@ export function getCveTableColumns(workflowState) {
     const tableColumns = [
         {
             expander: true,
-            show: false
+            show: false,
         },
         {
             Header: 'id',
             headerClassName: 'hidden',
             className: 'hidden',
-            accessor: 'id'
+            accessor: 'id',
         },
         {
             Header: `CVE`,
@@ -64,7 +64,7 @@ export function getCveTableColumns(workflowState) {
             className: `w-1/10 ${defaultColumnClassName}`,
             id: cveSortFields.CVE,
             accessor: 'cve',
-            sortField: cveSortFields.CVE
+            sortField: cveSortFields.CVE,
         },
         {
             Header: `Fixable`,
@@ -82,7 +82,7 @@ export function getCveTableColumns(workflowState) {
             id: cveSortFields.FIXABLE,
             accessor: 'isFixable',
             sortField: cveSortFields.FIXABLE,
-            sortable: false
+            sortable: false,
         },
         {
             Header: `Fixed in`,
@@ -91,7 +91,7 @@ export function getCveTableColumns(workflowState) {
             Cell: ({ original }) => original.fixedByVersion || '-',
             id: cveSortFields.FIXEDIN,
             accessor: 'fixedByVersion',
-            sortField: cveSortFields.FIXEDIN
+            sortField: cveSortFields.FIXEDIN,
         },
         {
             Header: `CVSS Score`,
@@ -104,7 +104,7 @@ export function getCveTableColumns(workflowState) {
             },
             id: cveSortFields.CVSS_SCORE,
             accessor: 'cvss',
-            sortField: cveSortFields.CVSS_SCORE
+            sortField: cveSortFields.CVSS_SCORE,
         },
         {
             Header: `Env. Impact`,
@@ -120,7 +120,7 @@ export function getCveTableColumns(workflowState) {
             id: cveSortFields.ENV_IMPACT,
             accessor: 'envImpact',
             sortField: cveSortFields.ENV_IMPACT,
-            sortable: false
+            sortable: false,
         },
         {
             Header: `Impact Score`,
@@ -133,7 +133,7 @@ export function getCveTableColumns(workflowState) {
             },
             id: cveSortFields.IMPACT_SCORE,
             accessor: 'impactScore',
-            sortField: cveSortFields.IMPACT_SCORE
+            sortField: cveSortFields.IMPACT_SCORE,
         },
         {
             Header: `Deployments`,
@@ -152,7 +152,7 @@ export function getCveTableColumns(workflowState) {
             id: cveSortFields.DEPLOYMENTS,
             accessor: 'deploymentCount',
             sortField: cveSortFields.DEPLOYMENTS,
-            sortable: false
+            sortable: false,
         },
         {
             Header: `Images`,
@@ -171,7 +171,7 @@ export function getCveTableColumns(workflowState) {
             id: cveSortFields.IMAGES,
             accessor: 'imageCount',
             sortField: cveSortFields.IMAGES,
-            sortable: false
+            sortable: false,
         },
         {
             Header: `Components`,
@@ -190,7 +190,7 @@ export function getCveTableColumns(workflowState) {
             id: cveSortFields.COMPONENTS,
             accessor: 'componentCount',
             sortField: cveSortFields.COMPONENTS,
-            sortable: false
+            sortable: false,
         },
         {
             Header: `Discovered Time`,
@@ -199,7 +199,7 @@ export function getCveTableColumns(workflowState) {
             Cell: ({ original, pdf }) => <DateTimeField date={original.createdAt} asString={pdf} />,
             id: cveSortFields.CVE_CREATED_TIME,
             accessor: 'createdAt',
-            sortField: cveSortFields.CVE_CREATED_TIME
+            sortField: cveSortFields.CVE_CREATED_TIME,
         },
         {
             Header: `Published`,
@@ -210,8 +210,8 @@ export function getCveTableColumns(workflowState) {
             ),
             id: cveSortFields.PUBLISHED,
             accessor: 'published',
-            sortField: cveSortFields.PUBLISHED
-        }
+            sortField: cveSortFields.PUBLISHED,
+        },
     ];
 
     const cveColumnsBasedOnContext = getFilteredCVEColumns(tableColumns, workflowState);
@@ -244,7 +244,7 @@ const VulnMgmtCves = ({
     addToast,
     removeToast,
     refreshTrigger,
-    setRefreshTrigger
+    setRefreshTrigger,
 }) => {
     const [selectedCveIds, setSelectedCveIds] = useState([]);
     const [bulkActionCveIds, setBulkActionCveIds] = useState([]);
@@ -269,11 +269,11 @@ const VulnMgmtCves = ({
             query: queryService.objectToWhereClause(search),
             scopeQuery: '',
             cachebuster: refreshTrigger,
-            pagination: queryService.getPagination(tableSort, page, LIST_PAGE_SIZE)
-        }
+            pagination: queryService.getPagination(tableSort, page, LIST_PAGE_SIZE),
+        },
     };
 
-    const addToPolicy = cveId => e => {
+    const addToPolicy = (cveId) => (e) => {
         e.stopPropagation();
 
         const cveIdsToAdd = cveId ? [cveId] : selectedCveIds;
@@ -287,7 +287,7 @@ const VulnMgmtCves = ({
         }
     };
 
-    const suppressCves = (cveId, duration) => e => {
+    const suppressCves = (cveId, duration) => (e) => {
         e.stopPropagation();
 
         const cveIdsToToggle = cveId ? [cveId] : selectedCveIds;
@@ -304,13 +304,13 @@ const VulnMgmtCves = ({
                 addToast(`Successfully snoozed ${cveIdsToToggle.length} ${pluralizedCVEs}`);
                 setTimeout(removeToast, 2000);
             })
-            .catch(evt => {
+            .catch((evt) => {
                 addToast(`Could not snooze all of the selected CVEs: ${evt.message}`);
                 setTimeout(removeToast, 2000);
             });
     };
 
-    const unsuppressCves = cveId => e => {
+    const unsuppressCves = (cveId) => (e) => {
         e.stopPropagation();
 
         const cveIdsToToggle = cveId ? [cveId] : selectedCveIds;
@@ -327,7 +327,7 @@ const VulnMgmtCves = ({
                 addToast(`Successfully unsnoozed ${cveIdsToToggle.length} ${pluralizedCVEs}`);
                 setTimeout(removeToast, 2000);
             })
-            .catch(evt => {
+            .catch((evt) => {
                 addToast(`Could not unsnooze all of the selected CVEs: ${evt.message}`);
                 setTimeout(removeToast, 2000);
             });
@@ -359,8 +359,8 @@ const VulnMgmtCves = ({
         </div>
     );
 
-    const snoozeOptions = cveId => {
-        return Object.keys(snoozeDurations).map(d => {
+    const snoozeOptions = (cveId) => {
+        return Object.keys(snoozeDurations).map((d) => {
             return { label: snoozeDurations[d], onClick: suppressCves(cveId, durations[d]) };
         });
     };
@@ -399,7 +399,7 @@ const VulnMgmtCves = ({
     const viewButtonText = viewingSuppressed ? 'View Unsnoozed' : 'View Snoozed';
 
     const tableHeaderComponents = (
-        <React.Fragment>
+        <>
             <PanelButton
                 icon={<Icon.Plus className="h-4 w-4" />}
                 className="btn-icon btn-tertiary"
@@ -452,7 +452,7 @@ const VulnMgmtCves = ({
             >
                 {viewButtonText}
             </PanelButton>
-        </React.Fragment>
+        </>
     );
 
     return (
@@ -490,23 +490,18 @@ const VulnMgmtCves = ({
 VulnMgmtCves.propTypes = {
     ...workflowListPropTypes,
     refreshTrigger: PropTypes.number,
-    setRefreshTrigger: PropTypes.func
+    setRefreshTrigger: PropTypes.func,
 };
 VulnMgmtCves.defaultProps = {
     ...workflowListDefaultProps,
     sort: null,
     refreshTrigger: 0,
-    setRefreshTrigger: null
+    setRefreshTrigger: null,
 };
 
 const mapDispatchToProps = {
     addToast: notificationActions.addNotification,
-    removeToast: notificationActions.removeOldestNotification
+    removeToast: notificationActions.removeOldestNotification,
 };
 
-export default withRouter(
-    connect(
-        null,
-        mapDispatchToProps
-    )(VulnMgmtCves)
-);
+export default withRouter(connect(null, mapDispatchToProps)(VulnMgmtCves));

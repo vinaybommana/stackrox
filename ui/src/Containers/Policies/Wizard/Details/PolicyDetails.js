@@ -19,8 +19,8 @@ function PolicyDetails({ policy }) {
 
 PolicyDetails.propTypes = {
     policy: PropTypes.shape({
-        name: PropTypes.string
-    }).isRequired
+        name: PropTypes.string,
+    }).isRequired,
 };
 
 export default PolicyDetails;

@@ -12,7 +12,7 @@ const riskPanelTabs = [
     { text: 'Violation' },
     { text: 'Enforcement' },
     { text: 'Deployment' },
-    { text: 'Policy' }
+    { text: 'Policy' },
 ];
 
 function ViolationTabs({ alert }) {
@@ -52,8 +52,8 @@ ViolationTabs.propTypes = {
         violations: PropTypes.arrayOf(PropTypes.object),
         processViolation: PropTypes.shape({}),
         deployment: PropTypes.shape({}),
-        policy: PropTypes.shape({})
-    }).isRequired
+        policy: PropTypes.shape({}),
+    }).isRequired,
 };
 
 export default React.memo(ViolationTabs);

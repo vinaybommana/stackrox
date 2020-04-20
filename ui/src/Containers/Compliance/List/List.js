@@ -19,7 +19,7 @@ const ComplianceList = ({
     entityType,
     query,
     selectedRowId,
-    noSearch
+    noSearch,
 }) => {
     function setSelectedRowId(row) {
         const { id } = row;
@@ -67,13 +67,13 @@ ComplianceList.propTypes = {
     match: ReactRouterPropTypes.match.isRequired,
     history: ReactRouterPropTypes.history.isRequired,
     location: ReactRouterPropTypes.location.isRequired,
-    noSearch: PropTypes.bool
+    noSearch: PropTypes.bool,
 };
 
 ComplianceList.defaultProps = {
     query: null,
     selectedRowId: null,
-    noSearch: false
+    noSearch: false,
     // entityType2: null,
     // entityId2: null
 };

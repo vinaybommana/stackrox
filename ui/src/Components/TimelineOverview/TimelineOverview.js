@@ -24,8 +24,9 @@ const TimelineOverview = ({ type, total, counts, onClick }) => {
                     key={text}
                     superText={count}
                     text={text}
-                    className={`p-2 border-dashed border-r ${index === 0 &&
-                        'border-l'} border-primary-300`}
+                    className={`p-2 border-dashed border-r ${
+                        index === 0 && 'border-l'
+                    } border-primary-300`}
                     textWrap
                 />
             ))}
@@ -44,14 +45,14 @@ TimelineOverview.propTypes = {
     counts: PropTypes.arrayOf(
         PropTypes.shape({
             count: PropTypes.number.isRequired,
-            text: PropTypes.string.isRequiredd
+            text: PropTypes.string.isRequiredd,
         })
     ),
-    onClick: PropTypes.func.isRequired
+    onClick: PropTypes.func.isRequired,
 };
 
 TimelineOverview.defaultProps = {
-    counts: []
+    counts: [],
 };
 
 export default TimelineOverview;

@@ -17,7 +17,7 @@ const getPodEvents = (pods, selectedEventType) => {
             name,
             subText: formattedTime,
             events: processedEvents,
-            hasChildren: hasContainers
+            hasChildren: hasContainers,
         };
     });
     return podsWithEvents;

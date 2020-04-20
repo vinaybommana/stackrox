@@ -47,26 +47,23 @@ Permissions.propTypes = {
     selectedRole: PropTypes.shape({
         name: PropTypes.string,
         globalAccess: PropTypes.string,
-        resourceToAccess: PropTypes.shape({})
+        resourceToAccess: PropTypes.shape({}),
     }),
     isEditing: PropTypes.bool.isRequired,
     onSave: PropTypes.func.isRequired,
     onCancel: PropTypes.func.isRequired,
-    onEdit: PropTypes.func.isRequired
+    onEdit: PropTypes.func.isRequired,
 };
 
 Permissions.defaultProps = {
-    selectedRole: null
+    selectedRole: null,
 };
 
 const mapStateToProps = createStructuredSelector({
     resources: selectors.getResources,
-    selectedRole: selectors.getSelectedRole
+    selectedRole: selectors.getSelectedRole,
 });
 
 const mapDispatchToProps = {};
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(Permissions);
+export default connect(mapStateToProps, mapDispatchToProps)(Permissions);

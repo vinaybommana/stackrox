@@ -5,7 +5,7 @@ import { httpURLPattern, isValidURL } from 'utils/urlUtils';
 
 const CommentMessage = ({ message }) => {
     // split the message by URLs
-    return message.split(httpURLPattern).map(word => {
+    return message.split(httpURLPattern).map((word) => {
         // create links for each URL string
         if (isValidURL(word)) {
             return (
@@ -26,11 +26,11 @@ const CommentMessage = ({ message }) => {
 };
 
 CommentMessage.propTypes = {
-    message: PropTypes.string
+    message: PropTypes.string,
 };
 
 CommentMessage.defaultProps = {
-    message: ''
+    message: '',
 };
 
 export default CommentMessage;

@@ -60,10 +60,10 @@ const WorkflowEntityPageLayout = ({ location }) => {
         ? {
               opacity: 1,
               transition: '.15s opacity ease-in',
-              transitionDelay: '.25s'
+              transitionDelay: '.25s',
           }
         : {
-              opacity: 0
+              opacity: 0,
           };
 
     const subheaderText = entityLabels[pageEntityType];

@@ -304,7 +304,7 @@ const formFieldsComponents = {
     oidc: OidcFormFields,
     auth0: Auth0FormFields,
     saml: SamlFormFields,
-    userpki: UserPkiFormFields
+    userpki: UserPkiFormFields,
 };
 
 const ConfigurationFormFields = ({ providerType, disabled, configValues, change }) => {
@@ -318,11 +318,11 @@ ConfigurationFormFields.propTypes = {
     providerType: PropTypes.oneOf(Object.keys(formFieldsComponents)).isRequired,
     disabled: PropTypes.bool.isRequired,
     configValues: PropTypes.shape({}),
-    change: PropTypes.func.isRequired
+    change: PropTypes.func.isRequired,
 };
 
 ConfigurationFormFields.defaultProps = {
-    configValues: {}
+    configValues: {},
 };
 
 export default formValues({ configValues: 'config' })(ConfigurationFormFields);

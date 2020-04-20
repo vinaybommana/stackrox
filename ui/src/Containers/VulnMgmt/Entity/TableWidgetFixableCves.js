@@ -55,8 +55,8 @@ const TableWidgetFixableCves = ({ workflowState, entityContext, entityType, name
             query: '',
             scopeQuery: getScopeQuery(entityContext),
             vulnQuery: queryService.objectToWhereClause({ Fixable: true }),
-            vulnPagination: queryService.getPagination(cveSort, fixableCvesPage, LIST_PAGE_SIZE)
-        }
+            vulnPagination: queryService.getPagination(cveSort, fixableCvesPage, LIST_PAGE_SIZE),
+        },
     };
     const { loading: cvesLoading, data: fixableCvesData, error: cvesError } = useQuery(
         fixableCvesQuery,
@@ -68,7 +68,7 @@ const TableWidgetFixableCves = ({ workflowState, entityContext, entityType, name
     const fixableCveState = {
         page: fixableCvesPage,
         setPage: setFixableCvesPage,
-        totalCount: fixableCount
+        totalCount: fixableCount,
     };
 
     const cveActions = (
@@ -127,7 +127,7 @@ TableWidgetFixableCves.propType = {
     entityContext: PropTypes.shape({}).isRequired,
     entityType: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
-    id: PropTypes.string.isRequired
+    id: PropTypes.string.isRequired,
 };
 
 export default TableWidgetFixableCves;

@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { useTheme } from 'Containers/ThemeProvider';
 
-const renderSubHeader = subHeader => {
+const renderSubHeader = (subHeader) => {
     if (!subHeader) return null;
     return <div className="mt-1 italic capitalize opacity-75">{subHeader}</div>;
 };
@@ -36,14 +36,14 @@ PageHeader.propTypes = {
     subHeader: PropTypes.string,
     classes: PropTypes.string,
     bgStyle: PropTypes.shape({}),
-    children: PropTypes.oneOfType([PropTypes.element, PropTypes.arrayOf(PropTypes.element)])
+    children: PropTypes.oneOfType([PropTypes.element, PropTypes.arrayOf(PropTypes.element)]),
 };
 
 PageHeader.defaultProps = {
     children: null,
     subHeader: null,
     classes: '',
-    bgStyle: null
+    bgStyle: null,
 };
 
 export default PageHeader;

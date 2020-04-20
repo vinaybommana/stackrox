@@ -13,32 +13,29 @@ function RiskSidePanel({ selectedDeploymentId, setSelectedDeploymentId }) {
 
     const [isFetching, setIsFetching] = useState(false);
 
-    useEffect(
-        () => {
-            if (!selectedDeploymentId) {
-                setSelectedDeployment(undefined);
-                return;
-            }
+    useEffect(() => {
+        if (!selectedDeploymentId) {
+            setSelectedDeployment(undefined);
+            return;
+        }
 
-            setIsFetching(true);
-            Promise.all([
-                fetchDeploymentWithRisk(selectedDeploymentId),
-                fetchProcesses(selectedDeploymentId)
-            ]).then(
-                ([deploymentWithRisk, processes]) => {
-                    setSelectedDeployment(deploymentWithRisk);
-                    setSelectedProcesses(processes.response);
-                    setIsFetching(false);
-                },
-                () => {
-                    setSelectedDeployment(undefined);
-                    setSelectedProcesses(undefined);
-                    setIsFetching(false);
-                }
-            );
-        },
-        [selectedDeploymentId, setSelectedDeployment, setSelectedProcesses, setIsFetching]
-    );
+        setIsFetching(true);
+        Promise.all([
+            fetchDeploymentWithRisk(selectedDeploymentId),
+            fetchProcesses(selectedDeploymentId),
+        ]).then(
+            ([deploymentWithRisk, processes]) => {
+                setSelectedDeployment(deploymentWithRisk);
+                setSelectedProcesses(processes.response);
+                setIsFetching(false);
+            },
+            () => {
+                setSelectedDeployment(undefined);
+                setSelectedProcesses(undefined);
+                setIsFetching(false);
+            }
+        );
+    }, [selectedDeploymentId, setSelectedDeployment, setSelectedProcesses, setIsFetching]);
 
     function unselectDeployment() {
         setSelectedDeploymentId(undefined);
@@ -64,11 +61,11 @@ function RiskSidePanel({ selectedDeploymentId, setSelectedDeploymentId }) {
 
 RiskSidePanel.propTypes = {
     selectedDeploymentId: PropTypes.string,
-    setSelectedDeploymentId: PropTypes.func.isRequired
+    setSelectedDeploymentId: PropTypes.func.isRequired,
 };
 
 RiskSidePanel.defaultProps = {
-    selectedDeploymentId: undefined
+    selectedDeploymentId: undefined,
 };
 
 export default RiskSidePanel;

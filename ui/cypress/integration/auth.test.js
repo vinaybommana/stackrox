@@ -16,7 +16,7 @@ describe('Authentication', () => {
             method: 'GET',
             url: api.auth.authStatus,
             status: authStatusValid ? 200 : 401,
-            response: authStatusResponse
+            response: authStatusResponse,
         }).as('authStatus');
 
         cy.visit(landingUrl);
@@ -52,7 +52,7 @@ describe('Authentication', () => {
         cy.url().should('contain', loginUrl);
         cy.get(selectors.providerSelect).should('have.text', 'auth-provider-name');
         cy.get(selectors.loginButton).click(); // stubbed auth provider will simulate redirect with 'my-token'
-        cy.wait('@authStatus').then(xhr => {
+        cy.wait('@authStatus').then((xhr) => {
             expect(xhr.request.headers.Authorization).to.eq('Bearer my-token');
         });
         cy.url().should('contain', dashboardURL);

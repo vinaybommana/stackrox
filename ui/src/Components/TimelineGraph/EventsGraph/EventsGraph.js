@@ -13,7 +13,7 @@ const EventsGraph = ({
     maxTimeRange,
     height,
     width,
-    numRows
+    numRows,
 }) => {
     const rowHeight = Math.min(
         Math.max(MIN_ROW_HEIGHT, Math.floor(height / numRows) - 1),

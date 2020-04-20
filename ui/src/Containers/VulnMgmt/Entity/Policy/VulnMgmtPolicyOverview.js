@@ -42,7 +42,7 @@ const emptyPolicy = {
     remediation: '',
     scope: [],
     severity: '',
-    whitelists: []
+    whitelists: [],
 };
 
 const noop = () => {};
@@ -69,7 +69,7 @@ const VulnMgmtPolicyOverview = ({ data, entityContext, setRefreshTrigger }) => {
         fields,
         scope,
         whitelists,
-        deployments
+        deployments,
     } = safeData;
     const [currentDisabledState, setCurrentDisabledState] = useState(disabled);
 
@@ -114,7 +114,7 @@ const VulnMgmtPolicyOverview = ({ data, entityContext, setRefreshTrigger }) => {
     );
 
     // @TODO: extract this out to make it re-usable and easier to test
-    const failingDeployments = deployments.filter(singleDeploy => {
+    const failingDeployments = deployments.filter((singleDeploy) => {
         if (
             singleDeploy.policyStatus === 'pass' ||
             !singleDeploy.deployAlerts ||
@@ -122,7 +122,7 @@ const VulnMgmtPolicyOverview = ({ data, entityContext, setRefreshTrigger }) => {
         ) {
             return false;
         }
-        return singleDeploy.deployAlerts.some(alert => {
+        return singleDeploy.deployAlerts.some((alert) => {
             return alert && alert.policy && alert.policy.id === id;
         });
     });
@@ -130,64 +130,64 @@ const VulnMgmtPolicyOverview = ({ data, entityContext, setRefreshTrigger }) => {
     const descriptionBlockMetadata = [
         {
             key: 'Description',
-            value: description || '-'
+            value: description || '-',
         },
         {
             key: 'Rationale',
-            value: rationale || '-'
+            value: rationale || '-',
         },
         {
             key: 'Remediation',
-            value: remediation || '-'
-        }
+            value: remediation || '-',
+        },
     ];
 
     const details = [
         {
             key: 'Categories',
-            value: categories && categories.join(', ')
+            value: categories && categories.join(', '),
         },
         {
             key: 'Last violated',
-            value: latestViolation ? format(latestViolation, dateTimeFormat) : '-'
+            value: latestViolation ? format(latestViolation, dateTimeFormat) : '-',
         },
         {
             key: 'Last updated',
-            value: lastUpdated ? format(lastUpdated, dateTimeFormat) : '-'
+            value: lastUpdated ? format(lastUpdated, dateTimeFormat) : '-',
         },
         {
             key: 'Enforcement',
-            value: enforcementActions && enforcementActions.length ? 'Yes' : 'No'
+            value: enforcementActions && enforcementActions.length ? 'Yes' : 'No',
         },
         {
             key: 'Lifecycle',
             value:
                 lifecycleStages && lifecycleStages.length
-                    ? lifecycleStages.map(stage => stage.toLowerCase()).join(', ')
-                    : 'No lifecycle stages'
-        }
+                    ? lifecycleStages.map((stage) => stage.toLowerCase()).join(', ')
+                    : 'No lifecycle stages',
+        },
     ];
 
     const scopeDetails = [
         {
             key: 'Cluster',
-            value: (scope && scope.cluster) || 'N/A'
+            value: (scope && scope.cluster) || 'N/A',
         },
         {
             key: 'Namespace',
-            value: (scope && scope.namespace) || 'N/A'
-        }
+            value: (scope && scope.namespace) || 'N/A',
+        },
     ];
 
     const whitelistDetails = [
         {
             key: 'Image(s)',
-            value: (whitelists && whitelists.image && whitelists.image.name) || 'N/A'
+            value: (whitelists && whitelists.image && whitelists.image.name) || 'N/A',
         },
         {
             key: 'Deployment(s)',
-            value: (whitelists && whitelists.image && whitelists.image.name) || 'N/A'
-        }
+            value: (whitelists && whitelists.image && whitelists.image.name) || 'N/A',
+        },
     ];
 
     const newEntityContext = { ...entityContext, [entityTypes.POLICY]: id };
@@ -220,8 +220,8 @@ const VulnMgmtPolicyOverview = ({ data, entityContext, setRefreshTrigger }) => {
                     defaultSorted={[
                         {
                             id: 'priority',
-                            desc: false
-                        }
+                            desc: false,
+                        },
                     ]}
                 />
             </div>

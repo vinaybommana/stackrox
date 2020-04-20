@@ -11,17 +11,17 @@ const Content = posed.div({
     closed: {
         height: '1px',
         transition: {
-            duration: 0
+            duration: 0,
         },
-        flip: true
+        flip: true,
     },
     open: {
         height: 'auto',
         transition: {
-            duration: 0
+            duration: 0,
         },
-        flip: true
-    }
+        flip: true,
+    },
 });
 
 const CollapsibleSection = ({ title, children, headerComponents, dataTestId }) => {
@@ -59,12 +59,12 @@ CollapsibleSection.propTypes = {
     title: PropTypes.string.isRequired,
     children: PropTypes.node.isRequired,
     headerComponents: PropTypes.element,
-    dataTestId: PropTypes.string
+    dataTestId: PropTypes.string,
 };
 
 CollapsibleSection.defaultProps = {
     headerComponents: null,
-    dataTestId: null
+    dataTestId: null,
 };
 
 export default CollapsibleSection;

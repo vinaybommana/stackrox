@@ -9,7 +9,7 @@ const TileContent = ({
     text,
     short,
     textColorClass,
-    textWrap
+    textWrap,
 }) => {
     return (
         <div className={`flex flex-col text-center justify-around ${textColorClass} ${className}`}>
@@ -20,8 +20,9 @@ const TileContent = ({
             )}
             {icon !== null && <div className="p-1 flex justify-center">{icon}</div>}
             <div
-                className={`flex ${!textWrap &&
-                    'whitespace-no-wrap'} items-center font-600 font-condensed uppercase justify-center`}
+                className={`flex ${
+                    !textWrap && 'whitespace-no-wrap'
+                } items-center font-600 font-condensed uppercase justify-center`}
                 data-testid="tile-link-value"
             >
                 {text}
@@ -47,7 +48,7 @@ TileContent.propTypes = {
     text: PropTypes.string.isRequired,
     short: PropTypes.bool,
     textColorClass: PropTypes.string,
-    textWrap: PropTypes.bool
+    textWrap: PropTypes.bool,
 };
 
 TileContent.defaultProps = {
@@ -57,7 +58,7 @@ TileContent.defaultProps = {
     icon: null,
     short: false,
     textColorClass: 'text-base-600',
-    textWrap: false
+    textWrap: false,
 };
 
 export default TileContent;

@@ -18,67 +18,67 @@ const defaultTabs = [
     {
         text: 'All',
         category: '',
-        disabled: false
+        disabled: false,
     },
     {
         text: 'Violations',
         category: 'ALERTS',
-        disabled: false
+        disabled: false,
     },
     {
         text: 'Policies',
         category: 'POLICIES',
-        disabled: false
+        disabled: false,
     },
     {
         text: 'Deployments',
         category: 'DEPLOYMENTS',
-        disabled: false
+        disabled: false,
     },
     {
         text: 'Images',
         category: 'IMAGES',
-        disabled: false
+        disabled: false,
     },
     {
         text: 'Secrets',
         category: 'SECRETS',
-        disabled: false
-    }
+        disabled: false,
+    },
 ];
 
 const mapping = {
     IMAGES: {
         filterOn: ['RISK', 'VIOLATIONS'],
         viewOn: ['IMAGES'],
-        name: 'Image'
+        name: 'Image',
     },
     DEPLOYMENTS: {
         filterOn: ['VIOLATIONS', 'NETWORK'],
         viewOn: ['RISK'],
-        name: 'Deployment'
+        name: 'Deployment',
     },
     POLICIES: {
         filterOn: ['VIOLATIONS'],
         viewOn: ['POLICIES'],
-        name: 'Policy'
+        name: 'Policy',
     },
     ALERTS: {
         filterOn: [],
         viewOn: ['VIOLATIONS'],
-        name: 'Policy'
+        name: 'Policy',
     },
     SECRETS: {
         filterOn: ['RISK'],
         viewOn: ['SECRETS'],
-        name: 'Secret'
-    }
+        name: 'Secret',
+    },
 };
 
 const filterOnMapping = {
     RISK: 'DEPLOYMENTS',
     VIOLATIONS: 'ALERTS',
-    NETWORK: 'NETWORK'
+    NETWORK: 'NETWORK',
 };
 
 const getLink = (item, id) => {
@@ -97,14 +97,14 @@ class SearchResults extends Component {
         setGlobalSearchCategory: PropTypes.func.isRequired,
         passthroughGlobalSearchOptions: PropTypes.func.isRequired,
         tabs: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-        defaultTab: PropTypes.shape({})
+        defaultTab: PropTypes.shape({}),
     };
 
     static defaultProps = {
-        defaultTab: null
+        defaultTab: null,
     };
 
-    onTabClick = tab => {
+    onTabClick = (tab) => {
         this.props.setGlobalSearchCategory(tab.category);
     };
 
@@ -133,7 +133,7 @@ class SearchResults extends Component {
                         tabDisabledClass="tab flex-1 items-center justify-center border-2 border-transparent p-3 font-700 disabled shadow-none uppercase"
                         tabContentBgColor="bg-base-100"
                     >
-                        {tabs.map(tab => (
+                        {tabs.map((tab) => (
                             <TabContent key={tab.text}>
                                 <div className="flex flex-1 w-full h-full pl-3 pr-3 pt-3 rounded-sm">
                                     {this.renderTable()}
@@ -160,12 +160,12 @@ class SearchResults extends Component {
                             </div>
                         ) : null}
                     </div>
-                )
+                ),
             },
             {
                 accessor: 'category',
                 Header: 'Type',
-                Cell: ({ original }) => capitalize(original.category)
+                Cell: ({ original }) => capitalize(original.category),
             },
             {
                 Header: 'View On:',
@@ -196,7 +196,7 @@ class SearchResults extends Component {
                         </ul>
                     );
                 },
-                sortable: false
+                sortable: false,
             },
             {
                 Header: 'Filter On:',
@@ -224,8 +224,8 @@ class SearchResults extends Component {
                         )}
                     </ul>
                 ),
-                sortable: false
-            }
+                sortable: false,
+            },
         ];
         const rows = this.props.globalSearchResults;
         if (!rows.length) return <NoResultsMessage message="No Search Results." />;
@@ -257,29 +257,26 @@ class SearchResults extends Component {
     }
 }
 
-const getTabs = createSelector(
-    [selectors.getGlobalSearchCounts],
-    globalSearchCounts => {
-        if (globalSearchCounts.length === 0) return defaultTabs;
+const getTabs = createSelector([selectors.getGlobalSearchCounts], (globalSearchCounts) => {
+    if (globalSearchCounts.length === 0) return defaultTabs;
 
-        const newTabs = [];
-        defaultTabs.forEach(tab => {
-            const newTab = Object.assign({}, tab);
-            const currentTab = globalSearchCounts.find(obj => obj.category === tab.category);
-            if (currentTab) {
-                newTab.text += ` (${currentTab.count})`;
-                if (currentTab.count === '0') newTab.disabled = true;
-            }
-            newTabs.push(newTab);
-        });
-        return newTabs;
-    }
-);
+    const newTabs = [];
+    defaultTabs.forEach((tab) => {
+        const newTab = { ...tab };
+        const currentTab = globalSearchCounts.find((obj) => obj.category === tab.category);
+        if (currentTab) {
+            newTab.text += ` (${currentTab.count})`;
+            if (currentTab.count === '0') newTab.disabled = true;
+        }
+        newTabs.push(newTab);
+    });
+    return newTabs;
+});
 
 const getDefaultTab = createSelector(
     [selectors.getGlobalSearchCategory],
-    globalSearchCategory => {
-        const tab = defaultTabs.find(obj => obj.category === globalSearchCategory);
+    (globalSearchCategory) => {
+        const tab = defaultTabs.find((obj) => obj.category === globalSearchCategory);
         return tab;
     }
 );
@@ -288,17 +285,14 @@ const mapStateToProps = createStructuredSelector({
     globalSearchResults: selectors.getGlobalSearchResults,
     globalSearchOptions: selectors.getGlobalSearchOptions,
     tabs: getTabs,
-    defaultTab: getDefaultTab
+    defaultTab: getDefaultTab,
 });
 
-const mapDispatchToProps = dispatch => ({
-    setGlobalSearchCategory: category =>
+const mapDispatchToProps = (dispatch) => ({
+    setGlobalSearchCategory: (category) =>
         dispatch(globalSearchActions.setGlobalSearchCategory(category)),
     passthroughGlobalSearchOptions: (searchOptions, category) =>
-        dispatch(globalSearchActions.passthroughGlobalSearchOptions(searchOptions, category))
+        dispatch(globalSearchActions.passthroughGlobalSearchOptions(searchOptions, category)),
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(SearchResults);
+export default connect(mapStateToProps, mapDispatchToProps)(SearchResults);

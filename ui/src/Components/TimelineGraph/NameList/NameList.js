@@ -30,15 +30,15 @@ NameList.propTypes = {
             id: PropTypes.string.isRequired,
             name: PropTypes.string.isRequired,
             subText: PropTypes.string.isRequired,
-            hasChildren: PropTypes.bool.isRequired
+            hasChildren: PropTypes.bool.isRequired,
         })
     ),
-    onClick: PropTypes.func // @TODO: Make this required when we start working with changing views
+    onClick: PropTypes.func, // @TODO: Make this required when we start working with changing views
 };
 
 NameList.defaultProps = {
     names: [],
-    onClick: () => {}
+    onClick: () => {},
 };
 
 export default NameList;

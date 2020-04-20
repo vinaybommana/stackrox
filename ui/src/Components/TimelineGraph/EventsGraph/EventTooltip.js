@@ -44,12 +44,12 @@ EventTooltip.propTypes = {
     uid: PropTypes.string,
     reason: PropTypes.string,
     timestamp: PropTypes.string.isRequired,
-    children: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.node), PropTypes.node]).isRequired
+    children: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.node), PropTypes.node]).isRequired,
 };
 
 EventTooltip.defaultProps = {
     uid: null,
-    reason: null
+    reason: null,
 };
 
 export default EventTooltip;

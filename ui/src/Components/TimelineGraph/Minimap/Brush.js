@@ -13,7 +13,7 @@ const Brush = ({ translateX, translateY, width, height, onSelectionChange }) => 
         }
         const selection = {
             start: event.selection[0],
-            end: event.selection[1]
+            end: event.selection[1],
         };
         onSelectionChange(selection);
     }
@@ -22,7 +22,10 @@ const Brush = ({ translateX, translateY, width, height, onSelectionChange }) => 
     function onUpdate(container) {
         const brush = container.call(
             brushX()
-                .extent([[0, 0], [width, height]])
+                .extent([
+                    [0, 0],
+                    [width, height],
+                ])
                 .on('end', brushEnded)
         );
         brush

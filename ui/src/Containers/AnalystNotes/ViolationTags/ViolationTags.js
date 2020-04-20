@@ -29,11 +29,11 @@ const ViolationTags = ({ resourceId, isCollapsible }) => {
 
 ViolationTags.propTypes = {
     resourceId: PropTypes.string.isRequired,
-    isCollapsible: PropTypes.bool
+    isCollapsible: PropTypes.bool,
 };
 
 ViolationTags.defaultProps = {
-    isCollapsible: true
+    isCollapsible: true,
 };
 
 export default ViolationTags;

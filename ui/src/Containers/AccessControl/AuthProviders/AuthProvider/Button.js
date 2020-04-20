@@ -30,7 +30,7 @@ Button.propTypes = {
     isEditing: PropTypes.bool.isRequired,
     onEdit: PropTypes.func.isRequired,
     onCancel: PropTypes.func.isRequired,
-    disabled: PropTypes.bool.isRequired
+    disabled: PropTypes.bool.isRequired,
 };
 
 export default Button;

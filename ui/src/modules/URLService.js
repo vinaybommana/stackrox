@@ -14,19 +14,19 @@ import {
     secretsPath,
     urlEntityListTypes,
     urlEntityTypes,
-    policiesPath
+    policiesPath,
 } from '../routePaths';
 
 export function getTypeKeyFromParamValue(value, listOnly) {
-    const listMatch = Object.entries(urlEntityListTypes).find(entry => entry[1] === value);
-    const entityMatch = Object.entries(urlEntityTypes).find(entry => entry[1] === value);
+    const listMatch = Object.entries(urlEntityListTypes).find((entry) => entry[1] === value);
+    const entityMatch = Object.entries(urlEntityTypes).find((entry) => entry[1] === value);
     const match = listOnly ? listMatch : listMatch || entityMatch;
     return match ? match[0] : null;
 }
 
 function transcodeEntityIds(params, transcode) {
     const newParams = { ...params };
-    Object.keys(params).forEach(key => {
+    Object.keys(params).forEach((key) => {
         if (key && key.includes('Id')) {
             const value = params[key];
             if (value) {
@@ -54,7 +54,7 @@ function isListType(value) {
 }
 
 function getEntityTypeKeyFromValue(entityTypeValue) {
-    const match = Object.entries(urlEntityListTypes).find(entry => entry[1] === entityTypeValue);
+    const match = Object.entries(urlEntityListTypes).find((entry) => entry[1] === entityTypeValue);
     return match ? match[0] : null;
 }
 
@@ -70,7 +70,7 @@ function getPageType(urlParams) {
 
 function getTabsPerEntity(entityType, context) {
     const contextRelationships = {
-        [useCases.CONFIG_MANAGEMENT]: configMgmtEntityRelationship
+        [useCases.CONFIG_MANAGEMENT]: configMgmtEntityRelationship,
     };
     if (!contextRelationships[context] || !contextRelationships[context][entityType]) return [];
     return contextRelationships[context][entityType];
@@ -83,25 +83,25 @@ function getPath(urlParams) {
     const defaultPathMap = {
         [pageTypes.DASHBOARD]: nestedPaths.DASHBOARD,
         [pageTypes.ENTITY]: nestedPaths.ENTITY,
-        [pageTypes.LIST]: nestedPaths.LIST
+        [pageTypes.LIST]: nestedPaths.LIST,
     };
 
     const legacyPathMap = {
         [useCases.RISK]: {
             [pageTypes.ENTITY]: riskPath,
             [pageTypes.LIST]: '/main/risk',
-            [pageTypes.DASHBOARD]: '/main/risk'
+            [pageTypes.DASHBOARD]: '/main/risk',
         },
         [useCases.SECRET]: {
             [pageTypes.ENTITY]: secretsPath,
             [pageTypes.LIST]: '/main/configmanagement/secrets',
-            [pageTypes.DASHBOARD]: '/main/configmanagement/secrets'
+            [pageTypes.DASHBOARD]: '/main/configmanagement/secrets',
         },
         [useCases.POLICY]: {
             [pageTypes.ENTITY]: policiesPath,
             [pageTypes.LIST]: '/main/policies',
-            [pageTypes.DASHBOARD]: '/main/policies'
-        }
+            [pageTypes.DASHBOARD]: '/main/policies',
+        },
     };
 
     const contextData = legacyPathMap[context] || defaultPathMap;
@@ -167,7 +167,7 @@ function getParams(match, location) {
         query:
             location && location.search
                 ? qs.parse(location.search, { ignoreQueryPrefix: true })
-                : {}
+                : {},
     };
 }
 
@@ -178,20 +178,20 @@ function getLinkTo(params) {
         ? qs.stringify(query, {
               addQueryPrefix: true,
               arrayFormat: 'repeat',
-              encodeValuesOnly: true
+              encodeValuesOnly: true,
           })
         : '';
 
     return {
         pathname,
         search,
-        url: pathname + search
+        url: pathname + search,
     };
 }
 
 const pageTypesToParamNames = {
     [pageTypes.ENTITY]: entityParamNames,
-    [pageTypes.LIST]: listParamNames
+    [pageTypes.LIST]: listParamNames,
 };
 
 function getLastUsedParamName(urlParams) {
@@ -275,7 +275,7 @@ class URL {
         else if (val && val2) {
             if (!lastUsedParamIsId) {
                 throw new Error({
-                    message: `Can't push an entity type and id onto a list. Use push(id) instead of push(type,id)`
+                    message: `Can't push an entity type and id onto a list. Use push(id) instead of push(type,id)`,
                 });
             }
             if (!isListPath && !urlParams.entityId1) {
@@ -291,12 +291,12 @@ class URL {
                           pageEntityType: entityType2,
                           pageEntityId: encodeURIComponent(urlParams.entityId2),
                           entityListType1: val,
-                          entityId1: encodeURIComponent(val2)
+                          entityId1: encodeURIComponent(val2),
                       }
                     : (newParams = {
                           context: urlParams.context,
                           pageEntityType: val,
-                          pageEntityId: encodeURIComponent(val2)
+                          pageEntityId: encodeURIComponent(val2),
                       });
                 newQuery = null;
             }
@@ -326,11 +326,11 @@ class URL {
                       context: urlParams.context,
                       pageEntityType: entityType2,
                       pageEntityId: encodeURIComponent(urlParams.entityId2),
-                      entityListType1: val
+                      entityListType1: val,
                   }
                 : {
                       context: urlParams.context,
-                      pageEntityListType: val
+                      pageEntityListType: val,
                   };
             newQuery = null;
         }
@@ -396,5 +396,5 @@ export default {
     getParams,
     getLinkTo,
     getEntityTypeKeyFromValue,
-    getURL
+    getURL,
 };

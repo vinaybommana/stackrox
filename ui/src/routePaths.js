@@ -46,7 +46,7 @@ export const urlEntityListTypes = {
     [standardEntityTypes.CONTROL]: 'controls',
     [rbacConfigTypes.SERVICE_ACCOUNT]: 'serviceaccounts',
     [rbacConfigTypes.SUBJECT]: 'subjects',
-    [rbacConfigTypes.ROLE]: 'roles'
+    [rbacConfigTypes.ROLE]: 'roles',
 };
 
 export const urlEntityTypes = {
@@ -63,11 +63,11 @@ export const urlEntityTypes = {
     [standardEntityTypes.STANDARD]: 'standard',
     [rbacConfigTypes.SERVICE_ACCOUNT]: 'serviceaccount',
     [rbacConfigTypes.SUBJECT]: 'subject',
-    [rbacConfigTypes.ROLE]: 'role'
+    [rbacConfigTypes.ROLE]: 'role',
 };
 
 export const useCasePaths = {
-    [useCaseTypes.VULN_MANAGEMENT]: 'vulnerability-management'
+    [useCaseTypes.VULN_MANAGEMENT]: 'vulnerability-management',
 };
 
 const entityListTypeMatcher = `(${Object.values(urlEntityListTypes).join('|')})`;
@@ -76,5 +76,5 @@ const entityTypeMatcher = `(${Object.values(urlEntityTypes).join('|')})`;
 export const nestedPaths = {
     DASHBOARD: `${mainPath}/:context`,
     LIST: `${mainPath}/:context/:pageEntityListType${entityListTypeMatcher}/:entityId1?/:entityType2?/:entityId2?`,
-    ENTITY: `${mainPath}/:context/:pageEntityType${entityTypeMatcher}/:pageEntityId?/:entityType1?/:entityId1?/:entityType2?/:entityId2?`
+    ENTITY: `${mainPath}/:context/:pageEntityType${entityTypeMatcher}/:pageEntityId?/:entityType1?/:entityId1?/:entityType2?/:entityId2?`,
 };

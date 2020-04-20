@@ -11,7 +11,7 @@ export const getPod = ({ id, name, startTime }) => {
         type: graphTypes.POD,
         id,
         name,
-        subText: formattedTime
+        subText: formattedTime,
     };
 };
 
@@ -26,7 +26,7 @@ export const getContainerEvents = (containers, selectedEventType) => {
             name,
             subText: formattedTime,
             events: processedEvents,
-            hasChildren: false
+            hasChildren: false,
         };
     });
     return containersWithEvents;

@@ -3,20 +3,20 @@ import { SERVICE_ACCOUNTS, SERVICE_ACCOUNT, SERVICE_ACCOUNT_NAME } from 'queries
 import {
     DEPLOYMENT_QUERY as DEPLOYMENT,
     DEPLOYMENTS_QUERY as DEPLOYMENTS,
-    DEPLOYMENT_NAME
+    DEPLOYMENT_NAME,
 } from 'queries/deployment';
 import { K8S_ROLES as ROLES, K8S_ROLE as ROLE, ROLE_NAME } from 'queries/role';
 import { SECRET, SECRETS, SECRET_NAME } from 'queries/secret';
 import {
     CLUSTER_QUERY as CLUSTER,
     CLUSTERS_QUERY as CLUSTERS,
-    CLUSTER_NAME
+    CLUSTER_NAME,
 } from 'queries/cluster';
 import { CVE_NAME } from 'queries/cve';
 import {
     NAMESPACE_QUERY as NAMESPACE,
     NAMESPACES_QUERY as NAMESPACES,
-    NAMESPACE_NAME
+    NAMESPACE_NAME,
 } from 'queries/namespace';
 import { POLICY, POLICIES, POLICY_NAME } from 'queries/policy';
 import { CONTROL_QUERY as CONTROL, CONTROL_NAME } from 'queries/controls';
@@ -25,7 +25,7 @@ import { NODES_QUERY as NODES, NODE_QUERY as NODE, NODE_NAME } from 'queries/nod
 import {
     SUBJECTS_QUERY as SUBJECTS,
     SUBJECT_QUERY as SUBJECT,
-    SUBJECT_NAME
+    SUBJECT_NAME,
 } from 'queries/subject';
 
 import COMPONENT_NAME from 'queries/components';
@@ -41,7 +41,7 @@ export const entityQueryMap = {
     [entityTypes.CONTROL]: CONTROL,
     [entityTypes.IMAGE]: IMAGE,
     [entityTypes.POLICY]: POLICY,
-    [entityTypes.SUBJECT]: SUBJECT
+    [entityTypes.SUBJECT]: SUBJECT,
 };
 
 export const entityListQueryMap = {
@@ -57,7 +57,7 @@ export const entityListQueryMap = {
     [entityTypes.NODE]: NODES,
     [entityTypes.NAMESPACE]: NAMESPACES,
     [entityTypes.POLICY]: POLICIES,
-    [entityTypes.SUBJECT]: SUBJECTS
+    [entityTypes.SUBJECT]: SUBJECTS,
 };
 
 export const entityNameQueryMap = {
@@ -73,5 +73,5 @@ export const entityNameQueryMap = {
     [entityTypes.IMAGE]: IMAGE_NAME,
     [entityTypes.POLICY]: POLICY_NAME,
     [entityTypes.SUBJECT]: SUBJECT_NAME,
-    [entityTypes.COMPONENT]: COMPONENT_NAME
+    [entityTypes.COMPONENT]: COMPONENT_NAME,
 };

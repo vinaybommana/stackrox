@@ -16,7 +16,7 @@ export const selectors = {
     viewOnPoliciesChip:
         'div.rt-tbody > .rt-tr-group:nth-child(3) .rt-tr .rt-td:nth-child(3) ul > li:first-child > button ',
     viewOnImagesChip:
-        'div.rt-tbody > .rt-tr-group:nth-child(4) .rt-tr .rt-td:nth-child(3) ul > li:first-child > button'
+        'div.rt-tbody > .rt-tr-group:nth-child(4) .rt-tr .rt-td:nth-child(3) ul > li:first-child > button',
 };
 
 export const operations = {
@@ -27,21 +27,18 @@ export const operations = {
             // also, likely it'll mimic better typical user's behavior
             cy.get(inputSelector).type(`${optionText.charAt(0)}`);
             cy.wait('@searchAutocomplete');
-            cy.get(selectors.searchOptions)
-                .contains(optionText)
-                .first()
-                .click({ force: true });
+            cy.get(selectors.searchOptions).contains(optionText).first().click({ force: true });
         }
 
         Object.entries(searchObj).forEach(([searchCategory, searchValue]) => {
             selectSearchOption(searchCategory);
 
             if (Array.isArray(searchValue)) {
-                searchValue.forEach(val => selectSearchOption(val));
+                searchValue.forEach((val) => selectSearchOption(val));
             } else {
                 selectSearchOption(searchValue);
             }
         });
         cy.get(inputSelector).blur(); // remove focus to close the autocomplete popup
-    }
+    },
 };

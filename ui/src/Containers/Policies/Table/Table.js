@@ -30,22 +30,22 @@ class Table extends Component {
         selectPolicyId: PropTypes.func.isRequired,
         setWizardStage: PropTypes.func.isRequired,
         openWizard: PropTypes.func.isRequired,
-        history: ReactRouterPropTypes.history.isRequired
+        history: ReactRouterPropTypes.history.isRequired,
     };
 
     constructor(props) {
         super(props);
 
         this.state = {
-            showImportDialogue: false
+            showImportDialogue: false,
         };
     }
 
-    setSelectedPolicy = policyId => {
+    setSelectedPolicy = (policyId) => {
         // Add policy to history.
         const urlSuffix = `/${policyId}`;
         this.props.history.push({
-            pathname: `/main/policies${urlSuffix}`
+            pathname: `/main/policies${urlSuffix}`,
         });
 
         // Select the policy so that it is highlighted in the table.
@@ -105,26 +105,21 @@ class Table extends Component {
 
 const isViewFiltered = createSelector(
     [selectors.getPoliciesSearchOptions],
-    searchOptions => searchOptions.length !== 0
+    (searchOptions) => searchOptions.length !== 0
 );
 
 const mapStateToProps = createStructuredSelector({
     selectedPolicyIds: selectors.getSelectedPolicyIds,
     policies: selectors.getFilteredPolicies,
     page: selectors.getTablePage,
-    isViewFiltered
+    isViewFiltered,
 });
 
 const mapDispatchToProps = {
     selectPolicyId: tableActions.selectPolicyId,
     setWizardStage: wizardActions.setWizardStage,
     openWizard: pageActions.openWizard,
-    setPage: tableActions.setTablePage
+    setPage: tableActions.setTablePage,
 };
 
-export default withRouter(
-    connect(
-        mapStateToProps,
-        mapDispatchToProps
-    )(Table)
-);
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(Table));

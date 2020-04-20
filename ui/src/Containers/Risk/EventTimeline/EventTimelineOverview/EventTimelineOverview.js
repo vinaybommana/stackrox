@@ -13,7 +13,7 @@ import { GET_EVENT_TIMELINE_OVERVIEW } from '../timelineQueries';
 const EventTimelineOverview = ({ deploymentId }) => {
     const [isModalOpen, setModalOpen] = useState(false);
     const { loading, error, data } = useQuery(GET_EVENT_TIMELINE_OVERVIEW, {
-        variables: { deploymentId }
+        variables: { deploymentId },
     });
 
     if (error) Raven.captureException(error);
@@ -30,7 +30,7 @@ const EventTimelineOverview = ({ deploymentId }) => {
         numPolicyViolations,
         numProcessActivities,
         numRestarts,
-        numTerminations
+        numTerminations,
     } = data.deployment;
     const numTotalEvents =
         numPolicyViolations + numProcessActivities + numRestarts + numTerminations;
@@ -46,7 +46,7 @@ const EventTimelineOverview = ({ deploymentId }) => {
     const counts = [
         { text: 'Policy Violations', count: numPolicyViolations },
         { text: 'Process Activities', count: numProcessActivities },
-        { text: 'Restarts / Terminations', count: numRestarts + numTerminations }
+        { text: 'Restarts / Terminations', count: numRestarts + numTerminations },
     ];
 
     return (
@@ -72,7 +72,7 @@ const EventTimelineOverview = ({ deploymentId }) => {
 };
 
 EventTimelineOverview.propTypes = {
-    deploymentId: PropTypes.string.isRequired
+    deploymentId: PropTypes.string.isRequired,
 };
 
 export default React.memo(EventTimelineOverview);

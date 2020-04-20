@@ -30,11 +30,11 @@ NameListItem.propTypes = {
     name: PropTypes.string.isRequired,
     subText: PropTypes.string.isRequired,
     hasChildren: PropTypes.bool.isRequired,
-    onClick: PropTypes.func
+    onClick: PropTypes.func,
 };
 
 NameListItem.defaultProps = {
-    onClick: () => {}
+    onClick: () => {},
 };
 
 export default NameListItem;

@@ -4,7 +4,7 @@ import axios from 'services/instance';
 import queryString from 'qs';
 import AccessTokenManager from './AccessTokenManager';
 import addTokenRefreshInterceptors, {
-    doNotStallRequestConfig
+    doNotStallRequestConfig,
 } from './addTokenRefreshInterceptors';
 
 const authProvidersUrl = '/v1/authProviders';
@@ -39,8 +39,8 @@ export class AuthHttpError extends Error {
  * @returns {Promise<Object, Error>} object with response property being an array of auth providers
  */
 export function fetchAuthProviders() {
-    return axios.get(`${authProvidersUrl}`).then(response => ({
-        response: response.data.authProviders
+    return axios.get(`${authProvidersUrl}`).then((response) => ({
+        response: response.data.authProviders,
     }));
 }
 
@@ -50,8 +50,8 @@ export function fetchAuthProviders() {
  * @returns {Promise<Object, Error>} object with response property being an array of login auth providers
  */
 export function fetchLoginAuthProviders() {
-    return axios.get(`${authLoginProvidersUrl}`).then(response => ({
-        response: response.data.authProviders
+    return axios.get(`${authLoginProvidersUrl}`).then((response) => ({
+        response: response.data.authProviders,
     }));
 }
 
@@ -85,7 +85,7 @@ export function deleteAuthProvider(authProviderId) {
  * @returns {Promise} promise which is fullfilled when the request is complete
  */
 export function deleteAuthProviders(authProviderIds) {
-    return Promise.all(authProviderIds.map(id => deleteAuthProvider(id)));
+    return Promise.all(authProviderIds.map((id) => deleteAuthProvider(id)));
 }
 
 /*
@@ -101,7 +101,7 @@ async function refreshAccessToken() {
 const accessTokenManager = new AccessTokenManager({ refreshToken: refreshAccessToken });
 
 export const getAccessToken = () => accessTokenManager.getToken();
-export const storeAccessToken = token => accessTokenManager.setToken(token);
+export const storeAccessToken = (token) => accessTokenManager.setToken(token);
 
 /**
  * Calls the server to check auth status, rejects with error if auth status isn't valid.
@@ -126,9 +126,9 @@ export function exchangeAuthToken(token, type, state) {
     const data = {
         external_token: token,
         type,
-        state
+        state,
     };
-    return axios.post(`${authProvidersUrl}/exchangeToken`, data).then(response => response.data);
+    return axios.post(`${authProvidersUrl}/exchangeToken`, data).then((response) => response.data);
 }
 
 /**
@@ -143,7 +143,7 @@ export async function logout() {
     accessTokenManager.clearToken();
 }
 
-export const storeRequestedLocation = location => store.set(requestedLocationKey, location);
+export const storeRequestedLocation = (location) => store.set(requestedLocationKey, location);
 export const getAndClearRequestedLocation = () => {
     const location = store.get(requestedLocationKey);
     store.remove(requestedLocationKey);
@@ -168,14 +168,14 @@ const BEARER_TOKEN_PREFIX = `Bearer `;
 
 function setAuthHeader(config, token) {
     const {
-        headers: { Authorization, ...notAuthHeaders }
+        headers: { Authorization, ...notAuthHeaders },
     } = config;
     // make sure new config doesn't have unnecessary auth header
     const newConfig = {
         ...config,
         headers: {
-            ...notAuthHeaders
-        }
+            ...notAuthHeaders,
+        },
     };
     if (token) newConfig.headers.Authorization = `${BEARER_TOKEN_PREFIX}${token}`;
 
@@ -193,13 +193,13 @@ function extractAccessTokenFromRequestConfig({ headers }) {
     return headers.Authorization.substring(BEARER_TOKEN_PREFIX.length);
 }
 
-const parseAccessToken = token => {
+const parseAccessToken = (token) => {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const jsonPayload = decodeURIComponent(
         atob(base64)
             .split('')
-            .map(function(c) {
+            .map((c) => {
                 return `%${`00${c.charCodeAt(0).toString(16)}`.slice(-2)}`;
             })
             .join('')
@@ -217,8 +217,8 @@ export const getUserName = () => {
 
 function addAuthHeaderRequestInterceptor() {
     axios.interceptors.request.use(
-        config => setAuthHeader(config, getAccessToken()),
-        error => Promise.reject(error)
+        (config) => setAuthHeader(config, getAccessToken()),
+        (error) => Promise.reject(error)
     );
 }
 
@@ -235,7 +235,7 @@ export function addAuthInterceptors(authHttpErrorHandler) {
     addAuthHeaderRequestInterceptor();
     addTokenRefreshInterceptors(axios, accessTokenManager, {
         extractAccessToken: extractAccessTokenFromRequestConfig,
-        handleAuthError: error => {
+        handleAuthError: (error) => {
             const authError = new AuthHttpError(
                 'Authentication Error',
                 error.response.status,
@@ -247,7 +247,7 @@ export function addAuthInterceptors(authHttpErrorHandler) {
                 accessTokenManager.clearToken();
             }
             authHttpErrorHandler(authError);
-        }
+        },
     });
 
     interceptorsAdded = true;

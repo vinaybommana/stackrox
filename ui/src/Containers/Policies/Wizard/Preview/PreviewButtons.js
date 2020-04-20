@@ -17,7 +17,7 @@ function PreviewButtons({ setWizardStage }) {
     }
 
     return (
-        <React.Fragment>
+        <>
             <PanelButton
                 icon={<ArrowLeft className="h-4 w-4" />}
                 className="btn btn-base"
@@ -34,19 +34,16 @@ function PreviewButtons({ setWizardStage }) {
             >
                 Next
             </PanelButton>
-        </React.Fragment>
+        </>
     );
 }
 
 PreviewButtons.propTypes = {
-    setWizardStage: PropTypes.func.isRequired
+    setWizardStage: PropTypes.func.isRequired,
 };
 
 const mapDispatchToProps = {
-    setWizardStage: wizardActions.setWizardStage
+    setWizardStage: wizardActions.setWizardStage,
 };
 
-export default connect(
-    null,
-    mapDispatchToProps
-)(PreviewButtons);
+export default connect(null, mapDispatchToProps)(PreviewButtons);

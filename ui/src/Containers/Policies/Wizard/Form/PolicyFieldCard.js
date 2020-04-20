@@ -10,7 +10,7 @@ import AndOrOperator from 'Components/AndOrOperator';
 import FieldValue from './FieldValue';
 
 const emptyFieldValue = {
-    value: ''
+    value: '',
 };
 
 function PolicyFieldCard({
@@ -20,7 +20,7 @@ function PolicyFieldCard({
     header,
     booleanOperator,
     fieldKey,
-    toggleFieldName
+    toggleFieldName,
 }) {
     function addValueHander() {
         fields.push(emptyFieldValue);
@@ -88,11 +88,11 @@ PolicyFieldCard.propTypes = {
     header: PropTypes.string.isRequired,
     booleanOperator: PropTypes.string.isRequired,
     toggleFieldName: PropTypes.string.isRequired,
-    ...reduxFormPropTypes
+    ...reduxFormPropTypes,
 };
 
 PolicyFieldCard.defaultProps = {
-    isNegated: false
+    isNegated: false,
 };
 
 export default PolicyFieldCard;

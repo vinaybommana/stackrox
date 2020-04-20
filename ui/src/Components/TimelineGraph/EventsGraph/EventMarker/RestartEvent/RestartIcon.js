@@ -28,11 +28,11 @@ const RestartIcon = forwardRef(({ height, width }, ref) => {
 
 RestartIcon.propTypes = {
     width: PropTypes.number.isRequired,
-    height: PropTypes.number
+    height: PropTypes.number,
 };
 
 RestartIcon.defaultProps = {
-    height: null
+    height: null,
 };
 
 export default RestartIcon;

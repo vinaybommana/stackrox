@@ -4,7 +4,7 @@ import SectionHeaderInput from './SectionHeaderInput';
 
 export default {
     title: 'SectionHeaderInput',
-    component: SectionHeaderInput
+    component: SectionHeaderInput,
 };
 
 export const withHeader = () => {

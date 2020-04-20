@@ -10,7 +10,7 @@ const CommonDetails = ({ name }) => (
 const OidcDetails = ({ authProvider: { name, config } }) => {
     const oidcCallbackValues = {
         post: 'HTTP POST',
-        fragment: 'Fragment'
+        fragment: 'Fragment',
     };
     const callbackModeValue = oidcCallbackValues[config.mode];
     if (!callbackModeValue) throw new Error(`Unknown callback mode "${config.mode}"`);
@@ -71,7 +71,7 @@ const detailsComponents = {
     oidc: OidcDetails,
     auth0: Auth0Details,
     saml: SamlDetails,
-    userpki: UserPkiDetails
+    userpki: UserPkiDetails,
 };
 
 const ConfigurationDetails = ({ authProvider }) => {

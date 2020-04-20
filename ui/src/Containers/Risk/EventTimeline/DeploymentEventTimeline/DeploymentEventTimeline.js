@@ -14,7 +14,7 @@ import { GET_DEPLOYMENT_EVENT_TIMELINE } from '../timelineQueries';
 
 const defaultPodsSort = {
     id: 'Pod Name',
-    desc: false
+    desc: false,
 };
 
 const DeploymentEventTimeline = ({
@@ -24,15 +24,15 @@ const DeploymentEventTimeline = ({
     headerComponents,
     currentPage,
     pageSize,
-    onPageChange
+    onPageChange,
 }) => {
     const { loading, error, data } = useQuery(GET_DEPLOYMENT_EVENT_TIMELINE, {
         variables: {
             deploymentId: id,
             podsQuery: queryService.objectToWhereClause({ 'Deployment ID': id }),
             // TODO: Standardize on 1-indexing for Pagination so we can put the value adjustment into the function itself. https://github.com/stackrox/rox/pull/5075#discussion_r395284332
-            pagination: queryService.getPagination(defaultPodsSort, currentPage - 1, pageSize)
-        }
+            pagination: queryService.getPagination(defaultPodsSort, currentPage - 1, pageSize),
+        },
     });
 
     captureGraphQLErrors([error]);
@@ -49,7 +49,7 @@ const DeploymentEventTimeline = ({
         numProcessActivities,
         numRestarts,
         numTerminations,
-        numTotalPods
+        numTotalPods,
     } = data.deployment;
     const numEvents = numPolicyViolations + numProcessActivities + numRestarts + numTerminations;
 
@@ -83,7 +83,7 @@ DeploymentEventTimeline.propTypes = {
     headerComponents: PropTypes.node.isRequired,
     currentPage: PropTypes.number.isRequired,
     pageSize: PropTypes.number.isRequired,
-    onPageChange: PropTypes.func.isRequired
+    onPageChange: PropTypes.func.isRequired,
 };
 
 export default DeploymentEventTimeline;

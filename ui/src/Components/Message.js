@@ -15,7 +15,7 @@ function Message(props) {
         guidance:
             'guidance-message p-4 rounded-sm text-primary-800 items-center border border-primary-700 bg-primary-200 leading-normal flex-shrink-0 w-full',
         loading:
-            'loading-message p-4 rounded-sm text-primary-800 items-center border border-primary-700 bg-primary-200 leading-normal flex-shrink-0 w-full'
+            'loading-message p-4 rounded-sm text-primary-800 items-center border border-primary-700 bg-primary-200 leading-normal flex-shrink-0 w-full',
     };
 
     const borderColor = {
@@ -23,7 +23,7 @@ function Message(props) {
         error: 'border-alert-300',
         info: 'border-info-300',
         guidance: 'border-primary-300',
-        loading: 'border-primary-300'
+        loading: 'border-primary-300',
     };
 
     const icons = {
@@ -31,7 +31,7 @@ function Message(props) {
         error: <Icon.AlertTriangle className="h-6 w-6" strokeWidth="2px" />,
         info: <Icon.Check className="h-6 w-6" strokeWidth="2px" />,
         guidance: <Icon.Info className="h-6 w-6" strokeWidth="2px" />,
-        loading: <Loader message={null} />
+        loading: <Loader message={null} />,
     };
 
     return (
@@ -52,11 +52,11 @@ function Message(props) {
 
 Message.propTypes = {
     message: PropTypes.string.isRequired,
-    type: PropTypes.oneOf(['warn', 'error', 'info', 'guidance', 'loading'])
+    type: PropTypes.oneOf(['warn', 'error', 'info', 'guidance', 'loading']),
 };
 
 Message.defaultProps = {
-    type: 'info'
+    type: 'info',
 };
 
 export default Message;

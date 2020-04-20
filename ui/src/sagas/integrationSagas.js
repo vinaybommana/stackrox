@@ -18,7 +18,7 @@ const fetchIntegrationsActionMap = {
     imageIntegrations: actions.fetchImageIntegrations.request(),
     notifiers: actions.fetchNotifiers.request(),
     clusters: clusterActions.fetchClusters.request(),
-    apitoken: apiTokenActions.fetchAPITokens.request()
+    apitoken: apiTokenActions.fetchAPITokens.request(),
 };
 
 // Call fetchIntegration with the given source, and pass the response/failure
@@ -49,13 +49,16 @@ function* getImageIntegrations() {
 }
 
 function* watchLocation() {
-    const effects = [getImageIntegrations, getNotifiers, getBackups, getAuthPlugins].map(
-        fetchFunc => takeEveryNewlyMatchedLocation(integrationsPath, fetchFunc)
-    );
+    const effects = [
+        getImageIntegrations,
+        getNotifiers,
+        getBackups,
+        getAuthPlugins,
+    ].map((fetchFunc) => takeEveryNewlyMatchedLocation(integrationsPath, fetchFunc));
     yield all([
         ...effects,
         takeEveryNewlyMatchedLocation(policiesPath, getNotifiers),
-        takeEveryNewlyMatchedLocation(networkPath, getNotifiers)
+        takeEveryNewlyMatchedLocation(networkPath, getNotifiers),
     ]);
 }
 
@@ -65,7 +68,7 @@ function* watchFetchRequest() {
             types.FETCH_AUTH_PLUGINS.REQUEST,
             types.FETCH_BACKUPS.REQUEST,
             types.FETCH_IMAGE_INTEGRATIONS.REQUEST,
-            types.FETCH_NOTIFIERS.REQUEST
+            types.FETCH_NOTIFIERS.REQUEST,
         ]);
         switch (action.type) {
             case types.FETCH_AUTH_PLUGINS.REQUEST:
@@ -189,6 +192,6 @@ export default function* integrations() {
         fork(watchSaveRequest),
         fork(watchTestRequest),
         fork(watchDeleteRequest),
-        fork(watchBackupRequest)
+        fork(watchBackupRequest),
     ]);
 }

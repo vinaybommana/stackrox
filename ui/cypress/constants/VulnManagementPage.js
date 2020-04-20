@@ -19,12 +19,12 @@ export const url = {
         image: `${baseURL}/image`,
         cve: `${baseURL}/cve`,
         policy: `${baseURL}/policy`,
-        deployment: `${baseURL}/deployment`
-    }
+        deployment: `${baseURL}/deployment`,
+    },
 };
 
 export const vmHomePageSelectors = {
-    vmDBPageTileLink: '[data-testid="Vulnerability Management"]'
+    vmDBPageTileLink: '[data-testid="Vulnerability Management"]',
 };
 export const listSelectors = {
     riskScoreCol: '.rt-table > .rt-tbody > div > div > div:nth-child(10)',
@@ -50,7 +50,7 @@ export const listSelectors = {
     cveUnsuppressPanelButton: '[data-testid="panel-button-unsuppress-selected-cves"]',
     suppressOneDayOption: '[data-testid="1 Day"]',
     suppressToggleViewPanelButton: '[data-testid="panel-button-toggle-suppressed-cves-view"]',
-    cveUnsuppressRowButton: '[data-testid="row-action-unsuppress"]'
+    cveUnsuppressRowButton: '[data-testid="row-action-unsuppress"]',
 };
 
 export const sidePanelListEntityPageSelectors = {
@@ -70,12 +70,12 @@ export const sidePanelListEntityPageSelectors = {
     policyTileLink: "[data-testid='POLICY-tile-link']",
     cveTileLink: '[data-testid="CVE-tile-link"]',
     tabButton: '[data-testid="tab"]',
-    getSidePanelTabHeader: title => {
+    getSidePanelTabHeader: (title) => {
         return `[data-testid="widget-header"] > .w-full:contains('${title}')`;
     },
     emptyFindingsSection: '[data-testid="results-message"]',
     deploymentCountText: '.rt-td [data-testid="deploymentCountText"]',
-    imageCountText: '.rt-td [data-testid="imageCountText"]'
+    imageCountText: '.rt-td [data-testid="imageCountText"]',
 };
 
 export const dashboardSelectors = {
@@ -84,19 +84,19 @@ export const dashboardSelectors = {
         select: {
             input: '[data-testid="widget"] .react-select__control',
             value: '[data-testid="widget"] .react-select__single-value',
-            options: '[data-testid="widget"] .react-select__option'
-        }
+            options: '[data-testid="widget"] .react-select__option',
+        },
     },
-    getMenuListItem: name => {
+    getMenuListItem: (name) => {
         return `[data-testid="menu-list"] [data-testid="${name}"]`;
     },
-    getWidget: title => {
+    getWidget: (title) => {
         return `[data-testid="widget"]:contains('${title}')`;
     },
-    getTileLink: title => {
+    getTileLink: (title) => {
         return `[data-testid="tile-link"]:contains('${title}')`;
     },
-    getAllClickableTileLinks: title => {
+    getAllClickableTileLinks: (title) => {
         return `[data-testid="tile-link-value"]:contains('${title}')`;
     },
     widgetBody: '[data-testid="widget-body"]',
@@ -113,7 +113,7 @@ export const dashboardSelectors = {
         '#capture-dashboard > div > div:nth-child(6) > div > .h-full > div > ul > li:nth-child(1) > a > span',
     tabLinks: '[data-testid="tab"]',
     allTileLinks: '#capture-widgets > div > .h-full > div > ul > li',
-    tabHeader: '[data-testid="panel-header"]'
+    tabHeader: '[data-testid="panel-header"]',
 };
 
 const linkSelectors = {
@@ -121,25 +121,25 @@ const linkSelectors = {
     fixableCvesLink: '[data-testid="fixableCvesLink"]',
     tileLinks: "[data-testid='tile-link']",
     tileLinkValue: "[data-testid='tile-link-value']",
-    tileLinkSuperText: '[data-testid="tileLinkSuperText"]'
+    tileLinkSuperText: '[data-testid="tileLinkSuperText"]',
 };
 
 const sidePanelSelectors = {
     backButton: '[data-testid="sidepanelBackButton"]',
     entityIcon: '[data-testid="entity-icon"]',
     sidePanelExpandButton: '[data-testid = "external-link"]',
-    getSidePanelTabLink: title => {
+    getSidePanelTabLink: (title) => {
         return `[data-testid="tab"]:contains('${title}')`;
     },
     policyFindingsSection: scopeSelectors('[data-testid="policy-findings-section"]', {
-        table: tableSelectors
+        table: tableSelectors,
     }),
-    violationTags: violationTagsSelectors
+    violationTags: violationTagsSelectors,
 };
 
 const policySidePanelSelectors = {
     policyEditButton: '[data-testid="button-link"]',
-    policyEditPageHeader: '[data-testid="side-panel-header"]'
+    policyEditPageHeader: '[data-testid="side-panel-header"]',
 };
 
 export const selectors = {
@@ -154,5 +154,5 @@ export const selectors = {
     ...vmHomePageSelectors,
     // TODO-ivan: unscrew everything above, it overrides each other etc., move to scoped definitions
     mainTable: scopeSelectors('[data-testid="panel"]', tableSelectors),
-    sidePanel1: scopeSelectors(panelSelectors.sidePanel, sidePanelSelectors)
+    sidePanel1: scopeSelectors(panelSelectors.sidePanel, sidePanelSelectors),
 };

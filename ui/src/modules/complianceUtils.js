@@ -43,10 +43,10 @@ export function getResourceCountFromAggregatedResults(type, data) {
     if (type === entityTypes.CONTROL) {
         result = source;
     } else {
-        result = source.filter(datum => datum.numFailing + datum.numPassing);
+        result = source.filter((datum) => datum.numFailing + datum.numPassing);
     }
 
-    result = uniq(result.map(datum => datum.aggregationKeys[index].id));
+    result = uniq(result.map((datum) => datum.aggregationKeys[index].id));
 
     return result.length;
 }

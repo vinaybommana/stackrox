@@ -15,12 +15,12 @@ function AndOrOperator({ onToggle, value }) {
 
 AndOrOperator.propTypes = {
     value: PropTypes.oneOf([BOOLEAN_LOGIC_VALUES.AND, BOOLEAN_LOGIC_VALUES.OR]),
-    onToggle: PropTypes.func
+    onToggle: PropTypes.func,
 };
 
 AndOrOperator.defaultProps = {
     value: BOOLEAN_LOGIC_VALUES.OR,
-    onToggle: null
+    onToggle: null,
 };
 
 export default AndOrOperator;

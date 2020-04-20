@@ -12,7 +12,7 @@ describe('Integrations page', () => {
 
     it('Plugin tiles should all be the same height', () => {
         let value = null;
-        cy.get(selectors.plugins).each($el => {
+        cy.get(selectors.plugins).each(($el) => {
             if (value) expect($el[0].clientHeight).to.equal(value);
             else value = $el[0].clientHeight;
         });
@@ -30,9 +30,7 @@ describe('Integrations page', () => {
         cy.get(selectors.buttons.delete).should('not.exist');
         cy.get(selectors.buttons.new).click();
 
-        const name = `Docker Registry ${Math.random()
-            .toString(36)
-            .substring(7)}`;
+        const name = `Docker Registry ${Math.random().toString(36).substring(7)}`;
         cy.get(selectors.dockerRegistryForm.nameInput).type(name);
 
         cy.get(
@@ -59,9 +57,7 @@ describe('Integrations page', () => {
 describe('API Token Creation Flow', () => {
     withAuth();
 
-    const randomTokenName = `Token${Math.random()
-        .toString(36)
-        .substring(7)}`;
+    const randomTokenName = `Token${Math.random().toString(36).substring(7)}`;
 
     beforeEach(() => {
         cy.visit('/');

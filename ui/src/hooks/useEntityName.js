@@ -9,11 +9,11 @@ function useEntityName(entityType, entityId, skip) {
     const nameQueryOptions = {
         options: {
             fetchPolicy: 'cache-first',
-            skip
+            skip,
         },
         variables: {
-            id: entityId
-        }
+            id: entityId,
+        },
     };
     const { loading, error, data } = useQuery(entityNameQuery, nameQueryOptions);
 
@@ -25,7 +25,7 @@ function useEntityName(entityType, entityId, skip) {
     return {
         loading,
         error,
-        entityName
+        entityName,
     };
 }
 

@@ -46,7 +46,7 @@ describe('Violation Page: Comments', () => {
         cy.wait('@getComments');
 
         cy.get(commentsSelectors.lastComment.userName).should('have.text', 'ui_tests');
-        cy.get(commentsSelectors.lastComment.dateAndEditedStatus).should(date => {
+        cy.get(commentsSelectors.lastComment.dateAndEditedStatus).should((date) => {
             const created = Cypress.moment(date.text(), 'MM/DD/YYYY | h:mm:ssA');
             const now = Cypress.moment();
             // check the comment was created in the last minute
@@ -54,7 +54,7 @@ describe('Violation Page: Comments', () => {
         });
         cy.get(commentsSelectors.lastComment.message).should('have.text', comment);
         cy.get(commentsSelectors.lastComment.links).should('have.length', 3);
-        cy.get(commentsSelectors.lastComment.links).each(a => {
+        cy.get(commentsSelectors.lastComment.links).each((a) => {
             expect(a).to.have.text(link);
             expect(a).to.have.attr('href', link);
         });

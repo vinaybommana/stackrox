@@ -5,14 +5,14 @@ describe('processEvents', () => {
         const startTime = '2020-04-20T15:00:00Z';
         const events = [
             {
-                timestamp: '2020-04-20T16:00:00Z'
+                timestamp: '2020-04-20T16:00:00Z',
             },
             {
-                timestamp: '2020-04-20T20:00:00Z'
+                timestamp: '2020-04-20T20:00:00Z',
             },
             {
-                timestamp: '2020-04-21T15:00:00Z'
-            }
+                timestamp: '2020-04-21T15:00:00Z',
+            },
         ];
 
         const value = processEvents(events, startTime);
@@ -20,16 +20,16 @@ describe('processEvents', () => {
         expect(value).toEqual([
             {
                 timestamp: '2020-04-20T16:00:00Z',
-                differenceInMilliseconds: 3600000
+                differenceInMilliseconds: 3600000,
             },
             {
                 timestamp: '2020-04-20T20:00:00Z',
-                differenceInMilliseconds: 18000000
+                differenceInMilliseconds: 18000000,
             },
             {
                 timestamp: '2020-04-21T15:00:00Z',
-                differenceInMilliseconds: 86400000
-            }
+                differenceInMilliseconds: 86400000,
+            },
         ]);
     });
 });

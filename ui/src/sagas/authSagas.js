@@ -141,7 +141,7 @@ function* dispatchAuthResponse(type, location) {
     // For every handler registered under `/auth/response/<type>`, add a function that returns the token.
     const responseHandlers = {
         oidc: handleOidcResponse,
-        generic: handleGenericResponse
+        generic: handleGenericResponse,
     };
     let result = {};
     const handler = responseHandlers[type];
@@ -189,7 +189,7 @@ function* saveAuthProvider(action) {
         const { groups, defaultRole, ...remaining } = authProvider;
         const authProviders = yield select(selectors.getAuthProviders);
         const filteredGroups = groups.filter(
-            group =>
+            (group) =>
                 group &&
                 group.props &&
                 group.props.key &&
@@ -198,11 +198,11 @@ function* saveAuthProvider(action) {
                 group.roleName !== ''
         );
         const isNewAuthProvider = !authProviders.filter(
-            currAuthProvider => currAuthProvider.name === remaining.name
+            (currAuthProvider) => currAuthProvider.name === remaining.name
         ).length;
         if (isNewAuthProvider) {
             const savedAuthProvider = yield call(AuthService.saveAuthProvider, remaining);
-            filteredGroups.forEach(group =>
+            filteredGroups.forEach((group) =>
                 Object.assign(group.props, { authProviderId: savedAuthProvider.data.id })
             );
             yield put(
@@ -286,6 +286,6 @@ export default function* auth() {
         fork(watchAuthProvidersFetchRequest),
         fork(watchLoginAuthProvidersFetchRequest),
         fork(watchLogout),
-        fork(watchAuthHttpErrors)
+        fork(watchAuthHttpErrors),
     ]);
 }

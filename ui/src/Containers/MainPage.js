@@ -20,7 +20,7 @@ import {
     licensePath,
     systemConfigPath,
     vulnManagementPath,
-    configManagementPath
+    configManagementPath,
 } from 'routePaths';
 import { selectors } from 'reducers';
 import { actions as globalSearchActions } from 'reducers/globalSearch';
@@ -71,22 +71,22 @@ class MainPage extends Component {
         featureFlags: PropTypes.arrayOf(
             PropTypes.shape({
                 envVar: PropTypes.string.isRequired,
-                enabled: PropTypes.bool.isRequired
+                enabled: PropTypes.bool.isRequired,
             })
-        ).isRequired
+        ).isRequired,
     };
 
     static defaultProps = {
         metadata: { stale: false },
-        pdfLoadingStatus: false
+        pdfLoadingStatus: false,
     };
 
-    onSearchCloseHandler = toURL => {
+    onSearchCloseHandler = (toURL) => {
         this.props.toggleGlobalSearchView();
         if (toURL && typeof toURL === 'string') this.props.history.push(toURL);
     };
 
-    onCLICloseHandler = toURL => {
+    onCLICloseHandler = (toURL) => {
         this.props.toggleCLIDownloadView();
         if (toURL && typeof toURL === 'string') this.props.history.push(toURL);
     };
@@ -202,15 +202,12 @@ const mapStateToProps = createStructuredSelector({
     cliDownloadView: selectors.getCLIDownloadView,
     metadata: selectors.getMetadata,
     pdfLoadingStatus: selectors.getPdfLoadingStatus,
-    featureFlags: selectors.getFeatureFlags
+    featureFlags: selectors.getFeatureFlags,
 });
 
-const mapDispatchToProps = dispatch => ({
+const mapDispatchToProps = (dispatch) => ({
     toggleGlobalSearchView: () => dispatch(globalSearchActions.toggleGlobalSearchView()),
-    toggleCLIDownloadView: () => dispatch(cliSearchActions.toggleCLIDownloadView())
+    toggleCLIDownloadView: () => dispatch(cliSearchActions.toggleCLIDownloadView()),
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(MainPage);
+export default connect(mapStateToProps, mapDispatchToProps)(MainPage);

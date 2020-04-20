@@ -1,6 +1,6 @@
 import {
     url as violationsUrl,
-    selectors as ViolationsPageSelectors
+    selectors as ViolationsPageSelectors,
 } from '../../constants/ViolationsPage';
 import { selectors as PoliciesPageSelectors } from '../../constants/PoliciesPage';
 import * as api from '../../constants/apiEndpoints';
@@ -51,7 +51,7 @@ describe('Violations page', () => {
         cy.route({
             method: 'PATCH',
             url: '/v1/alerts/*',
-            response: {}
+            response: {},
         }).as('patchAlerts');
     };
 
@@ -59,7 +59,7 @@ describe('Violations page', () => {
         cy.route({
             method: 'GET',
             url: '/v1/policies/*',
-            response: {}
+            response: {},
         }).as('getPolicy');
     };
 
@@ -80,9 +80,7 @@ describe('Violations page', () => {
         mockGetAlert();
         cy.get(ViolationsPageSelectors.firstPanelTableRow).click();
         cy.wait('@alertById');
-        cy.get(ViolationsPageSelectors.panels)
-            .eq(1)
-            .should('be.visible');
+        cy.get(ViolationsPageSelectors.panels).eq(1).should('be.visible');
     });
 
     it('should show side panel with panel header', () => {
@@ -103,9 +101,7 @@ describe('Violations page', () => {
         cy.visit(violationsUrl);
         cy.get(searchSelectors.pageSearchInput).type('Cluster:{enter}', { force: true });
         cy.get(searchSelectors.pageSearchInput).type('remote{enter}', { force: true });
-        cy.get(ViolationsPageSelectors.panels)
-            .eq(1)
-            .should('not.be.visible');
+        cy.get(ViolationsPageSelectors.panels).eq(1).should('not.be.visible');
     });
 
     // TODO(ROX-3106)
@@ -174,12 +170,8 @@ describe('Violations page', () => {
         mockWhitelistDeployment();
         mockPatchAlerts();
         mockGetPolicy();
-        cy.get(ViolationsPageSelectors.lastTableRow)
-            .find('[type="checkbox"]')
-            .check();
-        cy.get('.panel-actions button')
-            .first()
-            .click();
+        cy.get(ViolationsPageSelectors.lastTableRow).find('[type="checkbox"]').check();
+        cy.get('.panel-actions button').first().click();
         cy.get('.ReactModal__Content .btn.btn-success').click();
         cy.wait('@getPolicy');
         cy.visit('/main/violations');
@@ -195,12 +187,16 @@ describe('Violations page', () => {
             .eq(1)
             .get(ViolationsPageSelectors.sidePanel.getTabByIndex(1), { timeout: 7000 })
             .click();
-        cy.get(ViolationsPageSelectors.sidePanel.enforcementDetailMessage).should(message => {
+        cy.get(ViolationsPageSelectors.sidePanel.enforcementDetailMessage).should((message) => {
             expect(message).to.contain('Kill Pod');
         });
-        cy.get(ViolationsPageSelectors.sidePanel.enforcementExplanationMessage).should(message => {
-            expect(message).to.contain('Runtime data was evaluated against this StackRox policy');
-        });
+        cy.get(ViolationsPageSelectors.sidePanel.enforcementExplanationMessage).should(
+            (message) => {
+                expect(message).to.contain(
+                    'Runtime data was evaluated against this StackRox policy'
+                );
+            }
+        );
     });
 
     it('should have deployment information in the Deployment Details tab', () => {
@@ -212,9 +208,7 @@ describe('Violations page', () => {
             .get(ViolationsPageSelectors.sidePanel.getTabByIndex(2))
             .click();
         cy.get(ViolationsPageSelectors.collapsible.header).should('have.length', 3);
-        cy.get(ViolationsPageSelectors.collapsible.header)
-            .eq(0)
-            .should('have.text', 'Overview');
+        cy.get(ViolationsPageSelectors.collapsible.header).eq(0).should('have.text', 'Overview');
         cy.get(ViolationsPageSelectors.collapsible.header)
             .eq(1)
             .should('have.text', 'Container configuration');
@@ -254,17 +248,13 @@ describe('Violations page', () => {
             .click({ force: true });
         cy.wait('@resolve');
 
-        cy.get(ViolationsPageSelectors.panels)
-            .eq(1)
-            .should('not.be.visible');
+        cy.get(ViolationsPageSelectors.panels).eq(1).should('not.be.visible');
     });
 
     it('should request the alerts in descending time order by default', () => {
         cy.get('@alerts')
             .its('url')
             .should('include', 'pagination.sortOption.field=Violation Time');
-        cy.get('@alerts')
-            .its('url')
-            .should('include', 'pagination.sortOption.reversed=true');
+        cy.get('@alerts').its('url').should('include', 'pagination.sortOption.reversed=true');
     });
 });

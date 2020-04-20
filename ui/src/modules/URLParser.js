@@ -3,17 +3,18 @@ import qs from 'qs';
 
 import useCases from 'constants/useCaseTypes';
 import { searchParams, sortParams, pagingParams } from 'constants/searchParams';
-import { WorkflowState, WorkflowEntity } from './WorkflowState';
+import WorkflowEntity from './WorkflowEntity';
+import { WorkflowState } from './WorkflowState';
 import {
     nestedPaths as workflowPaths,
     urlEntityListTypes,
     urlEntityTypes,
-    riskPath
+    riskPath,
 } from '../routePaths';
 
 function getTypeKeyFromParamValue(value, listOnly) {
-    const listMatch = Object.entries(urlEntityListTypes).find(entry => entry[1] === value);
-    const entityMatch = Object.entries(urlEntityTypes).find(entry => entry[1] === value);
+    const listMatch = Object.entries(urlEntityListTypes).find((entry) => entry[1] === value);
+    const entityMatch = Object.entries(urlEntityTypes).find((entry) => entry[1] === value);
     const match = listOnly ? listMatch : listMatch || entityMatch;
     return match ? match[0] : null;
 }
@@ -61,7 +62,7 @@ function formatSort(sort) {
     return sorts.map(({ id, desc }) => {
         return {
             id,
-            desc: JSON.parse(desc)
+            desc: JSON.parse(desc),
         };
     });
 }
@@ -73,23 +74,23 @@ function parseURL(location) {
 
     const { pathname, search } = location;
     const listParams = matchPath(pathname, {
-        path: workflowPaths.LIST
+        path: workflowPaths.LIST,
     });
     const entityParams = matchPath(pathname, {
-        path: workflowPaths.ENTITY
+        path: workflowPaths.ENTITY,
     });
     const dashboardParams = matchPath(pathname, {
         path: workflowPaths.DASHBOARD,
-        exact: true
+        exact: true,
     });
     const riskParams = {
         params: {
             ...matchPath(pathname, {
                 path: riskPath,
-                exact: true
+                exact: true,
             }),
-            context: useCases.RISK
-        }
+            context: useCases.RISK,
+        },
     };
 
     const { params } = entityParams || listParams || dashboardParams || riskParams;
@@ -104,7 +105,7 @@ function parseURL(location) {
         [sortParams.page]: pageSort,
         [sortParams.sidePanel]: sidePanelSort,
         [pagingParams.page]: pagePaging,
-        [pagingParams.sidePanel]: sidePanelPaging
+        [pagingParams.sidePanel]: sidePanelPaging,
     } = queryStr;
 
     stateStackFromQueryString = !Array.isArray(stateStackFromQueryString)
@@ -119,15 +120,15 @@ function parseURL(location) {
         [...stateStackFromURLParams, ...stateStackFromQueryString],
         {
             [searchParams.page]: pageSearch || null,
-            [searchParams.sidePanel]: sidePanelSearch || null
+            [searchParams.sidePanel]: sidePanelSearch || null,
         },
         {
             [sortParams.page]: formatSort(pageSort),
-            [sortParams.sidePanel]: formatSort(sidePanelSort)
+            [sortParams.sidePanel]: formatSort(sidePanelSort),
         },
         {
             [pagingParams.page]: parseInt(pagePaging || 0, 10),
-            [pagingParams.sidePanel]: parseInt(sidePanelPaging || 0, 10)
+            [pagingParams.sidePanel]: parseInt(sidePanelPaging || 0, 10),
         }
     );
 

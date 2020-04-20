@@ -7,13 +7,13 @@ import { withRouter } from 'react-router-dom';
 
 import DashboardMenu from 'Components/DashboardMenu';
 
-const getLabel = entityType => pluralize(entityLabels[entityType]);
+const getLabel = (entityType) => pluralize(entityLabels[entityType]);
 
 const createOptions = (urlBuilder, types) => {
-    return types.map(type => {
+    return types.map((type) => {
         return {
             label: getLabel(type),
-            link: urlBuilder.base(type).url()
+            link: urlBuilder.base(type).url(),
         };
     });
 };

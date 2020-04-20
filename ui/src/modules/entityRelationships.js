@@ -23,15 +23,15 @@ export const useCaseEntityMap = {
         entityTypes.SUBJECT,
         entityTypes.SERVICE_ACCOUNT,
         entityTypes.POLICY,
-        ...baseEntities
+        ...baseEntities,
     ],
     [useCaseTypes.VULN_MANAGEMENT]: [
         entityTypes.POLICY,
         entityTypes.CVE,
         ...baseEntities,
         entityTypes.IMAGE,
-        entityTypes.COMPONENT
-    ]
+        entityTypes.COMPONENT,
+    ],
 };
 
 export const entityGroups = {
@@ -39,7 +39,7 @@ export const entityGroups = {
     VIOLATIONS_AND_FINDINGS: 'Violations & Findings',
     APPLICATION_RESOURCES: 'Application & Infrastructure',
     RBAC_CONFIG: 'RBAC Visibility & Configurations',
-    SECURITY: 'Security Findings'
+    SECURITY: 'Security Findings',
 };
 
 export const entityGroupMap = {
@@ -57,7 +57,7 @@ export const entityGroupMap = {
 
     [entityTypes.POLICY]: entityGroups.SECURITY,
     [entityTypes.CONTROL]: entityGroups.SECURITY,
-    [entityTypes.CVE]: entityGroups.SECURITY
+    [entityTypes.CVE]: entityGroups.SECURITY,
 };
 
 // const edgeTypes = {
@@ -82,18 +82,18 @@ const entityRelationshipMap = {
     [entityTypes.CLUSTER]: {
         children: [entityTypes.NODE, entityTypes.NAMESPACE, entityTypes.ROLE],
         parents: [],
-        matches: [entityTypes.CONTROL]
+        matches: [entityTypes.CONTROL],
         // extendedMatches: [entityTypes.POLICY]
     },
     [entityTypes.NODE]: {
         children: [],
         parents: [entityTypes.CLUSTER],
-        matches: [entityTypes.CONTROL]
+        matches: [entityTypes.CONTROL],
     },
     [entityTypes.NAMESPACE]: {
         children: [entityTypes.DEPLOYMENT, entityTypes.SERVICE_ACCOUNT, entityTypes.SECRET],
         parents: [entityTypes.CLUSTER],
-        matches: []
+        matches: [],
         // extendedMatches: [entityTypes.POLICY]
     },
     [entityTypes.DEPLOYMENT]: {
@@ -103,92 +103,95 @@ const entityRelationshipMap = {
             entityTypes.SERVICE_ACCOUNT,
             entityTypes.POLICY,
             entityTypes.CONTROL,
-            entityTypes.SECRET
-        ]
+            entityTypes.SECRET,
+        ],
     },
     [entityTypes.IMAGE]: {
         children: [entityTypes.COMPONENT],
         parents: [],
-        matches: [entityTypes.DEPLOYMENT]
+        matches: [entityTypes.DEPLOYMENT],
     },
     [entityTypes.COMPONENT]: {
         children: [entityTypes.CVE],
         parents: [],
         matches: [entityTypes.IMAGE],
-        extendedMatches: [entityTypes.DEPLOYMENT]
+        extendedMatches: [entityTypes.DEPLOYMENT],
     },
     [entityTypes.CVE]: {
         children: [],
         parents: [],
         matches: [entityTypes.COMPONENT],
-        extendedMatches: [entityTypes.IMAGE, entityTypes.DEPLOYMENT]
+        extendedMatches: [entityTypes.IMAGE, entityTypes.DEPLOYMENT],
     },
     [entityTypes.CONTROL]: {
         children: [],
         parents: [],
-        matches: [entityTypes.NODE, entityTypes.DEPLOYMENT, entityTypes.CLUSTER]
+        matches: [entityTypes.NODE, entityTypes.DEPLOYMENT, entityTypes.CLUSTER],
     },
     [entityTypes.POLICY]: {
         children: [],
         parents: [],
-        matches: [entityTypes.DEPLOYMENT]
+        matches: [entityTypes.DEPLOYMENT],
     },
     [entityTypes.SECRET]: {
         children: [],
         parents: [entityTypes.NAMESPACE],
-        matches: [entityTypes.DEPLOYMENT]
+        matches: [entityTypes.DEPLOYMENT],
     },
     [entityTypes.SUBJECT]: {
         children: [],
         parents: [],
-        matches: [entityTypes.ROLE]
+        matches: [entityTypes.ROLE],
     },
     [entityTypes.SERVICE_ACCOUNT]: {
         children: [],
         parents: [entityTypes.NAMESPACE],
-        matches: [entityTypes.DEPLOYMENT, entityTypes.ROLE]
+        matches: [entityTypes.DEPLOYMENT, entityTypes.ROLE],
     },
     [entityTypes.ROLE]: {
         children: [],
         parents: [entityTypes.CLUSTER],
-        matches: [entityTypes.SERVICE_ACCOUNT, entityTypes.SUBJECT]
-    }
+        matches: [entityTypes.SERVICE_ACCOUNT, entityTypes.SUBJECT],
+    },
 };
 
 // helper functions
-const getChildren = entityType => entityRelationshipMap[entityType].children;
-const getParents = entityType => entityRelationshipMap[entityType].parents;
-const getPureMatches = entityType => entityRelationshipMap[entityType].matches;
-const getExtendedMatches = entityType => entityRelationshipMap[entityType].extendedMatches || [];
-const getMatches = entityType => [...getPureMatches(entityType), ...getExtendedMatches(entityType)];
+const getChildren = (entityType) => entityRelationshipMap[entityType].children;
+const getParents = (entityType) => entityRelationshipMap[entityType].parents;
+const getPureMatches = (entityType) => entityRelationshipMap[entityType].matches;
+const getExtendedMatches = (entityType) => entityRelationshipMap[entityType].extendedMatches || [];
+const getMatches = (entityType) => [
+    ...getPureMatches(entityType),
+    ...getExtendedMatches(entityType),
+];
 
 // function to recursively get inclusive 'contains' relationships (inferred)
 // this includes all generations of children AND inferred (matches of children down the chain) relationships
 // e.g. namespace inclusively contains policy since ns contains deployment and deployment matches policy
-const getContains = entityType => {
+const getContains = (entityType) => {
     const relationships = [];
     const children = getChildren(entityType);
     if (children) {
-        children.forEach(child => {
+        children.forEach((child) => {
             const childMatches = getPureMatches(child);
             const childContains = getContains(child);
             relationships.push(child, ...childMatches, ...childContains);
         });
     }
     // TODO: Should never return a type as a relationship of itself. Seems like logic is off somewhere
-    return uniq(relationships).filter(type => type !== entityType);
+    return uniq(relationships).filter((type) => type !== entityType);
 };
 
-const isChild = (parent, child) => !!getChildren(parent).find(c => c === child);
-const isParent = (parent, child) => !!getParents(child).find(p => p === parent);
+const isChild = (parent, child) => !!getChildren(parent).find((c) => c === child);
+const isParent = (parent, child) => !!getParents(child).find((p) => p === parent);
 const isMatch = (entityType1, entityType2) =>
-    !!getMatches(entityType1).find(m => m === entityType2);
+    !!getMatches(entityType1).find((m) => m === entityType2);
 const isPureMatch = (entityType1, entityType2) =>
-    !!getPureMatches(entityType1).find(m => m === entityType2);
+    !!getPureMatches(entityType1).find((m) => m === entityType2);
 const isExtendedMatch = (entityType1, entityType2) =>
-    !!getExtendedMatches(entityType1).find(m => m === entityType2);
+    !!getExtendedMatches(entityType1).find((m) => m === entityType2);
 const isContained = (entityType1, entityType2) =>
-    !!getContains(entityType1).find(c => c === entityType2);
+    !!getContains(entityType1).find((c) => c === entityType2);
 const isContainedInferred = (entityType1, entityType2) =>
     entityType1 !== entityType2 &&
     !!isContained(entityType1, entityType2) &&
@@ -209,7 +212,7 @@ export const getEntityTypesByRelationship = (entityType, relationship, useCase) 
     } else if (relationship === relationshipTypes.CHILDREN) {
         entities = getChildren(entityType);
     }
-    return entities.filter(entity => useCaseEntityMap[useCase].includes(entity));
+    return entities.filter((entity) => useCaseEntityMap[useCase].includes(entity));
 };
 
 export default {
@@ -223,5 +226,5 @@ export default {
     isPureMatch,
     isExtendedMatch,
     isContained,
-    isContainedInferred
+    isContainedInferred,
 };

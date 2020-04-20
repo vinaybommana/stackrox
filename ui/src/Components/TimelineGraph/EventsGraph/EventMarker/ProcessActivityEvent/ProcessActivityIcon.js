@@ -42,11 +42,11 @@ const ProcessActivityIcon = forwardRef(({ height, width }, ref) => {
 
 ProcessActivityIcon.propTypes = {
     width: PropTypes.number.isRequired,
-    height: PropTypes.number
+    height: PropTypes.number,
 };
 
 ProcessActivityIcon.defaultProps = {
-    height: null
+    height: null,
 };
 
 export default ProcessActivityIcon;

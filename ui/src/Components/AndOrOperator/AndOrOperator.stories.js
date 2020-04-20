@@ -7,7 +7,7 @@ import AndOrOperator from './AndOrOperator';
 
 export default {
     title: 'AndOrOperator',
-    component: AndOrOperator
+    component: AndOrOperator,
 };
 
 export const withAnd = () => {

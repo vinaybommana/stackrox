@@ -40,15 +40,15 @@ RadioButtonGroup.propTypes = {
     headerText: PropTypes.string.isRequired,
     buttons: PropTypes.arrayOf(
         PropTypes.shape({
-            text: PropTypes.string.isRequired
+            text: PropTypes.string.isRequired,
         })
     ).isRequired,
     selected: PropTypes.string,
-    onClick: PropTypes.func.isRequired
+    onClick: PropTypes.func.isRequired,
 };
 
 RadioButtonGroup.defaultProps = {
-    selected: null
+    selected: null,
 };
 
 export default RadioButtonGroup;

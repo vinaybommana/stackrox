@@ -8,7 +8,7 @@ import workflowStateContext from 'Containers/workflowStateContext';
 import VulnMgmtDashboardPage from 'Containers/VulnMgmt/Dashboard/VulnMgmtDashboardPage';
 
 const DashboardMap = {
-    [useCaseTypes.VULN_MANAGEMENT]: VulnMgmtDashboardPage
+    [useCaseTypes.VULN_MANAGEMENT]: VulnMgmtDashboardPage,
 };
 
 const WorkflowDashboardLayout = ({ match, location }) => {

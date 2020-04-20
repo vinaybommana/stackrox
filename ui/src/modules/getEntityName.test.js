@@ -28,10 +28,10 @@ describe('getEntityName', () => {
                 id: 'sha256:d074a3df2ea6c6320a1d888f93995b92c1c072df2fd13814b42cce6109c5f685',
                 name: {
                     fullName: 'us.gcr.io/ultra-current-825/struts-violations/visa-processor:latest',
-                    __typename: 'ImageName'
+                    __typename: 'ImageName',
                 },
-                __typename: 'Image'
-            }
+                __typename: 'Image',
+            },
         };
 
         const entityName = getEntityName(entityType, data);
@@ -48,18 +48,18 @@ describe('getEntityName', () => {
                 {
                     id: '07a88749-1c93-4c64-98dc-a737dd8f2283',
                     k8srole: null,
-                    __typename: 'Cluster'
+                    __typename: 'Cluster',
                 },
                 {
                     id: 'de9e9702-f1f1-4a6e-b98a-1df994aeadc1',
                     k8srole: {
                         id: '017eefb7-6f72-11ea-a65a-42010a8a0161',
                         name: 'system:kube-dns',
-                        __typename: 'K8SRole'
+                        __typename: 'K8SRole',
                     },
-                    __typename: 'Cluster'
-                }
-            ]
+                    __typename: 'Cluster',
+                },
+            ],
         };
 
         const entityName = getEntityName(entityType, data);
@@ -74,8 +74,8 @@ describe('getEntityName', () => {
                 id: 'CIS_Docker_v1_2_0:1_2_1',
                 name: '1.2.1',
                 description: 'Ensure a separate partition for containers has been created',
-                __typename: 'ComplianceControl'
-            }
+                __typename: 'ComplianceControl',
+            },
         };
 
         const entityName = getEntityName(entityType, data);
@@ -95,11 +95,11 @@ describe('getEntityName', () => {
                         id: 'system:kube-controller-manager',
                         subject: {
                             name: 'system:kube-controller-manager',
-                            __typename: 'Subject'
+                            __typename: 'Subject',
                         },
-                        __typename: 'SubjectWithClusterID'
+                        __typename: 'SubjectWithClusterID',
                     },
-                    __typename: 'Cluster'
+                    __typename: 'Cluster',
                 },
                 {
                     id: 'de9e9702-f1f1-4a6e-b98a-1df994aeadc1',
@@ -107,13 +107,13 @@ describe('getEntityName', () => {
                         id: 'system:kube-controller-manager',
                         subject: {
                             name: 'system:kube-controller-manager',
-                            __typename: 'Subject'
+                            __typename: 'Subject',
                         },
-                        __typename: 'SubjectWithClusterID'
+                        __typename: 'SubjectWithClusterID',
                     },
-                    __typename: 'Cluster'
-                }
-            ]
+                    __typename: 'Cluster',
+                },
+            ],
         };
 
         const entityName = getEntityName(entityType, data);
@@ -127,8 +127,8 @@ describe('getEntityName', () => {
             serviceAccount: {
                 id: '66853828-6f72-11ea-b000-42010a8a005a',
                 name: 'admission-control',
-                __typename: 'ServiceAccount'
-            }
+                __typename: 'ServiceAccount',
+            },
         };
 
         const entityName = getEntityName(entityType, data);
@@ -142,8 +142,8 @@ describe('getEntityName', () => {
             secret: {
                 id: '63dc443c-6f72-11ea-a65a-42010a8a0161',
                 name: 'collector-stackrox',
-                __typename: 'Secret'
-            }
+                __typename: 'Secret',
+            },
         };
 
         const entityName = getEntityName(entityType, data);
@@ -157,8 +157,8 @@ describe('getEntityName', () => {
             cluster: {
                 id: '07a88749-1c93-4c64-98dc-a737dd8f2283',
                 name: 'production',
-                __typename: 'Cluster'
-            }
+                __typename: 'Cluster',
+            },
         };
 
         const entityName = getEntityName(entityType, data);
@@ -173,15 +173,15 @@ describe('getEntityName', () => {
                 id: 'sha256:d074a3df2ea6c6320a1d888f93995b92c1c072df2fd13814b42cce6109c5f685',
                 name: {
                     fullName: 'us.gcr.io/ultra-current-825/struts-violations/visa-processor:latest',
-                    __typename: 'ImageName'
+                    __typename: 'ImageName',
                 },
-                __typename: 'Image'
+                __typename: 'Image',
             },
             component: {
                 id: 'bGlieG1sMg:Mi45LjErZGZzZzEtNStkZWI4dTQ',
                 name: 'libxml2',
-                __typename: 'EmbeddedImageScanComponent'
-            }
+                __typename: 'EmbeddedImageScanComponent',
+            },
         };
 
         const entityName = getEntityName(entityType, data);
@@ -196,8 +196,8 @@ describe('getEntityName', () => {
                 id: 'CVE-2017-7376',
                 name: 'CVE-2017-7376',
                 cve: 'CVE-2017-7376',
-                __typename: 'EmbeddedVulnerability'
-            }
+                __typename: 'EmbeddedVulnerability',
+            },
         };
 
         const entityName = getEntityName(entityType, data);
@@ -211,8 +211,8 @@ describe('getEntityName', () => {
             deployment: {
                 id: '7ac0fabd-6f72-11ea-b000-42010a8a005a',
                 name: 'visa-processor',
-                __typename: 'Deployment'
-            }
+                __typename: 'Deployment',
+            },
         };
 
         const entityName = getEntityName(entityType, data);
@@ -227,10 +227,10 @@ describe('getEntityName', () => {
                 metadata: {
                     name: 'stackrox',
                     id: '65acc658-6f72-11ea-b000-42010a8a005a',
-                    __typename: 'NamespaceMetadata'
+                    __typename: 'NamespaceMetadata',
                 },
-                __typename: 'Namespace'
-            }
+                __typename: 'Namespace',
+            },
         };
 
         const entityName = getEntityName(entityType, data);
@@ -244,8 +244,8 @@ describe('getEntityName', () => {
             node: {
                 id: '1bc856c3-6f72-11ea-b000-42010a8a005a',
                 name: 'gke-setup-ops52f53-prod-default-pool-2fdbe4fa-08fh',
-                __typename: 'Node'
-            }
+                __typename: 'Node',
+            },
         };
 
         const entityName = getEntityName(entityType, data);
@@ -259,8 +259,8 @@ describe('getEntityName', () => {
             policy: {
                 id: '900990b5-60ef-44e5-b7f6-4a1f22215d7f',
                 name: 'Apache Struts: CVE-2017-5638',
-                __typename: 'Policy'
-            }
+                __typename: 'Policy',
+            },
         };
 
         const entityName = getEntityName(entityType, data);

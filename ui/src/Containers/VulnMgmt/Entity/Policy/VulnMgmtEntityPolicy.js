@@ -21,7 +21,7 @@ const VulmMgmtEntityPolicy = ({
     entityContext,
     sort,
     page,
-    setRefreshTrigger
+    setRefreshTrigger,
 }) => {
     const queryVarParam = entityContext[entityTypes.POLICY] ? '' : '(query: $scopeQuery)';
     const queryVarConcat = entityContext[entityTypes.POLICY] ? '' : ', query: $scopeQuery';
@@ -200,8 +200,8 @@ const VulmMgmtEntityPolicy = ({
             id: entityId,
             query: queryService.objectToWhereClause({ ...search }),
             ...vulMgmtPolicyQuery,
-            scopeQuery: getScopeQuery(fullEntityContext)
-        }
+            scopeQuery: getScopeQuery(fullEntityContext),
+        },
     };
 
     return (
@@ -226,7 +226,7 @@ const VulmMgmtEntityPolicy = ({
 
 VulmMgmtEntityPolicy.propTypes = {
     ...workflowEntityPropTypes,
-    setRefreshTrigger: PropTypes.func
+    setRefreshTrigger: PropTypes.func,
 };
 VulmMgmtEntityPolicy.defaultProps = workflowEntityDefaultProps;
 

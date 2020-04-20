@@ -22,7 +22,7 @@ const DashboardMenu = ({ text, options }) => {
 
 DashboardMenu.propTypes = {
     text: PropTypes.string.isRequired,
-    options: PropTypes.arrayOf(PropTypes.shape({})).isRequired
+    options: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
 };
 
 export default DashboardMenu;

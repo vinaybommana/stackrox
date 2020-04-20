@@ -29,7 +29,7 @@ const Detail = ({ config, telemetryConfig }) => (
 
 Detail.propTypes = {
     config: PropTypes.shape({}).isRequired,
-    telemetryConfig: PropTypes.shape({}).isRequired
+    telemetryConfig: PropTypes.shape({}).isRequired,
 };
 
 export default Detail;

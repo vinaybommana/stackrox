@@ -14,7 +14,7 @@ import logError from './logError';
  */
 function captureGraphQLErrors(errors) {
     const errorMessages = [];
-    errors.forEach(error => {
+    errors.forEach((error) => {
         if (error) {
             logError(error);
             errorMessages.push(error.message);
@@ -22,7 +22,7 @@ function captureGraphQLErrors(errors) {
     });
     return {
         hasErrors: !!errorMessages.length,
-        errorMessages
+        errorMessages,
     };
 }
 

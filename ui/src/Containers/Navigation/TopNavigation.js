@@ -79,21 +79,16 @@ const TopNavigation = ({ logout, shouldHaveReadPermission }) => {
 
 TopNavigation.propTypes = {
     logout: PropTypes.func.isRequired,
-    shouldHaveReadPermission: PropTypes.func.isRequired
+    shouldHaveReadPermission: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = createStructuredSelector({
     authStatus: selectors.getAuthStatus,
-    shouldHaveReadPermission: selectors.shouldHaveReadPermission
+    shouldHaveReadPermission: selectors.shouldHaveReadPermission,
 });
 
-const mapDispatchToProps = dispatch => ({
-    logout: () => dispatch(authActions.logout())
+const mapDispatchToProps = (dispatch) => ({
+    logout: () => dispatch(authActions.logout()),
 });
 
-export default withRouter(
-    connect(
-        mapStateToProps,
-        mapDispatchToProps
-    )(TopNavigation)
-);
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(TopNavigation));

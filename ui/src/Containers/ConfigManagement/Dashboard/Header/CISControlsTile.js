@@ -24,9 +24,7 @@ const CISControlsTile = ({ match, location }) => {
     const { loading, error, data } = useQuery(NUM_CIS_CONTROLS);
     if (error) logError(error);
 
-    const controlsURL = URLService.getURL(match, location)
-        .base(entityTypes.CONTROL)
-        .url();
+    const controlsURL = URLService.getURL(match, location).base(entityTypes.CONTROL).url();
 
     const numCISControls = !loading ? getNumCISControls(data) : 0;
     return (
@@ -43,7 +41,7 @@ const CISControlsTile = ({ match, location }) => {
 
 CISControlsTile.propTypes = {
     match: ReactRouterPropTypes.match.isRequired,
-    location: ReactRouterPropTypes.location.isRequired
+    location: ReactRouterPropTypes.location.isRequired,
 };
 
 export default withRouter(CISControlsTile);

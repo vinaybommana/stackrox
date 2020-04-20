@@ -11,7 +11,7 @@ const EventsRow = ({
     translateX,
     translateY,
     minTimeRange,
-    maxTimeRange
+    maxTimeRange,
 }) => {
     const eventMarkerSize = Math.max(0, height / 3);
     const eventMarkerOffsetY = Math.max(0, height / 2);

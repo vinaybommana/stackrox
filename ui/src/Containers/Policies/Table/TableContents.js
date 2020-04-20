@@ -18,7 +18,7 @@ import {
     defaultColumnClassName,
     defaultHeaderClassName,
     wrapClassName,
-    rtTrActionsClassName
+    rtTrActionsClassName,
 } from 'Components/Table';
 import { lifecycleStageLabels } from 'messages/common';
 import { sortAscii, sortSeverity, sortLifecycle } from 'sorters/sorters';
@@ -39,27 +39,27 @@ class TableContents extends Component {
         updatePolicyDisabledState: PropTypes.func.isRequired,
         selectPolicyIds: PropTypes.func.isRequired,
         setWizardPolicyDisabled: PropTypes.func.isRequired,
-        deletePolicies: PropTypes.func.isRequired
+        deletePolicies: PropTypes.func.isRequired,
     };
 
     static defaultProps = {
-        wizardPolicy: null
+        wizardPolicy: null,
     };
 
-    setSelectedPolicy = policy => {
+    setSelectedPolicy = (policy) => {
         this.props.setSelectedPolicy(policy.id);
     };
 
-    toggleEnabledDisabledPolicy = ({ id, disabled }) => e => {
+    toggleEnabledDisabledPolicy = ({ id, disabled }) => (e) => {
         e.stopPropagation();
         this.props.updatePolicyDisabledState({
             policyId: id,
-            disabled: !disabled
+            disabled: !disabled,
         });
         this.props.setWizardPolicyDisabled(!disabled);
     };
 
-    toggleRow = id => {
+    toggleRow = (id) => {
         const selection = toggleRow(id, this.props.selectedPolicyIds);
         this.props.selectPolicyIds(selection);
     };
@@ -71,12 +71,12 @@ class TableContents extends Component {
         this.props.selectPolicyIds(selection);
     };
 
-    onDeletePolicy = ({ id }) => e => {
+    onDeletePolicy = ({ id }) => (e) => {
         e.stopPropagation();
         this.props.deletePolicies([id]);
     };
 
-    renderRowActionButtons = policy => {
+    renderRowActionButtons = (policy) => {
         const enableTooltip = `${policy.disabled ? 'Enable' : 'Disable'} policy`;
         const enableIconColor = policy.disabled ? 'text-primary-600' : 'text-success-600';
         const enableIconHoverColor = policy.disabled ? 'text-primary-700' : 'text-success-700';
@@ -135,13 +135,13 @@ class TableContents extends Component {
                 ),
                 sortMethod: sortAscii,
                 className: `w-1/5 left-checkbox-offset ${wrapClassName} ${defaultColumnClassName}`,
-                headerClassName: `w-1/5 left-checkbox-offset ${defaultHeaderClassName}`
+                headerClassName: `w-1/5 left-checkbox-offset ${defaultHeaderClassName}`,
             },
             {
                 Header: 'Description',
                 accessor: 'description',
                 className: `w-1/3 ${wrapClassName} ${defaultColumnClassName}`,
-                headerClassName: `w-1/3 ${defaultHeaderClassName}`
+                headerClassName: `w-1/3 ${defaultHeaderClassName}`,
             },
             {
                 Header: 'Lifecycle',
@@ -150,27 +150,27 @@ class TableContents extends Component {
                 headerClassName: `${defaultHeaderClassName}`,
                 Cell: ({ original }) => {
                     const { lifecycleStages } = original;
-                    return lifecycleStages.map(stage => lifecycleStageLabels[stage]).join(', ');
+                    return lifecycleStages.map((stage) => lifecycleStageLabels[stage]).join(', ');
                 },
-                sortMethod: sortLifecycle
+                sortMethod: sortLifecycle,
             },
             {
                 Header: 'Severity',
                 accessor: 'severity',
-                Cell: ci => {
+                Cell: (ci) => {
                     const severity = ci.value;
                     return <SeverityLabel severity={severity} />;
                 },
                 width: 100,
-                sortMethod: sortSeverity
+                sortMethod: sortSeverity,
             },
             {
                 Header: '',
                 accessor: '',
                 headerClassName: 'hidden',
                 className: rtTrActionsClassName,
-                Cell: ({ original }) => this.renderRowActionButtons(original)
-            }
+                Cell: ({ original }) => this.renderRowActionButtons(original),
+            },
         ];
 
         const id = this.props.selectedPolicyId;
@@ -198,8 +198,8 @@ class TableContents extends Component {
                     defaultSorted={[
                         {
                             id: 'name',
-                            desc: false
-                        }
+                            desc: false,
+                        },
                     ]}
                 />
             </div>
@@ -214,19 +214,14 @@ const mapStateToProps = createStructuredSelector({
     selectedPolicyIds: selectors.getSelectedPolicyIds,
     wizardOpen: selectors.getWizardOpen,
     wizardStage: selectors.getWizardStage,
-    wizardPolicy: selectors.getWizardPolicy
+    wizardPolicy: selectors.getWizardPolicy,
 });
 
 const mapDispatchToProps = {
     selectPolicyIds: tableActions.selectPolicyIds,
     updatePolicyDisabledState: tableActions.updatePolicyDisabledState,
     deletePolicies: backendActions.deletePolicies,
-    setWizardPolicyDisabled: wizardActions.setWizardPolicyDisabled
+    setWizardPolicyDisabled: wizardActions.setWizardPolicyDisabled,
 };
 
-export default withRouter(
-    connect(
-        mapStateToProps,
-        mapDispatchToProps
-    )(TableContents)
-);
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(TableContents));

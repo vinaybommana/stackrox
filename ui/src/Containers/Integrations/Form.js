@@ -24,7 +24,7 @@ class Form extends Component {
     static propTypes = {
         initialValues: PropTypes.shape({
             id: PropTypes.string,
-            name: PropTypes.string
+            name: PropTypes.string,
         }),
         source: PropTypes.oneOf([
             'imageIntegrations',
@@ -32,21 +32,21 @@ class Form extends Component {
             'authProviders',
             'clusters',
             'backups',
-            'authPlugins'
+            'authPlugins',
         ]).isRequired,
         type: PropTypes.string.isRequired,
         formFields: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
         formData: PropTypes.shape({
-            name: PropTypes.string
+            name: PropTypes.string,
         }).isRequired,
         onClose: PropTypes.func.isRequired,
         testIntegration: PropTypes.func.isRequired,
         saveIntegration: PropTypes.func.isRequired,
-        triggerBackup: PropTypes.func.isRequired
+        triggerBackup: PropTypes.func.isRequired,
     };
 
     static defaultProps = {
-        initialValues: null
+        initialValues: null,
     };
 
     onTest = () => {
@@ -70,7 +70,7 @@ class Form extends Component {
 
     addDefaultFormValues = () => {
         const { initialValues, formData } = this.props;
-        const data = Object.assign({}, initialValues, formData);
+        const data = { ...initialValues, ...formData };
         const { location } = window;
         data.uiEndpoint = this.props.source === 'authProviders' ? location.host : location.origin;
         data.type = this.props.type;
@@ -83,9 +83,11 @@ class Form extends Component {
         return data;
     };
 
-    renderHiddenField = field => <input type="hidden" name={field.jsonpath} value={field.value} />;
+    renderHiddenField = (field) => (
+        <input type="hidden" name={field.jsonpath} value={field.value} />
+    );
 
-    renderFormField = field => {
+    renderFormField = (field) => {
         const disabled = field.disabled || (this.isEditMode() && field.immutable);
         switch (field.type) {
             case 'text':
@@ -169,8 +171,8 @@ class Form extends Component {
             <form id="integrations-form" className="w-full p-4">
                 <div>
                     {formFields
-                        .filter(field => field.type !== 'hidden')
-                        .map(field => {
+                        .filter((field) => field.type !== 'hidden')
+                        .map((field) => {
                             if (field.type === 'html') {
                                 return field.html;
                             }
@@ -187,7 +189,7 @@ class Form extends Component {
                             );
                         })}
                     {formFields
-                        .filter(field => field.type === 'hidden')
+                        .filter((field) => field.type === 'hidden')
                         .map(this.renderHiddenField)}
                 </div>
             </form>
@@ -197,7 +199,7 @@ class Form extends Component {
     render() {
         const header = this.isEditMode() ? this.props.formData.name : 'New Integration';
         const buttons = (
-            <React.Fragment>
+            <>
                 <PanelButton
                     icon={<Icon.Save className="h-4 w-4" />}
                     className="btn btn-success mx-1"
@@ -228,7 +230,7 @@ class Form extends Component {
                         Test
                     </PanelButton>
                 )}
-            </React.Fragment>
+            </>
         );
 
         return (
@@ -247,12 +249,12 @@ const getFormFields = createSelector(
 );
 
 const getFormFieldKeys = (source, type) =>
-    formDescriptors[source] ? formDescriptors[source][type].map(obj => obj.jsonpath) : '';
+    formDescriptors[source] ? formDescriptors[source][type].map((obj) => obj.jsonpath) : '';
 
 const getFormDefaultValues = (source, type) => {
     const defaultValues = {};
     if (formDescriptors[source] && formDescriptors[source][type]) {
-        formDescriptors[source][type].forEach(field => {
+        formDescriptors[source][type].forEach((field) => {
             if (field.default) {
                 set(defaultValues, field.jsonpath, field.default);
             }
@@ -267,31 +269,25 @@ const formFieldKeys = (state, props) => {
         ...getFormFieldKeys(props.source, props.type)
     );
     const defaultValues = getFormDefaultValues(props.source, props.type);
-    const initialValues = Object.assign({}, defaultValues, values);
+    const initialValues = { ...defaultValues, ...values };
     return initialValues;
 };
 
-const getFormData = createSelector(
-    [formFieldKeys],
-    formData => formData
-);
+const getFormData = createSelector([formFieldKeys], (formData) => formData);
 
 const mapStateToProps = createStructuredSelector({
     formFields: getFormFields,
-    formData: getFormData
+    formData: getFormData,
 });
 
-const mapDispatchToProps = dispatch => ({
+const mapDispatchToProps = (dispatch) => ({
     saveIntegration: (source, sourceType, integration) =>
         dispatch(actions.saveIntegration.request({ source, sourceType, integration })),
     testIntegration: (source, integration) =>
         dispatch(actions.testIntegration(source, integration)),
-    triggerBackup: (source, id) => dispatch(actions.triggerBackup(source, id))
+    triggerBackup: (source, id) => dispatch(actions.triggerBackup(source, id)),
 });
 
 export default reduxForm({ form: 'integrationForm' })(
-    connect(
-        mapStateToProps,
-        mapDispatchToProps
-    )(Form)
+    connect(mapStateToProps, mapDispatchToProps)(Form)
 );

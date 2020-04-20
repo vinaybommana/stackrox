@@ -30,9 +30,7 @@ const RelatedEntity = ({
         if (workflowState && workflowState.useCase) {
             url = workflowState.pushRelatedEntity(entityType, entityId).toUrl();
         } else {
-            url = URLService.getURL(match, location)
-                .push(entityType, entityId)
-                .url();
+            url = URLService.getURL(match, location).push(entityType, entityId).url();
         }
         history.push(url);
     }
@@ -79,14 +77,14 @@ RelatedEntity.propTypes = {
     link: PropTypes.string,
     match: ReactRouterPropTypes.match.isRequired,
     location: ReactRouterPropTypes.location.isRequired,
-    history: ReactRouterPropTypes.history.isRequired
+    history: ReactRouterPropTypes.history.isRequired,
 };
 
 RelatedEntity.defaultProps = {
     link: null,
     value: '',
     entityId: null,
-    name: null
+    name: null,
 };
 
 export default withRouter(RelatedEntity);

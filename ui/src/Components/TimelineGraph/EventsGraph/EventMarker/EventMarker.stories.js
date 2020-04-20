@@ -5,7 +5,7 @@ import EventMarker from './EventMarker';
 
 export default {
     title: 'EventMarker',
-    component: EventMarker
+    component: EventMarker,
 };
 
 export const policyViolationEvent = () => {

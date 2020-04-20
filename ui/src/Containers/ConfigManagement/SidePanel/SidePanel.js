@@ -25,7 +25,7 @@ const SidePanel = ({
     entityType2,
     entityListType2,
     entityId2,
-    query
+    query,
 }) => {
     const { isDarkMode } = useTheme();
     const searchParam = useContext(searchContext);
@@ -55,11 +55,7 @@ const SidePanel = ({
     }
 
     function onClose() {
-        history.push(
-            URLService.getURL(match, location)
-                .clearSidePanelParams()
-                .url()
-        );
+        history.push(URLService.getURL(match, location).clearSidePanelParams().url());
     }
 
     SidePanel.handleClickOutside = () => {
@@ -143,7 +139,7 @@ SidePanel.propTypes = {
     entityType2: PropTypes.string,
     entityListType2: PropTypes.string,
     entityId2: PropTypes.string,
-    query: PropTypes.shape().isRequired
+    query: PropTypes.shape().isRequired,
 };
 
 SidePanel.defaultProps = {
@@ -155,11 +151,11 @@ SidePanel.defaultProps = {
     entityId1: null,
     entityType2: null,
     entityListType2: null,
-    entityId2: null
+    entityId2: null,
 };
 
 const clickOutsideConfig = {
-    handleClickOutside: () => SidePanel.handleClickOutside
+    handleClickOutside: () => SidePanel.handleClickOutside,
 };
 
 /*

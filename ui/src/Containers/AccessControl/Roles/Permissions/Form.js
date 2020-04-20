@@ -47,14 +47,14 @@ Form.propTypes = {
     onSubmit: PropTypes.func.isRequired,
     initialValues: PropTypes.shape({
         name: PropTypes.string,
-        resourceToAccess: PropTypes.shape({})
-    })
+        resourceToAccess: PropTypes.shape({}),
+    }),
 };
 
 Form.defaultProps = {
-    initialValues: null
+    initialValues: null,
 };
 
 export default reduxForm({
-    form: 'role-form'
+    form: 'role-form',
 })(Form);

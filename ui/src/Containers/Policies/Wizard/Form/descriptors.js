@@ -2,7 +2,7 @@ import {
     lifecycleStageLabels,
     portExposureLabels,
     envVarSrcLabels,
-    rbacPermissionLabels
+    rbacPermissionLabels,
 } from 'messages/common';
 import { clientOnlyWhitelistFieldNames } from './whitelistFieldNames';
 
@@ -10,14 +10,14 @@ const equalityOptions = [
     { label: 'Is greater than', value: 'GREATER_THAN' },
     {
         label: 'Is greater than or equal to',
-        value: 'GREATER_THAN_OR_EQUALS'
+        value: 'GREATER_THAN_OR_EQUALS',
     },
     { label: 'Is equal to', value: 'EQUALS' },
     {
         label: 'Is less than or equal to',
-        value: 'LESS_THAN_OR_EQUALS'
+        value: 'LESS_THAN_OR_EQUALS',
     },
-    { label: 'Is less than', value: 'LESS_THAN' }
+    { label: 'Is less than', value: 'LESS_THAN' },
 ];
 
 // TO-DO: to add when old policy format is deprecated
@@ -45,7 +45,7 @@ const cpuResource = (label, policy, field) => ({
             jsonpath: `fields.${policy}.${field}.op`,
             type: 'select',
             options: equalityOptions,
-            subpath: 'key'
+            subpath: 'key',
         },
         {
             jsonpath: `fields.${policy}.${field}.value`,
@@ -53,12 +53,12 @@ const cpuResource = (label, policy, field) => ({
             placeholder: '# of cores',
             min: 0,
             step: 0.1,
-            subpath: 'value'
-        }
+            subpath: 'value',
+        },
     ],
     required: false,
     default: false,
-    canNegate: false
+    canNegate: false,
 });
 
 const capabilities = [
@@ -99,7 +99,7 @@ const capabilities = [
     { label: 'CAP_SYS_TIME', value: 'CAP_SYS_TIME' },
     { label: 'CAP_SYS_TTY_CONFIG', value: 'CAP_SYS_TTY_CONFIG' },
     { label: 'CAP_SYSLOG', value: 'CAP_SYSLOG' },
-    { label: 'CAP_WAKE_ALARM', value: 'CAP_WAKE_ALARM' }
+    { label: 'CAP_WAKE_ALARM', value: 'CAP_WAKE_ALARM' },
 ];
 
 const memoryResource = (label, policy, field) => ({
@@ -112,18 +112,18 @@ const memoryResource = (label, policy, field) => ({
             jsonpath: `fields.${policy}.${field}.op`,
             type: 'select',
             options: equalityOptions,
-            subpath: 'key'
+            subpath: 'key',
         },
         {
             jsonpath: `fields.${policy}.${field}.value`,
             type: 'number',
             placeholder: '# MB',
             min: 0,
-            subpath: 'value'
-        }
+            subpath: 'value',
+        },
     ],
     required: false,
-    default: false
+    default: false,
 });
 
 // A descriptor for every option on the policy creation page.
@@ -135,8 +135,8 @@ const policyStatusDescriptor = [
         type: 'toggle',
         required: false,
         reverse: true,
-        default: true
-    }
+        default: true,
+    },
 ];
 
 const policyDetailsFormDescriptor = [
@@ -145,7 +145,7 @@ const policyDetailsFormDescriptor = [
         jsonpath: 'name',
         type: 'text',
         required: true,
-        default: true
+        default: true,
     },
     {
         label: 'Severity',
@@ -155,22 +155,22 @@ const policyDetailsFormDescriptor = [
             { label: 'Critical', value: 'CRITICAL_SEVERITY' },
             { label: 'High', value: 'HIGH_SEVERITY' },
             { label: 'Medium', value: 'MEDIUM_SEVERITY' },
-            { label: 'Low', value: 'LOW_SEVERITY' }
+            { label: 'Low', value: 'LOW_SEVERITY' },
         ],
         placeholder: 'Select a severity level',
         required: true,
-        default: true
+        default: true,
     },
     {
         label: 'Lifecycle Stages',
         jsonpath: 'lifecycleStages',
         type: 'multiselect',
-        options: Object.keys(lifecycleStageLabels).map(key => ({
+        options: Object.keys(lifecycleStageLabels).map((key) => ({
             label: lifecycleStageLabels[key],
-            value: key
+            value: key,
         })),
         required: true,
-        default: true
+        default: true,
     },
     {
         label: 'Description',
@@ -178,7 +178,7 @@ const policyDetailsFormDescriptor = [
         type: 'textarea',
         placeholder: 'What does this policy do?',
         required: false,
-        default: true
+        default: true,
     },
     {
         label: 'Rationale',
@@ -186,7 +186,7 @@ const policyDetailsFormDescriptor = [
         type: 'textarea',
         placeholder: 'Why does this policy exist?',
         required: false,
-        default: true
+        default: true,
     },
     {
         label: 'Remediation',
@@ -194,7 +194,7 @@ const policyDetailsFormDescriptor = [
         type: 'textarea',
         placeholder: 'What can an operator do to resolve any violations?',
         required: false,
-        default: true
+        default: true,
     },
     {
         label: 'Categories',
@@ -202,7 +202,7 @@ const policyDetailsFormDescriptor = [
         type: 'multiselect-creatable',
         options: [],
         required: true,
-        default: true
+        default: true,
     },
     {
         label: 'Notifications',
@@ -210,7 +210,7 @@ const policyDetailsFormDescriptor = [
         type: 'multiselect',
         options: [],
         required: false,
-        default: true
+        default: true,
     },
     {
         label: 'Restrict to Scope',
@@ -218,7 +218,7 @@ const policyDetailsFormDescriptor = [
         type: 'scope',
         options: [],
         required: false,
-        default: true
+        default: true,
     },
     {
         label: 'Whitelist by Scope',
@@ -226,7 +226,7 @@ const policyDetailsFormDescriptor = [
         type: 'whitelistScope',
         options: [],
         required: false,
-        default: true
+        default: true,
     },
     {
         label: 'Images Whitelist (Build Lifecycle only)',
@@ -234,8 +234,8 @@ const policyDetailsFormDescriptor = [
         type: 'multiselect-creatable',
         options: [],
         required: false,
-        default: true
-    }
+        default: true,
+    },
 ];
 
 const policyConfigurationDescriptor = [
@@ -247,7 +247,7 @@ const policyConfigurationDescriptor = [
         placeholder: 'docker.io',
         required: false,
         default: false,
-        canNegate: true
+        canNegate: true,
         // canBooleanLogic:
     },
     {
@@ -258,7 +258,7 @@ const policyConfigurationDescriptor = [
         placeholder: 'library/nginx',
         required: false,
         default: false,
-        canNegate: false
+        canNegate: false,
     },
     {
         label: 'Image Tag',
@@ -268,7 +268,7 @@ const policyConfigurationDescriptor = [
         placeholder: 'latest',
         required: false,
         default: false,
-        canNegate: true
+        canNegate: true,
     },
     {
         label: 'Days since image was created',
@@ -279,7 +279,7 @@ const policyConfigurationDescriptor = [
         placeholder: '1',
         required: false,
         default: false,
-        canNegate: false
+        canNegate: false,
     },
     {
         label: 'Days since image was last scanned',
@@ -290,7 +290,7 @@ const policyConfigurationDescriptor = [
         placeholder: '1',
         required: false,
         default: false,
-        canNegate: false
+        canNegate: false,
     },
     {
         label: 'Dockerfile Line',
@@ -315,21 +315,21 @@ const policyConfigurationDescriptor = [
                     { label: 'VOLUME', value: 'VOLUME' },
                     { label: 'USER', value: 'USER' },
                     { label: 'WORKDIR', value: 'WORKDIR' },
-                    { label: 'ONBUILD', value: 'ONBUILD' }
+                    { label: 'ONBUILD', value: 'ONBUILD' },
                 ],
-                subpath: 'key'
+                subpath: 'key',
             },
             {
                 jsonpath: 'fields.lineRule.value',
                 name: 'value',
                 type: 'text',
                 placeholder: '.*example.*',
-                subpath: 'value'
-            }
+                subpath: 'value',
+            },
         ],
         required: false,
         default: false,
-        canNegate: false
+        canNegate: false,
     },
     {
         label: 'Image is NOT Scanned',
@@ -341,7 +341,7 @@ const policyConfigurationDescriptor = [
         default: false,
         defaultValue: true,
         disabled: true,
-        canNegate: false
+        canNegate: false,
     },
     {
         label: 'CVSS',
@@ -353,7 +353,7 @@ const policyConfigurationDescriptor = [
                 jsonpath: 'fields.cvss.op',
                 type: 'select',
                 options: equalityOptions,
-                subpath: 'key'
+                subpath: 'key',
             },
             {
                 jsonpath: 'fields.cvss.value',
@@ -362,12 +362,12 @@ const policyConfigurationDescriptor = [
                 max: 10,
                 min: 0,
                 step: 0.1,
-                subpath: 'value'
-            }
+                subpath: 'value',
+            },
         ],
         required: false,
         default: false,
-        canNegate: false
+        canNegate: false,
     },
     {
         label: 'Fixed By',
@@ -378,7 +378,7 @@ const policyConfigurationDescriptor = [
         placeholder: '.*',
         required: false,
         default: false,
-        canNegate: false
+        canNegate: false,
     },
     {
         label: 'CVE',
@@ -388,7 +388,7 @@ const policyConfigurationDescriptor = [
         placeholder: 'CVE-2017-11882',
         required: false,
         default: false,
-        canNegate: true
+        canNegate: true,
     },
     {
         label: 'Image Component',
@@ -401,18 +401,18 @@ const policyConfigurationDescriptor = [
                 jsonpath: 'fields.component.name',
                 type: 'text',
                 placeholder: 'example',
-                subpath: 'key'
+                subpath: 'key',
             },
             {
                 jsonpath: 'fields.component.version',
                 type: 'text',
                 placeholder: '1.2.[0-9]+',
-                subpath: 'value'
-            }
+                subpath: 'value',
+            },
         ],
         required: false,
         default: false,
-        canNegate: true
+        canNegate: true,
     },
     {
         label: 'Environment Variable',
@@ -425,28 +425,28 @@ const policyConfigurationDescriptor = [
                 jsonpath: 'fields.env.key',
                 type: 'text',
                 placeholder: 'Key',
-                subpath: 'key'
+                subpath: 'key',
             },
             {
                 jsonpath: 'fields.env.value',
                 type: 'text',
                 placeholder: 'Value',
-                subpath: 'value'
+                subpath: 'value',
             },
             {
                 jsonpath: 'fields.env.envVarSource',
                 type: 'select',
-                options: Object.keys(envVarSrcLabels).map(key => ({
+                options: Object.keys(envVarSrcLabels).map((key) => ({
                     label: envVarSrcLabels[key],
-                    value: key
+                    value: key,
                 })),
                 placeholder: 'Value From',
-                subpath: 'source'
-            }
+                subpath: 'source',
+            },
         ],
         required: false,
         default: false,
-        canNegate: false
+        canNegate: false,
     },
     {
         label: 'Disallowed Annotation',
@@ -459,18 +459,18 @@ const policyConfigurationDescriptor = [
                 jsonpath: 'fields.disallowedAnnotation.key',
                 type: 'text',
                 placeholder: 'admission.stackrox.io/break-glass',
-                subpath: 'key'
+                subpath: 'key',
             },
             {
                 jsonpath: 'fields.disallowedAnnotation.value',
                 type: 'text',
                 placeholder: '',
-                subpath: 'value'
-            }
+                subpath: 'value',
+            },
         ],
         required: false,
         default: false,
-        canNegate: false
+        canNegate: false,
     },
     {
         label: 'Required Label',
@@ -483,18 +483,18 @@ const policyConfigurationDescriptor = [
                 jsonpath: 'fields.requiredLabel.key',
                 type: 'text',
                 placeholder: 'owner',
-                subpath: 'key'
+                subpath: 'key',
             },
             {
                 jsonpath: 'fields.requiredLabel.value',
                 type: 'text',
                 placeholder: '.*',
-                subpath: 'value'
-            }
+                subpath: 'value',
+            },
         ],
         required: false,
         default: false,
-        canNegate: false
+        canNegate: false,
     },
     {
         label: 'Required Annotation',
@@ -507,18 +507,18 @@ const policyConfigurationDescriptor = [
                 jsonpath: 'fields.requiredAnnotation.key',
                 type: 'text',
                 placeholder: 'owner',
-                subpath: 'key'
+                subpath: 'key',
             },
             {
                 jsonpath: 'fields.requiredAnnotation.value',
                 type: 'text',
                 placeholder: '.*',
-                subpath: 'value'
-            }
+                subpath: 'value',
+            },
         ],
         required: false,
         default: false,
-        canNegate: false
+        canNegate: false,
     },
     {
         label: 'Volume Name',
@@ -528,7 +528,7 @@ const policyConfigurationDescriptor = [
         placeholder: 'docker-socket',
         required: false,
         default: false,
-        canNegate: true
+        canNegate: true,
     },
     {
         label: 'Volume Source',
@@ -538,7 +538,7 @@ const policyConfigurationDescriptor = [
         placeholder: '/var/run/docker.sock',
         required: false,
         default: false,
-        canNegate: true
+        canNegate: true,
     },
     {
         label: 'Volume Destination',
@@ -548,7 +548,7 @@ const policyConfigurationDescriptor = [
         placeholder: '/var/run/docker.sock',
         required: false,
         default: false,
-        canNegate: true
+        canNegate: true,
     },
     {
         label: 'Volume Type',
@@ -558,7 +558,7 @@ const policyConfigurationDescriptor = [
         placeholder: 'bind, secret',
         required: false,
         default: false,
-        canNegate: true
+        canNegate: true,
     },
     {
         label: 'Writable Volume',
@@ -570,7 +570,7 @@ const policyConfigurationDescriptor = [
         default: false,
         defaultValue: false,
         reverse: true,
-        canNegate: false
+        canNegate: false,
     },
     {
         label: 'Protocol',
@@ -580,7 +580,7 @@ const policyConfigurationDescriptor = [
         placeholder: 'tcp',
         required: false,
         default: false,
-        canNegate: true
+        canNegate: true,
     },
     {
         label: 'Port',
@@ -590,7 +590,7 @@ const policyConfigurationDescriptor = [
         placeholder: '22',
         required: false,
         default: false,
-        canNegate: true
+        canNegate: true,
     },
     cpuResource('Container CPU Request', 'containerResourcePolicy', 'cpuResourceRequest'),
     cpuResource('Container CPU Limit', 'containerResourcePolicy', 'cpuResourceLimit'),
@@ -605,7 +605,7 @@ const policyConfigurationDescriptor = [
         default: false,
         defaultValue: true,
         disabled: true,
-        canNegate: false
+        canNegate: false,
     },
     {
         label: 'Read-Only Root Filesystem',
@@ -616,7 +616,7 @@ const policyConfigurationDescriptor = [
         default: false,
         defaultValue: false,
         disabled: true,
-        canNegate: false
+        canNegate: false,
     },
     {
         label: 'Drop Capabilities',
@@ -626,7 +626,7 @@ const policyConfigurationDescriptor = [
         options: [...capabilities],
         required: false,
         default: false,
-        canNegate: false
+        canNegate: false,
     },
     {
         label: 'Add Capabilities',
@@ -636,7 +636,7 @@ const policyConfigurationDescriptor = [
         options: [...capabilities],
         required: false,
         default: false,
-        canNegate: false
+        canNegate: false,
     },
     {
         label: 'Process Name',
@@ -646,7 +646,7 @@ const policyConfigurationDescriptor = [
         placeholder: 'apt-get',
         required: false,
         default: false,
-        canNegate: true
+        canNegate: true,
     },
     {
         label: 'Process Ancestor',
@@ -656,7 +656,7 @@ const policyConfigurationDescriptor = [
         placeholder: 'java',
         required: false,
         default: false,
-        canNegate: true
+        canNegate: true,
     },
     {
         label: 'Process Args',
@@ -666,7 +666,7 @@ const policyConfigurationDescriptor = [
         placeholder: 'install nmap',
         required: false,
         default: false,
-        canNegate: true
+        canNegate: true,
     },
     {
         label: 'Process UID',
@@ -676,7 +676,7 @@ const policyConfigurationDescriptor = [
         placeholder: '0',
         required: false,
         default: false,
-        canNegate: true
+        canNegate: true,
     },
     {
         label: 'Port Exposure',
@@ -684,14 +684,14 @@ const policyConfigurationDescriptor = [
         jsonpath: 'fields.portExposurePolicy.exposureLevels',
         type: 'multiselect',
         options: Object.keys(portExposureLabels)
-            .filter(key => key !== 'INTERNAL')
-            .map(key => ({
+            .filter((key) => key !== 'INTERNAL')
+            .map((key) => ({
                 label: portExposureLabels[key],
-                value: key
+                value: key,
             })),
         required: false,
         default: false,
-        canNegate: true
+        canNegate: true,
     },
     {
         label: 'Writable Host Mount',
@@ -703,7 +703,7 @@ const policyConfigurationDescriptor = [
         defaultValue: false,
         reverse: true,
         disabled: true,
-        canNegate: false
+        canNegate: false,
     },
     {
         label: 'Whitelists Enabled',
@@ -714,20 +714,20 @@ const policyConfigurationDescriptor = [
         default: false,
         defaultValue: false,
         reverse: false,
-        canNegate: false
+        canNegate: false,
     },
     {
         label: 'Minimum RBAC Permissions',
         name: 'Minimum RBAC Permissions',
         jsonpath: 'fields.permissionPolicy.permissionLevel',
         type: 'select',
-        options: Object.keys(rbacPermissionLabels).map(key => ({
+        options: Object.keys(rbacPermissionLabels).map((key) => ({
             label: rbacPermissionLabels[key],
-            value: key
+            value: key,
         })),
         required: false,
         default: false,
-        canNegate: true
+        canNegate: true,
     },
     {
         label: 'Required Image Label',
@@ -739,18 +739,18 @@ const policyConfigurationDescriptor = [
                 jsonpath: 'fields.requiredImageLabel.key',
                 type: 'text',
                 placeholder: 'requiredLabelKey.*',
-                subpath: 'key'
+                subpath: 'key',
             },
             {
                 jsonpath: 'fields.requiredImageLabel.value',
                 type: 'text',
                 placeholder: 'requiredValue.*',
-                subpath: 'value'
-            }
+                subpath: 'value',
+            },
         ],
         required: false,
         default: false,
-        canNegate: false
+        canNegate: false,
     },
     {
         label: 'Disallowed Image Label',
@@ -762,35 +762,35 @@ const policyConfigurationDescriptor = [
                 jsonpath: 'fields.disallowedImageLabel.key',
                 type: 'text',
                 placeholder: 'disallowedLabelKey.*',
-                subpath: 'key'
+                subpath: 'key',
             },
             {
                 jsonpath: 'fields.disallowedImageLabel.value',
                 type: 'text',
                 placeholder: 'disallowedValue.*',
-                subpath: 'value'
-            }
+                subpath: 'value',
+            },
         ],
         required: false,
         default: false,
-        canNegate: false
-    }
+        canNegate: false,
+    },
 ];
 
 export const policyStatus = {
     header: 'Enable Policy',
     descriptor: policyStatusDescriptor,
-    dataTestId: 'policyStatusField'
+    dataTestId: 'policyStatusField',
 };
 
 export const policyDetails = {
     header: 'Policy Summary',
     descriptor: policyDetailsFormDescriptor,
-    dataTestId: 'policyDetailsFields'
+    dataTestId: 'policyDetailsFields',
 };
 
 export const policyConfiguration = {
     header: 'Policy Criteria',
     descriptor: policyConfigurationDescriptor,
-    dataTestId: 'policyConfigurationFields'
+    dataTestId: 'policyConfigurationFields',
 };

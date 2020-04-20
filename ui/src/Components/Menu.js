@@ -17,7 +17,7 @@ const Menu = ({
     disabled,
     grouped,
     tooltip,
-    dataTestId
+    dataTestId,
 }) => {
     const [isMenuOpen, setMenuState] = useState(false);
 
@@ -29,7 +29,7 @@ const Menu = ({
         setMenuState(true);
         document.addEventListener('click', hideMenu);
     };
-    const onClickHandler = () => e => {
+    const onClickHandler = () => (e) => {
         e.stopPropagation();
         if (!isMenuOpen) showMenu();
         else hideMenu();
@@ -70,7 +70,7 @@ const Menu = ({
     }
 
     function renderGroupedOptions(formattedOptions) {
-        return Object.keys(formattedOptions).map(group => {
+        return Object.keys(formattedOptions).map((group) => {
             return (
                 <React.Fragment key={group}>
                     <div className="uppercase font-condensed p-3 border-b border-primary-300 text-lg">
@@ -120,15 +120,15 @@ Menu.propTypes = {
                 icon: PropTypes.object,
                 label: PropTypes.string.isRequired,
                 link: PropTypes.string,
-                onClick: PropTypes.func
+                onClick: PropTypes.func,
             })
         ).isRequired,
-        PropTypes.shape({})
+        PropTypes.shape({}),
     ]).isRequired,
     disabled: PropTypes.bool,
     grouped: PropTypes.bool,
     tooltip: PropTypes.string,
-    dataTestId: PropTypes.string
+    dataTestId: PropTypes.string,
 };
 
 Menu.defaultProps = {
@@ -138,7 +138,7 @@ Menu.defaultProps = {
     className: '',
     grouped: false,
     tooltip: '',
-    dataTestId: 'menu-button'
+    dataTestId: 'menu-button',
 };
 
 export default Menu;

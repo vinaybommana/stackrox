@@ -23,12 +23,12 @@ TerminationEvent.propTypes = {
     reason: PropTypes.string,
     timestamp: PropTypes.string.isRequired,
     width: PropTypes.number.isRequired,
-    height: PropTypes.number
+    height: PropTypes.number,
 };
 
 TerminationEvent.defaultProps = {
     reason: null,
-    height: null
+    height: null,
 };
 
 export default TerminationEvent;

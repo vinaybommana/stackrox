@@ -20,9 +20,9 @@ const PoliciesCountTile = () => {
     const { loading, data = {} } = useQuery(POLICIES_COUNT_QUERY, {
         variables: {
             query: queryService.objectToWhereClause({
-                Category: 'Vulnerability Management'
-            })
-        }
+                Category: 'Vulnerability Management',
+            }),
+        },
     });
 
     const { policies = [] } = data;
@@ -34,10 +34,7 @@ const PoliciesCountTile = () => {
     const failingPoliciesCountText = `(${failingPoliciesCount} failing)`;
 
     const workflowState = useContext(workflowStateContext);
-    const url = workflowState
-        .clear()
-        .pushList(entityTypes.POLICY)
-        .toUrl();
+    const url = workflowState.clear().pushList(entityTypes.POLICY).toUrl();
 
     return (
         <EntityTileLink

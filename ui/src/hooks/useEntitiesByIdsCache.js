@@ -9,7 +9,7 @@ function reducer(state, payload) {
         new Set()
     );
     const anyNewEntities = payload.entities.some(
-        entity => !currentIds.has(entity[payload.idAttribute])
+        (entity) => !currentIds.has(entity[payload.idAttribute])
     );
     if (anyNewEntities) {
         return payload.entities;
@@ -33,7 +33,7 @@ export default function useEntitiesByIdsCache(initialState = [], idAttribute = '
     // useCallback is needed, as some components might (and they're) have it as a dependency for useEffect
     // recreating function all the time will cause a rapid useEffect firing and eventual browser crash (oops)
     const updateCache = useCallback(
-        entities => {
+        (entities) => {
             dispatch({ entities, idAttribute });
         },
         [idAttribute]

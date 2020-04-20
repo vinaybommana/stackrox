@@ -82,6 +82,6 @@ export default function* integrations() {
         fork(watchFetchRequest),
         fork(watchGenerateRequest),
         fork(watchRevokeRequest),
-        fork(watchModalOpen)
+        fork(watchModalOpen),
     ]);
 }

@@ -176,15 +176,15 @@ const processData = (data, entityType, workflowState) => {
                 ),
                 tooltip: {
                     title: tooltipTitle,
-                    body: tooltipBody
-                }
+                    body: tooltipBody,
+                },
             };
         });
 
     return results;
 };
 
-const getQueryBySelectedEntity = entityType => {
+const getQueryBySelectedEntity = (entityType) => {
     switch (entityType) {
         case entityTypes.COMPONENT:
             return TOP_RISKIEST_COMPONENTS;
@@ -194,7 +194,7 @@ const getQueryBySelectedEntity = entityType => {
     }
 };
 
-const getEntitiesByContext = entityContext => {
+const getEntitiesByContext = (entityContext) => {
     const entities = [];
     if (entityContext === {} || !entityContext[entityTypes.COMPONENT]) {
         entities.push({ label: 'Top Riskiest Components', value: entityTypes.COMPONENT });
@@ -221,12 +221,12 @@ const TopRiskiestImagesAndComponents = ({ entityContext, limit }) => {
             pagination: queryService.getPagination(
                 {
                     id: 'Priority',
-                    desc: false
+                    desc: false,
                 },
                 WIDGET_PAGINATION_START_OFFSET,
                 limit
-            )
-        }
+            ),
+        },
     });
 
     const workflowState = useContext(workflowStateContext);
@@ -284,12 +284,12 @@ const TopRiskiestImagesAndComponents = ({ entityContext, limit }) => {
 
 TopRiskiestImagesAndComponents.propTypes = {
     entityContext: PropTypes.shape({}),
-    limit: PropTypes.number
+    limit: PropTypes.number,
 };
 
 TopRiskiestImagesAndComponents.defaultProps = {
     entityContext: {},
-    limit: 5
+    limit: 5,
 };
 
 export default TopRiskiestImagesAndComponents;

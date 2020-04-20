@@ -51,19 +51,19 @@ const buildTableColumns = (match, location) => {
             Header: 'Id',
             headerClassName: 'hidden',
             className: 'hidden',
-            accessor: 'id'
+            accessor: 'id',
         },
         {
             Header: `Cluster`,
             headerClassName: `w-1/8 ${defaultHeaderClassName}`,
             className: `w-1/8 ${defaultColumnClassName}`,
-            accessor: 'name'
+            accessor: 'name',
         },
         {
             Header: `K8S Version`,
             headerClassName: `w-1/8 ${defaultHeaderClassName}`,
             className: `w-1/8 ${defaultColumnClassName}`,
-            accessor: 'status.orchestratorMetadata.version'
+            accessor: 'status.orchestratorMetadata.version',
         },
         {
             Header: `Policy Status`,
@@ -75,7 +75,7 @@ const buildTableColumns = (match, location) => {
                 return <StatusChip status={policyStatus.status} asString={pdf} />;
             },
             id: 'status',
-            accessor: d => d.policyStatus.status
+            accessor: (d) => d.policyStatus.status,
         },
         {
             Header: `CIS Controls`,
@@ -101,7 +101,7 @@ const buildTableColumns = (match, location) => {
                         text={`${totalCount} ${pluralize('Controls', totalCount)}`}
                     />
                 );
-            }
+            },
         },
         {
             Header: `Users & Groups`,
@@ -126,7 +126,7 @@ const buildTableColumns = (match, location) => {
                 );
             },
             id: 'subjectCount',
-            accessor: d => d.subjectCount
+            accessor: (d) => d.subjectCount,
         },
         {
             Header: `Service Accounts`,
@@ -154,7 +154,7 @@ const buildTableColumns = (match, location) => {
                 );
             },
             id: 'serviceAccountCount',
-            accessor: d => d.serviceAccountCount
+            accessor: (d) => d.serviceAccountCount,
         },
         {
             Header: `Roles`,
@@ -177,13 +177,13 @@ const buildTableColumns = (match, location) => {
                 );
             },
             id: 'k8sroleCount',
-            accessor: d => d.k8sroleCount
-        }
+            accessor: (d) => d.k8sroleCount,
+        },
     ];
     return tableColumns;
 };
 
-const createTableRows = data => data.results;
+const createTableRows = (data) => data.results;
 
 const Clusters = ({ match, location, className, selectedRowId, onRowClick, query, data }) => {
     const autoFocusSearchInput = !selectedRowId;

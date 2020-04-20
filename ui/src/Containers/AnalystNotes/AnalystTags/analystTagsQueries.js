@@ -74,19 +74,19 @@ export const getTagsDataByType = (type, data) => {
  * @param {string} type - The tags type (ie. VIOLATION and PROCESS)
  * @returns {Result} - returns an object with queries
  */
-export const getQueriesByType = type => {
+export const getQueriesByType = (type) => {
     if (type === ANALYST_NOTES_TYPES.VIOLATION) {
         return {
             GET_TAGS: GET_ALERT_TAGS,
             ADD_TAGS: ADD_ALERT_TAGS,
-            REMOVE_TAGS: REMOVE_ALERT_TAGS
+            REMOVE_TAGS: REMOVE_ALERT_TAGS,
         };
     }
     if (type === ANALYST_NOTES_TYPES.PROCESS) {
         return {
             GET_TAGS: GET_PROCESS_TAGS,
             ADD_TAGS: ADD_PROCESS_TAGS,
-            REMOVE_TAGS: REMOVE_PROCESS_TAGS
+            REMOVE_TAGS: REMOVE_PROCESS_TAGS,
         };
     }
     const error = `Queries for type (${type}) do not exist`;

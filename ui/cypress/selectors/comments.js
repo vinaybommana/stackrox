@@ -4,7 +4,7 @@ const editSelectors = {
     textArea: 'textarea[data-testid="comment-textarea"]',
     saveButton: 'button[data-testid="save-comment-button"]',
     error: '[data-testid="comment-form-error"]',
-    cancelButton: '[data-testid="cancel-comment-editing-button"]'
+    cancelButton: '[data-testid="cancel-comment-editing-button"]',
 };
 
 const commentSelectors = {
@@ -14,7 +14,7 @@ const commentSelectors = {
     dateAndEditedStatus: '[data-testid="comment-subheader"]',
     message: '[data-testid="comment-message"]',
     links: 'a[data-testid="comment-link"]',
-    ...editSelectors // when editing existing comment it's applicable
+    ...editSelectors, // when editing existing comment it's applicable
 };
 
 const selectors = {
@@ -23,7 +23,7 @@ const selectors = {
 
     newButton: 'button[data-testid="new-comment-button"]',
 
-    newComment: scopeSelectors('[data-testid="new-comment"]', editSelectors)
+    newComment: scopeSelectors('[data-testid="new-comment"]', editSelectors),
 };
 
 export const violationCommentsSelectors = scopeSelectors(
@@ -37,5 +37,5 @@ export const processCommentsSelectors = scopeSelectors(
 );
 
 export const commentsDialogSelectors = scopeSelectors('.ReactModal__Content', {
-    yesButton: 'button:contains("Yes")'
+    yesButton: 'button:contains("Yes")',
 });

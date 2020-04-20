@@ -29,11 +29,11 @@ const TerminationIcon = forwardRef(({ height, width }, ref) => {
 
 TerminationIcon.propTypes = {
     width: PropTypes.number.isRequired,
-    height: PropTypes.number
+    height: PropTypes.number,
 };
 
 TerminationIcon.defaultProps = {
-    height: null
+    height: null,
 };
 
 export default TerminationIcon;

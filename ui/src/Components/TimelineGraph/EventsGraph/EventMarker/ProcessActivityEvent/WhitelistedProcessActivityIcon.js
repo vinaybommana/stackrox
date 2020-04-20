@@ -40,11 +40,11 @@ const WhitelistedProcessActivityIcon = forwardRef(({ height, width }, ref) => {
 
 WhitelistedProcessActivityIcon.propTypes = {
     width: PropTypes.number.isRequired,
-    height: PropTypes.number
+    height: PropTypes.number,
 };
 
 WhitelistedProcessActivityIcon.defaultProps = {
-    height: null
+    height: null,
 };
 
 export default WhitelistedProcessActivityIcon;

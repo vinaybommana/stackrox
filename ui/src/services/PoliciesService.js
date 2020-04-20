@@ -95,8 +95,8 @@ const policyCategoriesUrl = '/v1/policyCategories';
  * @returns {Promise<Object, Error>} fulfilled with normalized response
  */
 export function fetchPolicy(policyId) {
-    return axios.get(`${baseUrl}/${policyId}`).then(response => ({
-        response: normalize(response.data, policySchema)
+    return axios.get(`${baseUrl}/${policyId}`).then((response) => ({
+        response: normalize(response.data, policySchema),
     }));
 }
 
@@ -108,8 +108,8 @@ export function fetchPolicy(policyId) {
  */
 export function fetchPolicies(filters) {
     const params = queryString.stringify({ ...filters }, { arrayFormat: 'repeat' });
-    return axios.get(`${baseUrl}?${params}`).then(response => ({
-        response: normalize(response.data, { policies: [policySchema] })
+    return axios.get(`${baseUrl}?${params}`).then((response) => ({
+        response: normalize(response.data, { policies: [policySchema] }),
     }));
 }
 
@@ -119,8 +119,8 @@ export function fetchPolicies(filters) {
  * @returns {Promise<Object, Error>}
  */
 export function fetchPolicyCategories() {
-    return axios.get(policyCategoriesUrl).then(response => ({
-        response: response.data
+    return axios.get(policyCategoriesUrl).then((response) => ({
+        response: response.data,
     }));
 }
 
@@ -150,7 +150,7 @@ export function deletePolicy(policyId) {
  * @returns {Promise<AxiosResponse, Error>}
  */
 export function deletePolicies(policyIds = []) {
-    return Promise.all(policyIds.map(policyId => deletePolicy(policyId)));
+    return Promise.all(policyIds.map((policyId) => deletePolicy(policyId)));
 }
 
 /**
@@ -174,7 +174,9 @@ export function enableDisablePolicyNotifications(policyId, data) {
  */
 export function enableDisableNotificationsForPolicies(policyIds, notifierIds, disable) {
     const data = { notifierIds, disable };
-    return Promise.all(policyIds.map(policyId => enableDisablePolicyNotifications(policyId, data)));
+    return Promise.all(
+        policyIds.map((policyId) => enableDisablePolicyNotifications(policyId, data))
+    );
 }
 
 /**
@@ -229,8 +231,8 @@ export async function whitelistDeployments(policyId, deploymentNames) {
     const { response } = await fetchPolicy(policyId);
     const policy = response.entities.policy[policyId];
 
-    const deploymentEntries = deploymentNames.map(name => ({
-        deployment: { name }
+    const deploymentEntries = deploymentNames.map((name) => ({
+        deployment: { name },
     }));
     policy.whitelists = [...policy.whitelists, ...deploymentEntries];
     return axios.put(`${baseUrl}/${policy.id}`, policy);
@@ -255,7 +257,7 @@ export function updatePolicyDisabledState(policyId, disabled) {
  * @returns {Promise<AxiosResponse, Error>} fulfilled in case of success or rejected with an error
  */
 export function exportPolicies(policyIds) {
-    return axios.post(`${baseUrl}/export`, { policyIds }).then(response => {
+    return axios.post(`${baseUrl}/export`, { policyIds }).then((response) => {
         if (response?.data && response?.data?.policies?.length > 0) {
             try {
                 const numSpaces = 4;
@@ -263,7 +265,7 @@ export function exportPolicies(policyIds) {
                 const filename = addBrandedTimestampToString('Exported_Policies');
 
                 const file = new Blob([stringData], {
-                    type: 'application/json'
+                    type: 'application/json',
                 });
 
                 FileSaver.saveAs(file, `${filename}.json`);

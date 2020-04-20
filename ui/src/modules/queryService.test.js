@@ -12,7 +12,7 @@ describe('queryService.objectToWhereClause', () => {
     it('converts an option to a GraphQL query string', () => {
         const cvesStr = 'CVE-2005-2541,CVE-2017-12424,CVE-2018-16402';
         const queryObj = {
-            cve: cvesStr
+            cve: cvesStr,
         };
 
         const queryStr = queryService.objectToWhereClause(queryObj);

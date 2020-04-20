@@ -24,7 +24,7 @@ export function* getPolicies(filters) {
         const fetchedPolicIds = result.response.result.policies;
         if (fetchedPolicIds) {
             const policy = yield select(selectors.getWizardPolicy);
-            if (policy && fetchedPolicIds.find(id => id === policy.id) === undefined) {
+            if (policy && fetchedPolicIds.find((id) => id === policy.id) === undefined) {
                 yield put(pageActions.closeWizard());
             }
         }
@@ -47,7 +47,7 @@ export function* getPolicy(policyId, command) {
     try {
         const [policyResult] = yield all([
             call(service.fetchPolicy, policyId),
-            call(getPolicyCategories) // make sure we have latest categories for the wizard
+            call(getPolicyCategories), // make sure we have latest categories for the wizard
         ]);
         yield put(backendActions.fetchPolicy.success(policyResult.response));
 
@@ -74,7 +74,7 @@ export function* filterPoliciesPageBySearch() {
         return;
     }
     const filters = {
-        query: searchOptionsToQuery(searchOptions)
+        query: searchOptionsToQuery(searchOptions),
     };
     yield fork(getPolicies, filters);
 }
@@ -320,6 +320,6 @@ export default function* policies() {
         fork(watchDisableNotificationsForPolicies),
         fork(watchUpdateRequest),
         fork(watchPoliciesSearchOptions),
-        takeEvery(tableTypes.UPDATE_POLICY_DISABLED_STATE, updatePolicyDisabled)
+        takeEvery(tableTypes.UPDATE_POLICY_DISABLED_STATE, updatePolicyDisabled),
     ]);
 }

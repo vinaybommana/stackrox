@@ -12,15 +12,15 @@ const PAGE_SIZE = 10;
 
 const EventTimelineComponentMap = {
     [rootTypes.DEPLOYMENT]: DeploymentEventTimeline,
-    [rootTypes.POD]: PodEventTimeline
+    [rootTypes.POD]: PodEventTimeline,
 };
 
 const EventTimeline = ({ deploymentId }) => {
     const rootView = [
         {
             type: rootTypes.DEPLOYMENT,
-            id: deploymentId
-        }
+            id: deploymentId,
+        },
     ];
     const [currentPage, setPage] = useState(1);
     const [selectedEventType, selectEventType] = useState(eventTypes.ALL);
@@ -89,7 +89,7 @@ const EventTimeline = ({ deploymentId }) => {
 };
 
 EventTimeline.propTypes = {
-    deploymentId: PropTypes.string.isRequired
+    deploymentId: PropTypes.string.isRequired,
 };
 
 export default EventTimeline;

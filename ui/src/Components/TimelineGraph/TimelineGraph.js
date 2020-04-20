@@ -15,7 +15,7 @@ const TimelineGraph = ({
     totalSize,
     pageSize,
     onPageChange,
-    absoluteMaxTimeRange
+    absoluteMaxTimeRange,
 }) => {
     const [minTimeRange, setMinTimeRange] = useState(absoluteMinTimeRange);
     const [maxTimeRange, setMaxTimeRange] = useState(absoluteMaxTimeRange);
@@ -25,7 +25,7 @@ const TimelineGraph = ({
         id,
         name,
         subText,
-        hasChildren
+        hasChildren,
     }));
     return (
         <div className="flex flex-1 flex-col h-full" data-testid="timeline-graph">
@@ -78,9 +78,9 @@ TimelineGraph.propTypes = {
                     id: PropTypes.string.isRequired,
                     differenceInMilliseconds: PropTypes.number.isRequired,
                     edges: PropTypes.arrayOf(PropTypes.shape({})),
-                    type: PropTypes.string.isRequired
+                    type: PropTypes.string.isRequired,
                 })
-            )
+            ),
         })
     ),
     goToNextView: PropTypes.func.isRequired,
@@ -88,12 +88,12 @@ TimelineGraph.propTypes = {
     pageSize: PropTypes.number.isRequired,
     totalSize: PropTypes.number.isRequired,
     onPageChange: PropTypes.func.isRequired,
-    absoluteMaxTimeRange: PropTypes.number
+    absoluteMaxTimeRange: PropTypes.number,
 };
 
 TimelineGraph.defaultProps = {
     data: [],
-    absoluteMaxTimeRange: 3600000 * 24 // default to 24 hours
+    absoluteMaxTimeRange: 3600000 * 24, // default to 24 hours
 };
 
 export default TimelineGraph;

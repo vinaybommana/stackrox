@@ -12,16 +12,16 @@ import PolicyFieldCard from './PolicyFieldCard';
 import { policyConfiguration } from './descriptors';
 import { getPolicyCriteriaFieldKeys } from './utils';
 
-const getEmptyPolicyFieldCard = fieldKey => ({
+const getEmptyPolicyFieldCard = (fieldKey) => ({
     field_name: fieldKey.name,
     boolean_operator: 'OR',
     values: [
         {
-            value: 'hi'
-        }
+            value: 'hi',
+        },
     ],
     negate: fieldKey.negate,
-    fieldKey
+    fieldKey,
 });
 
 function PolicySection({ fields, header, removeSectionHandler }) {
@@ -35,12 +35,12 @@ function PolicySection({ fields, header, removeSectionHandler }) {
             fields.push(newPolicyFieldCard);
         },
         canDrop: ({ fieldKey }) => {
-            return !allFields.find(field => field.field_name === fieldKey.name);
+            return !allFields.find((field) => field.field_name === fieldKey.name);
         },
-        collect: monitor => ({
+        collect: (monitor) => ({
             isOver: monitor.isOver(),
-            canDrop: monitor.canDrop()
-        })
+            canDrop: monitor.canDrop(),
+        }),
     });
 
     function removeFieldHandler(index) {
@@ -68,12 +68,12 @@ function PolicySection({ fields, header, removeSectionHandler }) {
                         const {
                             negate,
                             field_name: fieldName,
-                            boolean_operator: booleanOperator
+                            boolean_operator: booleanOperator,
                         } = field;
                         let { fieldKey } = field;
                         if (!fieldKey)
                             fieldKey = policyConfiguration.descriptor.find(
-                                fieldObj => fieldObj.name === fieldName
+                                (fieldObj) => fieldObj.name === fieldName
                             );
                         return (
                             <FieldArray
@@ -109,7 +109,7 @@ function PolicySection({ fields, header, removeSectionHandler }) {
 PolicySection.propTypes = {
     ...reduxFormPropTypes,
     header: PropTypes.string.isRequired,
-    removeSectionHandler: PropTypes.func.isRequired
+    removeSectionHandler: PropTypes.func.isRequired,
 };
 
 export default PolicySection;

@@ -25,14 +25,12 @@ function getTotalNumPolicies(data) {
 }
 
 const PoliciesTile = ({ match, location }) => {
-    const policiesURL = URLService.getURL(match, location)
-        .base(entityTypes.POLICY)
-        .url();
+    const policiesURL = URLService.getURL(match, location).base(entityTypes.POLICY).url();
     return (
         <Query
             query={policiesQuery}
             variables={{
-                query: queryService.objectToWhereClause({ 'Lifecycle Stage': 'DEPLOY' })
+                query: queryService.objectToWhereClause({ 'Lifecycle Stage': 'DEPLOY' }),
             }}
         >
             {({ loading, data }) => {
@@ -54,7 +52,7 @@ const PoliciesTile = ({ match, location }) => {
 
 PoliciesTile.propTypes = {
     match: ReactRouterPropTypes.match.isRequired,
-    location: ReactRouterPropTypes.location.isRequired
+    location: ReactRouterPropTypes.location.isRequired,
 };
 
 export default withRouter(PoliciesTile);

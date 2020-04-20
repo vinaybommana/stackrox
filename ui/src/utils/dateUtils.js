@@ -29,5 +29,5 @@ export function addBrandedTimestampToString(str) {
 
 export default {
     getLatestDatedItemByKey,
-    addBrandedTimestampToString
+    addBrandedTimestampToString,
 };

@@ -22,15 +22,13 @@ const Axis = ({ translateX, translateY, minDomain, maxDomain, direction }) => {
     // the "container" argument is a reference to the container for the D3-related element
     function onUpdate(container) {
         const width = getWidth(selectors.svgSelector);
-        const scale = scaleLinear()
-            .domain([minDomain, maxDomain])
-            .range([0, width]);
+        const scale = scaleLinear().domain([minDomain, maxDomain]).range([0, width]);
         const axis = getAxisDirection(direction)(scale)
             .ticks(8)
             .tickFormat(getTimeDiffTickFormat)
             .tickSize(0);
 
-        container.call(axis).call(g => g.select('.domain').style('stroke', 'var(--base-300)'));
+        container.call(axis).call((g) => g.select('.domain').style('stroke', 'var(--base-300)'));
     }
     return (
         <D3Anchor

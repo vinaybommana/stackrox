@@ -29,13 +29,13 @@ ProcessActivityEvent.propTypes = {
     timestamp: PropTypes.string.isRequired,
     whitelisted: PropTypes.bool,
     width: PropTypes.number.isRequired,
-    height: PropTypes.number
+    height: PropTypes.number,
 };
 
 ProcessActivityEvent.defaultProps = {
     uid: null,
     whitelisted: false,
-    height: null
+    height: null,
 };
 
 export default ProcessActivityEvent;

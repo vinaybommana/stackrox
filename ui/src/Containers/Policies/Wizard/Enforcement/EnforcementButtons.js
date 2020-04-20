@@ -25,7 +25,7 @@ function EnforcementButtons({ history, match, wizardPolicyIsNew, setWizardStage 
         }
     }
     return (
-        <React.Fragment>
+        <>
             <PanelButton
                 icon={<ArrowLeft className="h-4 w-4" />}
                 className="btn btn-base"
@@ -42,7 +42,7 @@ function EnforcementButtons({ history, match, wizardPolicyIsNew, setWizardStage 
             >
                 Save
             </PanelButton>
-        </React.Fragment>
+        </>
     );
 }
 
@@ -50,20 +50,15 @@ EnforcementButtons.propTypes = {
     history: ReactRouterPropTypes.location.isRequired,
     match: ReactRouterPropTypes.location.isRequired,
     wizardPolicyIsNew: PropTypes.bool.isRequired,
-    setWizardStage: PropTypes.func.isRequired
+    setWizardStage: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = createStructuredSelector({
-    wizardPolicyIsNew: selectors.getWizardIsNew
+    wizardPolicyIsNew: selectors.getWizardIsNew,
 });
 
 const mapDispatchToProps = {
-    setWizardStage: wizardActions.setWizardStage
+    setWizardStage: wizardActions.setWizardStage,
 };
 
-export default withRouter(
-    connect(
-        mapStateToProps,
-        mapDispatchToProps
-    )(EnforcementButtons)
-);
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(EnforcementButtons));

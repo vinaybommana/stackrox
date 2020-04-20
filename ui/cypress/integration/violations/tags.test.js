@@ -4,7 +4,7 @@ import { selectors, url } from '../../constants/ViolationsPage';
 
 import {
     selectors as searchSelectors,
-    operations as searchOperations
+    operations as searchOperations,
 } from '../../constants/SearchPage';
 import * as api from '../../constants/apiEndpoints';
 
@@ -42,9 +42,7 @@ describe('Violation Page: Tags', () => {
         cy.wait(['@getTags', '@tagsAutocomplete']);
 
         // pressing {enter} won't save the tag, only one would be displayed as tag chip
-        cy.get(selectors.sidePanel.tags.values)
-            .contains(tag)
-            .should('have.length', 1);
+        cy.get(selectors.sidePanel.tags.values).contains(tag).should('have.length', 1);
     });
 
     it('should add tag without allowing duplicates with leading/trailing whitespace', () => {
@@ -58,9 +56,7 @@ describe('Violation Page: Tags', () => {
         cy.wait(['@getTags', '@tagsAutocomplete']);
 
         // pressing {enter} won't save the tag, only one would be displayed as tag chip
-        cy.get(selectors.sidePanel.tags.values)
-            .contains(tag)
-            .should('have.length', 1);
+        cy.get(selectors.sidePanel.tags.values).contains(tag).should('have.length', 1);
     });
 
     it('should add bulk tags without duplication and search by a tag', () => {
@@ -71,9 +67,7 @@ describe('Violation Page: Tags', () => {
         cy.get(selectors.sidePanel.tags.input).type(`${tag}{enter}`);
         cy.wait(['@getTags', '@tagsAutocomplete']);
 
-        cy.get(`${selectors.activeRow} input[type="checkbox"]`)
-            .should('not.be.checked')
-            .check();
+        cy.get(`${selectors.activeRow} input[type="checkbox"]`).should('not.be.checked').check();
         // also check some other violation
         cy.get(`${selectors.rows}:not(${selectors.activeRow}):first input[type="checkbox"]`)
             .should('not.be.checked')
@@ -93,12 +87,10 @@ describe('Violation Page: Tags', () => {
         cy.wait('@alerts');
 
         cy.get(selectors.rows).should('have.length', 2);
-        cy.get(selectors.rows).each(row => {
+        cy.get(selectors.rows).each((row) => {
             cy.wrap(row).click({ force: true });
             cy.wait(['@alertById', '@getTags', '@tagsAutocomplete']);
-            cy.get(selectors.sidePanel.tags.values)
-                .contains(tag)
-                .should('have.length', 1);
+            cy.get(selectors.sidePanel.tags.values).contains(tag).should('have.length', 1);
         });
     });
 

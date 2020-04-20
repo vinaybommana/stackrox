@@ -6,7 +6,7 @@ function PolicyBuilderKey({ fieldKey }) {
     const { name } = fieldKey;
     // eslint-disable-next-line no-unused-vars
     const [collectedProps, drag] = useDrag({
-        item: { id: name, type: name, fieldKey }
+        item: { id: name, type: name, fieldKey },
     });
     return (
         <div
@@ -22,8 +22,8 @@ function PolicyBuilderKey({ fieldKey }) {
 
 PolicyBuilderKey.propTypes = {
     fieldKey: PropTypes.shape({
-        name: PropTypes.string.isRequired
-    }).isRequired
+        name: PropTypes.string.isRequired,
+    }).isRequired,
 };
 
 export default PolicyBuilderKey;

@@ -23,7 +23,7 @@ const EntityPage = ({ match, location }) => {
         entityType2,
         entityListType2,
         entityId2,
-        query
+        query,
     } = params;
     const overlay = !!entityId1;
     const [fadeIn, setFadeIn] = useState(false);
@@ -37,10 +37,10 @@ const EntityPage = ({ match, location }) => {
         ? {
               opacity: 1,
               transition: '.15s opacity ease-in',
-              transitionDelay: '.25s'
+              transitionDelay: '.25s',
           }
         : {
-              opacity: 0
+              opacity: 0,
           };
     return (
         <div className="flex flex-1 flex-col" style={style}>
@@ -91,7 +91,7 @@ const EntityPage = ({ match, location }) => {
 
 EntityPage.propTypes = {
     match: ReactRouterPropTypes.match.isRequired,
-    location: ReactRouterPropTypes.location.isRequired
+    location: ReactRouterPropTypes.location.isRequired,
 };
 
 export default withRouter(EntityPage);

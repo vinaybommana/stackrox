@@ -22,7 +22,7 @@ const ListPage = ({ match, location, history }) => {
         entityType2,
         entityListType2,
         entityId2,
-        query
+        query,
     } = params;
     const searchParam = useContext(searchContext);
 
@@ -78,7 +78,7 @@ const ListPage = ({ match, location, history }) => {
 ListPage.propTypes = {
     match: ReactRouterPropTypes.match.isRequired,
     location: ReactRouterPropTypes.location.isRequired,
-    history: ReactRouterPropTypes.history.isRequired
+    history: ReactRouterPropTypes.history.isRequired,
 };
 
 export default ListPage;

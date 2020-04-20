@@ -7,9 +7,9 @@ import getDifferenceInMilliseconds from './getDifferenceInMilliseconds';
  * @returns {Object[]} - The processed events data
  */
 function processEvents(events, entityStartTime) {
-    return events.map(event => ({
+    return events.map((event) => ({
         ...event,
-        differenceInMilliseconds: getDifferenceInMilliseconds(event.timestamp, entityStartTime)
+        differenceInMilliseconds: getDifferenceInMilliseconds(event.timestamp, entityStartTime),
     }));
 }
 

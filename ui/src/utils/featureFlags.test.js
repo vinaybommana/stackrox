@@ -4,13 +4,13 @@ const backendFeatureFlags = [
     {
         name: 'Enable Config Mgmt UI',
         envVar: 'ROX_CONFIG_MGMT_UI',
-        enabled: false
+        enabled: false,
     },
     {
         name: 'Enable Sensor Autoupgrades',
         envVar: 'ROX_SENSOR_AUTOUPGRADE',
-        enabled: true
-    }
+        enabled: true,
+    },
 ];
 
 describe('featureFlags utils', () => {

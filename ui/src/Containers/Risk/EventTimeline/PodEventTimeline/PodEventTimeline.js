@@ -23,14 +23,14 @@ const PodEventTimeline = ({
     headerComponents,
     currentPage,
     pageSize,
-    onPageChange
+    onPageChange,
 }) => {
     const { loading, error, data } = useQuery(GET_POD_EVENT_TIMELINE, {
         variables: {
             podId: id,
             // TODO: We should standardize on using Id vs. ID. Change this once backend makes the change
-            containersQuery: queryService.objectToWhereClause({ 'Pod ID': id })
-        }
+            containersQuery: queryService.objectToWhereClause({ 'Pod ID': id }),
+        },
     });
 
     captureGraphQLErrors([error]);
@@ -86,7 +86,7 @@ PodEventTimeline.propTypes = {
     headerComponents: PropTypes.node.isRequired,
     currentPage: PropTypes.number.isRequired,
     pageSize: PropTypes.number.isRequired,
-    onPageChange: PropTypes.func.isRequired
+    onPageChange: PropTypes.func.isRequired,
 };
 
 export default PodEventTimeline;

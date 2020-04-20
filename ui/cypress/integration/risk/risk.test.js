@@ -78,18 +78,14 @@ describe('Risk page', () => {
             cy.wait('@firstDeployment');
 
             cy.get(RiskPageSelectors.panelTabs.deploymentDetails).click({ force: true });
-            cy.get(RiskPageSelectors.imageLink)
-                .first()
-                .click({ force: true });
+            cy.get(RiskPageSelectors.imageLink).first().click({ force: true });
             cy.url().should('contain', '/main/vulnerability-management/image');
         });
 
         it('should close the side panel on search filter', () => {
             cy.get(searchSelectors.pageSearchInput).type('Cluster:{enter}', { force: true });
             cy.get(searchSelectors.pageSearchInput).type('remote{enter}', { force: true });
-            cy.get(searchSelectors.panelHeader)
-                .eq(1)
-                .should('not.be.visible');
+            cy.get(searchSelectors.panelHeader).eq(1).should('not.be.visible');
         });
 
         it('should navigate to network page with selected deployment', () => {
@@ -116,7 +112,7 @@ describe('Risk page', () => {
             const nsValue = 'stackrox';
             cy.get(RiskPageSelectors.table.dataRows)
                 .filter(`:contains("${nsValue}")`)
-                .then(stackroxDeps => {
+                .then((stackroxDeps) => {
                     const stackroxCount = stackroxDeps.length;
 
                     const urlWithSearch = `${url}?s[${nsOption}]=${nsValue}`;
@@ -142,7 +138,7 @@ describe('Risk page', () => {
             const deployValue = 'static';
             cy.get(RiskPageSelectors.table.dataRows)
                 .filter(`:contains("${deployValue}")`)
-                .then(staticDeps => {
+                .then((staticDeps) => {
                     const staticCount = staticDeps.length;
 
                     const urlWithSearch = `${url}?s[${nsOption}]=${nsValue}&s[${deployOption}]=${deployValue}`;
@@ -187,7 +183,7 @@ describe('Risk page', () => {
             // second, save the "n Deployments" number in the table header
             cy.get(RiskPageSelectors.table.header)
                 .invoke('text')
-                .then(headerText => {
+                .then((headerText) => {
                     // third, try to search for an unallowed search option
                     const sillyOption = 'Wingardium';
                     const sillyValue = 'leviosa';
@@ -204,7 +200,7 @@ describe('Risk page', () => {
                     cy.get(RiskPageSelectors.table.dataRows);
                     cy.get(RiskPageSelectors.table.header)
                         .invoke('text')
-                        .then(newHeaderText => {
+                        .then((newHeaderText) => {
                             expect(newHeaderText).to.equal(headerText);
                         });
                 });

@@ -2,7 +2,7 @@ import { isString, isPlainObject, isFunction, mapValues } from 'lodash';
 
 function appendPrefixDeep(prefix, selector) {
     if (isPlainObject(selector)) {
-        return mapValues(selector, val => appendPrefixDeep(prefix, val));
+        return mapValues(selector, (val) => appendPrefixDeep(prefix, val));
     }
     if (isString(selector)) {
         return `${prefix} ${selector}`;

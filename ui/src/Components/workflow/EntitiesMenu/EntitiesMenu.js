@@ -14,7 +14,7 @@ const EntitiesMenu = ({ text, options, grouped }) => {
 
     function createGroupedOptions(types) {
         const groupedOptions = {};
-        types.forEach(type => {
+        types.forEach((type) => {
             const option = getOption(type, workflowState);
             const optionGroup = groupedOptions[entityGroupMap[type]];
             if (optionGroup) {
@@ -40,7 +40,7 @@ const EntitiesMenu = ({ text, options, grouped }) => {
     if (!grouped) {
         const dashboardOption = {
             label: `${useCaseShortLabels[workflowState.useCase]} Dashboard`,
-            link: workflowState.clear().toUrl()
+            link: workflowState.clear().toUrl(),
         };
         formattedOptions = [dashboardOption, ...createOptions(options, workflowState)];
     } else {
@@ -62,11 +62,11 @@ const EntitiesMenu = ({ text, options, grouped }) => {
 EntitiesMenu.propTypes = {
     text: PropTypes.string.isRequired,
     options: PropTypes.arrayOf(PropTypes.string).isRequired,
-    grouped: PropTypes.bool
+    grouped: PropTypes.bool,
 };
 
 EntitiesMenu.defaultProps = {
-    grouped: false
+    grouped: false,
 };
 
 export default EntitiesMenu;

@@ -23,7 +23,7 @@ const LabelChip = ({ text, type, size, fade, dataTestId }) => {
     let className =
         'inline-block border rounded font-600 text-center whitespace-no-wrap min-h-6 flex justify-center items-center';
     className = getClassNameBySize(className, size);
-    const colorType = colorTypes.find(datum => datum === type) || defaultColorType;
+    const colorType = colorTypes.find((datum) => datum === type) || defaultColorType;
     className = `${className} bg-${colorType}-200 border-${colorType}-400 text-${colorType}-800 capitalize ${
         fade ? 'opacity-50' : ''
     }`;
@@ -39,14 +39,14 @@ LabelChip.propTypes = {
     type: PropTypes.oneOf(colorTypes),
     size: PropTypes.oneOf(['small', 'medium', 'large']),
     fade: PropTypes.bool,
-    dataTestId: PropTypes.string
+    dataTestId: PropTypes.string,
 };
 
 LabelChip.defaultProps = {
     type: defaultColorType,
     size: 'medium',
     fade: false,
-    dataTestId: 'label-chip'
+    dataTestId: 'label-chip',
 };
 
 export default LabelChip;

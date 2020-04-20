@@ -18,21 +18,21 @@ class AuthProvider extends Component {
             name: PropTypes.string,
             id: PropTypes.string,
             type: PropTypes.string,
-            active: PropTypes.bool
+            active: PropTypes.bool,
         }),
         isEditing: PropTypes.bool.isRequired,
         onSave: PropTypes.func.isRequired,
         onEdit: PropTypes.func.isRequired,
         onCancel: PropTypes.func.isRequired,
         groups: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-        featureFlags: PropTypes.shape({}).isRequired
+        featureFlags: PropTypes.shape({}).isRequired,
     };
 
     static defaultProps = {
-        selectedAuthProvider: null
+        selectedAuthProvider: null,
     };
 
-    populateDefaultValues = initialValues => {
+    populateDefaultValues = (initialValues) => {
         const newInitialValues = { ...initialValues };
         newInitialValues.uiEndpoint = window.location.host;
         newInitialValues.enabled = true;
@@ -42,7 +42,7 @@ class AuthProvider extends Component {
         return newInitialValues;
     };
 
-    transformInitialValues = initialValues => {
+    transformInitialValues = (initialValues) => {
         // TODO-ivan: eventually logic for different auth provider type should live
         // with the form component that renders form for the corresponding auth provider
         // type, probably makes sense to refactor after moving away from redux-form
@@ -52,7 +52,7 @@ class AuthProvider extends Component {
             // backend doesn't return the exact value for the client secret for the security reasons,
             // instead it'll return some obfuscated data, but not an empty one
             alteredConfig.clientOnly = {
-                clientSecretStored: !!alteredConfig.client_secret
+                clientSecretStored: !!alteredConfig.client_secret,
             };
 
             if (initialValues.name) {
@@ -65,7 +65,7 @@ class AuthProvider extends Component {
 
             return {
                 ...initialValues,
-                config: alteredConfig
+                config: alteredConfig,
             };
         }
         if (initialValues.type === 'saml') {
@@ -74,13 +74,13 @@ class AuthProvider extends Component {
             alteredConfig.type = alteredConfig.idp_issuer ? 'static' : 'dynamic';
             return {
                 ...initialValues,
-                config: alteredConfig
+                config: alteredConfig,
             };
         }
         return initialValues;
     };
 
-    transformValuesBeforeSaving = values => {
+    transformValuesBeforeSaving = (values) => {
         if (values.type === 'oidc') {
             const alteredConfig = { ...values.config };
 
@@ -102,14 +102,14 @@ class AuthProvider extends Component {
 
             return {
                 ...values,
-                config: alteredConfig
+                config: alteredConfig,
             };
         }
         if (values.type === 'saml') {
             const alteredConfig = { ...values.config };
             if (alteredConfig.type === 'dynamic') {
                 ['idp_issuer', 'idp_sso_url', 'idp_nameid_format', 'idp_cert_pem'].forEach(
-                    p => delete alteredConfig[p]
+                    (p) => delete alteredConfig[p]
                 );
             } else if (alteredConfig.type === 'static') {
                 delete alteredConfig.idp_metadata_url;
@@ -118,20 +118,20 @@ class AuthProvider extends Component {
 
             return {
                 ...values,
-                config: alteredConfig
+                config: alteredConfig,
             };
         }
         return values;
     };
 
-    onSave = values => {
+    onSave = (values) => {
         const transformedValues = this.transformValuesBeforeSaving(values);
         this.props.onSave(transformedValues);
     };
 
     getGroupsByAuthProviderId = (groups, id) => {
         const filteredGroups = groups.filter(
-            group =>
+            (group) =>
                 group.props &&
                 group.props.authProviderId &&
                 group.props.authProviderId === id &&
@@ -142,7 +142,7 @@ class AuthProvider extends Component {
 
     getDefaultRoleByAuthProviderId = (groups, id) => {
         let defaultRoleGroups = groups.filter(
-            group =>
+            (group) =>
                 group.props &&
                 group.props.authProviderId &&
                 group.props.authProviderId === id &&
@@ -153,7 +153,7 @@ class AuthProvider extends Component {
             return defaultRoleGroups[0].roleName;
         }
         // if there is no default role specified for this auth provider then use the global default role
-        defaultRoleGroups = groups.filter(group => !group.props);
+        defaultRoleGroups = groups.filter((group) => !group.props);
         if (defaultRoleGroups.length) return defaultRoleGroups[0].roleName;
         return 'Admin';
     };
@@ -174,7 +174,7 @@ class AuthProvider extends Component {
         const modifiedInitialValues = {
             ...this.transformInitialValues(initialValues),
             groups: filteredGroups,
-            defaultRole
+            defaultRole,
         };
         const content = isEditing ? (
             <Form
@@ -234,7 +234,7 @@ class AuthProvider extends Component {
 }
 
 const mapStateToProps = createStructuredSelector({
-    featureFlags: selectors.getFeatureFlags
+    featureFlags: selectors.getFeatureFlags,
 });
 
 export default connect(mapStateToProps)(AuthProvider);

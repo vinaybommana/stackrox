@@ -15,7 +15,7 @@ const btnClassName =
 const queryParamMap = {
     CLUSTER: 'clusterId',
     STANDARD: 'standardId',
-    ALL: ''
+    ALL: '',
 };
 
 const complianceDownloadUrl = '/api/compliance/export/csv';
@@ -38,7 +38,7 @@ class ExportButton extends Component {
         tableOptions: PropTypes.shape({}),
         customCsvExportHandler: PropTypes.func,
         page: PropTypes.string,
-        disabled: PropTypes.bool
+        disabled: PropTypes.bool,
     };
 
     static defaultProps = {
@@ -51,13 +51,17 @@ class ExportButton extends Component {
         tableOptions: {},
         customCsvExportHandler: null,
         page: '',
-        disabled: false
+        disabled: false,
     };
 
-    state = {
-        toggleWidget: false,
-        csvIsDownloading: false
-    };
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            toggleWidget: false,
+            csvIsDownloading: false,
+        };
+    }
 
     handleClickOutside = () => this.setState({ toggleWidget: false });
 

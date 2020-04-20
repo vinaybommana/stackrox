@@ -59,10 +59,16 @@ test('should not update with the same set of entities', () => {
 });
 
 test('should respect custom ID attribute', () => {
-    const initialState = [{ id: 1, customId: 'a' }, { id: 2, customId: 'b' }];
+    const initialState = [
+        { id: 1, customId: 'a' },
+        { id: 2, customId: 'b' },
+    ];
     const { result } = renderHook(() => useEntitiesByIdsCache(initialState, 'customId'));
 
-    const newEntities = [{ id: 1, customId: 'b' }, { id: 2, customId: 'c' }];
+    const newEntities = [
+        { id: 1, customId: 'b' },
+        { id: 2, customId: 'c' },
+    ];
     act(() => {
         const setEntities = result.current[1];
         setEntities(newEntities);

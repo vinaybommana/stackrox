@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import entityTypes, {
     resourceTypes,
-    resourceTypeToApplicableStandards
+    resourceTypeToApplicableStandards,
 } from 'constants/entityTypes';
 import { DEPLOYMENT_QUERY } from 'queries/deployment';
 import Widget from 'Components/Widget';
@@ -43,7 +43,7 @@ const DeploymentPage = ({
     entityListType2,
     entityId2,
     query,
-    sidePanelMode
+    sidePanelMode,
 }) => {
     const searchParam = useContext(searchContext);
 
@@ -59,7 +59,7 @@ const DeploymentPage = ({
                     clusterName,
                     namespace,
                     clusterId,
-                    namespaceId
+                    namespaceId,
                 } = deployment;
                 const pdfClassName = !sidePanelMode ? 'pdf-page' : '';
                 let contents;
@@ -69,7 +69,7 @@ const DeploymentPage = ({
                         groupBy:
                             listEntityType1 === entityTypes.CONTROL ? entityTypes.STANDARD : '',
                         deployment: name,
-                        ...query[searchParam]
+                        ...query[searchParam],
                     };
                     contents = (
                         <section
@@ -148,7 +148,7 @@ const DeploymentPage = ({
                                     <Labels labels={labels} />
                                 </Widget>
                                 {resourceTypeToApplicableStandards[resourceTypes.DEPLOYMENT].map(
-                                    standardType => (
+                                    (standardType) => (
                                         <ComplianceByStandard
                                             key={standardType}
                                             standardType={standardType}

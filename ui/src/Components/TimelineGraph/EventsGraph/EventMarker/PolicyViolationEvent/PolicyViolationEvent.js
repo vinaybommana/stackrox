@@ -22,11 +22,11 @@ PolicyViolationEvent.propTypes = {
     type: PropTypes.oneOf(Object.values(eventTypes)).isRequired,
     timestamp: PropTypes.string.isRequired,
     width: PropTypes.number.isRequired,
-    height: PropTypes.number
+    height: PropTypes.number,
 };
 
 PolicyViolationEvent.defaultProps = {
-    height: null
+    height: null,
 };
 
 export default PolicyViolationEvent;

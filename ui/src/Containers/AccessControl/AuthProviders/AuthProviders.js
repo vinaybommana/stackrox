@@ -18,28 +18,22 @@ const AuthProviders = ({
     authProviders,
     deleteAuthProvider,
     groups,
-    isEditing
+    isEditing,
 }) => {
-    const setDefaultSelection = useCallback(
-        () => {
-            // sets selection to the first provider in the list, or to `null` if there are none
-            if (authProviders.length) {
-                selectAuthProvider(authProviders[0]);
-            } else if (selectedAuthProvider) {
-                // optimization: clear selection only if it isn't cleared
-                selectAuthProvider(null);
-            }
-        },
-        [authProviders, selectAuthProvider, selectedAuthProvider]
-    );
+    const setDefaultSelection = useCallback(() => {
+        // sets selection to the first provider in the list, or to `null` if there are none
+        if (authProviders.length) {
+            selectAuthProvider(authProviders[0]);
+        } else if (selectedAuthProvider) {
+            // optimization: clear selection only if it isn't cleared
+            selectAuthProvider(null);
+        }
+    }, [authProviders, selectAuthProvider, selectedAuthProvider]);
 
-    useEffect(
-        () => {
-            // select default / first auth provider when nothing is selected
-            if (!selectedAuthProvider && authProviders.length) setDefaultSelection();
-        },
-        [authProviders.length, selectedAuthProvider, setDefaultSelection]
-    );
+    useEffect(() => {
+        // select default / first auth provider when nothing is selected
+        if (!selectedAuthProvider && authProviders.length) setDefaultSelection();
+    }, [authProviders.length, selectedAuthProvider, setDefaultSelection]);
 
     const [providerToDelete, setProviderToDelete] = useState(null);
 
@@ -122,37 +116,34 @@ const AuthProviders = ({
 AuthProviders.propTypes = {
     authProviders: PropTypes.arrayOf(PropTypes.shape({})),
     selectedAuthProvider: PropTypes.shape({
-        id: PropTypes.string
+        id: PropTypes.string,
     }),
     selectAuthProvider: PropTypes.func.isRequired,
     saveAuthProvider: PropTypes.func.isRequired,
     deleteAuthProvider: PropTypes.func.isRequired,
     groups: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
     setAuthProviderEditingState: PropTypes.func.isRequired,
-    isEditing: PropTypes.bool
+    isEditing: PropTypes.bool,
 };
 
 AuthProviders.defaultProps = {
     authProviders: [],
     selectedAuthProvider: null,
-    isEditing: false
+    isEditing: false,
 };
 
 const mapStateToProps = createStructuredSelector({
     authProviders: selectors.getAvailableAuthProviders,
     selectedAuthProvider: selectors.getSelectedAuthProvider,
     groups: selectors.getRuleGroups,
-    isEditing: selectors.getAuthProviderEditingState
+    isEditing: selectors.getAuthProviderEditingState,
 });
 
 const mapDispatchToProps = {
     selectAuthProvider: actions.selectAuthProvider,
     saveAuthProvider: actions.saveAuthProvider,
     deleteAuthProvider: actions.deleteAuthProvider,
-    setAuthProviderEditingState: actions.setAuthProviderEditingState
+    setAuthProviderEditingState: actions.setAuthProviderEditingState,
 };
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(AuthProviders);
+export default connect(mapStateToProps, mapDispatchToProps)(AuthProviders);

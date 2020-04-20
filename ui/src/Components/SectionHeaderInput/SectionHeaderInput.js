@@ -26,7 +26,11 @@ function SectionHeaderInput({ header }) {
             )}
             {isEditing && (
                 <>
-                    <input value={header} className="p-2 w-full bg-base-200" />
+                    <input
+                        value={header}
+                        className="p-2 w-full bg-base-200"
+                        aria-label="Section Header"
+                    />
                     <div className="hover:bg-base-400">
                         <Button
                             icon={<Check className="w-5 h-5" />}
@@ -41,7 +45,7 @@ function SectionHeaderInput({ header }) {
 }
 
 SectionHeaderInput.propTypes = {
-    header: PropTypes.string.isRequired
+    header: PropTypes.string.isRequired,
 };
 
 export default SectionHeaderInput;

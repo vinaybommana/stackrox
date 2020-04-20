@@ -60,48 +60,48 @@ const appReducer = combineReducers({
     pdfDownload,
     license,
     systemConfig,
-    telemetryConfig
+    telemetryConfig,
 });
 
 const rootReducer = combineReducers({
     route,
     form: formReducer,
-    app: appReducer
+    app: appReducer,
 });
 
 export default rootReducer;
 
 // Selectors
 
-const getRoute = state => state.route;
-const getApp = state => state.app;
-const getAlerts = state => getApp(state).alerts;
-const getAPITokens = state => getApp(state).apiTokens;
-const getAuth = state => getApp(state).auth;
-const getClusters = state => getApp(state).clusters;
-const getDeployments = state => getApp(state).deployments;
-const getImages = state => getApp(state).images;
-const getIntegrations = state => getApp(state).integrations;
-const getNotifications = state => getApp(state).notifications;
-const getFeatureFlags = state => getApp(state).featureFlags;
-const getGlobalSearches = state => getApp(state).globalSearch;
-const getPolicies = state => getApp(state).policies;
-const getRoles = state => getApp(state).roles;
-const getSearchAutocomplete = state => getApp(state).searchAutoComplete;
-const getServerError = state => getApp(state).serverError;
-const getSecrets = state => getApp(state).secrets;
-const getDashboard = state => getApp(state).dashboard;
-const getLoadingStatus = state => getApp(state).loading;
-const getMetadata = state => getApp(state).metadata;
-const getNetwork = state => getApp(state).network;
-const getProcesses = state => getApp(state).processes;
-const getRuleGroups = state => getApp(state).groups;
-const getAttributes = state => getApp(state).attributes;
-const getCLI = state => getApp(state).cli;
-const getPdfDownload = state => getApp(state).pdfDownload;
-const getLicense = state => getApp(state).license;
-const getSystemConfig = state => getApp(state).systemConfig;
-const getTelemetryConfig = state => getApp(state).telemetryConfig;
+const getRoute = (state) => state.route;
+const getApp = (state) => state.app;
+const getAlerts = (state) => getApp(state).alerts;
+const getAPITokens = (state) => getApp(state).apiTokens;
+const getAuth = (state) => getApp(state).auth;
+const getClusters = (state) => getApp(state).clusters;
+const getDeployments = (state) => getApp(state).deployments;
+const getImages = (state) => getApp(state).images;
+const getIntegrations = (state) => getApp(state).integrations;
+const getNotifications = (state) => getApp(state).notifications;
+const getFeatureFlags = (state) => getApp(state).featureFlags;
+const getGlobalSearches = (state) => getApp(state).globalSearch;
+const getPolicies = (state) => getApp(state).policies;
+const getRoles = (state) => getApp(state).roles;
+const getSearchAutocomplete = (state) => getApp(state).searchAutoComplete;
+const getServerError = (state) => getApp(state).serverError;
+const getSecrets = (state) => getApp(state).secrets;
+const getDashboard = (state) => getApp(state).dashboard;
+const getLoadingStatus = (state) => getApp(state).loading;
+const getMetadata = (state) => getApp(state).metadata;
+const getNetwork = (state) => getApp(state).network;
+const getProcesses = (state) => getApp(state).processes;
+const getRuleGroups = (state) => getApp(state).groups;
+const getAttributes = (state) => getApp(state).attributes;
+const getCLI = (state) => getApp(state).cli;
+const getPdfDownload = (state) => getApp(state).pdfDownload;
+const getLicense = (state) => getApp(state).license;
+const getSystemConfig = (state) => getApp(state).systemConfig;
+const getTelemetryConfig = (state) => getApp(state).telemetryConfig;
 
 const boundSelectors = {
     ...bindSelectors(getAlerts, alertSelectors),
@@ -131,9 +131,9 @@ const boundSelectors = {
     ...bindSelectors(getPdfDownload, pdfDownloadSelectors),
     ...bindSelectors(getLicense, licenseSelectors),
     ...bindSelectors(getSystemConfig, systemConfigSelectors),
-    ...bindSelectors(getTelemetryConfig, telemetryConfigSelectors)
+    ...bindSelectors(getTelemetryConfig, telemetryConfigSelectors),
 };
 
 export const selectors = {
-    ...boundSelectors
+    ...boundSelectors,
 };

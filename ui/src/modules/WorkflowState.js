@@ -4,26 +4,7 @@ import entityRelationships from 'modules/entityRelationships';
 import generateURL from 'modules/URLGenerator';
 import { searchParams, sortParams, pagingParams } from 'constants/searchParams';
 
-// An item in the workflow stack
-export class WorkflowEntity {
-    constructor(entityType, entityId) {
-        if (entityType) {
-            this.t = entityType;
-        }
-        if (entityId) {
-            this.i = entityId;
-        }
-        Object.freeze(this);
-    }
-
-    get entityType() {
-        return this.t;
-    }
-
-    get entityId() {
-        return this.i;
-    }
-}
+import WorkflowEntity from './WorkflowEntity';
 
 // Returns true if stack provided makes sense
 export function isStackValid(stack) {
@@ -167,7 +148,7 @@ export class WorkflowState {
     }
 
     getSingleAncestorOfType(entityType) {
-        const ancestor = this.stateStack.find(level => level.t === entityType && level.i);
+        const ancestor = this.stateStack.find((level) => level.t === entityType && level.i);
 
         return ancestor ? new WorkflowEntity(ancestor.entityType, ancestor.entityId) : null;
     }
@@ -330,7 +311,7 @@ export class WorkflowState {
 
         const newSearch = {
             ...search,
-            [param]: newProps
+            [param]: newProps,
         };
         return new WorkflowState(useCase, stateStack, newSearch, sort, paging);
     }
@@ -341,7 +322,7 @@ export class WorkflowState {
 
         const newSort = {
             ...sort,
-            [param]: sortProp
+            [param]: sortProp,
         };
 
         return new WorkflowState(useCase, stateStack, search, newSort, paging);
@@ -353,7 +334,7 @@ export class WorkflowState {
 
         const newSearch = {
             ...search,
-            [param]: undefined
+            [param]: undefined,
         };
 
         return new WorkflowState(useCase, stateStack, newSearch, sort, paging);
@@ -365,7 +346,7 @@ export class WorkflowState {
 
         const newSort = {
             ...sort,
-            [param]: undefined
+            [param]: undefined,
         };
 
         return new WorkflowState(useCase, stateStack, search, newSort, paging);
@@ -377,7 +358,7 @@ export class WorkflowState {
 
         const newPaging = {
             ...paging,
-            [param]: pagingProp
+            [param]: pagingProp,
         };
         return new WorkflowState(useCase, stateStack, search, sort, newPaging);
     }
@@ -388,7 +369,7 @@ export class WorkflowState {
 
     getEntityContext() {
         return this.stateStack
-            .filter(item => !!item.entityId)
+            .filter((item) => !!item.entityId)
             .reduce((entityContext, item) => {
                 return { ...entityContext, [item.entityType]: item.entityId };
             }, {});

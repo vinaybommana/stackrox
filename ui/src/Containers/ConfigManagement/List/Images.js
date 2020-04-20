@@ -18,13 +18,13 @@ const buildTableColumns = (match, location, entityContext) => {
             Header: 'Id',
             headerClassName: 'hidden',
             className: 'hidden',
-            accessor: 'id'
+            accessor: 'id',
         },
         {
             Header: `Image`,
             headerClassName: `w-1/8 ${defaultHeaderClassName}`,
             className: `w-1/8 ${defaultColumnClassName}`,
-            accessor: 'name.fullName'
+            accessor: 'name.fullName',
         },
         {
             Header: `Created`,
@@ -35,7 +35,7 @@ const buildTableColumns = (match, location, entityContext) => {
                 if (!metadata) return '-';
                 return format(metadata.v1.created, dateTimeFormat);
             },
-            sortMethod: sortDate
+            sortMethod: sortDate,
         },
         entityContext && entityContext[entityTypes.DEPLOYMENT]
             ? null
@@ -55,14 +55,14 @@ const buildTableColumns = (match, location, entityContext) => {
                           .url();
                       return <TableCellLink pdf={pdf} url={url} text={text} />;
                   },
-                  accessor: 'deployments'
-              }
+                  accessor: 'deployments',
+              },
     ];
 
-    return tableColumns.filter(col => col);
+    return tableColumns.filter((col) => col);
 };
 
-const createTableRows = data => data.images;
+const createTableRows = (data) => data.images;
 
 const Images = ({
     className,
@@ -72,7 +72,7 @@ const Images = ({
     match,
     location,
     data,
-    entityContext
+    entityContext,
 }) => {
     const autoFocusSearchInput = !selectedRowId;
     const queryText = queryService.objectToWhereClause(query);

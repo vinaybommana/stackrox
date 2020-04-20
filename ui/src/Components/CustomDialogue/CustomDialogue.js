@@ -4,7 +4,7 @@ import { ClipLoader as Loader } from 'react-spinners';
 import * as Icon from 'react-feather';
 import Modal from 'Components/Modal';
 
-const CustomDialogue = props => (
+const CustomDialogue = (props) => (
     <Modal
         isOpen
         onRequestClose={props.onCancel}
@@ -59,7 +59,7 @@ CustomDialogue.propTypes = {
     confirmText: PropTypes.string,
     confirmDisabled: PropTypes.bool,
     isLoading: PropTypes.bool,
-    loadingText: PropTypes.string
+    loadingText: PropTypes.string,
 };
 
 CustomDialogue.defaultProps = {
@@ -72,7 +72,7 @@ CustomDialogue.defaultProps = {
     confirmDisabled: false,
     isLoading: false,
     loadingText: null,
-    text: null
+    text: null,
 };
 
 export default CustomDialogue;

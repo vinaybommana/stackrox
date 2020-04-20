@@ -20,7 +20,7 @@ const CommentThread = ({
     defaultOpen,
     isLoading,
     isDisabled,
-    isCollapsible
+    isCollapsible,
 }) => {
     const [newComment, createComment] = useState(null);
     const [limit, setLimit] = useState(defaultLimit);
@@ -37,7 +37,7 @@ const CommentThread = ({
         e.stopPropagation(); // prevents click-through trigger of collapsible
         createComment({
             createdTime: new Date().toISOString(),
-            message: ''
+            message: '',
         });
     }
 
@@ -137,12 +137,12 @@ CommentThread.propTypes = {
             user: PropTypes.shape({
                 id: PropTypes.string.isRequired,
                 name: PropTypes.string.isRequired,
-                email: PropTypes.string.isRequired
+                email: PropTypes.string.isRequired,
             }),
             createdTime: PropTypes.string.isRequired,
             updatedTime: PropTypes.string.isRequired,
             isEditable: PropTypes.bool,
-            isDeletable: PropTypes.bool
+            isDeletable: PropTypes.bool,
         })
     ),
     onCreate: PropTypes.func.isRequired,
@@ -152,7 +152,7 @@ CommentThread.propTypes = {
     defaultOpen: PropTypes.bool,
     isLoading: PropTypes.bool,
     isDisabled: PropTypes.bool,
-    isCollapsible: PropTypes.bool
+    isCollapsible: PropTypes.bool,
 };
 
 CommentThread.defaultProps = {
@@ -161,7 +161,7 @@ CommentThread.defaultProps = {
     defaultOpen: false,
     isLoading: false,
     isDisabled: false,
-    isCollapsible: true
+    isCollapsible: true,
 };
 
 export default CommentThread;

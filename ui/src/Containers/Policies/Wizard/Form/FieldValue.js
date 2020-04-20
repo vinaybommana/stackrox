@@ -31,7 +31,7 @@ FieldValue.propTypes = {
     fieldKey: PropTypes.shape({}).isRequired,
     booleanOperator: PropTypes.string.isRequired,
     removeValueHandler: PropTypes.func.isRequired,
-    index: PropTypes.number.isRequired
+    index: PropTypes.number.isRequired,
 };
 
 export default FieldValue;

@@ -24,18 +24,18 @@ const ResourceTabs = ({ entityType, entityId, resourceTabs, selectedType, match,
             {
                 title: 'overview',
                 link: getLinkToListType(),
-                type: null
-            }
+                type: null,
+            },
         ];
 
         if (resourceTabs.length && data) {
-            resourceTabs.forEach(type => {
+            resourceTabs.forEach((type) => {
                 const count = getResourceCountFromAggregatedResults(type, data);
                 if (count > 0)
                     tabData.push({
                         title: `${count} ${pluralize(resourceLabels[type], count)}`,
                         link: getLinkToListType(type),
-                        type
+                        type,
                     });
             });
         }
@@ -46,7 +46,7 @@ const ResourceTabs = ({ entityType, entityId, resourceTabs, selectedType, match,
     function getVariables() {
         // entitytype.NODE and namespace don't play well in groupBy
         return {
-            query: queryService.objectToWhereClause({ [`${entityType} ID`]: entityId })
+            query: queryService.objectToWhereClause({ [`${entityType} ID`]: entityId }),
         };
     }
 
@@ -62,7 +62,7 @@ const ResourceTabs = ({ entityType, entityId, resourceTabs, selectedType, match,
                             let bgColor = 'bg-base-200';
                             let textColor = 'text-base-600';
                             const style = {
-                                borderColor: 'hsla(225, 44%, 87%, 1)'
+                                borderColor: 'hsla(225, 44%, 87%, 1)',
                             };
                             if (datum.type === selectedType || (!selectedType && !datum.type)) {
                                 bgColor = 'bg-base-100';
@@ -97,12 +97,12 @@ ResourceTabs.propTypes = {
     entityType: PropTypes.string.isRequired,
     entityId: PropTypes.string.isRequired,
     selectedType: PropTypes.string,
-    resourceTabs: PropTypes.arrayOf(PropTypes.string)
+    resourceTabs: PropTypes.arrayOf(PropTypes.string),
 };
 
 ResourceTabs.defaultProps = {
     resourceTabs: PropTypes.arrayOf(PropTypes.string),
-    selectedType: null
+    selectedType: null,
 };
 
 export default withRouter(ResourceTabs);

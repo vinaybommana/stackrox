@@ -28,8 +28,8 @@ const ServiceAccount = ({ id, entityListType, entityId1, query, entityContext })
         id,
         query: queryService.objectToWhereClause({
             ...query[searchParam],
-            'Lifecycle Stage': 'DEPLOY'
-        })
+            'Lifecycle Stage': 'DEPLOY',
+        }),
     };
 
     const defaultQuery = gql`
@@ -125,7 +125,7 @@ const ServiceAccount = ({ id, entityListType, entityId1, query, entityContext })
                     scopedPermissions = [],
                     annotations,
                     clusterName = '',
-                    clusterId = ''
+                    clusterId = '',
                 } = entity;
 
                 let namespaceName = '';
@@ -140,8 +140,8 @@ const ServiceAccount = ({ id, entityListType, entityId1, query, entityContext })
                     { key: 'Automounted', value: automountToken.toString() },
                     {
                         key: 'Created',
-                        value: createdAt ? format(createdAt, dateTimeFormat) : 'N/A'
-                    }
+                        value: createdAt ? format(createdAt, dateTimeFormat) : 'N/A',
+                    },
                 ];
 
                 const scopedPermissionsByCluster = [{ clusterId, clusterName, scopedPermissions }];

@@ -38,25 +38,20 @@ Form.propTypes = {
     config: PropTypes.shape({
         privateConfig: PropTypes.shape({
             alertConfig: PropTypes.shape({}),
-            imageRetentionDurationDays: PropTypes.number
+            imageRetentionDurationDays: PropTypes.number,
         }),
         telemetryConfig: PropTypes.shape({
-            enabled: PropTypes.bool
-        })
+            enabled: PropTypes.bool,
+        }),
     }).isRequired,
     onSubmit: PropTypes.func.isRequired,
-    initialValues: PropTypes.shape({})
+    initialValues: PropTypes.shape({}),
 };
 
 Form.defaultProps = {
-    initialValues: null
+    initialValues: null,
 };
 
 export default reduxForm({
-    form: 'system-config-form'
-})(
-    connect(
-        null,
-        null
-    )(Form)
-);
+    form: 'system-config-form',
+})(connect(null, null)(Form));

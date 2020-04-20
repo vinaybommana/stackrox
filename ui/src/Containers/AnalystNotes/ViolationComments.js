@@ -19,11 +19,11 @@ const ViolationComments = ({ resourceId, isCollapsible }) => {
 
 ViolationComments.propTypes = {
     resourceId: PropTypes.string.isRequired,
-    isCollapsible: PropTypes.bool
+    isCollapsible: PropTypes.bool,
 };
 
 ViolationComments.defaultProps = {
-    isCollapsible: true
+    isCollapsible: true,
 };
 
 export default ViolationComments;

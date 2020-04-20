@@ -20,7 +20,7 @@ const ControlRelatedEntitiesList = ({
     pageEntity,
     limit,
     standard,
-    className
+    className,
 }) => {
     const linkContext = useCases.COMPLIANCE;
     const searchParam = useContext(searchContext);
@@ -34,9 +34,9 @@ const ControlRelatedEntitiesList = ({
             options = clusters.reduce(
                 (acc, cluster) =>
                     acc.concat(
-                        cluster.namespaces.map(ns => ({
+                        cluster.namespaces.map((ns) => ({
                             ...ns.metadata,
-                            name: `${cluster.name}/${ns.metadata.name}`
+                            name: `${cluster.name}/${ns.metadata.name}`,
                         }))
                     ),
                 []
@@ -45,9 +45,9 @@ const ControlRelatedEntitiesList = ({
             options = clusters.reduce(
                 (acc, cluster) =>
                     acc.concat(
-                        cluster.nodes.map(node => ({
+                        cluster.nodes.map((node) => ({
                             ...node,
-                            name: `${cluster.name}/${node.name}`
+                            name: `${cluster.name}/${node.name}`,
                         }))
                     ),
                 []
@@ -57,24 +57,22 @@ const ControlRelatedEntitiesList = ({
         }
 
         function getEntityName(id) {
-            const found = options.find(item => item.id === id);
+            const found = options.find((item) => item.id === id);
             return found ? found.name : null;
         }
 
         const ids = data.results.results
-            .filter(item => item.numPassing > 0 || item.numFailing > 0)
-            .map(item => item.aggregationKeys.find(key => key.scope === listEntityType).id);
+            .filter((item) => item.numPassing > 0 || item.numFailing > 0)
+            .map((item) => item.aggregationKeys.find((key) => key.scope === listEntityType).id);
 
         const filteredIds = [];
-        ids.forEach(id => {
+        ids.forEach((id) => {
             if (!filteredIds.includes(id)) filteredIds.push(id);
         });
 
-        const result = filteredIds.map(id => ({
+        const result = filteredIds.map((id) => ({
             label: getEntityName(id),
-            link: URLService.getURL(match, location)
-                .base(listEntityType, id)
-                .url()
+            link: URLService.getURL(match, location).base(listEntityType, id).url(),
         }));
 
         return result;
@@ -105,7 +103,7 @@ const ControlRelatedEntitiesList = ({
     const variables = {
         groupBy: [pageEntityType, listEntityType],
         unit: entityTypes.CONTROL,
-        where: queryService.objectToWhereClause({ [`${pageEntityType} ID`]: pageEntity.id })
+        where: queryService.objectToWhereClause({ [`${pageEntityType} ID`]: pageEntity.id }),
     };
 
     return (
@@ -129,17 +127,17 @@ ControlRelatedEntitiesList.propTypes = {
     pageEntityType: PropTypes.string.isRequired,
     pageEntity: PropTypes.shape({
         id: PropTypes.string,
-        name: PropTypes.string
+        name: PropTypes.string,
     }),
     limit: PropTypes.number,
     standard: PropTypes.string.isRequired,
-    className: PropTypes.string
+    className: PropTypes.string,
 };
 
 ControlRelatedEntitiesList.defaultProps = {
     pageEntity: null,
     limit: 10,
-    className: ''
+    className: '',
 };
 
 export default withRouter(ControlRelatedEntitiesList);

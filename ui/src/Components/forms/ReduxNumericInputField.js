@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { Field } from 'redux-form';
 import NumericInput from 'react-numeric-input';
 
-const ReduxNumericInput = props => (
+const ReduxNumericInput = (props) => (
     <NumericInput
         max={props.max}
         min={props.min}
@@ -22,13 +22,13 @@ const ReduxNumericInput = props => (
 ReduxNumericInput.propTypes = {
     input: PropTypes.shape({
         value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-        onChange: PropTypes.func
+        onChange: PropTypes.func,
     }).isRequired,
     placeholder: PropTypes.string.isRequired,
     min: PropTypes.number.isRequired,
     max: PropTypes.number.isRequired,
     step: PropTypes.number.isRequired,
-    className: PropTypes.string.isRequired
+    className: PropTypes.string.isRequired,
 };
 
 const ReduxNumericInputField = ({ name, min, max, placeholder, step, className }) => (
@@ -51,7 +51,7 @@ ReduxNumericInputField.propTypes = {
     max: PropTypes.number,
     step: PropTypes.number,
     placeholder: PropTypes.string,
-    className: PropTypes.string
+    className: PropTypes.string,
 };
 
 ReduxNumericInputField.defaultProps = {
@@ -59,7 +59,7 @@ ReduxNumericInputField.defaultProps = {
     max: Number.MAX_SAFE_INTEGER,
     step: 1,
     placeholder: '',
-    className: 'bg-base-100 border-2 rounded-l p-3 text-base-600 border-base-300 w-full font-600'
+    className: 'bg-base-100 border-2 rounded-l p-3 text-base-600 border-base-300 w-full font-600',
 };
 
 export default ReduxNumericInputField;

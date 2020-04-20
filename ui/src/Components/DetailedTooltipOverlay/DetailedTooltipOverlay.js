@@ -25,13 +25,13 @@ DetailedTooltipOverlay.propTypes = {
     body: PropTypes.node.isRequired,
     subtitle: PropTypes.string,
     footer: PropTypes.node,
-    className: PropTypes.string
+    className: PropTypes.string,
 };
 
 DetailedTooltipOverlay.defaultProps = {
     subtitle: '',
     footer: '',
-    className: ''
+    className: '',
 };
 
 export default DetailedTooltipOverlay;

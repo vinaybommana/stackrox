@@ -4,7 +4,7 @@ module.exports = function main(app) {
     const defaultOptions = {
         target: process.env.YARN_START_TARGET || 'https://localhost:8000',
         changeOrigin: true,
-        secure: false
+        secure: false,
     };
 
     app.use(proxy('/v1', defaultOptions));

@@ -15,17 +15,17 @@ const SideBar = ({
     header,
     rows,
     selected,
-    addRowButton
+    addRowButton,
 }) => {
     function onRowSelectHandler() {
-        return row => {
+        return (row) => {
             onSelectRow(row);
             onCancel();
         };
     }
 
     function onDeleteHandler(row) {
-        return e => {
+        return (e) => {
             e.stopPropagation();
             onDelete(row);
         };
@@ -49,14 +49,14 @@ const SideBar = ({
         {
             id: 'name',
             accessor: 'name',
-            className: `${defaultColumnClassName}`
+            className: `${defaultColumnClassName}`,
         },
         {
             accessor: '',
             headerClassName: 'hidden',
             className: rtTrActionsClassName,
-            Cell: ({ original }) => renderRowActionButtons(original)
-        }
+            Cell: ({ original }) => renderRowActionButtons(original),
+        },
     ];
     return (
         <Panel
@@ -90,11 +90,11 @@ SideBar.propTypes = {
     addRowButton: PropTypes.node.isRequired,
     onCancel: PropTypes.func.isRequired,
     onDelete: PropTypes.func.isRequired,
-    type: PropTypes.string.isRequired
+    type: PropTypes.string.isRequired,
 };
 
 SideBar.defaultProps = {
-    selected: null
+    selected: null,
 };
 
 export default SideBar;

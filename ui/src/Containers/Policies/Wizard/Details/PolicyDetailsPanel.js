@@ -27,17 +27,17 @@ function PolicyDetailsPanel({ header, wizardPolicy, onClose }) {
 PolicyDetailsPanel.propTypes = {
     header: PropTypes.string,
     wizardPolicy: PropTypes.shape({
-        name: PropTypes.string
+        name: PropTypes.string,
     }).isRequired,
-    onClose: PropTypes.func.isRequired
+    onClose: PropTypes.func.isRequired,
 };
 
 PolicyDetailsPanel.defaultProps = {
-    header: ''
+    header: '',
 };
 
 const mapStateToProps = createStructuredSelector({
-    wizardPolicy: selectors.getWizardPolicy
+    wizardPolicy: selectors.getWizardPolicy,
 });
 
 export default connect(mapStateToProps)(PolicyDetailsPanel);

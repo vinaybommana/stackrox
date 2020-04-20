@@ -18,7 +18,7 @@ import {
     CLUSTER_LIST_FRAGMENT as VULN_CLUSTER_LIST_FRAGMENT,
     DEPLOYMENT_LIST_FRAGMENT as VULN_DEPLOYMENT_LIST_FRAGMENT,
     NAMESPACE_LIST_FRAGMENT as VULN_NAMESPACE_LIST_FRAGMENT,
-    POLICY_LIST_FRAGMENT as VULN_POLICY_LIST_FRAGMENT
+    POLICY_LIST_FRAGMENT as VULN_POLICY_LIST_FRAGMENT,
 } from 'Containers/VulnMgmt/VulnMgmt.fragments';
 import { DEFAULT_PAGE_SIZE } from 'Components/Table';
 
@@ -171,7 +171,7 @@ function getFragment(entityType, useCase) {
         [entityTypes.SECRET]: SECRET_FRAGMENT,
         [entityTypes.POLICY]: POLICY_FRAGMENT,
         [entityTypes.SERVICE_ACCOUNT]: SERVICE_ACCOUNT_FRAGMENT,
-        [entityTypes.CONTROL]: CONTROL_FRAGMENT
+        [entityTypes.CONTROL]: CONTROL_FRAGMENT,
     };
 
     const fragmentsByUseCase = {
@@ -183,8 +183,8 @@ function getFragment(entityType, useCase) {
             [entityTypes.CLUSTER]: VULN_CLUSTER_LIST_FRAGMENT,
             [entityTypes.NAMESPACE]: VULN_NAMESPACE_LIST_FRAGMENT,
             [entityTypes.POLICY]: VULN_POLICY_LIST_FRAGMENT,
-            [entityTypes.DEPLOYMENT]: VULN_DEPLOYMENT_LIST_FRAGMENT
-        }
+            [entityTypes.DEPLOYMENT]: VULN_DEPLOYMENT_LIST_FRAGMENT,
+        },
     };
 
     const fragmentMap = fragmentsByUseCase[useCase] || defaultFragments;
@@ -200,7 +200,7 @@ function getFragmentInfo(entityType, listType, useCase) {
     return {
         listFieldName,
         fragmentName,
-        fragment
+        fragment,
     };
 }
 
@@ -212,14 +212,14 @@ function getPagination(sort, page, pageSize = DEFAULT_PAGE_SIZE) {
     const limit = pageSize;
     const paginationObj = {
         offset,
-        limit
+        limit,
     };
 
     if (!sortObj.id) return paginationObj;
 
     paginationObj.sortOption = {
         field: sortObj.id,
-        reversed: sortObj.desc
+        reversed: sortObj.desc,
     };
     return paginationObj;
 }
@@ -231,5 +231,5 @@ export default {
     getEntityWhereClause,
     getQueryBasedOnSearchContext,
     getFragmentInfo,
-    getPagination
+    getPagination,
 };

@@ -36,7 +36,7 @@ const PolicyImportDialogue = ({ closeAction }) => {
 };
 
 PolicyImportDialogue.propTypes = {
-    closeAction: PropTypes.func.isRequired
+    closeAction: PropTypes.func.isRequired,
 };
 
 export default PolicyImportDialogue;

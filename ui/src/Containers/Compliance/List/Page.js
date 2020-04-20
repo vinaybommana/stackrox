@@ -51,12 +51,12 @@ ComplianceListPage.propTypes = {
     match: ReactRouterPropTypes.match.isRequired,
     location: ReactRouterPropTypes.location.isRequired,
     params: PropTypes.shape({
-        entityType: PropTypes.string.isRequired
-    })
+        entityType: PropTypes.string.isRequired,
+    }),
 };
 
 ComplianceListPage.defaultProps = {
-    params: null
+    params: null,
 };
 
 export default withRouter(ComplianceListPage);

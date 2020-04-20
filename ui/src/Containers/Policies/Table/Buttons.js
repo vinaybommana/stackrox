@@ -27,21 +27,21 @@ class Buttons extends Component {
         wizardOpen: PropTypes.bool.isRequired,
         wizardPolicy: PropTypes.shape({
             id: PropTypes.string,
-            name: PropTypes.string
+            name: PropTypes.string,
         }),
         openWizard: PropTypes.func.isRequired,
         setWizardStage: PropTypes.func.isRequired,
         setWizardPolicy: PropTypes.func.isRequired,
-        history: ReactRouterPropTypes.history.isRequired
+        history: ReactRouterPropTypes.history.isRequired,
     };
 
     static defaultProps = {
-        wizardPolicy: null
+        wizardPolicy: null,
     };
 
     addPolicy = () => {
         this.props.history.push({
-            pathname: `/main/policies`
+            pathname: `/main/policies`,
         });
         this.props.setWizardPolicy({ name: '' });
         this.props.setWizardStage(wizardStages.edit);
@@ -52,7 +52,7 @@ class Buttons extends Component {
         this.props.startPolicyImport();
     };
 
-    openDialogue = policiesAction => {
+    openDialogue = (policiesAction) => {
         this.props.setPoliciesAction(policiesAction);
     };
 
@@ -63,23 +63,23 @@ class Buttons extends Component {
             {
                 label: 'Enable Notification',
                 onClick: () => this.openDialogue(policyBulkActions.enableNotification),
-                icon: <Bell className="h-4" />
+                icon: <Bell className="h-4" />,
             },
             {
                 label: 'Disable Notification',
                 onClick: () => this.openDialogue(policyBulkActions.disableNotification),
-                icon: <BellOff className="h-4" />
+                icon: <BellOff className="h-4" />,
             },
             {
                 label: 'Delete Policies',
                 onClick: () => this.openDialogue(policyBulkActions.deletePolicies),
                 className: 'border-t bg-alert-100 text-alert-700',
-                icon: <Trash2 className="h-4" />
-            }
+                icon: <Trash2 className="h-4" />,
+            },
         ];
 
         return (
-            <React.Fragment>
+            <>
                 {selectionCount !== 0 && (
                     <Menu
                         className="mr-2"
@@ -94,7 +94,7 @@ class Buttons extends Component {
                         disabled={
                             buttonsDisabled &&
                             this.props.selectedPolicyIds.find(
-                                id => id === this.props.wizardPolicy.id
+                                (id) => id === this.props.wizardPolicy.id
                             ) !== undefined
                         }
                     />
@@ -134,7 +134,7 @@ class Buttons extends Component {
                         </PanelButton>
                     </>
                 )}
-            </React.Fragment>
+            </>
         );
     }
 }
@@ -142,7 +142,7 @@ class Buttons extends Component {
 const mapStateToProps = createStructuredSelector({
     selectedPolicyIds: selectors.getSelectedPolicyIds,
     wizardOpen: selectors.getWizardOpen,
-    wizardPolicy: selectors.getWizardPolicy
+    wizardPolicy: selectors.getWizardPolicy,
 });
 
 const mapDispatchToProps = {
@@ -151,12 +151,7 @@ const mapDispatchToProps = {
     reassessPolicies: backendActions.reassessPolicies,
 
     setWizardStage: wizardActions.setWizardStage,
-    setWizardPolicy: wizardActions.setWizardPolicy
+    setWizardPolicy: wizardActions.setWizardPolicy,
 };
 
-export default withRouter(
-    connect(
-        mapStateToProps,
-        mapDispatchToProps
-    )(Buttons)
-);
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(Buttons));

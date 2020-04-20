@@ -32,10 +32,10 @@ function DiscoveryCards({ deploymentId, processGroup, processEpoch, setProcessEp
 DiscoveryCards.propTypes = {
     deploymentId: PropTypes.string.isRequired,
     processGroup: PropTypes.shape({
-        groups: PropTypes.arrayOf(PropTypes.object)
+        groups: PropTypes.arrayOf(PropTypes.object),
     }).isRequired,
     processEpoch: PropTypes.number.isRequired,
-    setProcessEpoch: PropTypes.func.isRequired
+    setProcessEpoch: PropTypes.func.isRequired,
 };
 
 export default DiscoveryCards;

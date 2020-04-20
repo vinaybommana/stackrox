@@ -11,7 +11,7 @@ const CommentActionButtons = ({
     onEdit,
     onRemove,
     onClose,
-    isDisabled
+    isDisabled,
 }) => {
     if (isEditing) {
         return (
@@ -58,14 +58,14 @@ CommentActionButtons.propTypes = {
     onEdit: PropTypes.func.isRequired,
     onRemove: PropTypes.func.isRequired,
     onClose: PropTypes.func.isRequired,
-    isDisabled: PropTypes.bool
+    isDisabled: PropTypes.bool,
 };
 
 CommentActionButtons.defaultProps = {
     isEditing: false,
     isDisabled: false,
     isEditable: false,
-    isDeletable: false
+    isDeletable: false,
 };
 
 export default CommentActionButtons;

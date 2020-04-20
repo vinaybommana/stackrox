@@ -12,7 +12,7 @@ const HeaderWithSubText = ({ header, subText }) => {
 
 HeaderWithSubText.propTypes = {
     header: PropTypes.string.isRequired,
-    subText: PropTypes.string.isRequired
+    subText: PropTypes.string.isRequired,
 };
 
 export default HeaderWithSubText;

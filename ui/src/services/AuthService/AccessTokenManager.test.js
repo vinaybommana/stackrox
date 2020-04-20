@@ -74,7 +74,7 @@ describe('AccessTokenManager', () => {
     it('should notify attached listener about token being refreshed', () => {
         const refreshToken = jest.fn().mockRejectedValue();
         let opPromiseToTest = null;
-        const refreshTokenListener = opPromise => {
+        const refreshTokenListener = (opPromise) => {
             opPromiseToTest = opPromise;
         };
         const tokenInfo = { expiry: new Date(Date.now() + 31000).toISOString() };

@@ -17,49 +17,49 @@ export const selectors = {
     policies: {
         scanImage: 'div.rt-tr:contains("90-Day")',
         addCapabilities: '.rt-tr:contains("CAP_SYS_ADMIN capability added")',
-        disabledPolicyImage: 'div.rt-tr.data-test-disabled:first'
+        disabledPolicyImage: 'div.rt-tr.data-test-disabled:first',
     },
     form: {
         nameInput: 'form input[name=name]',
         enableField: 'form input[name=disabled]',
         required: 'form span[data-testid="required"]',
         select: 'form select',
-        selectValue: 'form .react-select__multi-value__label'
+        selectValue: 'form .react-select__multi-value__label',
     },
     configurationField: {
         select: '#policyConfigurationSelect',
         selectArrow: '#policyConfigurationSelect .react-select__dropdown-indicator',
         options: '#policyConfigurationSelect .react-select__option',
-        numericInput: '[data-testid="policyConfigurationFields"] .react-numeric-input input'
+        numericInput: '[data-testid="policyConfigurationFields"] .react-numeric-input input',
     },
     imageRegistry: {
         input: 'input[name="fields.imageName.registry"]',
         deleteButton: 'div:contains("Image Registry")+ div.flex>div.flex>button',
-        value: '[data-testid="imageName"] div.flex'
+        value: '[data-testid="imageName"] div.flex',
     },
     scanAgeDays: {
         input:
             'div:contains("Days since image was last scanned") + div.flex>.react-numeric-input>input',
         deleteButton:
             'div:contains("Days since image was last scanned") + div.flex>div.flex>button',
-        value: '[data-testid="scanAgeDays"] div.flex'
+        value: '[data-testid="scanAgeDays"] div.flex',
     },
     categoriesField: {
         input: 'div:contains("Categories") + div.flex .react-select__input > input',
-        valueContainer: 'div:contains("Categories") + div.flex .react-select__value-container'
+        valueContainer: 'div:contains("Categories") + div.flex .react-select__value-container',
     },
     policyPreview: {
         loading: '[data-testid="dry-run-loading"]',
         message: '.warn-message',
         alertPreview: {
-            table: '.alert-preview table'
-        }
+            table: '.alert-preview table',
+        },
     },
     policyDetailsPanel: {
         detailsSection: '[data-testid="policy-details"]',
         criteriaSection: '[data-testid="policy-criteria"]',
         idValueDiv: 'div.text-base-600:contains("ID:") + div',
-        enabledValueDiv: 'div.text-base-600:contains("Enabled") + div'
+        enabledValueDiv: 'div.text-base-600:contains("Enabled") + div',
     },
     searchInput: '.react-select__input > input',
     sidePanel: '[data-testid="side-panel"]',
@@ -74,15 +74,15 @@ export const selectors = {
     enforcement: {
         buildTile: '[data-testid="policy-enforcement-build-tile"]',
         deployTile: '[data-testid="policy-enforcement-deploy-tile"]',
-        onOffToggle: '[data-testid="policy-enforcement-on-off"]'
+        onOffToggle: '[data-testid="policy-enforcement-on-off"]',
     },
-    toast: '.toast-selector'
+    toast: '.toast-selector',
 };
 
 export const text = {
     policyLatestTagName: 'Latest tag',
     policyPreview: {
         message:
-            'This policy is not currently enabled. If enabled, the policy would generate violations for the following deployments on your system.'
-    }
+            'This policy is not currently enabled. If enabled, the policy would generate violations for the following deployments on your system.',
+    },
 };

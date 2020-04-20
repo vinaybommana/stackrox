@@ -13,7 +13,7 @@ const MiniMap = ({
     setMinTimeRange,
     setMaxTimeRange,
     data,
-    numRows
+    numRows,
 }) => {
     const [width, setWidth] = useState(0);
     const [height, setHeight] = useState(0);
@@ -24,9 +24,7 @@ const MiniMap = ({
     }, []);
 
     function onSelectionChange(selection) {
-        const scale = scaleLinear()
-            .domain([minTimeRange, maxTimeRange])
-            .range([0, width]);
+        const scale = scaleLinear().domain([minTimeRange, maxTimeRange]).range([0, width]);
         const newMinTimeRange = selection ? scale.invert(selection.start) : minTimeRange;
         const newMaxTimeRange = selection ? scale.invert(selection.end) : maxTimeRange;
         setMinTimeRange(newMinTimeRange);

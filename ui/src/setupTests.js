@@ -7,13 +7,11 @@ import '@testing-library/jest-dom/extend-expect';
  * Fix for test error "matchMedia not present, legacy browsers require a polyfill"
  * https://github.com/akiran/react-slick/issues/742
  */
-if (window.matchMedia) {
-    window.matchMedia = window.matchMedia;
-} else {
+if (!window.matchMedia) {
     window.matchMedia = () => ({
         matches: false,
         addListener() {},
-        removeListener() {}
+        removeListener() {},
     });
 }
 

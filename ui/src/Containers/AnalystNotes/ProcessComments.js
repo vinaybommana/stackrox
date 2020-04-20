@@ -14,7 +14,7 @@ const ProcessComments = ({ deploymentID, containerName, execFilePath, args }) =>
 };
 
 ProcessComments.propTypes = {
-    ...ProcessKeyProps
+    ...ProcessKeyProps,
 };
 
 export default ProcessComments;

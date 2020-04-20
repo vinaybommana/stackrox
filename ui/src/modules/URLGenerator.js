@@ -9,31 +9,31 @@ import {
     secretsPath,
     urlEntityListTypes,
     urlEntityTypes,
-    policiesPath
+    policiesPath,
 } from '../routePaths';
 
 const defaultPathMap = {
     [pageTypes.DASHBOARD]: workflowPaths.DASHBOARD,
     [pageTypes.ENTITY]: workflowPaths.ENTITY,
-    [pageTypes.LIST]: workflowPaths.LIST
+    [pageTypes.LIST]: workflowPaths.LIST,
 };
 
 const legacyPathMap = {
     [useCases.RISK]: {
         [pageTypes.ENTITY]: riskPath,
         [pageTypes.LIST]: '/main/risk',
-        [pageTypes.DASHBOARD]: '/main/risk'
+        [pageTypes.DASHBOARD]: '/main/risk',
     },
     [useCases.SECRET]: {
         [pageTypes.ENTITY]: secretsPath,
         [pageTypes.LIST]: '/main/configmanagement/secrets',
-        [pageTypes.DASHBOARD]: '/main/configmanagement/secrets'
+        [pageTypes.DASHBOARD]: '/main/configmanagement/secrets',
     },
     [useCases.POLICY]: {
         [pageTypes.ENTITY]: policiesPath,
         [pageTypes.LIST]: '/main/policies',
-        [pageTypes.DASHBOARD]: '/main/policies'
-    }
+        [pageTypes.DASHBOARD]: '/main/policies',
+    },
 };
 function generateURL(workflowState) {
     const { stateStack: originalStateStack, useCase } = workflowState;
@@ -85,7 +85,7 @@ function generateURL(workflowState) {
         [sortParams.page]: workflowState.sort[sortParams.page],
         [sortParams.sidePanel]: workflowState.sort[sortParams.sidePanel],
         [pagingParams.page]: workflowState.paging[pagingParams.page],
-        [pagingParams.sidePanel]: workflowState.paging[pagingParams.sidePanel]
+        [pagingParams.sidePanel]: workflowState.paging[pagingParams.sidePanel],
     };
 
     // Don't write URLs with p=0 or p2=0, since that's the default value anyway
@@ -104,7 +104,7 @@ function generateURL(workflowState) {
         ? qs.stringify(queryParams, {
               addQueryPrefix: true,
               arrayFormat: 'indices',
-              encodeValuesOnly: true
+              encodeValuesOnly: true,
           })
         : '';
 

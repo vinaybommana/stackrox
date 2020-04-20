@@ -6,7 +6,7 @@ import {
     ADD_ALERT_TAGS,
     ADD_PROCESS_TAGS,
     REMOVE_ALERT_TAGS,
-    REMOVE_PROCESS_TAGS
+    REMOVE_PROCESS_TAGS,
 } from './analystTagsQueries';
 
 describe('analystTagsQueries.getQueriesByType()', () => {
@@ -46,8 +46,8 @@ describe('analystTagsQueries.getTagsDataByType()', () => {
         const type = 'VIOLATION';
         const data = {
             violation: {
-                tags: ['tag-1', 'tag-2']
-            }
+                tags: ['tag-1', 'tag-2'],
+            },
         };
 
         const tags = getTagsDataByType(type, data);
@@ -58,7 +58,7 @@ describe('analystTagsQueries.getTagsDataByType()', () => {
     it('should get analyst tags data by the Proccess type', () => {
         const type = 'PROCESS';
         const data = {
-            processTags: ['tag-1', 'tag-2']
+            processTags: ['tag-1', 'tag-2'],
         };
 
         const tags = getTagsDataByType(type, data);
@@ -70,9 +70,9 @@ describe('analystTagsQueries.getTagsDataByType()', () => {
         const type = 'COVID-19';
         const data = {
             violation: {
-                tags: ['tag-1', 'tag-2']
+                tags: ['tag-1', 'tag-2'],
             },
-            processTags: ['tag-1', 'tag-2']
+            processTags: ['tag-1', 'tag-2'],
         };
 
         const tags = getQueriesByType(type, data);

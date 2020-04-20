@@ -8,11 +8,11 @@ import { ToastContainer, toast } from 'react-toastify';
 
 class Notifications extends Component {
     static propTypes = {
-        notifications: PropTypes.arrayOf(PropTypes.string)
+        notifications: PropTypes.arrayOf(PropTypes.string),
     };
 
     static defaultProps = {
-        notifications: []
+        notifications: [],
     };
 
     showLatestToast = () => {
@@ -33,7 +33,7 @@ class Notifications extends Component {
 }
 
 const mapStateToProps = createStructuredSelector({
-    notifications: selectors.getNotifications
+    notifications: selectors.getNotifications,
 });
 
 export default connect(mapStateToProps)(Notifications);

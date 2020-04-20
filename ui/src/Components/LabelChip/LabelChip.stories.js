@@ -4,7 +4,7 @@ import LabelChip from './LabelChip';
 
 export default {
     title: 'LabelChip',
-    component: LabelChip
+    component: LabelChip,
 };
 
 export const withTypeAlert = () => <LabelChip type="alert" text="14 C" />;

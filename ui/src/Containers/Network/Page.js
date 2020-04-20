@@ -16,7 +16,7 @@ class Page extends Component {
     static propTypes = {
         setNetworkModification: PropTypes.func.isRequired,
         closeWizard: PropTypes.func.isRequired,
-        setDialogueStage: PropTypes.func.isRequired
+        setDialogueStage: PropTypes.func.isRequired,
     };
 
     componentWillUnmount() {
@@ -47,10 +47,7 @@ class Page extends Component {
 const mapDispatchToProps = {
     closeWizard: pageActions.closeNetworkWizard,
     setNetworkModification: wizardActions.setNetworkPolicyModification,
-    setDialogueStage: dialogueActions.setNetworkDialogueStage
+    setDialogueStage: dialogueActions.setNetworkDialogueStage,
 };
 
-export default connect(
-    null,
-    mapDispatchToProps
-)(Page);
+export default connect(null, mapDispatchToProps)(Page);

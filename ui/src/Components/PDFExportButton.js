@@ -21,7 +21,7 @@ const printProperties = [
     'class',
     'stroke',
     'font',
-    'font-size'
+    'font-size',
 ];
 const defaultPageLandscapeWidth = 297;
 const defaultPagePotraitWidth = 210;
@@ -33,7 +33,7 @@ class PDFExportButton extends Component {
         options: PropTypes.shape({
             paperSize: PropTypes.string,
             mode: PropTypes.string,
-            marginType: PropTypes.string
+            marginType: PropTypes.string,
         }),
         fileName: PropTypes.string,
         setPDFRequestState: PropTypes.func,
@@ -41,7 +41,7 @@ class PDFExportButton extends Component {
         onClick: PropTypes.func,
         className: PropTypes.string,
         tableOptions: PropTypes.shape({}),
-        pdfTitle: PropTypes.string
+        pdfTitle: PropTypes.string,
     };
 
     static defaultProps = {
@@ -49,7 +49,7 @@ class PDFExportButton extends Component {
         options: {
             paperSize: 'a4',
             mode: 'p',
-            marginType: 'mm'
+            marginType: 'mm',
         },
         tableOptions: null,
         fileName: 'export',
@@ -57,7 +57,7 @@ class PDFExportButton extends Component {
         setPDFSuccessState: null,
         onClick: null,
         className: '',
-        pdfTitle: ''
+        pdfTitle: '',
     };
 
     beforePDFPrinting = () => {
@@ -78,28 +78,26 @@ class PDFExportButton extends Component {
         el.insertBefore(header, el.firstChild);
         promises.push(
             html2canvas(header, {
-                scale: 3
+                scale: 3,
             })
         );
 
         for (let i = 0; i < cc.length; i += 1) {
             const clonedNode = cc[i].cloneNode(true);
             clonedNode.setAttribute('data-class-name', clonedNode.className);
-            clonedNode.className = `${
-                clonedNode.className
-            } theme-light pdf-export border border-base-400`;
+            clonedNode.className = `${clonedNode.className} theme-light pdf-export border border-base-400`;
             cc[i].parentNode.appendChild(clonedNode);
             computedStyleToInlineStyle(clonedNode, {
                 recursive: true,
-                properties: printProperties
+                properties: printProperties,
             });
             cc[i].className = 'pdf-page hidden';
 
             const promise = html2canvas(clonedNode, {
-                scale: 3
-            }).then(canvas => {
+                scale: 3,
+            }).then((canvas) => {
                 Object.assign(canvas, {
-                    className: clonedNode.className.replace('pdf-page', 'pdf-page-image')
+                    className: clonedNode.className.replace('pdf-page', 'pdf-page-image'),
                 });
                 cc[i].parentNode.insertBefore(canvas, clonedNode);
                 clonedNode.className = 'clonedNode hidden';
@@ -111,18 +109,16 @@ class PDFExportButton extends Component {
     };
 
     drawTable = (positionY, doc) => {
-        const tableOptions = Object.assign(
-            {
-                html: '#pdf-table',
-                startY: positionY + 2,
-                styles: {
-                    fontSize: 6
-                },
-                margin: { left: 3, right: 3 },
-                didParseCell: enhanceWordBreak
+        const tableOptions = {
+            html: '#pdf-table',
+            startY: positionY + 2,
+            styles: {
+                fontSize: 6,
             },
-            this.props.tableOptions
-        );
+            margin: { left: 3, right: 3 },
+            didParseCell: enhanceWordBreak,
+            ...this.props.tableOptions,
+        };
         doc.autoTable(tableOptions);
     };
 
@@ -133,7 +129,7 @@ class PDFExportButton extends Component {
             fileName,
             setPDFRequestState,
             setPDFSuccessState,
-            onClick
+            onClick,
         } = this.props;
         setPDFRequestState();
         if (onClick) onClick();
@@ -223,7 +219,7 @@ class PDFExportButton extends Component {
         }
 
         setTimeout(() => {
-            Promise.all(this.beforePDFPrinting()).then(canvases => {
+            Promise.all(this.beforePDFPrinting()).then((canvases) => {
                 const printClonedElements = Array.from(
                     element.getElementsByClassName('clonedNode')
                 );
@@ -310,10 +306,7 @@ class PDFExportButton extends Component {
 
 const mapDispatchToProps = {
     setPDFRequestState: actions.fetchPdf.request,
-    setPDFSuccessState: actions.fetchPdf.success
+    setPDFSuccessState: actions.fetchPdf.success,
 };
 
-export default connect(
-    null,
-    mapDispatchToProps
-)(PDFExportButton);
+export default connect(null, mapDispatchToProps)(PDFExportButton);

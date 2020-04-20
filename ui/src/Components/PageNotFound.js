@@ -7,9 +7,7 @@ import URLService from 'modules/URLService';
 import NotFoundMessage from 'Components/NotFoundMessage';
 
 const PageNotFound = ({ match, location, resourceType }) => {
-    const homeUrl = URLService.getURL(match, location)
-        .base()
-        .url();
+    const homeUrl = URLService.getURL(match, location).base().url();
 
     const resourceTypeName = (resourceType || 'resource').toLowerCase();
     const message = (
@@ -29,11 +27,11 @@ const PageNotFound = ({ match, location, resourceType }) => {
 PageNotFound.propTypes = {
     resourceType: PropTypes.string,
     match: ReactRouterPropTypes.match.isRequired,
-    location: ReactRouterPropTypes.location.isRequired
+    location: ReactRouterPropTypes.location.isRequired,
 };
 
 PageNotFound.defaultProps = {
-    resourceType: null
+    resourceType: null,
 };
 
 export default withRouter(PageNotFound);

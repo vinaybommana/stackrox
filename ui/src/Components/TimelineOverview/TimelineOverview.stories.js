@@ -5,7 +5,7 @@ import TimelineOverview from './TimelineOverview';
 
 export default {
     title: 'Timeline Overview',
-    component: TimelineOverview
+    component: TimelineOverview,
 };
 
 function onClick() {
@@ -35,7 +35,7 @@ export const withMultipleCounts = () => {
     const counts = [
         { text: 'Policy Violations', count: 5 },
         { text: 'Process Activities', count: 10 },
-        { text: 'Restarts / Failures', count: 15 }
+        { text: 'Restarts / Failures', count: 15 },
     ];
 
     return <TimelineOverview type="EVENT" total={10} counts={counts} onClick={onClick} />;

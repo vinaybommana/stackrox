@@ -7,14 +7,14 @@ import PolicySection from './PolicySection';
 
 const emptyPolicySection = {
     section_name: '',
-    policy_groups: []
+    policy_groups: [],
 };
 
 function PolicySections({ fields }) {
     function addPolicySectionHandler() {
         const newPolicySection = {
             ...emptyPolicySection,
-            section_name: `policy section ${fields.length}`
+            section_name: `policy section ${fields.length}`,
         };
         fields.push(newPolicySection);
     }

@@ -37,14 +37,10 @@ const ComplianceListSidePanel = ({ entityType, entityId, match, location, histor
     }
 
     function closeSidePanel() {
-        const baseURL = URLService.getURL(match, location)
-            .clearSidePanelParams()
-            .url();
+        const baseURL = URLService.getURL(match, location).clearSidePanelParams().url();
         history.push(baseURL);
     }
-    const headerUrl = URLService.getURL(match, location)
-        .base(entityType, entityId)
-        .url();
+    const headerUrl = URLService.getURL(match, location).base(entityType, entityId).url();
 
     return (
         <Query query={entityNameQueryMap[entityType]} variables={{ id: entityId }}>
@@ -98,7 +94,7 @@ ComplianceListSidePanel.propTypes = {
     match: ReactRouterPropTypes.match.isRequired,
     location: ReactRouterPropTypes.location.isRequired,
     entityType: PropTypes.string.isRequired,
-    entityId: PropTypes.string.isRequired
+    entityId: PropTypes.string.isRequired,
 };
 
 export default withRouter(ComplianceListSidePanel);

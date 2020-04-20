@@ -8,7 +8,7 @@ const options = [
     { label: 'Policy Violations', value: eventTypes.POLICY_VIOLATION },
     { label: 'Process Activities', value: eventTypes.PROCESS_ACTIVITY },
     { label: 'Restarts', value: eventTypes.RESTART },
-    { label: 'Terminations', value: eventTypes.TERMINATION }
+    { label: 'Terminations', value: eventTypes.TERMINATION },
 ];
 
 const EventTypeSelect = ({ selectedEventType, selectEventType }) => {

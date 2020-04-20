@@ -8,9 +8,7 @@ const CommentForm = ({ initialFormValues, onSubmit }) => {
         <Formik
             initialValues={initialFormValues}
             validationSchema={object().shape({
-                message: string()
-                    .trim()
-                    .required('This field is required')
+                message: string().trim().required('This field is required'),
             })}
             onSubmit={onSubmit}
         >
@@ -52,11 +50,11 @@ const CommentForm = ({ initialFormValues, onSubmit }) => {
 
 CommentForm.propTypes = {
     initialFormValues: PropTypes.shape({}),
-    onSubmit: PropTypes.func.isRequired
+    onSubmit: PropTypes.func.isRequired,
 };
 
 CommentForm.defaultProps = {
-    initialFormValues: {}
+    initialFormValues: {},
 };
 
 export default CommentForm;

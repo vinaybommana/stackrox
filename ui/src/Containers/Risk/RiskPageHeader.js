@@ -25,7 +25,7 @@ function RiskPageHeader({ autoFocusSearchInput, isViewFiltered, searchOptions })
 RiskPageHeader.propTypes = {
     autoFocusSearchInput: PropTypes.bool.isRequired,
     isViewFiltered: PropTypes.bool.isRequired,
-    searchOptions: PropTypes.arrayOf(PropTypes.object).isRequired
+    searchOptions: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
 export default RiskPageHeader;

@@ -65,22 +65,10 @@ describe('Policies page', () => {
 
     it('should show the required "*" next to the required fields', () => {
         addPolicy();
-        cy.get(selectors.form.required)
-            .eq(0)
-            .prev()
-            .should('have.text', 'Name');
-        cy.get(selectors.form.required)
-            .eq(1)
-            .prev()
-            .should('have.text', 'Severity');
-        cy.get(selectors.form.required)
-            .eq(2)
-            .prev()
-            .should('have.text', 'Lifecycle Stages');
-        cy.get(selectors.form.required)
-            .eq(3)
-            .prev()
-            .should('have.text', 'Categories');
+        cy.get(selectors.form.required).eq(0).prev().should('have.text', 'Name');
+        cy.get(selectors.form.required).eq(1).prev().should('have.text', 'Severity');
+        cy.get(selectors.form.required).eq(2).prev().should('have.text', 'Lifecycle Stages');
+        cy.get(selectors.form.required).eq(3).prev().should('have.text', 'Categories');
     });
 
     it('should have selected item in nav bar', () => {
@@ -90,7 +78,7 @@ describe('Policies page', () => {
     it('should open side panel and check for the policy name', () => {
         cy.get(selectors.tableFirstRowName)
             .invoke('text')
-            .then(name => {
+            .then((name) => {
                 cy.get(selectors.tableFirstRow).click({ force: true });
                 cy.get(selectors.sidePanel).should('exist');
                 cy.get(selectors.sidePanelHeader).contains(name);
@@ -98,7 +86,7 @@ describe('Policies page', () => {
     });
 
     it('should allow updating policy name', () => {
-        const updatePolicyName = typeStr => {
+        const updatePolicyName = (typeStr) => {
             editPolicy();
             cy.get(selectors.tableContainer).should('have.class', 'pointer-events-none');
             cy.get(selectors.form.nameInput).type(typeStr);
@@ -123,15 +111,9 @@ describe('Policies page', () => {
     it('should allow floats for CPU and CVSS configuration fields', () => {
         const addCPUField = () => {
             editPolicy();
-            cy.get(selectors.configurationField.selectArrow)
-                .first()
-                .click();
-            cy.get(selectors.configurationField.options)
-                .contains('Container CPU Request')
-                .click();
-            cy.get(selectors.configurationField.numericInput)
-                .last()
-                .type(2.2);
+            cy.get(selectors.configurationField.selectArrow).first().click();
+            cy.get(selectors.configurationField.options).contains('Container CPU Request').click();
+            cy.get(selectors.configurationField.numericInput).last().type(2.2);
             savePolicy();
         };
         cy.get(selectors.tableFirstRow).click({ force: true });
@@ -177,12 +159,8 @@ describe('Policies page', () => {
         editPolicy();
         // cy.get(selectors.form.select).select('Image Registry');
 
-        cy.get(selectors.configurationField.selectArrow)
-            .first()
-            .click();
-        cy.get(selectors.configurationField.options)
-            .contains('Image Registry')
-            .click();
+        cy.get(selectors.configurationField.selectArrow).first().click();
+        cy.get(selectors.configurationField.options).contains('Image Registry').click();
 
         cy.get(selectors.imageRegistry.input).type('docker.io');
         savePolicy();
@@ -219,7 +197,7 @@ describe('Policies page', () => {
         // Reload the page with that row's id in the URL.
         cy.get(selectors.policyDetailsPanel.idValueDiv)
             .invoke('text')
-            .then(idValue => {
+            .then((idValue) => {
                 cy.visit(url.concat('/', idValue));
             });
 
@@ -237,9 +215,7 @@ describe('Policies page', () => {
     it('should allow updating days since image scanned in a policy', () => {
         cy.get(selectors.policies.scanImage).click({ force: true });
         editPolicy();
-        cy.get(selectors.configurationField.selectArrow)
-            .first()
-            .click();
+        cy.get(selectors.configurationField.selectArrow).first().click();
         cy.get(selectors.configurationField.options)
             .contains('Days since image was last scanned')
             .click();
@@ -258,17 +234,13 @@ describe('Policies page', () => {
         // initialize to have enabled policy
         cy.get(selectors.enableDisableIcon)
             .first()
-            .then(icon => {
+            .then((icon) => {
                 if (!icon.hasClass(selectors.enabledIconColor))
-                    cy.get(selectors.hoverActionButtons)
-                        .first()
-                        .click({ force: true });
+                    cy.get(selectors.hoverActionButtons).first().click({ force: true });
             });
 
         // force click the first enable/disable button on the first row
-        cy.get(selectors.hoverActionButtons)
-            .first()
-            .click({ force: true });
+        cy.get(selectors.hoverActionButtons).first().click({ force: true });
 
         cy.get(selectors.enableDisableIcon)
             .first()
@@ -276,9 +248,7 @@ describe('Policies page', () => {
         cy.get(selectors.tableFirstRow).click({ force: true });
         cy.get(selectors.policyDetailsPanel.enabledValueDiv).should('contain', 'No');
 
-        cy.get(selectors.hoverActionButtons)
-            .first()
-            .click({ force: true }); // enable policy
+        cy.get(selectors.hoverActionButtons).first().click({ force: true }); // enable policy
         cy.get(selectors.policyDetailsPanel.enabledValueDiv).should('contain', 'Yes');
         cy.get(selectors.enableDisableIcon)
             .first()
@@ -288,9 +258,7 @@ describe('Policies page', () => {
     it('should show action menu when the checkboxes are chosen', () => {
         cy.get(selectors.reassessAllButton).should('be.visible');
         cy.get(selectors.newPolicyButton).should('be.visible');
-        cy.get(selectors.checkboxes)
-            .eq(1)
-            .click({ force: true });
+        cy.get(selectors.checkboxes).eq(1).click({ force: true });
         cy.get(selectors.actionMenuBtn).should('be.visible');
         openActionMenu();
         cy.get(selectors.actionMenu).contains('Delete');
@@ -305,11 +273,9 @@ describe('Policies page', () => {
         cy.get(selectors.sidePanel).should('exist');
         cy.get(selectors.tableFirstRowName)
             .invoke('text')
-            .then(policyName => {
+            .then((policyName) => {
                 cy.get(selectors.tableFirstRow).should('contain', policyName);
-                cy.get(selectors.hoverActionButtons)
-                    .eq(1)
-                    .click({ force: true });
+                cy.get(selectors.hoverActionButtons).eq(1).click({ force: true });
                 cy.get(selectors.tableFirstRow).should('not.contain', policyName);
                 cy.get(selectors.tableFirstRow).click({ force: true });
                 cy.get(selectors.sidePanel).should('exist');
@@ -327,9 +293,7 @@ describe('Policies page', () => {
         // now edit same policy, the previous category should exist in the list
         editPolicy();
         cy.get(
-            `${
-                selectors.categoriesField.valueContainer
-            } > div:contains(${categoryName}) > div.react-select__multi-value__remove`
+            `${selectors.categoriesField.valueContainer} > div:contains(${categoryName}) > div.react-select__multi-value__remove`
         ).click(); // remove it
         savePolicy();
     });
@@ -338,12 +302,12 @@ describe('Policies page', () => {
         it('should start an API call to get the policy in the detail panel', () => {
             cy.route({
                 method: 'POST',
-                url: 'v1/policies/export'
+                url: 'v1/policies/export',
             }).as('policyExport');
 
             cy.get(selectors.tableFirstRow).click();
 
-            cy.url().then(href => {
+            cy.url().then((href) => {
                 const segments = href.split('/');
                 const policyId = segments[segments.length - 1];
                 cy.get(selectors.singlePolicyExportButton).click();
@@ -351,7 +315,7 @@ describe('Policies page', () => {
                 cy.wait('@policyExport')
                     .its('request.body')
                     .should('deep.equal', {
-                        policyIds: [policyId]
+                        policyIds: [policyId],
                     });
             });
         });
@@ -361,7 +325,7 @@ describe('Policies page', () => {
                 method: 'POST',
                 url: 'v1/policies/export',
                 status: 400,
-                response: { message: 'Some policies could not be retrieved.' }
+                response: { message: 'Some policies could not be retrieved.' },
             }).as('policyExport');
 
             cy.get(selectors.tableFirstRow).click();

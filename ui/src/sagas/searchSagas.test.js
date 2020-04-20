@@ -23,13 +23,13 @@ describe('Search Sagas Test', () => {
             .silentRun();
     });
 
-    const expectSagaWithGlobalSearchMocked = toProvide =>
+    const expectSagaWithGlobalSearchMocked = (toProvide) =>
         expectSaga(saga).provide([[call(fetchOptions, ''), {}], ...toProvide]);
 
     it('Should load search modifiers/suggestions for Alerts when location changes to Violations Page', () => {
         const options = ['option1', 'option2'];
         return expectSagaWithGlobalSearchMocked([
-            [call(fetchOptions, 'categories=ALERTS'), { options }]
+            [call(fetchOptions, 'categories=ALERTS'), { options }],
         ])
             .put(alertActions.setAlertsSearchModifiers(options))
             .put(alertActions.setAlertsSearchSuggestions(options))
@@ -40,7 +40,7 @@ describe('Search Sagas Test', () => {
     it('Should load search modifiers/suggestions for Deployments when location changes to Risk Page', () => {
         const options = ['option1', 'option2'];
         return expectSagaWithGlobalSearchMocked([
-            [call(fetchOptions, 'categories=DEPLOYMENTS'), { options }]
+            [call(fetchOptions, 'categories=DEPLOYMENTS'), { options }],
         ])
             .put(deploymentsActions.setDeploymentsSearchModifiers(options))
             .put(deploymentsActions.setDeploymentsSearchSuggestions(options))
@@ -51,7 +51,7 @@ describe('Search Sagas Test', () => {
     it('Should load search modifiers/suggestions for Policies when location changes to Policies Page', () => {
         const options = ['option1', 'option2'];
         return expectSagaWithGlobalSearchMocked([
-            [call(fetchOptions, 'categories=POLICIES'), { options }]
+            [call(fetchOptions, 'categories=POLICIES'), { options }],
         ])
             .put(policiesActions.setPoliciesSearchModifiers(options))
             .put(policiesActions.setPoliciesSearchSuggestions(options))

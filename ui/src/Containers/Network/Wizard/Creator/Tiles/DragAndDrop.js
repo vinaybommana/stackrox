@@ -11,20 +11,17 @@ import wizardStages from 'Containers/Network/Wizard/wizardStages';
 const BACKGROUND_COLOR = '#faecd2';
 const ICON_COLOR = '#b39357';
 
-const DragAndDrop = props => {
-    const showToast = useCallback(
-        () => {
-            const errorMessage = 'Invalid file type. Try again.';
-            props.addToast(errorMessage);
-            setTimeout(props.removeToast, 500);
-        },
-        [props]
-    );
+const DragAndDrop = (props) => {
+    const showToast = useCallback(() => {
+        const errorMessage = 'Invalid file type. Try again.';
+        props.addToast(errorMessage);
+        setTimeout(props.removeToast, 500);
+    }, [props]);
 
     const onDrop = useCallback(
-        acceptedFiles => {
+        (acceptedFiles) => {
             props.setNetworkPolicyModificationState('REQUEST');
-            acceptedFiles.forEach(file => {
+            acceptedFiles.forEach((file) => {
                 // check file type.
                 if (file && !file.name.includes('.yaml')) {
                     showToast();
@@ -92,7 +89,7 @@ DragAndDrop.propTypes = {
     setWizardStage: PropTypes.func.isRequired,
 
     addToast: PropTypes.func.isRequired,
-    removeToast: PropTypes.func.isRequired
+    removeToast: PropTypes.func.isRequired,
 };
 
 const mapDispatchToProps = {
@@ -104,10 +101,7 @@ const mapDispatchToProps = {
     setWizardStage: wizardActions.setNetworkWizardStage,
 
     addToast: notificationActions.addNotification,
-    removeToast: notificationActions.removeOldestNotification
+    removeToast: notificationActions.removeOldestNotification,
 };
 
-export default connect(
-    null,
-    mapDispatchToProps
-)(DragAndDrop);
+export default connect(null, mapDispatchToProps)(DragAndDrop);

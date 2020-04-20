@@ -22,7 +22,7 @@ const ResourceCount = ({
     entityType,
     relatedToResourceType,
     relatedToResource,
-    count
+    count,
 }) => {
     const searchParam = useContext(searchContext);
     function getUrl() {
@@ -31,8 +31,8 @@ const ResourceCount = ({
                 .set('context', useCases.SECRET)
                 .query({
                     [searchParam]: {
-                        [`${capitalize(relatedToResourceType)}`]: relatedToResource.name
-                    }
+                        [`${capitalize(relatedToResourceType)}`]: relatedToResource.name,
+                    },
                 })
                 .url();
         }
@@ -49,7 +49,7 @@ const ResourceCount = ({
             case entityTypes.NAMESPACE:
                 query = {
                     namespace: relatedToResource.name,
-                    cluster: relatedToResource.clusterName
+                    cluster: relatedToResource.clusterName,
                 };
                 break;
             default:
@@ -58,7 +58,7 @@ const ResourceCount = ({
 
         return {
             query: queryService.objectToWhereClause(query),
-            categories: []
+            categories: [],
         };
     }
 
@@ -100,15 +100,15 @@ ResourceCount.propTypes = {
     relatedToResource: PropTypes.shape({
         id: PropTypes.string,
         name: PropTypes.string,
-        clusterName: PropTypes.string
+        clusterName: PropTypes.string,
     }),
-    count: PropTypes.number
+    count: PropTypes.number,
 };
 
 ResourceCount.defaultProps = {
     entityType: null,
     relatedToResource: null,
-    count: null
+    count: null,
 };
 
 export default withRouter(ResourceCount);

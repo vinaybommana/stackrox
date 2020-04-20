@@ -1,10 +1,10 @@
 export function filterAllowedSearch(allowed = [], currentSearch = {}) {
     const filtered = Object.keys(currentSearch)
-        .filter(key => allowed.includes(key))
+        .filter((key) => allowed.includes(key))
         .reduce((newSearch, key) => {
             return {
                 ...newSearch,
-                [key]: currentSearch[key]
+                [key]: currentSearch[key],
             };
         }, {});
 
@@ -28,13 +28,13 @@ export function convertToRestSearch(workflowSearch = {}) {
 export function convertSortToGraphQLFormat({ field, reversed }) {
     return {
         id: field,
-        desc: reversed
+        desc: reversed,
     };
 }
 
 export function convertSortToRestFormat(graphqlSort) {
     return {
         field: graphqlSort[0]?.id,
-        reversed: graphqlSort[0]?.desc
+        reversed: graphqlSort[0]?.desc,
     };
 }

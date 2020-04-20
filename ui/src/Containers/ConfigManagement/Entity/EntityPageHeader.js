@@ -22,7 +22,7 @@ const getQueryAndVariables = (entityType, entityId) => {
     const safeEntityId = decodeURIComponent(entityId); // fix bug  ROX-4543-fix-bad-encoding-in-config-mgt-API-request
     return {
         query,
-        variables: getEntityVariables(entityType, safeEntityId)
+        variables: getEntityVariables(entityType, safeEntityId),
     };
 };
 
@@ -66,12 +66,12 @@ EntityPageHeader.propTypes = {
     entityType: PropTypes.string.isRequired,
     entityId: PropTypes.string.isRequired,
     urlParams: PropTypes.shape({
-        entityListType1: PropTypes.string
-    })
+        entityListType1: PropTypes.string,
+    }),
 };
 
 EntityPageHeader.defaultProps = {
-    urlParams: null
+    urlParams: null,
 };
 
 export default EntityPageHeader;
