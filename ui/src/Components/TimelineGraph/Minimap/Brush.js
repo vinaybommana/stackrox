@@ -1,10 +1,11 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { event } from 'd3-selection';
 import { brushX } from 'd3-brush';
 
 import D3Anchor from 'Components/D3Anchor';
 
-const Brush = ({ translateX, translateY, width, height, onSelectionChange }) => {
+const Brush = ({ translateX, translateY, width, height, onSelectionChange, margin }) => {
     function brushEnded() {
         if (!event.sourceEvent) return; // Only transition after input.
         if (!event.selection) {
@@ -20,11 +21,13 @@ const Brush = ({ translateX, translateY, width, height, onSelectionChange }) => 
 
     // the "container" argument is a reference to the container for the D3-related element
     function onUpdate(container) {
+        const minHorizontalExtent = margin;
+        const maxHorizontalExtent = width - margin;
         const brush = container.call(
             brushX()
                 .extent([
-                    [0, 0],
-                    [width, height],
+                    [minHorizontalExtent, 0],
+                    [maxHorizontalExtent, height],
                 ])
                 .on('end', brushEnded)
         );
@@ -42,6 +45,21 @@ const Brush = ({ translateX, translateY, width, height, onSelectionChange }) => 
             onUpdate={onUpdate}
         />
     );
+};
+
+Brush.propTypes = {
+    margin: PropTypes.number,
+    height: PropTypes.number.isRequired,
+    width: PropTypes.number.isRequired,
+    translateX: PropTypes.number,
+    translateY: PropTypes.number,
+    onSelectionChange: PropTypes.func.isRequired,
+};
+
+Brush.defaultProps = {
+    margin: 0,
+    translateX: 0,
+    translateY: 0,
 };
 
 export default Brush;

@@ -25,7 +25,7 @@ const ProcessActivityEvent = ({ name, type, uid, timestamp, whitelisted, width, 
 ProcessActivityEvent.propTypes = {
     name: PropTypes.string.isRequired,
     type: PropTypes.oneOf(Object.values(eventTypes)).isRequired,
-    uid: PropTypes.string,
+    uid: PropTypes.number,
     timestamp: PropTypes.string.isRequired,
     whitelisted: PropTypes.bool,
     width: PropTypes.number.isRequired,

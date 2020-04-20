@@ -7,6 +7,7 @@ import Minimap from 'Components/TimelineGraph/Minimap';
 import Pagination from 'Components/TimelineGraph/Pagination';
 
 const absoluteMinTimeRange = 0;
+const MARGIN = 20;
 
 const TimelineGraph = ({
     data,
@@ -39,6 +40,7 @@ const TimelineGraph = ({
                         minTimeRange={minTimeRange}
                         maxTimeRange={maxTimeRange}
                         numRows={pageSize}
+                        margin={MARGIN}
                     />
                 </div>
             </div>

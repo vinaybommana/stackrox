@@ -41,7 +41,7 @@ const EventTooltip = ({ type, name, uid, reason, timestamp, children }) => {
 EventTooltip.propTypes = {
     type: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
-    uid: PropTypes.string,
+    uid: PropTypes.number,
     reason: PropTypes.string,
     timestamp: PropTypes.string.isRequired,
     children: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.node), PropTypes.node]).isRequired,

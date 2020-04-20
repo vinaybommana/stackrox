@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { scaleLinear } from 'd3-scale';
 
 import selectors from 'Components/TimelineGraph/Minimap/selectors';
@@ -14,6 +15,7 @@ const MiniMap = ({
     setMaxTimeRange,
     data,
     numRows,
+    margin,
 }) => {
     const [width, setWidth] = useState(0);
     const [height, setHeight] = useState(0);
@@ -24,7 +26,11 @@ const MiniMap = ({
     }, []);
 
     function onSelectionChange(selection) {
-        const scale = scaleLinear().domain([minTimeRange, maxTimeRange]).range([0, width]);
+        const minRange = margin;
+        const maxRange = width - margin;
+        const scale = scaleLinear()
+            .domain([minTimeRange, maxTimeRange])
+            .range([minRange, maxRange]);
         const newMinTimeRange = selection ? scale.invert(selection.start) : minTimeRange;
         const newMaxTimeRange = selection ? scale.invert(selection.end) : maxTimeRange;
         setMinTimeRange(newMinTimeRange);
@@ -44,6 +50,8 @@ const MiniMap = ({
                 width={width}
                 height={brushableViewHeight}
                 numRows={numRows}
+                margin={margin}
+                isHeightAdjustable
             />
             <Brush
                 translateX={0}
@@ -51,6 +59,7 @@ const MiniMap = ({
                 width={width}
                 height={brushableViewHeight}
                 onSelectionChange={onSelectionChange}
+                margin={margin}
             />
             <Axis
                 translateX={0}
@@ -58,9 +67,24 @@ const MiniMap = ({
                 minDomain={minTimeRange}
                 maxDomain={maxTimeRange}
                 direction="bottom"
+                margin={margin}
             />
         </svg>
     );
+};
+
+MiniMap.propTypes = {
+    minTimeRange: PropTypes.number.isRequired,
+    maxTimeRange: PropTypes.number.isRequired,
+    setMinTimeRange: PropTypes.func.isRequired,
+    setMaxTimeRange: PropTypes.func.isRequired,
+    data: PropTypes.arrayOf(PropTypes.object).isRequired,
+    numRows: PropTypes.number.isRequired,
+    margin: PropTypes.number,
+};
+
+MiniMap.defaultProps = {
+    margin: 0,
 };
 
 export default MiniMap;

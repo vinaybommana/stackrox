@@ -24,11 +24,16 @@ const EventMarker = ({
     minTimeRange,
     maxTimeRange,
     size,
+    margin,
 }) => {
     // the "container" argument is a reference to the container for the D3-related element
     function onUpdate(container) {
         const width = getWidth(selectors.svgSelector);
-        const xScale = scaleLinear().domain([minTimeRange, maxTimeRange]).range([0, width]);
+        const minRange = margin;
+        const maxRange = width - margin;
+        const xScale = scaleLinear()
+            .domain([minTimeRange, maxTimeRange])
+            .range([minRange, maxRange]);
         const x = xScale(differenceInMilliseconds).toFixed(0);
 
         container.attr(
@@ -78,7 +83,7 @@ const EventMarker = ({
 EventMarker.propTypes = {
     name: PropTypes.string.isRequired,
     type: PropTypes.string.isRequired,
-    uid: PropTypes.string,
+    uid: PropTypes.number,
     reason: PropTypes.string,
     timestamp: PropTypes.string.isRequired,
     whitelisted: PropTypes.bool,
@@ -88,12 +93,14 @@ EventMarker.propTypes = {
     minTimeRange: PropTypes.number.isRequired,
     maxTimeRange: PropTypes.number.isRequired,
     size: PropTypes.number.isRequired,
+    margin: PropTypes.number,
 };
 
 EventMarker.defaultProps = {
     uid: null,
     reason: null,
     whitelisted: false,
+    margin: 0,
 };
 
 export default EventMarker;
