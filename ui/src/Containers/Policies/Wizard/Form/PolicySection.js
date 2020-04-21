@@ -17,10 +17,10 @@ const getEmptyPolicyFieldCard = (fieldKey) => ({
     boolean_operator: 'OR',
     values: [
         {
-            value: 'hi',
+            value: '',
         },
     ],
-    negate: fieldKey.negate,
+    negate: false,
     fieldKey,
 });
 
@@ -65,22 +65,18 @@ function PolicySection({ fields, sectionName, removeSectionHandler }) {
                 <div className="p-2">
                     {fields.map((name, i) => {
                         const field = fields.get(i);
-                        const {
-                            negate,
-                            field_name: fieldName,
-                            boolean_operator: booleanOperator,
-                        } = field;
+                        const { field_name: fieldName, boolean_operator: booleanOperator } = field;
                         let { fieldKey } = field;
-                        if (!fieldKey)
+                        if (!fieldKey) {
                             fieldKey = policyConfiguration.descriptor.find(
                                 (fieldObj) => fieldObj.name === fieldName
                             );
+                        }
                         return (
                             <FieldArray
                                 key={name}
                                 name={`${name}.values`}
                                 component={PolicyFieldCard}
-                                isNegated={negate}
                                 header={fieldName}
                                 booleanOperator={booleanOperator}
                                 removeFieldHandler={removeFieldHandler(i)}

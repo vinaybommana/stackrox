@@ -24,32 +24,32 @@ const policyCategoriesUrl = '/v1/policyCategories';
 //         {
 //             section_name: 'Docker Registries',
 //             policy_groups: [
-//                 {
-//                     field_name: 'Dockerfile Line',
-//                     boolean_operator: 'OR',
-//                     negate: false,
-//                     values: [{ value: 'FROM=.*example.*' }]
-//                 },
-//                 {
-//                     field_name: 'Environment Variable',
-//                     boolean_operator: 'OR',
-//                     negate: false,
-//                     values: [{ value: 'SECRET_KEY=sampleKey=sampleValue' }]
-//                 },
-//                 {
-//                     field_name: 'CVSS',
-//                     boolean_operator: 'OR',
-//                     negate: false,
-//                     values: [{ value: '>=5' }]
-//                 },
-//                 {
-//                     field_name: 'Image Registry',
-//                     boolean_operator: 'OR',
-//                     negate: false,
-//                     values: [{ value: 'docker.io' }]
-//                 }
-//             ]
+// {
+//     field_name: 'Dockerfile Line',
+//     boolean_operator: 'OR',
+//     negate: false,
+//     values: [{ value: 'FROM=.*example.*' }]
+// },
+// {
+//     field_name: 'Environment Variable',
+//     boolean_operator: 'OR',
+//     negate: false,
+//     values: [{ value: 'SECRET_KEY=sampleKey=sampleValue' }]
+// },
+// {
+//     field_name: 'CVSS',
+//     boolean_operator: 'OR',
+//     negate: false,
+//     values: [{ value: '>=5' }]
+// },
+//         {
+//             field_name: 'Image Registry',
+//             boolean_operator: 'OR',
+//             negate: false,
+//             values: [{ value: 'docker.io' }],
 //         },
+//     ],
+// },
 //         {
 //             section_name: 'Other Registries',
 //             policy_groups: [
@@ -84,7 +84,7 @@ const policyCategoriesUrl = '/v1/policyCategories';
 //                 }
 //             ]
 //         }
-//     ]
+//     ],
 // };
 
 /**

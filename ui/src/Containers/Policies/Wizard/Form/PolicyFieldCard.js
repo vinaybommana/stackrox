@@ -1,10 +1,12 @@
 import React from 'react';
+import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Trash2, PlusCircle } from 'react-feather';
+import { createSelector, createStructuredSelector } from 'reselect';
+import { formValueSelector } from 'redux-form';
 
 import reduxFormPropTypes from 'constants/reduxFormPropTypes';
 import Button from 'Components/Button';
-// import ToggleSwitch from 'Components/ToggleSwitch';
 import ReduxToggleField from 'Components/forms/ReduxToggleField';
 import AndOrOperator from 'Components/AndOrOperator';
 import FieldValue from './FieldValue';
@@ -83,7 +85,7 @@ function PolicyFieldCard({
 }
 
 PolicyFieldCard.propTypes = {
-    isNegated: PropTypes.bool,
+    isNegated: PropTypes.bool.isRequired,
     removeFieldHandler: PropTypes.func.isRequired,
     header: PropTypes.string.isRequired,
     booleanOperator: PropTypes.string.isRequired,
@@ -91,8 +93,13 @@ PolicyFieldCard.propTypes = {
     ...reduxFormPropTypes,
 };
 
-PolicyFieldCard.defaultProps = {
-    isNegated: false,
-};
+const isNegated = (state, ownProps) =>
+    formValueSelector('policyCreationForm')(state, ownProps.toggleFieldName);
 
-export default PolicyFieldCard;
+const getIsNegated = createSelector([isNegated], (negate) => negate);
+
+const mapStateToProps = createStructuredSelector({
+    isNegated: getIsNegated,
+});
+
+export default connect(mapStateToProps, null)(PolicyFieldCard);
