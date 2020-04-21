@@ -4,17 +4,18 @@ import { Edit, Check } from 'react-feather';
 
 import Button from 'Components/Button';
 
-function SectionHeaderInput({ header }) {
+function SectionHeaderInput({ input }) {
     const [isEditing, setIsEditing] = useState(false);
     function editHandler() {
         setIsEditing(!isEditing);
     }
+    const { value, onChange } = input;
 
     return (
         <div className="flex flex-1 justify-between items-center">
             {!isEditing && (
                 <>
-                    <span className="p-2 text-base-600 font-700">{header}</span>
+                    <span className="p-2 text-base-600 font-700">{value}</span>
                     <div className="hover:bg-base-400">
                         <Button
                             icon={<Edit className="w-5 h-5" />}
@@ -27,9 +28,10 @@ function SectionHeaderInput({ header }) {
             {isEditing && (
                 <>
                     <input
-                        value={header}
+                        value={value}
+                        onChange={onChange}
                         className="p-2 w-full bg-base-200"
-                        aria-label="Section Header"
+                        aria-label="Policy Section Header Input"
                     />
                     <div className="hover:bg-base-400">
                         <Button
@@ -45,7 +47,10 @@ function SectionHeaderInput({ header }) {
 }
 
 SectionHeaderInput.propTypes = {
-    header: PropTypes.string.isRequired,
+    input: PropTypes.shape({
+        value: PropTypes.string,
+        onChange: PropTypes.func.isRequired,
+    }).isRequired,
 };
 
 export default SectionHeaderInput;

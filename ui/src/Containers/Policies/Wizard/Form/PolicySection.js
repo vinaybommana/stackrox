@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { useDrop } from 'react-dnd';
 import { Trash2 } from 'react-feather';
-import { FieldArray } from 'redux-form';
+import { Field, FieldArray } from 'redux-form';
 
 import reduxFormPropTypes from 'constants/reduxFormPropTypes';
 import Button from 'Components/Button';
@@ -24,7 +24,7 @@ const getEmptyPolicyFieldCard = (fieldKey) => ({
     fieldKey,
 });
 
-function PolicySection({ fields, header, removeSectionHandler }) {
+function PolicySection({ fields, sectionName, removeSectionHandler }) {
     const allFields = fields.getAll();
     const acceptedFields = getPolicyCriteriaFieldKeys(allFields);
 
@@ -55,7 +55,7 @@ function PolicySection({ fields, header, removeSectionHandler }) {
         <>
             <div className="bg-base-300 border-2 border-base-100 rounded">
                 <div className="flex justify-between items-center border-b-2 border-base-400">
-                    <SectionHeaderInput header={header} />
+                    <Field name={sectionName} component={SectionHeaderInput} />
                     <Button
                         onClick={removeSectionHandler}
                         icon={<Trash2 className="w-5 h-5" />}
@@ -108,7 +108,7 @@ function PolicySection({ fields, header, removeSectionHandler }) {
 
 PolicySection.propTypes = {
     ...reduxFormPropTypes,
-    header: PropTypes.string.isRequired,
+    sectionName: PropTypes.string.isRequired,
     removeSectionHandler: PropTypes.func.isRequired,
 };
 

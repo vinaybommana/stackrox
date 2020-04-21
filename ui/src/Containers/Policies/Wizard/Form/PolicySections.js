@@ -32,13 +32,12 @@ function PolicySections({ fields }) {
             {fields.map((name, i) => {
                 // we get name and index when iterating through fields in a FieldArray in redux-form
                 // https://redux-form.com/8.2.2/docs/api/fieldarray.md/#iteration
-                const { section_name: sectionName } = fields.get(i);
                 return (
                     <FieldArray
                         key={name}
                         name={`${name}.policy_groups`}
                         component={PolicySection}
-                        header={sectionName}
+                        sectionName={`${name}.section_name`}
                         removeSectionHandler={removeSectionHandler(i)}
                     />
                 );
