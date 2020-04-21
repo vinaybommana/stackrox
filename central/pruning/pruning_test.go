@@ -121,17 +121,41 @@ func newDeployment(imageIDs ...string) *storage.Deployment {
 	}
 }
 
-func newPod(imageIDs ...string) *storage.Pod {
+func newPod(live bool, imageIDs ...string) *storage.Pod {
 	instanceLists := make([]*storage.Pod_ContainerInstanceList, len(imageIDs))
+	instances := make([]*storage.ContainerInstance, len(imageIDs))
 	for i, id := range imageIDs {
-		instanceLists[i] = &storage.Pod_ContainerInstanceList{
-			Instances: []*storage.ContainerInstance{
-				{
-					ImageDigest: types.NewDigest(id).Digest(),
+		if live {
+			instances[i] = &storage.ContainerInstance{
+				ImageDigest: types.NewDigest(id).Digest(),
+			}
+			// Populate terminated instances to ensure the indexing isn't overwritten.
+			instanceLists[i] = &storage.Pod_ContainerInstanceList{
+				Instances: []*storage.ContainerInstance{
+					{
+						ImageDigest: types.NewDigest("nonexistentid").Digest(),
+					},
 				},
-			},
+			}
+		} else {
+			instanceLists[i] = &storage.Pod_ContainerInstanceList{
+				Instances: []*storage.ContainerInstance{
+					{
+						ImageDigest: types.NewDigest(id).Digest(),
+					},
+				},
+			}
 		}
 	}
+
+	if live {
+		return &storage.Pod{
+			Id:                  "id",
+			LiveInstances:       instances,
+			TerminatedInstances: instanceLists,
+		}
+	}
+
 	return &storage.Pod{
 		Id:                  "id",
 		TerminatedInstances: instanceLists,
@@ -326,7 +350,7 @@ func TestImagePruning(t *testing.T) {
 				newImageInstance("id1", 1),
 				newImageInstance("id2", configDatastore.DefaultImageRetention+1),
 			},
-			pod:         newPod("id1"),
+			pod:         newPod(true, "id1"),
 			expectedIDs: []string{"id1"},
 		},
 		{
@@ -336,7 +360,7 @@ func TestImagePruning(t *testing.T) {
 				newImageInstance("id1", 1),
 				newImageInstance("id2", configDatastore.DefaultImageRetention+1),
 			},
-			pod:         newPod("id2"),
+			pod:         newPod(true, "id2"),
 			expectedIDs: []string{"id1", "id2"},
 		},
 		{
@@ -357,7 +381,7 @@ func TestImagePruning(t *testing.T) {
 				newImageInstance("id2", configDatastore.DefaultImageRetention+1),
 			},
 			deployment:  newDeployment("id2"),
-			pod:         newPod("id2"),
+			pod:         newPod(true, "id2"),
 			expectedIDs: []string{"id2"},
 		},
 		{
@@ -367,7 +391,7 @@ func TestImagePruning(t *testing.T) {
 				newImageInstance("id1", configDatastore.DefaultImageRetention+1),
 				newImageInstance("id2", configDatastore.DefaultImageRetention+1),
 			},
-			pod:         newPod("id2"),
+			pod:         newPod(true, "id2"),
 			expectedIDs: []string{"id2"},
 		},
 		{
@@ -377,7 +401,7 @@ func TestImagePruning(t *testing.T) {
 				newImageInstance("id1", configDatastore.DefaultImageRetention+1),
 				newImageInstance("id2", configDatastore.DefaultImageRetention+1),
 			},
-			pod:         newPod("id2"),
+			pod:         newPod(true, "id2"),
 			expectedIDs: []string{"id2"},
 		},
 		{
@@ -397,8 +421,26 @@ func TestImagePruning(t *testing.T) {
 					},
 				},
 			},
-			pod:         newPod("id2"),
+			pod:         newPod(true, "id2"),
 			expectedIDs: []string{"id1", "id2"},
+		},
+		{
+			sepEnabled: true,
+			name:       "one new - 1 pod with new, but terminated",
+			images: []*storage.Image{
+				newImageInstance("id1", 1),
+			},
+			pod:         newPod(false, "id1"),
+			expectedIDs: []string{"id1"},
+		},
+		{
+			sepEnabled: true,
+			name:       "one old - 1 pod with old, but terminated",
+			images: []*storage.Image{
+				newImageInstance("id1", configDatastore.DefaultImageRetention+1),
+			},
+			pod:         newPod(false, "id1"),
+			expectedIDs: []string{},
 		},
 	}
 

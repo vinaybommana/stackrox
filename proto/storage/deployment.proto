@@ -98,7 +98,7 @@ message Pod {
     repeated ContainerInstance live_instances           = 6;
     // Must be a list of lists, so we can perform search queries (does not work for maps that aren't <string, string>)
     // There is one bucket (list) per container name.
-    repeated ContainerInstanceList terminated_instances = 7;
+    repeated ContainerInstanceList terminated_instances = 7 [(gogoproto.moretags) = "search:\"-\""];
     // Time the first known container started
     google.protobuf.Timestamp started                   = 8;
 
