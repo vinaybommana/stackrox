@@ -51,10 +51,10 @@ export const REMOVE_PROCESS_TAGS = gql`
 export const getTagsDataByType = (type, data) => {
     if (!data) return [];
     if (type === ANALYST_NOTES_TYPES.VIOLATION) {
-        return data.violation && data.violation.tags;
+        return data?.violation?.tags || [];
     }
     if (type === ANALYST_NOTES_TYPES.PROCESS) {
-        return data.processTags;
+        return data?.processTags || [];
     }
     const error = `Can't get data for type (${type}) because it does not exist`;
     logError(new Error(error));

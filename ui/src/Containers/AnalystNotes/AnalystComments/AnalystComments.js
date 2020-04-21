@@ -61,7 +61,7 @@ const AnalystComments = ({ type, variables, isCollapsible }) => {
     const isDisabled =
         isWaitingToAddComment || isWaitingToUpdateComment || isWaitingToRemoveComment || false;
 
-    const comments = data ? data.comments : [];
+    const comments = data?.comments?.length ? data.comments : [];
 
     function onCreate(commentMessage) {
         addComment({
