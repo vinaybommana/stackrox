@@ -1,6 +1,7 @@
 import { selectors, text, url } from '../constants/PoliciesPage';
 import * as api from '../constants/apiEndpoints';
 import withAuth from '../helpers/basicAuth';
+import checkFeatureFlag from '../helpers/features';
 
 describe('Policies page', () => {
     withAuth();
@@ -299,6 +300,13 @@ describe('Policies page', () => {
     });
 
     describe('policy export', () => {
+        before(function beforeHook() {
+            // skip the whole suite if policy import/export isn't enabled
+            if (checkFeatureFlag('ROX_POLICY_IMPORT_EXPORT', false)) {
+                this.skip();
+            }
+        });
+
         it('should start an API call to get the policy in the detail panel', () => {
             cy.route({
                 method: 'POST',
