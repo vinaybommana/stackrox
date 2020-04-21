@@ -59,10 +59,7 @@ func newScanner(protoImageIntegration *storage.ImageIntegration, activeRegistrie
 	if err := validateConfig(conf); err != nil {
 		return nil, err
 	}
-	endpoint, err := urlfmt.FormatURL(conf.Endpoint, urlfmt.InsecureHTTP, urlfmt.NoTrailingSlash)
-	if err != nil {
-		return nil, err
-	}
+	endpoint := urlfmt.FormatURL(conf.Endpoint, urlfmt.InsecureHTTP, urlfmt.NoTrailingSlash)
 
 	dialer := net.Dialer{
 		Timeout: 2 * time.Second,

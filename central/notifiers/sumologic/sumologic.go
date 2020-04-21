@@ -92,10 +92,7 @@ func newSumoLogic(notifier *storage.Notifier) (*sumologic, error) {
 	if err := validateConfig(sumoConf); err != nil {
 		return nil, err
 	}
-	fullyQualifiedEndpoint, err := urlfmt.FormatURL(sumoConf.GetHttpSourceAddress(), urlfmt.HTTPS, urlfmt.HonorInputSlash)
-	if err != nil {
-		return nil, err
-	}
+	fullyQualifiedEndpoint := urlfmt.FormatURL(sumoConf.GetHttpSourceAddress(), urlfmt.HTTPS, urlfmt.HonorInputSlash)
 
 	return &sumologic{
 		Notifier: notifier,

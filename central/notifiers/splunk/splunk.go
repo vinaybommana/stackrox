@@ -182,10 +182,8 @@ func newSplunk(notifier *storage.Notifier) (*splunk, error) {
 	if err := validate(conf); err != nil {
 		return nil, err
 	}
-	url, err := urlfmt.FormatURL(conf.GetHttpEndpoint(), urlfmt.HTTPS, urlfmt.NoTrailingSlash)
-	if err != nil {
-		return nil, err
-	}
+	url := urlfmt.FormatURL(conf.GetHttpEndpoint(), urlfmt.HTTPS, urlfmt.NoTrailingSlash)
+
 	eventEndpoint := url
 	var healthEndpoint string
 	if baseURLPattern.MatchString(url) {
