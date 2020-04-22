@@ -9,6 +9,7 @@ COPY ./profiler/entrypoint.sh /profiler-entrypoint.sh
 
 COPY ./image/bin/mocksensor /mocksensor
 COPY ./image/bin/mockcollector /mockcollector
+COPY ./image/bin/chaos /chaos
 
 COPY ./image/bin/flightreplay /flightreplay
 COPY ./image/docker-entrypoint.sh /docker-entrypoint.sh
