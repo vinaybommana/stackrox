@@ -74,6 +74,10 @@ class Env {
         return value
     }
 
+    protected boolean isEnvVarEmpty(String key) {
+        return (envVars.get(key) ?: "null") == "null"
+    }
+
     private static OrchestratorTypes inferOrchestratorType() {
         // Infer the orchestrator type from the local deployment, by looking at which
         // `deploy/<orchestrator>/central-deploy/password` file was most recently written to.
@@ -97,13 +101,14 @@ class Env {
 
     private void assignFallbackValues() {
         for (def entry : DEFAULT_VALUES.entrySet()) {
-            if (envVars.get(entry.key) == null) {
+            if (isEnvVarEmpty(entry.key)) {
                 envVars.put(entry.key, entry.value)
             }
         }
+        println System.getenv()
 
-        if (envVars.get("ROX_PASSWORD") == null) {
-            if (envVars.get("CLUSTER") == null) {
+        if (isEnvVarEmpty("ROX_PASSWORD")) {
+            if (isEnvVarEmpty("CLUSTER")) {
                 envVars.put("CLUSTER", inferOrchestratorType().toString())
             }
 
@@ -121,7 +126,7 @@ class Env {
             }
         }
 
-        if (envVars.get("CLUSTER") == null) {
+        if (isEnvVarEmpty("CLUSTER")) {
             envVars.put("CLUSTER", OrchestratorTypes.K8S.toString())
         }
     }
