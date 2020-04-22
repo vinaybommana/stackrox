@@ -6,6 +6,7 @@ import { createSelector, createStructuredSelector } from 'reselect';
 import { formValueSelector } from 'redux-form';
 
 import reduxFormPropTypes from 'constants/reduxFormPropTypes';
+import BOOLEAN_LOGIC_VALUES from 'constants/booleanLogicValues';
 import Button from 'Components/Button';
 import ReduxToggleField from 'Components/forms/ReduxToggleField';
 import AndOrOperator from 'Components/AndOrOperator';
@@ -20,7 +21,7 @@ function PolicyFieldCard({
     removeFieldHandler,
     fields,
     header,
-    booleanOperator,
+    booleanOperatorName,
     fieldKey,
     toggleFieldName,
 }) {
@@ -63,23 +64,26 @@ function PolicyFieldCard({
                             key={name}
                             name={name}
                             length={fields.length}
-                            booleanOperator={booleanOperator}
+                            booleanOperatorName={booleanOperatorName}
                             fieldKey={fieldKey}
                             removeValueHandler={removeValueHandler(i)}
                             index={i}
                         />
                     ))}
-                    <div className="flex flex-col pt-2">
-                        <div className="flex justify-center">
-                            <Button
-                                onClick={addValueHander}
-                                icon={<PlusCircle className="w-5 h-5" />}
-                            />
+                    {/* this is because there can't be multiple boolean values */}
+                    {fieldKey.type !== 'toggle' && (
+                        <div className="flex flex-col pt-2">
+                            <div className="flex justify-center">
+                                <Button
+                                    onClick={addValueHander}
+                                    icon={<PlusCircle className="w-5 h-5" />}
+                                />
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             </div>
-            <AndOrOperator value={booleanOperator} />
+            <AndOrOperator value={BOOLEAN_LOGIC_VALUES.AND} disabled />
         </>
     );
 }
@@ -88,7 +92,7 @@ PolicyFieldCard.propTypes = {
     isNegated: PropTypes.bool.isRequired,
     removeFieldHandler: PropTypes.func.isRequired,
     header: PropTypes.string.isRequired,
-    booleanOperator: PropTypes.string.isRequired,
+    booleanOperatorName: PropTypes.string.isRequired,
     toggleFieldName: PropTypes.string.isRequired,
     ...reduxFormPropTypes,
 };

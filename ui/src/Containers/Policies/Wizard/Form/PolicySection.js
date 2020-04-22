@@ -65,7 +65,7 @@ function PolicySection({ fields, sectionName, removeSectionHandler }) {
                 <div className="p-2">
                     {fields.map((name, i) => {
                         const field = fields.get(i);
-                        const { field_name: fieldName, boolean_operator: booleanOperator } = field;
+                        const { field_name: fieldName } = field;
                         let { fieldKey } = field;
                         if (!fieldKey) {
                             fieldKey = policyConfiguration.descriptor.find(
@@ -78,7 +78,7 @@ function PolicySection({ fields, sectionName, removeSectionHandler }) {
                                 name={`${name}.values`}
                                 component={PolicyFieldCard}
                                 header={fieldName}
-                                booleanOperator={booleanOperator}
+                                booleanOperatorName={`${name}.boolean_operator`}
                                 removeFieldHandler={removeFieldHandler(i)}
                                 fieldKey={fieldKey}
                                 toggleFieldName={`${name}.negate`}
@@ -97,7 +97,7 @@ function PolicySection({ fields, sectionName, removeSectionHandler }) {
                     </div>
                 </div>
             </div>
-            <AndOrOperator />
+            <AndOrOperator disabled />
         </>
     );
 }

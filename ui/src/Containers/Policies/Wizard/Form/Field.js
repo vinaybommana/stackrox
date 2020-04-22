@@ -38,6 +38,7 @@ export default function Field({ field, name }) {
                     key={path}
                     disabled={field.disabled}
                     reverse={field.reverse}
+                    className="self-center"
                 />
             );
         case 'select':

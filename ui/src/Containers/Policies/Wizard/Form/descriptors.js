@@ -59,6 +59,7 @@ const cpuResource = (label, policy, field) => ({
     required: false,
     default: false,
     canNegate: false,
+    canBooleanLogic: true,
 });
 
 const capabilities = [
@@ -124,6 +125,8 @@ const memoryResource = (label, policy, field) => ({
     ],
     required: false,
     default: false,
+    canNegate: false,
+    canBooleanLogic: true,
 });
 
 // A descriptor for every option on the policy creation page.
@@ -248,7 +251,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: true,
-        // canBooleanLogic:
+        canBooleanLogic: true,
     },
     {
         label: 'Image Remote',
@@ -259,6 +262,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: false,
+        canBooleanLogic: true,
     },
     {
         label: 'Image Tag',
@@ -269,6 +273,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: true,
+        canBooleanLogic: true,
     },
     {
         label: 'Days since image was created',
@@ -280,6 +285,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: false,
+        canBooleanLogic: true,
     },
     {
         label: 'Days since image was last scanned',
@@ -291,6 +297,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: false,
+        canBooleanLogic: true,
     },
     {
         label: 'Dockerfile Line',
@@ -330,6 +337,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: false,
+        canBooleanLogic: true,
     },
     {
         label: 'Image is NOT Scanned',
@@ -342,6 +350,7 @@ const policyConfigurationDescriptor = [
         defaultValue: true,
         disabled: true,
         canNegate: false,
+        canBooleanLogic: false,
     },
     {
         label: 'CVSS',
@@ -368,6 +377,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: false,
+        canBooleanLogic: false,
     },
     {
         label: 'Fixed By',
@@ -379,6 +389,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: false,
+        canBooleanLogic: true,
     },
     {
         label: 'CVE',
@@ -389,6 +400,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: true,
+        canBooleanLogic: true,
     },
     {
         label: 'Image Component',
@@ -413,6 +425,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: true,
+        canBooleanLogic: true,
     },
     {
         label: 'Environment Variable',
@@ -447,6 +460,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: false,
+        canBooleanLogic: true,
     },
     {
         label: 'Disallowed Annotation',
@@ -471,6 +485,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: false,
+        canBooleanLogic: true,
     },
     {
         label: 'Required Label',
@@ -495,6 +510,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: false,
+        canBooleanLogic: true,
     },
     {
         label: 'Required Annotation',
@@ -519,6 +535,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: false,
+        canBooleanLogic: true,
     },
     {
         label: 'Volume Name',
@@ -529,6 +546,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: true,
+        canBooleanLogic: true,
     },
     {
         label: 'Volume Source',
@@ -539,6 +557,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: true,
+        canBooleanLogic: true,
     },
     {
         label: 'Volume Destination',
@@ -549,6 +568,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: true,
+        canBooleanLogic: true,
     },
     {
         label: 'Volume Type',
@@ -559,6 +579,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: true,
+        canBooleanLogic: true,
     },
     {
         label: 'Writable Volume',
@@ -571,6 +592,7 @@ const policyConfigurationDescriptor = [
         defaultValue: false,
         reverse: true,
         canNegate: false,
+        canBooleanLogic: true,
     },
     {
         label: 'Protocol',
@@ -581,6 +603,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: true,
+        canBooleanLogic: true,
     },
     {
         label: 'Port',
@@ -591,6 +614,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: true,
+        canBooleanLogic: true,
     },
     cpuResource('Container CPU Request', 'containerResourcePolicy', 'cpuResourceRequest'),
     cpuResource('Container CPU Limit', 'containerResourcePolicy', 'cpuResourceLimit'),
@@ -606,6 +630,7 @@ const policyConfigurationDescriptor = [
         defaultValue: true,
         disabled: true,
         canNegate: false,
+        canBooleanLogic: true,
     },
     {
         label: 'Read-Only Root Filesystem',
@@ -617,6 +642,7 @@ const policyConfigurationDescriptor = [
         defaultValue: false,
         disabled: true,
         canNegate: false,
+        canBooleanLogic: true,
     },
     {
         label: 'Drop Capabilities',
@@ -627,6 +653,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: false,
+        canBooleanLogic: true,
     },
     {
         label: 'Add Capabilities',
@@ -637,6 +664,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: false,
+        canBooleanLogic: true,
     },
     {
         label: 'Process Name',
@@ -647,6 +675,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: true,
+        canBooleanLogic: true,
     },
     {
         label: 'Process Ancestor',
@@ -657,6 +686,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: true,
+        canBooleanLogic: true,
     },
     {
         label: 'Process Args',
@@ -667,6 +697,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: true,
+        canBooleanLogic: true,
     },
     {
         label: 'Process UID',
@@ -677,6 +708,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: true,
+        canBooleanLogic: true,
     },
     {
         label: 'Port Exposure',
@@ -692,6 +724,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: true,
+        canBooleanLogic: true,
     },
     {
         label: 'Writable Host Mount',
@@ -704,6 +737,7 @@ const policyConfigurationDescriptor = [
         reverse: true,
         disabled: true,
         canNegate: false,
+        canBooleanLogic: true,
     },
     {
         label: 'Whitelists Enabled',
@@ -715,6 +749,7 @@ const policyConfigurationDescriptor = [
         defaultValue: false,
         reverse: false,
         canNegate: false,
+        canBooleanLogic: true,
     },
     {
         label: 'Minimum RBAC Permissions',
@@ -728,6 +763,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: true,
+        canBooleanLogic: true,
     },
     {
         label: 'Required Image Label',
@@ -751,6 +787,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: false,
+        canBooleanLogic: true,
     },
     {
         label: 'Disallowed Image Label',
@@ -774,6 +811,7 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: false,
+        canBooleanLogic: true,
     },
 ];
 
