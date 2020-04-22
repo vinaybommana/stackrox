@@ -29,7 +29,7 @@ const Panel = (props) => (
                         data-testid={`${props.id}-header`}
                     >
                         <Tooltip content={<TooltipOverlay>{props.header}</TooltipOverlay>}>
-                            <div className="truncate flex-none">{props.header}</div>
+                            <div className="line-clamp break-all">{props.header}</div>
                         </Tooltip>
                     </div>
                 )}
