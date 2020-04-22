@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import EventMarker from './EventMarker';
 
 const EventsRow = ({
-    name,
+    entityName,
     events,
     isOdd,
     height,
@@ -20,7 +20,7 @@ const EventsRow = ({
     return (
         <g
             data-testid="timeline-events-row"
-            key={name}
+            key={entityName}
             transform={`translate(${translateX}, ${translateY})`}
         >
             <rect
@@ -30,10 +30,21 @@ const EventsRow = ({
                 width={width}
             />
             {events.map(
-                ({ id, type, uid, reason, whitelisted, differenceInMilliseconds, timestamp }) => (
+                ({
+                    id,
+                    type,
+                    name,
+                    args,
+                    uid,
+                    reason,
+                    whitelisted,
+                    differenceInMilliseconds,
+                    timestamp,
+                }) => (
                     <EventMarker
                         key={id}
                         name={name}
+                        args={args}
                         uid={uid}
                         reason={reason}
                         type={type}
@@ -61,7 +72,7 @@ EventsRow.propTypes = {
     width: PropTypes.number.isRequired,
     translateX: PropTypes.number,
     translateY: PropTypes.number,
-    name: PropTypes.string.isRequired,
+    entityName: PropTypes.string.isRequired,
     events: PropTypes.arrayOf(PropTypes.object),
     isOdd: PropTypes.bool,
 };

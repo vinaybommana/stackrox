@@ -32,7 +32,7 @@ const EventsGraph = ({
                 return (
                     <EventsRow
                         key={id}
-                        name={name}
+                        entityName={name}
                         events={events}
                         isOdd={isOddRow}
                         height={rowHeight}

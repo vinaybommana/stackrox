@@ -13,6 +13,7 @@ import TerminationEvent from './TerminationEvent';
 
 const EventMarker = ({
     name,
+    args,
     type,
     uid,
     reason,
@@ -57,6 +58,7 @@ const EventMarker = ({
             {type === eventTypes.PROCESS_ACTIVITY && (
                 <ProcessActivityEvent
                     name={name}
+                    args={args}
                     type={type}
                     uid={uid}
                     timestamp={timestamp}
@@ -82,6 +84,7 @@ const EventMarker = ({
 
 EventMarker.propTypes = {
     name: PropTypes.string.isRequired,
+    args: PropTypes.string,
     type: PropTypes.string.isRequired,
     uid: PropTypes.number,
     reason: PropTypes.string,
@@ -98,6 +101,7 @@ EventMarker.propTypes = {
 
 EventMarker.defaultProps = {
     uid: null,
+    args: null,
     reason: null,
     whitelisted: false,
     margin: 0,

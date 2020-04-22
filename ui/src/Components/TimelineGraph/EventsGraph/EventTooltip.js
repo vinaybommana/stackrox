@@ -6,13 +6,19 @@ import { getDateTime } from 'utils/dateUtils';
 import Tooltip from 'Components/Tooltip';
 import DetailedTooltipOverlay from 'Components/DetailedTooltipOverlay';
 
-const EventTooltip = ({ type, name, uid, reason, timestamp, children }) => {
+const EventTooltip = ({ type, name, args, uid, reason, timestamp, children }) => {
     const tooltipBody = (
         <>
             <div>
                 <span className="font-700">Type: </span>
                 <span>{eventLabels[type]}</span>
             </div>
+            {args !== null && (
+                <div>
+                    <span className="font-700">Arguments: </span>
+                    <span>{args.length === 0 ? 'None' : args}</span>
+                </div>
+            )}
             {uid !== null && (
                 <div>
                     <span className="font-700">UID: </span>
@@ -41,6 +47,7 @@ const EventTooltip = ({ type, name, uid, reason, timestamp, children }) => {
 EventTooltip.propTypes = {
     type: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
+    args: PropTypes.string,
     uid: PropTypes.number,
     reason: PropTypes.string,
     timestamp: PropTypes.string.isRequired,
@@ -49,6 +56,7 @@ EventTooltip.propTypes = {
 
 EventTooltip.defaultProps = {
     uid: null,
+    args: null,
     reason: null,
 };
 

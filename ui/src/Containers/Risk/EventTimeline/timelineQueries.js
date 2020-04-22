@@ -33,6 +33,7 @@ export const PROCESS_ACTIVITY_EVENT_FRAGMENT = gql`
         type: __typename
         id
         name
+        args
         timestamp
         uid
         whitelisted
