@@ -316,6 +316,9 @@ func (ds *datastoreImpl) RemoveAlertComment(ctx context.Context, alertID, commen
 func (ds *datastoreImpl) AddAlertTags(ctx context.Context, resourceID string, tags []string) ([]string, error) {
 	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Alert", "AddAlertTags")
 
+	ds.keyedMutex.Lock(resourceID)
+	defer ds.keyedMutex.Unlock(resourceID)
+
 	alert, exists, err := ds.storage.GetAlert(resourceID)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error fetching alert %q from the DB", resourceID)
@@ -339,6 +342,9 @@ func (ds *datastoreImpl) AddAlertTags(ctx context.Context, resourceID string, ta
 
 func (ds *datastoreImpl) RemoveAlertTags(ctx context.Context, resourceID string, tags []string) error {
 	defer metrics.SetDatastoreFunctionDuration(time.Now(), "Alert", "DeleteAlertTags")
+
+	ds.keyedMutex.Lock(resourceID)
+	defer ds.keyedMutex.Unlock(resourceID)
 
 	alert, exists, err := ds.storage.GetAlert(resourceID)
 	if err != nil {
