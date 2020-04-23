@@ -1,68 +1,68 @@
 package util
 
 import static com.jayway.restassured.RestAssured.given
+
+import com.google.gson.GsonBuilder
+import objects.SplunkAlert
+import objects.SplunkAlertRaw
+import objects.SplunkAlerts
+import objects.SplunkSearch
+
 import com.google.gson.Gson
 import com.jayway.restassured.response.Response
 
 class SplunkUtil {
+    static final private Gson GSON = new GsonBuilder().create()
 
-    static Map<String,String> getInfoFromSplunk(String httpsEndPoint) {
-        Gson gson = new Gson()
-        Response response = getResponseWithTimeout(httpsEndPoint, 300)
-        if (response != null ) {
-            RawParser parser = gson.fromJson(response.jsonPath().get("result")["_raw"], RawParser)
-            RawParser.Policy policyParser = gson.fromJson(parser.policy, RawParser.Policy)
-            RawParser.Deployment deploymentParser = gson.fromJson(parser.deployment, RawParser.Deployment)
-            def map = new HashMap<String, String>()
-            map["preview"] = response.jsonPath().get("preview")
-            map["offset"] = response.jsonPath().get("offset")
-            map["policy"] = trimQuotes(policyParser.name.toString())
-            map["namespace"] = trimQuotes(deploymentParser.namespace.toString())
-            map["name"] = trimQuotes(deploymentParser.name.toString())
-            map["clusterName"] = trimQuotes(deploymentParser.clusterName.toString())
-            map["type"] = trimQuotes(deploymentParser.type.toString())
-            map["source"] = response.jsonPath().get("result")["source"]
-            map["sourcetype"] = response.jsonPath().get("result")["sourcetype"]
-            return map
+    static List<SplunkAlert> getSplunkAlerts(String httpsEndPoint, String searchId) {
+        Response response = getSearchResults(httpsEndPoint, searchId)
+        SplunkAlerts alerts = GSON.fromJson(response.asString(), SplunkAlerts)
+
+        def returnAlerts = []
+        for (SplunkAlertRaw raw : alerts.results) {
+            returnAlerts.add(GSON.fromJson(raw._raw, SplunkAlert))
         }
-        return [:]
+        return returnAlerts
     }
 
-    static String trimQuotes(String str) {
-        return str[1..(str.length()-2)]
-    }
-
-    static Map<String,String> waitForSplunkAlerts(String httpsLoadBalancer, int timeoutSeconds) {
-        int intervalSeconds = 1
+    static List<SplunkAlert> waitForSplunkAlerts(String httpsLoadBalancer, int timeoutSeconds) {
+        int intervalSeconds = 3
         int iterations = timeoutSeconds / intervalSeconds
-        Map resultMap
+        List results = []
         Timer t = new Timer(iterations, intervalSeconds)
-        while (resultMap == null && t.IsValid()) {
-            resultMap = getInfoFromSplunk(httpsLoadBalancer)
+        while (results.size() == 0 && t.IsValid()) {
+            def searchId = createSearch(httpsLoadBalancer)
+            results = getSplunkAlerts(httpsLoadBalancer, searchId)
         }
-        println("Received response from splunk after  ${iterations}  and  ${t.SecondsSince()} seconds")
-        return resultMap
+        return results
     }
 
-    static Response getResponseWithTimeout(String deploymentIP, int timeout) {
+    static Response getSearchResults(String deploymentIP, String searchId) {
         Response response
-        int intervalSeconds = 1
-        int iterations = timeout / intervalSeconds
-        Timer t = new Timer(iterations, intervalSeconds)
-        while (response?.jsonPath()?.get("result") == null && t.IsValid()) {
-            try {
-                response = given().auth().basic("admin", "changeme")
-                        .param("search", "search")
-                        .param("host", "splunk-collector.qa:8088")
-                        .param("output_mode", "json")
-                        .get("https://${deploymentIP}:8089/services/search/jobs/export")
-                println("Querying loadbalancer ${deploymentIP}")
-            }
-            catch (Exception e) {
-                println("catching unknownhost exception for KOPS and other intermittent connection issues" + e)
-            }
+        try {
+            response = given().auth().basic("admin", "changeme")
+                    .param("output_mode", "json")
+                    .get("https://${deploymentIP}:8089/services/search/jobs/${searchId}/events")
+            println("Querying loadbalancer ${deploymentIP}")
         }
-        println("Printing response from ${deploymentIP} " + response?.prettyPrint())
+        catch (Exception e) {
+            println("catching unknownhost exception for KOPS and other intermittent connection issues" + e)
+        }
+        println "Printing response from ${deploymentIP} " + response?.prettyPrint()
         return response
+    }
+
+    static String createSearch(String deploymentIP) {
+        Response response
+        try {
+            response = given().auth().basic("admin", "changeme")
+                    .formParam("search", "search")
+                    .param("output_mode", "json")
+                    .post("https://${deploymentIP}:8089/services/search/jobs")
+        }
+        catch (Exception e) {
+            println("catching unknownhost exception for KOPS and other intermittent connection issues" + e)
+        }
+        return GSON.fromJson(response.asString(), SplunkSearch).sid
     }
 }

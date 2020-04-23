@@ -4,7 +4,6 @@ import common.Constants
 import groovy.json.JsonSlurper
 import io.stackrox.proto.storage.NotifierOuterClass
 import io.stackrox.proto.storage.PolicyOuterClass.Policy
-import services.ClusterService
 import services.NotifierService
 import util.Env
 import util.MailService
@@ -238,14 +237,13 @@ class SplunkNotifier extends Notifier {
     void validateViolationNotification(Policy policy, Deployment deployment) {
         def response = SplunkUtil.waitForSplunkAlerts(splunkLbIp, 60)
 
-        assert response.get("offset") == 0
-        assert response.get("preview") == false
-        assert response.get("namespace") == deployment.namespace
-        assert response.get("name") == deployment.name
-        assert response.get("type") == "Deployment"
-        assert response.get("clusterName") == ClusterService.getCluster().name
-        assert response.get("policy") == policy.name
-        assert response.get("sourcetype") == "_json"
-        assert response.get("source") == "stackrox"
+        assert response.find { it.deployment.id == deployment.deploymentUid }
+        assert response.find { it.deployment.name == deployment.name }
+        assert response.find { it.deployment.namespace == deployment.namespace }
+        assert response.find { it.deployment.type == "Deployment" }
+        assert response.find { it.policy.name == policy.name }
+        assert response.find { it.policy.description == policy.description }
+        assert response.find { it.policy.remediation == policy.remediation }
+        assert response.find { it.policy.rationale == policy.rationale }
     }
 }
