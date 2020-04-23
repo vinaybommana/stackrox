@@ -866,16 +866,23 @@ commands:
             cmd=(gcloud container clusters get-credentials --project stackrox-ci --zone "$ZONE" "$CLUSTER_NAME")
             "${cmd[@]}"
             echo "Restored config for cluster ${CLUSTER_NAME}"
-            if [[ -x "${CONFIG_DIR}/refresh-token-forever.sh" ]]; then
-              echo "Running refresh token script in the background."
-              nohup "${CONFIG_DIR}/refresh-token-forever.sh" &
-            fi
             cci-export CLUSTER_NAME "$CLUSTER_NAME"
+            cci-export ZONE "$ZONE"
             echo
             echo "Run the following command to attach to the cluster:"
             echo
             printf " %q" "${cmd[@]}"
             echo
+
+      - run:
+          name: Running refresh token script in the background
+          command: |
+            CONFIG_DIR="/go/src/github.com/stackrox/rox/.ci-clusters/<< parameters.cluster-id >>"
+            if [[ ! -x "${CONFIG_DIR}/refresh-token-forever.sh" ]]; then
+              exit 0
+            fi
+            "${CONFIG_DIR}/refresh-token-forever.sh"
+          background: true
 
       - run:
           name: Waiting for << parameters.cluster-id >> cluster to stabilize
