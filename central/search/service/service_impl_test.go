@@ -230,7 +230,7 @@ func TestAutocompleteForEnums(t *testing.T) {
 	require.NoError(t, policyIndexer.AddPolicy(fixtures.GetPolicy()))
 	policySearcher, err := policySearcher.New(policyStore, policyIndexer)
 	require.NoError(t, err)
-	ds := policyDatastore.New(policyStore, policyIndexer, policySearcher)
+	ds := policyDatastore.New(policyStore, policyIndexer, policySearcher, nil, nil)
 
 	service := NewBuilder().
 		WithAlertStore(alertMocks.NewMockDataStore(mockCtrl)).

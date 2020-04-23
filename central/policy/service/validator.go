@@ -33,6 +33,8 @@ func newPolicyValidator(notifierStorage notifierDataStore.DataStore, clusterStor
 	}
 }
 
+type validationFunc func(*storage.Policy) error
+
 // policyValidator validates the incoming policy.
 type policyValidator struct {
 	notifierStorage          notifierDataStore.DataStore
@@ -47,6 +49,22 @@ type policyValidator struct {
 func (s *policyValidator) validate(ctx context.Context, policy *storage.Policy) error {
 	s.removeEnforcementsForMissingLifecycles(policy)
 
+	additionalValidators := []validationFunc{
+		func(policy *storage.Policy) error {
+			return s.validateNotifiers(ctx, policy)
+		},
+	}
+	return s.internalValidate(policy, additionalValidators)
+}
+
+// validateImport does not validate notifiers.  Invalid notifiers will be stripped out.
+func (s *policyValidator) validateImport(policy *storage.Policy) error {
+	return s.internalValidate(policy, nil)
+}
+
+func (s *policyValidator) internalValidate(policy *storage.Policy, additionalValidators []validationFunc) error {
+	s.removeEnforcementsForMissingLifecycles(policy)
+
 	errorList := errorhelpers.NewErrorList("policy invalid")
 	errorList.AddError(s.validateName(policy))
 	errorList.AddError(s.validateDescription(policy))
@@ -56,7 +74,9 @@ func (s *policyValidator) validate(ctx context.Context, policy *storage.Policy) 
 	errorList.AddError(s.validateScopes(policy))
 	errorList.AddError(s.validateWhitelists(policy))
 	errorList.AddError(s.validateCapabilities(policy))
-	errorList.AddError(s.validateNotifiers(ctx, policy))
+	for _, validator := range additionalValidators {
+		errorList.AddError(validator(policy))
+	}
 	return errorList.ToError()
 }
 

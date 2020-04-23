@@ -80,6 +80,35 @@ message ExportPoliciesErrorList {
     repeated ExportPolicyError errors = 1;
 }
 
+message ImportPoliciesMetadata {
+    bool overwrite = 1;
+}
+
+message ImportPoliciesRequest {
+    ImportPoliciesMetadata  metadata = 1;
+    repeated storage.Policy policies = 2;
+}
+
+message ImportPolicyError {
+    string message              = 1;
+    string type                 = 2;
+    oneof metadata {
+        string duplicate_name   = 3;
+        string validation_error = 4;
+    }
+}
+
+message ImportPolicyResponse {
+    bool                       succeeded = 1;
+    storage.Policy             policy    = 2;
+    repeated ImportPolicyError errors    = 3;
+}
+
+message ImportPoliciesResponse {
+    repeated ImportPolicyResponse responses     = 1;
+    bool                          all_succeeded = 2;
+}
+
 // PolicyService APIs can be used to manage policies.
 service PolicyService {
 
@@ -196,6 +225,14 @@ service PolicyService {
     rpc ExportPolicies (ExportPoliciesRequest) returns (storage.ExportPoliciesResponse) {
         option (google.api.http) = {
             post: "/v1/policies/export"
+            body: "*"
+        };
+    }
+
+    // ImportPolicies accepts a list of Policies and returns a list of the policies which could not be imported
+    rpc ImportPolicies (ImportPoliciesRequest) returns (ImportPoliciesResponse) {
+        option (google.api.http) = {
+            post: "/v1/policies/import"
             body: "*"
         };
     }

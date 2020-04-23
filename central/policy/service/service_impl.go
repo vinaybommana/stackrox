@@ -69,6 +69,7 @@ var (
 			"/v1.PolicyService/RenamePolicyCategory",
 			"/v1.PolicyService/DeletePolicyCategory",
 			"/v1.PolicyService/EnableDisablePolicyNotification",
+			"/v1.PolicyService/ImportPolicies",
 		},
 	})
 )
@@ -753,5 +754,65 @@ func (s *serviceImpl) ExportPolicies(ctx context.Context, request *v1.ExportPoli
 	}
 	return &storage.ExportPoliciesResponse{
 		Policies: policyList,
+	}, nil
+}
+
+func (s *serviceImpl) ImportPolicies(ctx context.Context, request *v1.ImportPoliciesRequest) (*v1.ImportPoliciesResponse, error) {
+	if !features.PolicyImportExport.Enabled() {
+		return nil, status.Error(codes.Unimplemented, "not implemented")
+	}
+
+	responses := make([]*v1.ImportPolicyResponse, 0, len(request.Policies))
+	allValidationSucceeded := true
+
+	// Validate input policies
+	validPolicyList := make([]*storage.Policy, 0, len(request.GetPolicies()))
+	for _, policy := range request.Policies {
+		if err := s.validator.validateImport(policy); err != nil {
+			allValidationSucceeded = false
+			responses = append(responses, &v1.ImportPolicyResponse{
+				Succeeded: false,
+				Policy:    policy,
+				Errors: []*v1.ImportPolicyError{
+					{
+						Message: "Invalid policy",
+						Type:    policies.ErrImportValidation,
+						Metadata: &v1.ImportPolicyError_ValidationError{
+							ValidationError: err.Error(),
+						},
+					},
+				},
+			})
+			continue
+		}
+		validPolicyList = append(validPolicyList, policy)
+	}
+
+	// Import valid policies
+	importResponses, allImportsSucceeded, err := s.policies.ImportPolicies(ctx, validPolicyList, request.GetMetadata().GetOverwrite())
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	for _, importResponse := range importResponses {
+		if importResponse.GetSucceeded() {
+			if err := s.addActivePolicy(importResponse.GetPolicy()); err != nil {
+				importResponse.Succeeded = false
+				importResponse.Errors = append(importResponse.GetErrors(), &v1.ImportPolicyError{
+					Message: errors.Wrap(err, "Policy could not be imported due to").Error(),
+					Type:    policies.ErrImportUnknown,
+				})
+			}
+		}
+	}
+
+	if err := s.syncPoliciesWithSensors(); err != nil {
+		return nil, err
+	}
+
+	responses = append(responses, importResponses...)
+	return &v1.ImportPoliciesResponse{
+		Responses:    responses,
+		AllSucceeded: allValidationSucceeded && allImportsSucceeded,
 	}, nil
 }
