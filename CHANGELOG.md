@@ -2,6 +2,7 @@
 All notable changes to this project that require documentation updates will be documented in this file.
 
 ## [NEXT RELEASE]
+- Detection APIs were not properly handling suppressed CVEs and they were being included in evaluation. This is now resolved.
 
 ## [42.0]
 - All `/v1/` API endpoints now support pretty-printing.  Make requests with the `?pretty` path parameter to receive pretty-printed json responses.

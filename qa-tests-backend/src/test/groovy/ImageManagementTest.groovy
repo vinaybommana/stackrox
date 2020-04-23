@@ -1,7 +1,11 @@
 import groups.BAT
 import groups.Integration
+import io.stackrox.proto.api.v1.Common
+import io.stackrox.proto.storage.PolicyOuterClass
 import org.junit.experimental.categories.Category
+import services.CVEService
 import services.ImageIntegrationService
+import services.PolicyService
 import spock.lang.Shared
 import spock.lang.Unroll
 import io.stackrox.proto.storage.PolicyOuterClass.LifecycleStage
@@ -22,6 +26,7 @@ class ImageManagementTest extends BaseSpecification {
             azureId = ImageIntegrationService.addAzureRegistry()
             assert azureId != null
         }
+        ImageIntegrationService.addStackroxScannerIntegration()
     }
 
     def cleanupSpec() {
@@ -29,6 +34,7 @@ class ImageManagementTest extends BaseSpecification {
         if (CHECK_AZURE) {
             assert ImageIntegrationService.deleteImageIntegration(azureId)
         }
+        ImageIntegrationService.deleteAutoRegisteredStackRoxScannerIntegrationIfExists()
     }
 
     @Unroll
@@ -113,5 +119,43 @@ class ImageManagementTest extends BaseSpecification {
         then:
         "assert startStage is null"
         assert startStages == []
+    }
+
+    @Unroll
+    @Category([BAT])
+    def "Verify CVE snoozing applies to build time detection"() {
+        given:
+        "Create policy looking for a specific CVE applying to build time"
+        PolicyOuterClass.Policy policy = PolicyService.policyClient.postPolicy(
+                PolicyOuterClass.Policy.newBuilder()
+                        .setName("Matching CVE (CVE-2019-14697)")
+                        .addLifecycleStages(LifecycleStage.BUILD)
+                        .addCategories("Testing")
+                        .setSeverity(PolicyOuterClass.Severity.HIGH_SEVERITY)
+                        .setFields(
+                            PolicyOuterClass.PolicyFields.newBuilder().setCve("CVE-2019-14697").build()
+                ).build()
+        )
+        def scanResults = Services.requestBuildImageScan("docker.io", "docker/kube-compose-controller", "v0.4.23")
+        assert scanResults.alertsList.find { x -> x.policy.id == policy.id } != null
+
+        when:
+        "Suppress CVE and check that it violates"
+        CVEService.suppressCVE("CVE-2019-14697")
+        scanResults = Services.requestBuildImageScan("docker.io", "docker/kube-compose-controller", "v0.4.23")
+        assert scanResults.alertsList.find { x -> x.policy.id == policy.id } == null
+
+        and:
+        "Unsuppress CVE"
+        CVEService.unsuppressCVE("CVE-2019-14697")
+        scanResults = Services.requestBuildImageScan("docker.io", "docker/kube-compose-controller", "v0.4.23")
+
+        then:
+        "Verify unsuppressing lets the CVE show up again"
+        assert scanResults.alertsList.find { x -> x.policy.id == policy.id } != null
+
+        cleanup:
+        "Delete policy"
+        PolicyService.policyClient.deletePolicy(Common.ResourceByID.newBuilder().setId(policy.id).build())
     }
 }

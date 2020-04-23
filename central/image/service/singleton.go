@@ -1,6 +1,7 @@
 package service
 
 import (
+	cveDataStore "github.com/stackrox/rox/central/cve/datastore"
 	"github.com/stackrox/rox/central/enrichment"
 	"github.com/stackrox/rox/central/image/datastore"
 	"github.com/stackrox/rox/pkg/sync"
@@ -13,7 +14,7 @@ var (
 )
 
 func initialize() {
-	as = New(datastore.Singleton(), enrichment.ImageEnricherSingleton(), enrichment.ImageMetadataCacheSingleton(), enrichment.ImageScanCacheSingleton())
+	as = New(datastore.Singleton(), cveDataStore.Singleton(), enrichment.ImageEnricherSingleton(), enrichment.ImageMetadataCacheSingleton(), enrichment.ImageScanCacheSingleton())
 }
 
 // Singleton provides the instance of the Service interface to register.

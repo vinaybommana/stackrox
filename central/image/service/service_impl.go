@@ -7,6 +7,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/pkg/errors"
+	cveDataStore "github.com/stackrox/rox/central/cve/datastore"
 	"github.com/stackrox/rox/central/image/datastore"
 	"github.com/stackrox/rox/central/role/resources"
 	v1 "github.com/stackrox/rox/generated/api/v1"
@@ -53,7 +54,8 @@ var (
 
 // serviceImpl provides APIs for alerts.
 type serviceImpl struct {
-	datastore datastore.DataStore
+	datastore    datastore.DataStore
+	cveDatastore cveDataStore.DataStore
 
 	metadataCache expiringcache.Cache
 	scanCache     expiringcache.Cache
@@ -215,6 +217,8 @@ func (s *serviceImpl) ScanImage(ctx context.Context, request *v1.ScanImageReques
 	if !enrichmentResult.ImageUpdated || (enrichmentResult.ScanResult != enricher.ScanSucceeded) {
 		return nil, status.Error(codes.Internal, "scan could not be completed. Please check that an applicable registry and scanner is integrated")
 	}
+
+	s.cveDatastore.EnrichImageWithSuppressedCVEs(img)
 
 	// Save the image
 	img.Id = utils.GetImageID(img)

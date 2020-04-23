@@ -9,6 +9,7 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	clusterDatastore "github.com/stackrox/rox/central/cluster/datastore"
+	cveDataStore "github.com/stackrox/rox/central/cve/datastore"
 	"github.com/stackrox/rox/central/detection/buildtime"
 	"github.com/stackrox/rox/central/detection/deploytime"
 	"github.com/stackrox/rox/central/enrichment"
@@ -57,6 +58,7 @@ type serviceImpl struct {
 	policySet          detection.PolicySet
 	imageEnricher      enricher.ImageEnricher
 	imageDatastore     imageDatastore.DataStore
+	cveDatastore       cveDataStore.DataStore
 	deploymentEnricher enrichment.Enricher
 	buildTimeDetector  buildtime.Detector
 	clusters           clusterDatastore.DataStore
@@ -107,6 +109,14 @@ func (s *serviceImpl) DetectBuildTime(ctx context.Context, req *apiV1.BuildDetec
 	if err != nil {
 		return nil, err
 	}
+
+	// Must evaluate the suppressed CVEs before detection
+	s.cveDatastore.EnrichImageWithSuppressedCVEs(img)
+	alerts, err := s.buildTimeDetector.Detect(img)
+	if err != nil {
+		return nil, err
+	}
+
 	if enrichResult.ImageUpdated {
 		img.Id = utils.GetImageID(img)
 		if img.GetId() != "" {
@@ -116,10 +126,6 @@ func (s *serviceImpl) DetectBuildTime(ctx context.Context, req *apiV1.BuildDetec
 		}
 	}
 
-	alerts, err := s.buildTimeDetector.Detect(img)
-	if err != nil {
-		return nil, err
-	}
 	return &apiV1.BuildDetectionResponse{
 		Alerts: alerts,
 	}, nil
@@ -129,6 +135,9 @@ func (s *serviceImpl) enrichAndDetect(ctx context.Context, enrichmentContext enr
 	images, updatedIndices, _, err := s.deploymentEnricher.EnrichDeployment(enrichmentContext, deployment)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
+	}
+	for _, image := range images {
+		s.cveDatastore.EnrichImageWithSuppressedCVEs(image)
 	}
 	for _, idx := range updatedIndices {
 		img := images[idx]
