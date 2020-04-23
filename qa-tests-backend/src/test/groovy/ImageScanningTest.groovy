@@ -101,8 +101,9 @@ class ImageScanningTest extends BaseSpecification {
 
         and:
         "validate registry based image metadata"
-        ImageOuterClass.Image imageDetail = ImageService.getImage(
-                ImageService.getImages().find { it.name == deployment.image }?.id)
+        def imageDigest = ImageService.getImages().find { it.name == deployment.image }
+        assert imageDigest?.id
+        ImageOuterClass.Image imageDetail = ImageService.getImage(imageDigest.id)
         assert imageDetail.metadata?.v1?.layersCount >= 1
         assert imageDetail.metadata?.layerShasCount >= 1
 
