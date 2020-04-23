@@ -77,6 +77,16 @@ const common = Object.freeze({
         FIELD: 'FieldRef',
         RESOURCE_FIELD: 'ResourceFieldRef',
     },
+    policyCriteriaCategories: {
+        IMAGE_REGISTRY: 'Image Registry',
+        IMAGE_CONTENTS: 'Image Contents',
+        CONTAINER_CONFIGURATION: 'Container Configuration',
+        DEPLOYMENT_METADATA: 'Deployment Metadata',
+        STORAGE: 'Storage',
+        NETWORKING: 'Networking',
+        PROCESS_ACTIVITY: 'Process Activity',
+        KUBERNETES_ACCESS: 'Kubernetes Access',
+    },
 });
 
 module.exports = common;

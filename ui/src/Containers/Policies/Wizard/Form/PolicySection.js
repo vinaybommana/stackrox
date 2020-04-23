@@ -77,7 +77,6 @@ function PolicySection({ fields, sectionName, removeSectionHandler }) {
                                 key={name}
                                 name={`${name}.values`}
                                 component={PolicyFieldCard}
-                                header={fieldName}
                                 booleanOperatorName={`${name}.boolean_operator`}
                                 removeFieldHandler={removeFieldHandler(i)}
                                 fieldKey={fieldKey}

@@ -3,6 +3,7 @@ import {
     portExposureLabels,
     envVarSrcLabels,
     rbacPermissionLabels,
+    policyCriteriaCategories,
 } from 'messages/common';
 import { clientOnlyWhitelistFieldNames } from './whitelistFieldNames';
 
@@ -39,6 +40,7 @@ const cpuResource = (label, policy, field) => ({
     label,
     name: label,
     jsonpath: `fields.${policy}.${field}`,
+    category: policyCriteriaCategories.CONTAINER_CONFIGURATION,
     type: 'group',
     jsonpaths: [
         {
@@ -107,6 +109,7 @@ const memoryResource = (label, policy, field) => ({
     label,
     name: label,
     jsonpath: `fields.${policy}.${field}`,
+    category: policyCriteriaCategories.CONTAINER_CONFIGURATION,
     type: 'group',
     jsonpaths: [
         {
@@ -245,7 +248,10 @@ const policyConfigurationDescriptor = [
     {
         label: 'Image Registry',
         name: 'Image Registry',
+        longName: 'Image pulled from registry',
+        negatedName: 'Image not pulled from registry',
         jsonpath: 'fields.imageName.registry',
+        category: policyCriteriaCategories.IMAGE_REGISTRY,
         type: 'text',
         placeholder: 'docker.io',
         required: false,
@@ -256,18 +262,21 @@ const policyConfigurationDescriptor = [
     {
         label: 'Image Remote',
         name: 'Image Remote',
+        longName: 'Image name in registry',
         jsonpath: 'fields.imageName.remote',
+        category: policyCriteriaCategories.IMAGE_REGISTRY,
         type: 'text',
         placeholder: 'library/nginx',
         required: false,
         default: false,
-        canNegate: false,
+        canNegate: true,
         canBooleanLogic: true,
     },
     {
         label: 'Image Tag',
         name: 'Image Tag',
         jsonpath: 'fields.imageName.tag',
+        category: policyCriteriaCategories.IMAGE_REGISTRY,
         type: 'text',
         placeholder: 'latest',
         required: false,
@@ -277,33 +286,36 @@ const policyConfigurationDescriptor = [
     },
     {
         label: 'Days since image was created',
-        // does not map to options -- using short name
         name: 'Image Age',
+        longName: 'Minimum days since image was built',
         jsonpath: 'fields.imageAgeDays',
+        category: policyCriteriaCategories.IMAGE_CONTENTS,
         type: 'number',
         placeholder: '1',
         required: false,
         default: false,
         canNegate: false,
-        canBooleanLogic: true,
+        canBooleanLogic: false,
     },
     {
         label: 'Days since image was last scanned',
-        // does not map to options -- using short name
         name: 'Image Scan Age',
+        longName: 'Minimum days since last image scan',
         jsonpath: 'fields.scanAgeDays',
+        category: policyCriteriaCategories.IMAGE_CONTENTS,
         type: 'number',
         placeholder: '1',
         required: false,
         default: false,
         canNegate: false,
-        canBooleanLogic: true,
+        canBooleanLogic: false,
     },
     {
         label: 'Dockerfile Line',
-        // does not map to options -- using field name in doc
         name: 'Dockerfile Line',
+        longName: 'Disallowed Dockerfile line',
         jsonpath: 'fields.lineRule',
+        category: policyCriteriaCategories.IMAGE_CONTENTS,
         type: 'group',
         jsonpaths: [
             {
@@ -341,10 +353,20 @@ const policyConfigurationDescriptor = [
     },
     {
         label: 'Image is NOT Scanned',
-        // using short name
         name: 'Unscanned Image',
         jsonpath: 'fields.noScanExists',
+        category: policyCriteriaCategories.IMAGE_CONTENTS,
         type: 'toggle',
+        options: [
+            {
+                label: 'Scanned',
+                value: false,
+            },
+            {
+                label: 'Not scanned',
+                value: true,
+            },
+        ],
         required: false,
         default: false,
         defaultValue: true,
@@ -355,7 +377,9 @@ const policyConfigurationDescriptor = [
     {
         label: 'CVSS',
         name: 'CVSS',
+        longName: 'Common Vulnerability Scoring System (CVSS) Score',
         jsonpath: 'fields.cvss',
+        category: policyCriteriaCategories.IMAGE_CONTENTS,
         type: 'group',
         jsonpaths: [
             {
@@ -377,24 +401,27 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: false,
-        canBooleanLogic: false,
+        canBooleanLogic: true,
     },
     {
         label: 'Fixed By',
-        // does not map to options -- using field name in doc
         name: 'Fixed By',
+        longName: 'Version in which vulnerability is fixed',
+        category: policyCriteriaCategories.IMAGE_CONTENTS,
         jsonpath: 'fields.fixedBy',
         type: 'text',
         placeholder: '.*',
         required: false,
         default: false,
-        canNegate: false,
+        canNegate: true,
         canBooleanLogic: true,
     },
     {
         label: 'CVE',
         name: 'CVE',
+        longName: 'Common Vulnerabilities and Exposures (CVE) identifier',
         jsonpath: 'fields.cve',
+        category: policyCriteriaCategories.IMAGE_CONTENTS,
         type: 'text',
         placeholder: 'CVE-2017-11882',
         required: false,
@@ -404,9 +431,9 @@ const policyConfigurationDescriptor = [
     },
     {
         label: 'Image Component',
-        // does not map to options -- using field name in doc
         name: 'Image Component',
         jsonpath: 'fields.component',
+        category: policyCriteriaCategories.IMAGE_CONTENTS,
         type: 'group',
         jsonpaths: [
             {
@@ -424,14 +451,14 @@ const policyConfigurationDescriptor = [
         ],
         required: false,
         default: false,
-        canNegate: true,
+        canNegate: false,
         canBooleanLogic: true,
     },
     {
         label: 'Environment Variable',
-        // does not map to options -- using field name in doc
         name: 'Environment Variable',
         jsonpath: 'fields.env',
+        category: policyCriteriaCategories.CONTAINER_CONFIGURATION,
         type: 'group',
         jsonpaths: [
             {
@@ -464,9 +491,9 @@ const policyConfigurationDescriptor = [
     },
     {
         label: 'Disallowed Annotation',
-        // does not map to options -- using field name in doc
         name: 'Disallowed Annotation',
         jsonpath: 'fields.disallowedAnnotation',
+        category: policyCriteriaCategories.DEPLOYMENT_METADATA,
         type: 'group',
         jsonpaths: [
             {
@@ -489,9 +516,10 @@ const policyConfigurationDescriptor = [
     },
     {
         label: 'Required Label',
-        // does not map to options -- using field name in doc
         name: 'Required Label',
+        longName: 'Required Deployment Label',
         jsonpath: 'fields.requiredLabel',
+        category: policyCriteriaCategories.DEPLOYMENT_METADATA,
         type: 'group',
         jsonpaths: [
             {
@@ -514,9 +542,10 @@ const policyConfigurationDescriptor = [
     },
     {
         label: 'Required Annotation',
-        // does not map to options -- using field name in doc
         name: 'Required Annotation',
+        longName: 'Required Deployment Annotation',
         jsonpath: 'fields.requiredAnnotation',
+        category: policyCriteriaCategories.DEPLOYMENT_METADATA,
         type: 'group',
         jsonpaths: [
             {
@@ -541,6 +570,7 @@ const policyConfigurationDescriptor = [
         label: 'Volume Name',
         name: 'Volume Name',
         jsonpath: 'fields.volumePolicy.name',
+        category: policyCriteriaCategories.STORAGE,
         type: 'text',
         placeholder: 'docker-socket',
         required: false,
@@ -552,6 +582,7 @@ const policyConfigurationDescriptor = [
         label: 'Volume Source',
         name: 'Volume Source',
         jsonpath: 'fields.volumePolicy.source',
+        category: policyCriteriaCategories.STORAGE,
         type: 'text',
         placeholder: '/var/run/docker.sock',
         required: false,
@@ -563,6 +594,7 @@ const policyConfigurationDescriptor = [
         label: 'Volume Destination',
         name: 'Volume Destination',
         jsonpath: 'fields.volumePolicy.destination',
+        category: policyCriteriaCategories.STORAGE,
         type: 'text',
         placeholder: '/var/run/docker.sock',
         required: false,
@@ -574,6 +606,7 @@ const policyConfigurationDescriptor = [
         label: 'Volume Type',
         name: 'Volume Type',
         jsonpath: 'fields.volumePolicy.type',
+        category: policyCriteriaCategories.STORAGE,
         type: 'text',
         placeholder: 'bind, secret',
         required: false,
@@ -583,21 +616,32 @@ const policyConfigurationDescriptor = [
     },
     {
         label: 'Writable Volume',
-        // does not map to options -- using field name in doc
         name: 'Writable Volume',
         jsonpath: 'fields.volumePolicy.readOnly',
+        category: policyCriteriaCategories.STORAGE,
         type: 'toggle',
+        option: [
+            {
+                label: 'Writable',
+                value: true,
+            },
+            {
+                label: 'Read-only',
+                value: false,
+            },
+        ],
         required: false,
         default: false,
         defaultValue: false,
         reverse: true,
         canNegate: false,
-        canBooleanLogic: true,
+        canBooleanLogic: false,
     },
     {
         label: 'Protocol',
         name: 'Exposed Port Protocol',
         jsonpath: 'fields.portPolicy.protocol',
+        category: policyCriteriaCategories.NETWORKING,
         type: 'text',
         placeholder: 'tcp',
         required: false,
@@ -609,6 +653,7 @@ const policyConfigurationDescriptor = [
         label: 'Port',
         name: 'Exposed Port',
         jsonpath: 'fields.portPolicy.port',
+        category: policyCriteriaCategories.NETWORKING,
         type: 'number',
         placeholder: '22',
         required: false,
@@ -624,30 +669,53 @@ const policyConfigurationDescriptor = [
         label: 'Privileged',
         name: 'Privileged Container',
         jsonpath: 'fields.privileged',
+        category: policyCriteriaCategories.CONTAINER_CONFIGURATION,
         type: 'toggle',
+        options: [
+            {
+                label: 'Privileged Container',
+                value: true,
+            },
+            {
+                label: 'Not a Privileged Container',
+                value: false,
+            },
+        ],
         required: false,
         default: false,
         defaultValue: true,
         disabled: true,
         canNegate: false,
-        canBooleanLogic: true,
+        canBooleanLogic: false,
     },
     {
         label: 'Read-Only Root Filesystem',
         name: 'Read-Only Root Filesystem',
         jsonpath: 'fields.readOnlyRootFs',
+        category: policyCriteriaCategories.CONTAINER_CONFIGURATION,
         type: 'toggle',
+        options: [
+            {
+                label: 'Read-Only',
+                value: true,
+            },
+            {
+                label: 'Writable',
+                value: false,
+            },
+        ],
         required: false,
         default: false,
         defaultValue: false,
         disabled: true,
         canNegate: false,
-        canBooleanLogic: true,
+        canBooleanLogic: false,
     },
     {
         label: 'Drop Capabilities',
         name: 'Drop Capabilities',
         jsonpath: 'fields.dropCapabilities',
+        category: policyCriteriaCategories.CONTAINER_CONFIGURATION,
         type: 'multiselect',
         options: [...capabilities],
         required: false,
@@ -659,6 +727,7 @@ const policyConfigurationDescriptor = [
         label: 'Add Capabilities',
         name: 'Add Capabilities',
         jsonpath: 'fields.addCapabilities',
+        category: policyCriteriaCategories.CONTAINER_CONFIGURATION,
         type: 'multiselect',
         options: [...capabilities],
         required: false,
@@ -670,6 +739,7 @@ const policyConfigurationDescriptor = [
         label: 'Process Name',
         name: 'Process Name',
         jsonpath: 'fields.processPolicy.name',
+        category: policyCriteriaCategories.PROCESS_ACTIVITY,
         type: 'text',
         placeholder: 'apt-get',
         required: false,
@@ -681,6 +751,7 @@ const policyConfigurationDescriptor = [
         label: 'Process Ancestor',
         name: 'Process Ancestor',
         jsonpath: 'fields.processPolicy.ancestor',
+        category: policyCriteriaCategories.PROCESS_ACTIVITY,
         type: 'text',
         placeholder: 'java',
         required: false,
@@ -692,6 +763,7 @@ const policyConfigurationDescriptor = [
         label: 'Process Args',
         name: 'Process Arguments',
         jsonpath: 'fields.processPolicy.args',
+        category: policyCriteriaCategories.PROCESS_ACTIVITY,
         type: 'text',
         placeholder: 'install nmap',
         required: false,
@@ -703,6 +775,7 @@ const policyConfigurationDescriptor = [
         label: 'Process UID',
         name: 'Process UID',
         jsonpath: 'fields.processPolicy.uid',
+        category: policyCriteriaCategories.PROCESS_ACTIVITY,
         type: 'text',
         placeholder: '0',
         required: false,
@@ -714,6 +787,7 @@ const policyConfigurationDescriptor = [
         label: 'Port Exposure',
         name: 'Port Exposure Method',
         jsonpath: 'fields.portExposurePolicy.exposureLevels',
+        category: policyCriteriaCategories.NETWORKING,
         type: 'multiselect',
         options: Object.keys(portExposureLabels)
             .filter((key) => key !== 'INTERNAL')
@@ -730,31 +804,48 @@ const policyConfigurationDescriptor = [
         label: 'Writable Host Mount',
         name: 'Writable Host Mount',
         jsonpath: 'fields.hostMountPolicy.readOnly',
+        category: policyCriteriaCategories.PROCESS_ACTIVITY,
         type: 'toggle',
+        options: [
+            {
+                label: 'Writable',
+                value: true,
+            },
+            {
+                label: 'Read-only',
+                value: false,
+            },
+        ],
         required: false,
         default: false,
         defaultValue: false,
         reverse: true,
         disabled: true,
         canNegate: false,
-        canBooleanLogic: true,
+        canBooleanLogic: false,
     },
     {
         label: 'Whitelists Enabled',
         name: 'Unexpected Process Executed',
         jsonpath: 'fields.whitelistEnabled',
+        category: policyCriteriaCategories.PROCESS_ACTIVITY,
         type: 'toggle',
+        options: [
+            { label: 'Unexpected Process', value: true },
+            { label: 'Expected Process', value: false },
+        ],
         required: false,
         default: false,
         defaultValue: false,
         reverse: false,
         canNegate: false,
-        canBooleanLogic: true,
+        canBooleanLogic: false,
     },
     {
         label: 'Minimum RBAC Permissions',
         name: 'Minimum RBAC Permissions',
         jsonpath: 'fields.permissionPolicy.permissionLevel',
+        category: policyCriteriaCategories.KUBERNETES_ACCESS,
         type: 'select',
         options: Object.keys(rbacPermissionLabels).map((key) => ({
             label: rbacPermissionLabels[key],
@@ -763,12 +854,13 @@ const policyConfigurationDescriptor = [
         required: false,
         default: false,
         canNegate: true,
-        canBooleanLogic: true,
+        canBooleanLogic: false,
     },
     {
         label: 'Required Image Label',
         name: 'Required Image Label',
         jsonpath: 'fields.requiredImageLabel',
+        category: policyCriteriaCategories.IMAGE_CONTENTS,
         type: 'group',
         jsonpaths: [
             {
@@ -793,6 +885,7 @@ const policyConfigurationDescriptor = [
         label: 'Disallowed Image Label',
         name: 'Disallowed Image Label',
         jsonpath: 'fields.disallowedImageLabel',
+        category: policyCriteriaCategories.IMAGE_CONTENTS,
         type: 'group',
         jsonpaths: [
             {

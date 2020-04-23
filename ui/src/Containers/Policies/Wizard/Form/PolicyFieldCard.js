@@ -20,7 +20,6 @@ function PolicyFieldCard({
     isNegated,
     removeFieldHandler,
     fields,
-    header,
     booleanOperatorName,
     fieldKey,
     toggleFieldName,
@@ -39,7 +38,7 @@ function PolicyFieldCard({
             <div className={`bg-base-200 border-2 ${borderColorClass} rounded`}>
                 <div className={`border-b-2 ${borderColorClass} flex`}>
                     <div className="flex flex-1 font-700 p-2 pl-3 text-base-600 text-sm uppercase items-center">
-                        {header}:
+                        {fieldKey.longName || fieldKey.name}:
                     </div>
                     {fieldKey.canNegate && (
                         <div className={`flex items-center p-2 border-l-2 ${borderColorClass}`}>
@@ -91,7 +90,6 @@ function PolicyFieldCard({
 PolicyFieldCard.propTypes = {
     isNegated: PropTypes.bool.isRequired,
     removeFieldHandler: PropTypes.func.isRequired,
-    header: PropTypes.string.isRequired,
     booleanOperatorName: PropTypes.string.isRequired,
     toggleFieldName: PropTypes.string.isRequired,
     ...reduxFormPropTypes,
