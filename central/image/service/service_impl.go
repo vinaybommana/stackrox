@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	cveDataStore "github.com/stackrox/rox/central/cve/datastore"
 	"github.com/stackrox/rox/central/image/datastore"
+	"github.com/stackrox/rox/central/risk/manager"
 	"github.com/stackrox/rox/central/role/resources"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
@@ -56,6 +57,7 @@ var (
 type serviceImpl struct {
 	datastore    datastore.DataStore
 	cveDatastore cveDataStore.DataStore
+	riskManager  manager.Manager
 
 	metadataCache expiringcache.Cache
 	scanCache     expiringcache.Cache
@@ -140,11 +142,11 @@ func (s *serviceImpl) InvalidateScanAndRegistryCaches(context.Context, *v1.Empty
 }
 
 func (s *serviceImpl) saveImage(ctx context.Context, img *storage.Image) {
-	// UpsertImage modifies the image, so clone it first
+	// CalculateRiskAndUpsertImage modifies the image, so clone it first
 	img = proto.Clone(img).(*storage.Image)
 	// Save the image if we received an ID from sensor
 	// Otherwise, our inferred ID may not match
-	if err := s.datastore.UpsertImage(ctx, img); err != nil {
+	if err := s.riskManager.CalculateRiskAndUpsertImage(img); err != nil {
 		log.Errorf("error upserting image %q: %v", img.GetName().GetFullName(), err)
 	}
 }
@@ -223,7 +225,7 @@ func (s *serviceImpl) ScanImage(ctx context.Context, request *v1.ScanImageReques
 	// Save the image
 	img.Id = utils.GetImageID(img)
 	if img.GetId() != "" {
-		if err := s.datastore.UpsertImage(ctx, img); err != nil {
+		if err := s.riskManager.CalculateRiskAndUpsertImage(img); err != nil {
 			return nil, err
 		}
 	}

@@ -8,6 +8,7 @@ import (
 	deploymentDatastore "github.com/stackrox/rox/central/deployment/datastore"
 	"github.com/stackrox/rox/central/enrichment"
 	imageDatastore "github.com/stackrox/rox/central/image/datastore"
+	"github.com/stackrox/rox/central/risk/manager"
 	"github.com/stackrox/rox/central/role/resources"
 	"github.com/stackrox/rox/central/sensor/service/connection"
 	"github.com/stackrox/rox/generated/internalapi/central"
@@ -44,14 +45,14 @@ var (
 
 	getAndWriteImagesContext = sac.WithGlobalAccessScopeChecker(context.Background(),
 		sac.AllowFixedScopes(
-			sac.AccessModeScopeKeys(storage.Access_READ_ACCESS, storage.Access_READ_WRITE_ACCESS),
+			sac.AccessModeScopeKeys(storage.Access_READ_ACCESS),
 			sac.ResourceScopeKeys(resources.Image)))
 )
 
 // Singleton returns the singleton reprocessor loop
 func Singleton() Loop {
 	once.Do(func() {
-		loop = NewLoop(connection.ManagerSingleton(), enrichment.ImageEnricherSingleton(), deploymentDatastore.Singleton(), imageDatastore.Singleton())
+		loop = NewLoop(connection.ManagerSingleton(), enrichment.ImageEnricherSingleton(), deploymentDatastore.Singleton(), imageDatastore.Singleton(), manager.Singleton())
 	})
 	return loop
 }
@@ -67,14 +68,14 @@ type Loop interface {
 }
 
 // NewLoop returns a new instance of a Loop.
-func NewLoop(connManager connection.Manager, enricher enricher.ImageEnricher, deployments deploymentDatastore.DataStore, images imageDatastore.DataStore) Loop {
-	return newLoopWithDuration(connManager, enricher, deployments, images, env.ReprocessInterval.DurationSetting(), 30*time.Minute, 15*time.Second)
+func NewLoop(connManager connection.Manager, enricher enricher.ImageEnricher, deployments deploymentDatastore.DataStore, images imageDatastore.DataStore, risk manager.Manager) Loop {
+	return newLoopWithDuration(connManager, enricher, deployments, images, risk, env.ReprocessInterval.DurationSetting(), 30*time.Minute, 15*time.Second)
 }
 
 // newLoopWithDuration returns a loop that ticks at the given duration.
 // It is NOT exported, since we don't want clients to control the duration; it only exists as a separate function
 // to enable testing.
-func newLoopWithDuration(connManager connection.Manager, enricher enricher.ImageEnricher, deployments deploymentDatastore.DataStore, images imageDatastore.DataStore, enrichAndDetectDuration,
+func newLoopWithDuration(connManager connection.Manager, enricher enricher.ImageEnricher, deployments deploymentDatastore.DataStore, images imageDatastore.DataStore, risk manager.Manager, enrichAndDetectDuration,
 	enrichAndDetectInjectionPeriod, deploymentRiskDuration time.Duration) Loop {
 	return &loopImpl{
 		enrichAndDetectTickerDuration:  enrichAndDetectDuration,
@@ -83,6 +84,7 @@ func newLoopWithDuration(connManager connection.Manager, enricher enricher.Image
 
 		enricher: enricher,
 		images:   images,
+		risk:     risk,
 
 		deployments:       deployments,
 		deploymentRiskSet: set.NewStringSet(),
@@ -107,6 +109,7 @@ type loopImpl struct {
 	enrichAndDetectTicker          *time.Ticker
 
 	images   imageDatastore.DataStore
+	risk     manager.Manager
 	enricher enricher.ImageEnricher
 
 	deployments                 deploymentDatastore.DataStore
@@ -240,7 +243,7 @@ func (l *loopImpl) reprocessImage(id string, sema *semaphore.Weighted, wg *concu
 		return
 	}
 	if result.ImageUpdated {
-		if err := l.images.UpsertImage(getAndWriteImagesContext, image); err != nil {
+		if err := l.risk.CalculateRiskAndUpsertImage(image); err != nil {
 			log.Errorf("error upserting image %q into datastore: %v", image.GetName().GetFullName(), err)
 		}
 	}

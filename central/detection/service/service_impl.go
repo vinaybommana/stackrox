@@ -14,6 +14,7 @@ import (
 	"github.com/stackrox/rox/central/detection/deploytime"
 	"github.com/stackrox/rox/central/enrichment"
 	imageDatastore "github.com/stackrox/rox/central/image/datastore"
+	"github.com/stackrox/rox/central/risk/manager"
 	"github.com/stackrox/rox/central/role/resources"
 	apiV1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
@@ -59,6 +60,7 @@ type serviceImpl struct {
 	imageEnricher      enricher.ImageEnricher
 	imageDatastore     imageDatastore.DataStore
 	cveDatastore       cveDataStore.DataStore
+	riskManager        manager.Manager
 	deploymentEnricher enrichment.Enricher
 	buildTimeDetector  buildtime.Detector
 	clusters           clusterDatastore.DataStore
@@ -120,7 +122,7 @@ func (s *serviceImpl) DetectBuildTime(ctx context.Context, req *apiV1.BuildDetec
 	if enrichResult.ImageUpdated {
 		img.Id = utils.GetImageID(img)
 		if img.GetId() != "" {
-			if err := s.imageDatastore.UpsertImage(ctx, img); err != nil {
+			if err := s.riskManager.CalculateRiskAndUpsertImage(img); err != nil {
 				return nil, err
 			}
 		}
@@ -142,7 +144,7 @@ func (s *serviceImpl) enrichAndDetect(ctx context.Context, enrichmentContext enr
 	for _, idx := range updatedIndices {
 		img := images[idx]
 		img.Id = utils.GetImageID(img)
-		if err := s.imageDatastore.UpsertImage(ctx, images[idx]); err != nil {
+		if err := s.riskManager.CalculateRiskAndUpsertImage(images[idx]); err != nil {
 			return nil, err
 		}
 	}

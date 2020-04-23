@@ -77,7 +77,7 @@ func (suite *loopTestSuite) waitForRun(loop *loopImpl, timeout time.Duration) bo
 
 func (suite *loopTestSuite) TestTimerTicksOnce() {
 	duration := 1 * time.Second // Need this to be long enough that the enrichAndDetectTicker won't get called twice during the test.
-	loop := newLoopWithDuration(suite.mockManager, suite.mockEnricher, suite.mockDeployment, suite.mockImage, duration, duration, duration).(*loopImpl)
+	loop := newLoopWithDuration(suite.mockManager, suite.mockEnricher, suite.mockDeployment, suite.mockImage, nil, duration, duration, duration).(*loopImpl)
 	suite.expectCalls(2, false)
 	loop.Start()
 	// Wait for initial to complete
@@ -90,7 +90,7 @@ func (suite *loopTestSuite) TestTimerTicksOnce() {
 
 func (suite *loopTestSuite) TestTimerTicksTwice() {
 	duration := 100 * time.Millisecond
-	loop := newLoopWithDuration(suite.mockManager, suite.mockEnricher, suite.mockDeployment, suite.mockImage, duration, duration, duration).(*loopImpl)
+	loop := newLoopWithDuration(suite.mockManager, suite.mockEnricher, suite.mockDeployment, suite.mockImage, nil, duration, duration, duration).(*loopImpl)
 	suite.expectCalls(3, false)
 	loop.Start()
 
@@ -102,7 +102,7 @@ func (suite *loopTestSuite) TestTimerTicksTwice() {
 }
 
 func (suite *loopTestSuite) TestShortCircuitOnce() {
-	loop := NewLoop(suite.mockManager, suite.mockEnricher, suite.mockDeployment, suite.mockImage).(*loopImpl)
+	loop := NewLoop(suite.mockManager, suite.mockEnricher, suite.mockDeployment, suite.mockImage, nil).(*loopImpl)
 	suite.expectCalls(2, false)
 	loop.Start()
 
@@ -114,7 +114,7 @@ func (suite *loopTestSuite) TestShortCircuitOnce() {
 }
 
 func (suite *loopTestSuite) TestShortCircuitTwice() {
-	loop := NewLoop(suite.mockManager, suite.mockEnricher, suite.mockDeployment, suite.mockImage).(*loopImpl)
+	loop := NewLoop(suite.mockManager, suite.mockEnricher, suite.mockDeployment, suite.mockImage, nil).(*loopImpl)
 	suite.expectCalls(2, true)
 	loop.Start()
 	timeout := 100 * time.Millisecond
@@ -127,7 +127,7 @@ func (suite *loopTestSuite) TestShortCircuitTwice() {
 }
 
 func (suite *loopTestSuite) TestStopWorks() {
-	loop := NewLoop(suite.mockManager, suite.mockEnricher, suite.mockDeployment, suite.mockImage).(*loopImpl)
+	loop := NewLoop(suite.mockManager, suite.mockEnricher, suite.mockDeployment, suite.mockImage, nil).(*loopImpl)
 	suite.expectCalls(1, false)
 	loop.Start()
 	timeout := 100 * time.Millisecond
@@ -157,7 +157,7 @@ func TestGetActiveImageIDs(t *testing.T) {
 		nil, filter.NewFilter(5, []int{5}), ranking.NewRanker(), ranking.NewRanker(), ranking.NewRanker())
 	require.NoError(t, err)
 
-	loop := NewLoop(nil, nil, deploymentsDS, imageDS).(*loopImpl)
+	loop := NewLoop(nil, nil, deploymentsDS, imageDS, nil).(*loopImpl)
 
 	ids, err := loop.getActiveImageIDs()
 	require.NoError(t, err)

@@ -2,9 +2,11 @@ import groups.BAT
 import groups.Integration
 import io.stackrox.proto.api.v1.Common
 import io.stackrox.proto.storage.PolicyOuterClass
+import objects.Deployment
 import org.junit.experimental.categories.Category
 import services.CVEService
 import services.ImageIntegrationService
+import services.ImageService
 import services.PolicyService
 import spock.lang.Shared
 import spock.lang.Unroll
@@ -158,4 +160,44 @@ class ImageManagementTest extends BaseSpecification {
         "Delete policy"
         PolicyService.policyClient.deletePolicy(Common.ResourceByID.newBuilder().setId(policy.id).build())
     }
+
+    @Unroll
+    @Category([BAT])
+    def "Verify risk is properly being attributed to scanned images"() {
+        when:
+        "Scan an image and then grab the image data"
+        ImageService.scanImage(
+          "mysql@sha256:de2913a0ec53d98ced6f6bd607f487b7ad8fe8d2a86e2128308ebf4be2f92667")
+
+        then:
+        "Assert that riskScore is non-zero"
+        withRetry(10, 3) {
+            def image = ImageService.getImage(
+                    "sha256:de2913a0ec53d98ced6f6bd607f487b7ad8fe8d2a86e2128308ebf4be2f92667")
+            assert image != null && image.riskScore != 0
+        }
+    }
+
+    @Unroll
+    @Category([BAT])
+    def "Verify risk is properly being attributed to run images"() {
+        when:
+        "Create deployment that runs an image and verify that image has a non-zero riskScore"
+        orchestrator.createDeployment(
+          new Deployment()
+            .setName("risk-image")
+            .setReplicas(1)
+            .setImage("mysql@sha256:f7985e36c668bb862a0e506f4ef9acdd1254cdf690469816f99633898895f7fa")
+            .setCommand(["sleep", "60000"])
+        )
+
+        then:
+        "Assert that riskScore is non-zero"
+        withRetry(10, 3) {
+            def image = ImageService.getImage(
+                    "sha256:f7985e36c668bb862a0e506f4ef9acdd1254cdf690469816f99633898895f7fa")
+            assert image != null && image.riskScore != 0
+        }
+    }
+
 }
