@@ -28,7 +28,12 @@ const CustomDialogue = (props) => (
                 {props.text && <div className="p-4 leading-normal">{props.text}</div>}
                 <div className="flex m-4 justify-end">
                     {props.onCancel && (
-                        <button type="button" className="btn btn-base" onClick={props.onCancel}>
+                        <button
+                            type="button"
+                            className="btn btn-base"
+                            onClick={props.onCancel}
+                            data-testid="custom-modal-cancel"
+                        >
                             {props.cancelText}
                         </button>
                     )}
@@ -38,6 +43,7 @@ const CustomDialogue = (props) => (
                             className="btn btn-success ml-4"
                             onClick={props.onConfirm}
                             disabled={props.confirmDisabled}
+                            data-testid="custom-modal-confirm"
                         >
                             {props.confirmText}
                         </button>

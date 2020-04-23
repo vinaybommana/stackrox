@@ -61,7 +61,7 @@ function FormButtons({
     return (
         <PanelButton
             icon={<ArrowRight className="h-4 w-4" />}
-            className="btn btn-base"
+            className="btn btn-base mr-2"
             onClick={goToPreview}
             tooltip="Go to next step"
         >

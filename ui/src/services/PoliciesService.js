@@ -250,10 +250,9 @@ export function updatePolicyDisabledState(policyId, disabled) {
 }
 
 /**
- * Send request to enable / disable policy with a given ID.
+ * Request policies as JSON for the given policy IDs.
  *
- * @param {!string} policyId
- * @param {!boolean} disabled if policy should be disabled
+ * @param {!array} array of policyIds
  * @returns {Promise<AxiosResponse, Error>} fulfilled in case of success or rejected with an error
  */
 export function exportPolicies(policyIds) {
@@ -276,4 +275,14 @@ export function exportPolicies(policyIds) {
             throw new Error('No policy data returned for the specified ID');
         }
     });
+}
+
+/**
+ * Request policies as JSON for the given policy IDs.
+ *
+ * @param {!array} array of policies
+ * @returns {Promise<AxiosResponse, Error>} fulfilled in case of success or rejected with an error
+ */
+export function importPolicies(policies) {
+    return axios.post(`${baseUrl}/import`, { policies, metadata: {} });
 }

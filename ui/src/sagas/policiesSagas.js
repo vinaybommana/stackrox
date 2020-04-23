@@ -5,7 +5,7 @@ import Raven from 'raven-js';
 import { policiesPath, violationsPath } from 'routePaths';
 import * as service from 'services/PoliciesService';
 import { actions as backendActions, types as backendTypes } from 'reducers/policies/backend';
-import { actions as pageActions } from 'reducers/policies/page';
+import { actions as pageActions, types as pageTypes } from 'reducers/policies/page';
 import { types as searchTypes } from 'reducers/policies/search';
 import { actions as tableActions, types as tableTypes } from 'reducers/policies/table';
 import { actions as wizardActions, types as wizardTypes } from 'reducers/policies/wizard';
@@ -133,6 +133,16 @@ function* deletePolicies({ policyIds }) {
     } catch (error) {
         // TODO-ivan: use global user notification system to display the problem to the user as well
         Raven.captureException(error);
+    }
+}
+
+function* importPolicySuccess({ policyId }) {
+    if (policyId) {
+        yield put(wizardActions.setWizardStage(wizardStages.details));
+        yield put(push(`/main/policies/${policyId}`));
+        yield fork(filterPoliciesPageBySearch);
+    } else {
+        Raven.captureException({ message: 'importPolicySuccess saga called with no policy ID' });
     }
 }
 
@@ -266,6 +276,10 @@ function* watchDeletePolicies() {
     yield takeLatest(backendTypes.DELETE_POLICIES, deletePolicies);
 }
 
+function* watchImportPolicy() {
+    yield takeLatest(pageTypes.IMPORT_POLICY_SUCCESS, importPolicySuccess);
+}
+
 function* watchEnableNotificationsForPolicies() {
     yield takeLatest(backendTypes.ENABLE_POLICIES_NOTIFICATION, enableNotificationsForPolicies);
 }
@@ -316,6 +330,7 @@ export default function* policies() {
         fork(watchWizardState),
         fork(watchReassessPolicies),
         fork(watchDeletePolicies),
+        fork(watchImportPolicy),
         fork(watchEnableNotificationsForPolicies),
         fork(watchDisableNotificationsForPolicies),
         fork(watchUpdateRequest),

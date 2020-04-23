@@ -299,7 +299,7 @@ describe('Policies page', () => {
         savePolicy();
     });
 
-    describe('policy export', () => {
+    describe('policy import and export', () => {
         before(function beforeHook() {
             // skip the whole suite if policy import/export isn't enabled
             if (checkFeatureFlag('ROX_POLICY_IMPORT_EXPORT', false)) {
@@ -342,6 +342,23 @@ describe('Policies page', () => {
             cy.wait('@policyExport');
 
             cy.get(selectors.toast).contains('Could not export the policy');
+        });
+
+        it('should open the import dialog when button is clicked', () => {
+            cy.get(selectors.importPolicyButton).click();
+
+            cy.get(`${selectors.policyImportModal.content}:contains("JSON")`);
+            cy.get(selectors.policyImportModal.uploadIcon);
+            cy.get(selectors.policyImportModal.fileInput);
+            cy.get(selectors.policyImportModal.confirm)
+                .should('be.disabled')
+                .invoke('text')
+                .then((btnText) => {
+                    expect(btnText).to.contain('Import');
+                });
+
+            cy.get(selectors.policyImportModal.cancel).click();
+            cy.get(selectors.policyImportModal.content).should('not.exist');
         });
     });
 });

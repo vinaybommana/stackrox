@@ -1,5 +1,7 @@
 import React, { useCallback } from 'react';
 import PropTypes from 'prop-types';
+import ReactRouterPropTypes from 'react-router-prop-types';
+import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { createSelector, createStructuredSelector } from 'reselect';
 
@@ -21,6 +23,7 @@ function Wizard({
     wizardPolicy,
     wizardOpen,
     closeWizard,
+    history,
     setWizardPolicy,
     selectPolicyId,
     fieldGroups,
@@ -29,7 +32,10 @@ function Wizard({
         closeWizard();
         setWizardPolicy({ name: '' });
         selectPolicyId('');
-    }, [closeWizard, setWizardPolicy, selectPolicyId]);
+        history.push({
+            pathname: `/main/policies`,
+        });
+    }, [closeWizard, history, setWizardPolicy, selectPolicyId]);
 
     if (!wizardOpen) return null;
 
@@ -52,6 +58,7 @@ Wizard.propTypes = {
     }),
     wizardOpen: PropTypes.bool.isRequired,
     closeWizard: PropTypes.func.isRequired,
+    history: ReactRouterPropTypes.history.isRequired,
     setWizardPolicy: PropTypes.func.isRequired,
     selectPolicyId: PropTypes.func.isRequired,
     fieldGroups: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
@@ -110,4 +117,4 @@ const mapDispatchToProps = {
     setWizardPolicy: wizardActions.setWizardPolicy,
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Wizard);
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(Wizard));

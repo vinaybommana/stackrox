@@ -8,6 +8,7 @@ export const types = {
     CLOSE_WIZARD: 'policies/CLOSE_WIZARD',
     SET_POLICIES_ACTION: 'policies/SET_POLICIES_ACTION',
     CLOSE_DIALOGUE: 'policies/CLOSE_DIALOGUE',
+    IMPORT_POLICY_SUCCESS: 'policies/IMPORT_POLICY_SUCCESS',
 };
 
 // Actions
@@ -18,6 +19,7 @@ export const actions = {
     closeWizard: () => ({ type: types.CLOSE_WIZARD }),
     setPoliciesAction: (policiesAction) => ({ type: types.SET_POLICIES_ACTION, policiesAction }),
     closeDialogue: () => ({ type: types.CLOSE_DIALOGUE }),
+    importPolicySuccess: (policyId) => ({ type: types.IMPORT_POLICY_SUCCESS, policyId }),
 };
 
 // Reducers

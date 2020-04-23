@@ -5,7 +5,7 @@ import { push } from 'react-router-redux';
 
 import { selectors } from 'reducers';
 import { actions as backendActions, types as backendTypes } from 'reducers/policies/backend';
-import { actions as pageActions } from 'reducers/policies/page';
+import { actions as pageActions, types as pageTypes } from 'reducers/policies/page';
 import { actions as searchActions, types as searchTypes } from 'reducers/policies/search';
 import { actions as tableActions } from 'reducers/policies/table';
 import { actions as wizardActions } from 'reducers/policies/wizard';
@@ -144,6 +144,12 @@ describe('Policies Sagas', () => {
                 [call(service.deletePolicies), ['12345', '6789']],
             ])
             .dispatch({ type: backendTypes.DELETE_POLICIES })
+            .silentRun());
+
+    it('should show successful policy on import', () =>
+        expectSaga(saga)
+            .provide([[select(selectors.getPoliciesSearchOptions), []]])
+            .dispatch({ type: pageTypes.IMPORT_POLICY_SUCCESS })
             .silentRun());
 
     it('should update given policy', () => {

@@ -20,7 +20,7 @@ function PreviewButtons({ setWizardStage }) {
         <>
             <PanelButton
                 icon={<ArrowLeft className="h-4 w-4" />}
-                className="btn btn-base"
+                className="btn btn-base mr-2"
                 onClick={goBackToEdit}
                 tooltip="Back to previous step"
             >
@@ -28,7 +28,7 @@ function PreviewButtons({ setWizardStage }) {
             </PanelButton>
             <PanelButton
                 icon={<ArrowRight className="h-4 w-4" />}
-                className="btn btn-base"
+                className="btn btn-base mr-2"
                 onClick={goToEnforcement}
                 tooltip="Go to next step"
             >

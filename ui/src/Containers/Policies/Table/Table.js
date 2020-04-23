@@ -57,8 +57,6 @@ class Table extends Component {
     };
 
     startPolicyImport = () => {
-        // eslint-disable-next-line no-console
-        console.log('open import dialog');
         this.setState({ showImportDialogue: true });
     };
 

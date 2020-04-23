@@ -28,7 +28,7 @@ function EnforcementButtons({ history, match, wizardPolicyIsNew, setWizardStage 
         <>
             <PanelButton
                 icon={<ArrowLeft className="h-4 w-4" />}
-                className="btn btn-base"
+                className="btn btn-base mr-2"
                 onClick={goBackToPreview}
                 tooltip="Back to previous step"
             >
@@ -36,7 +36,7 @@ function EnforcementButtons({ history, match, wizardPolicyIsNew, setWizardStage 
             </PanelButton>
             <PanelButton
                 icon={<Save className="h-4 w-4" />}
-                className="btn btn-success"
+                className="btn btn-success mr-2"
                 onClick={onSubmit}
                 tooltip="Save policy"
             >

@@ -119,6 +119,7 @@ class Buttons extends Component {
                                 onClick={this.startPolicyImport}
                                 disabled={buttonsDisabled}
                                 tooltip="Import a policy"
+                                dataTestId="import-policy-btn"
                             >
                                 Import Policy
                             </PanelButton>
