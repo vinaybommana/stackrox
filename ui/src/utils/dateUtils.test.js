@@ -29,7 +29,7 @@ describe('dateUtils', () => {
         });
     });
 
-    describe('getLatestDatedItemByKey', () => {
+    describe('addBrandedTimestampToString', () => {
         it('should return string with branding prepended, and current data appended', () => {
             const currentDate = new Date();
             const month = `0${currentDate.getMonth() + 1}`.slice(-2);

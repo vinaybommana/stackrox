@@ -1,3 +1,5 @@
+/* eslint jest/expect-expect: ["error", { "assertFunctionNames": ["expectColumnsToContain", "expectColumnsNotToContain"] }] */
+
 import { getColumnsByEntity, getColumnsByStandard } from './tableColumns';
 import { resourceTypes, standardTypes } from './entityTypes';
 

@@ -533,7 +533,7 @@ describe('cluster helpers', () => {
             expect(displayValue).toEqual(expected);
         });
 
-        it('should return "Upgrade timed out." if upgradeState is UPGRADE_TIMED_OUT', () => {
+        it('should return "Upgrade timed out." if upgradeState is UPGRADE_ERROR_UNKNOWN', () => {
             const testUpgradeStatus = {
                 upgradability: 'AUTO_UPGRADE_POSSIBLE',
                 mostRecentProcess: {

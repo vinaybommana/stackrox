@@ -64,7 +64,7 @@ describe('featureFlags utils', () => {
             expect(isEnabled).toEqual(backendFeatureFlags[0].enabled);
         });
 
-        it('should return the current value of the given flag when matched and disabled', () => {
+        it('should return the current value of the given flag when matched and enabled', () => {
             const flagToFind = 'ROX_SENSOR_AUTOUPGRADE'; // backendFeatureFlags[1].name
             const defaultVal = false;
 
