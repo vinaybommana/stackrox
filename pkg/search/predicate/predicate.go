@@ -14,6 +14,9 @@ import (
 // MergeResults merges predicate result into a single result
 // If the results slice passed is of length 0, then it will return a nil result
 func MergeResults(results ...*search.Result) *search.Result {
+	if len(results) == 0 {
+		return nil
+	}
 	res := search.NewResult()
 	for _, r := range results {
 		if r == nil {
