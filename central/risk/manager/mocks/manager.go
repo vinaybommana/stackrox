@@ -58,15 +58,3 @@ func (mr *MockManagerMockRecorder) ReprocessDeploymentRisk(arg0 interface{}) *go
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReprocessDeploymentRisk", reflect.TypeOf((*MockManager)(nil).ReprocessDeploymentRisk), arg0)
 }
-
-// ReprocessDeploymentRiskWithImages mocks base method
-func (m *MockManager) ReprocessDeploymentRiskWithImages(arg0 *storage.Deployment, arg1 []*storage.Image) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "ReprocessDeploymentRiskWithImages", arg0, arg1)
-}
-
-// ReprocessDeploymentRiskWithImages indicates an expected call of ReprocessDeploymentRiskWithImages
-func (mr *MockManagerMockRecorder) ReprocessDeploymentRiskWithImages(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReprocessDeploymentRiskWithImages", reflect.TypeOf((*MockManager)(nil).ReprocessDeploymentRiskWithImages), arg0, arg1)
-}

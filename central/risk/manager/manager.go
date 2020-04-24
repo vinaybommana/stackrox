@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
 	deploymentDS "github.com/stackrox/rox/central/deployment/datastore"
 	imageDS "github.com/stackrox/rox/central/image/datastore"
@@ -37,7 +38,6 @@ var (
 //go:generate mockgen-wrapper Manager
 type Manager interface {
 	ReprocessDeploymentRisk(deployment *storage.Deployment)
-	ReprocessDeploymentRiskWithImages(deployment *storage.Deployment, images []*storage.Image)
 	CalculateRiskAndUpsertImage(image *storage.Image) error
 }
 
@@ -92,41 +92,58 @@ func New(deploymentStorage deploymentDS.DataStore,
 
 // ReprocessDeploymentRisk will reprocess the passed deployments risk and save the results
 func (e *managerImpl) ReprocessDeploymentRisk(deployment *storage.Deployment) {
-	images, err := e.deploymentStorage.GetImagesForDeployment(riskReprocessorCtx, deployment)
+	defer metrics.ObserveRiskProcessingDuration(time.Now(), "Deployment")
+
+	oldRisk, exists, err := e.riskStorage.GetRisk(allAccessCtx, deployment.GetId(), storage.RiskSubjectType_DEPLOYMENT)
 	if err != nil {
-		log.Errorf("error fetching images for deployment %s: %v", deployment.GetName(), err)
+		log.Errorf("error getting risk for deployment %s: %v", deployment.GetName(), err)
+	}
+
+	// Get Image Risk
+	imageRisks := make([]*storage.Risk, 0, len(deployment.GetContainers()))
+	for _, container := range deployment.GetContainers() {
+		if imgID := container.GetImage().GetId(); imgID != "" {
+			risk, exists, err := e.riskStorage.GetRisk(allAccessCtx, imgID, storage.RiskSubjectType_IMAGE)
+			if err != nil {
+				log.Errorf("error getting risk for image %s: %v", imgID, err)
+				continue
+			}
+			if !exists {
+				continue
+			}
+			imageRisks = append(imageRisks, risk)
+		}
+	}
+
+	risk := e.deploymentScorer.Score(allAccessCtx, deployment, imageRisks)
+	if risk == nil {
 		return
 	}
 
-	e.ReprocessDeploymentRiskWithImages(deployment, images)
-}
-
-// ReprocessDeploymentRiskWithImages will reprocess the passed deployments risk and save the results
-func (e *managerImpl) ReprocessDeploymentRiskWithImages(deployment *storage.Deployment, images []*storage.Image) {
-	defer metrics.ObserveRiskProcessingDuration(time.Now(), "Deployment")
-
-	oldScore := e.deploymentRanker.GetScoreForID(deployment.GetId())
-	risk := e.deploymentScorer.Score(allAccessCtx, deployment, images)
-	if risk == nil {
+	// No need to insert if it hasn't changed
+	if exists && proto.Equal(oldRisk, risk) {
 		return
+	}
+
+	oldScore := float32(-1)
+	if exists {
+		oldScore = oldRisk.GetScore()
 	}
 
 	if err := e.riskStorage.UpsertRisk(riskReprocessorCtx, risk); err != nil {
 		log.Errorf("Error reprocessing risk for deployment %s: %v", deployment.GetName(), err)
 	}
 
-	if oldScore != risk.GetScore() {
-		e.updateNamespaceRisk(deployment.GetNamespaceId(), oldScore, risk.GetScore())
-		e.updateClusterRisk(deployment.GetClusterId(), oldScore, risk.GetScore())
-	}
-
 	if oldScore == risk.GetScore() {
 		return
 	}
 
+	e.updateNamespaceRisk(deployment.GetNamespaceId(), oldScore, risk.GetScore())
+	e.updateClusterRisk(deployment.GetClusterId(), oldScore, risk.GetScore())
+
 	deployment.RiskScore = risk.Score
 	if err := e.deploymentStorage.UpsertDeployment(riskReprocessorCtx, deployment); err != nil {
-		log.Error(err)
+		log.Errorf("error upserting deployment: %v", err)
 	}
 }
 
