@@ -3,12 +3,15 @@ package deploytime
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	deploymentDataStore "github.com/stackrox/rox/central/deployment/datastore"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/detection"
 	"github.com/stackrox/rox/pkg/detection/deploytime"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/sac"
+	"github.com/stackrox/rox/pkg/utils"
 )
 
 var (
@@ -34,6 +37,9 @@ func (d *detectorImpl) Detect(ctx deploytime.DetectionContext, deployment *stora
 }
 
 func (d *detectorImpl) AlertsForPolicy(policyID string) ([]*storage.Alert, error) {
+	if features.BooleanPolicyLogic.Enabled() {
+		return nil, utils.Should(errors.New("search-based policy evaluation is deprecated"))
+	}
 	exe := newAllDeploymentsExecutor(executorCtx, d.deployments)
 	err := d.policySet.ForOne(policyID, exe)
 	if err != nil {

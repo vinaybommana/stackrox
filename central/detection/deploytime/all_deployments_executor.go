@@ -3,10 +3,13 @@ package deploytime
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	"github.com/stackrox/rox/central/deployment/datastore"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/detection"
 	"github.com/stackrox/rox/pkg/detection/deploytime"
+	"github.com/stackrox/rox/pkg/features"
+	"github.com/stackrox/rox/pkg/utils"
 )
 
 func newAllDeploymentsExecutor(executorCtx context.Context, deployments datastore.DataStore) deploytime.AlertCollectingExecutor {
@@ -23,14 +26,24 @@ type allDeploymentsExecutor struct {
 }
 
 func (d *allDeploymentsExecutor) GetAlerts() []*storage.Alert {
+	if features.BooleanPolicyLogic.Enabled() {
+		utils.Should(errors.New("search-based policy evaluation is deprecated"))
+		return nil
+	}
 	return d.alerts
 }
 
 func (d *allDeploymentsExecutor) ClearAlerts() {
+	if features.BooleanPolicyLogic.Enabled() {
+		utils.Should(errors.New("search-based policy evaluation is deprecated"))
+	}
 	d.alerts = nil
 }
 
 func (d *allDeploymentsExecutor) Execute(compiled detection.CompiledPolicy) error {
+	if features.BooleanPolicyLogic.Enabled() {
+		return utils.Should(errors.New("search-based policy evaluation is deprecated"))
+	}
 	if compiled.Policy().GetDisabled() {
 		return nil
 	}

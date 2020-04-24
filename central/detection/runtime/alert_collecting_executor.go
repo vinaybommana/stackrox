@@ -10,8 +10,10 @@ import (
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/alert/convert"
 	"github.com/stackrox/rox/pkg/detection"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/protoutils"
 	"github.com/stackrox/rox/pkg/searchbasedpolicies"
+	"github.com/stackrox/rox/pkg/utils"
 	"github.com/stackrox/rox/pkg/uuid"
 )
 
@@ -51,6 +53,9 @@ func IsProcessWhitelistPolicy(compiled detection.CompiledPolicy) bool {
 }
 
 func (d *alertCollectingExecutorImpl) Execute(compiled detection.CompiledPolicy) error {
+	if features.BooleanPolicyLogic.Enabled() {
+		return utils.Should(errors.New("search-based policy evaluation is deprecated"))
+	}
 	if IsProcessWhitelistPolicy(compiled) || compiled.Policy().GetDisabled() {
 		return nil
 	}

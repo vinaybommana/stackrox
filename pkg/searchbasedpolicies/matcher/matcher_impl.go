@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/pkg/errors"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/predicate"
 	"github.com/stackrox/rox/pkg/searchbasedpolicies"
 	"github.com/stackrox/rox/pkg/searchbasedpolicies/builders"
+	"github.com/stackrox/rox/pkg/utils"
 )
 
 type matcherImpl struct {
@@ -24,6 +27,9 @@ type matcherImpl struct {
 }
 
 func (m *matcherImpl) MatchMany(ctx context.Context, searcher search.Searcher, ids ...string) (map[string]searchbasedpolicies.Violations, error) {
+	if features.BooleanPolicyLogic.Enabled() {
+		return nil, utils.Should(errors.New("search-based policy evaluation is deprecated"))
+	}
 	return m.violationsMapFromQuery(ctx, searcher, search.ConjunctionQuery(search.NewQueryBuilder().AddDocIDs(ids...).ProtoQuery(), m.q))
 }
 
@@ -80,6 +86,9 @@ func (m *matcherImpl) MatchOne(ctx context.Context, deployment *storage.Deployme
 }
 
 func (m *matcherImpl) Match(ctx context.Context, searcher search.Searcher) (map[string]searchbasedpolicies.Violations, error) {
+	if features.BooleanPolicyLogic.Enabled() {
+		return nil, utils.Should(errors.New("search-based policy evaluation is deprecated"))
+	}
 	return m.violationsMapFromQuery(ctx, searcher, m.q)
 }
 

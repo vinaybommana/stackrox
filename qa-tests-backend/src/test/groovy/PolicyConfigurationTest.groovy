@@ -296,7 +296,7 @@ class PolicyConfigurationTest extends BaseSpecification {
                         .setSeverityValue(2)
                         .setFields(PolicyFields.newBuilder()
                                 .setLineRule(DockerfileLineRuleField.newBuilder()
-                                        .setValue("apt-get")
+                                        .setValue("apt-get.*")
                                         .setInstruction("RUN")
                                         .build()))
                         .build()                       | DEPLOYMENTNGINX

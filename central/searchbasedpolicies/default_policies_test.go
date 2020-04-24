@@ -1053,25 +1053,27 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		suite.T().Run(fmt.Sprintf("%s (on deployments)", c.policyName), func(t *testing.T) {
 			m, err := suite.matcherBuilder.ForPolicy(p)
 			require.NoError(t, err)
-			matches, err := m.Match(suite.matchCtx, suite.deploymentSearcher)
-			require.NoError(t, err)
-			validateDeploymentMatches(matches, allDeployments, c, t)
+			if !features.BooleanPolicyLogic.Enabled() {
+				matches, err := m.Match(suite.matchCtx, suite.deploymentSearcher)
+				require.NoError(t, err)
+				validateDeploymentMatches(matches, allDeployments, c, t)
 
-			var allIDs []string
-			for _, deployment := range allDeployments {
-				allIDs = append(allIDs, deployment.ID)
-			}
-			matchesFromMatchMany, err := m.MatchMany(suite.matchCtx, suite.deploymentSearcher, allIDs...)
-			require.NoError(t, err)
-			validateDeploymentMatches(matchesFromMatchMany, allDeployments, c, t)
+				var allIDs []string
+				for _, deployment := range allDeployments {
+					allIDs = append(allIDs, deployment.ID)
+				}
+				matchesFromMatchMany, err := m.MatchMany(suite.matchCtx, suite.deploymentSearcher, allIDs...)
+				require.NoError(t, err)
+				validateDeploymentMatches(matchesFromMatchMany, allDeployments, c, t)
 
-			var matchingIDs []string
-			for id := range c.expectedViolations {
-				matchingIDs = append(matchingIDs, id)
+				var matchingIDs []string
+				for id := range c.expectedViolations {
+					matchingIDs = append(matchingIDs, id)
+				}
+				matchesFromExactlyMatchMany, err := m.MatchMany(suite.matchCtx, suite.deploymentSearcher, matchingIDs...)
+				require.NoError(t, err)
+				validateDeploymentMatches(matchesFromExactlyMatchMany, allDeployments, c, t)
 			}
-			matchesFromExactlyMatchMany, err := m.MatchMany(suite.matchCtx, suite.deploymentSearcher, matchingIDs...)
-			require.NoError(t, err)
-			validateDeploymentMatches(matchesFromExactlyMatchMany, allDeployments, c, t)
 
 			for id, violations := range c.expectedViolations {
 				// Test match one only if we aren't testing processes
@@ -1335,25 +1337,27 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		suite.T().Run(fmt.Sprintf("%s (on images)", c.policyName), func(t *testing.T) {
 			m, err := suite.matcherBuilder.ForPolicy(p)
 			require.NoError(t, err)
-			matches, err := m.Match(suite.testCtx, suite.imageSearcher)
-			require.NoError(t, err)
-			validateImageMatches(matches, allImages, c, t)
+			if !features.BooleanPolicyLogic.Enabled() {
+				matches, err := m.Match(suite.testCtx, suite.imageSearcher)
+				require.NoError(t, err)
+				validateImageMatches(matches, allImages, c, t)
 
-			var allIDs []string
-			for _, image := range allImages {
-				allIDs = append(allIDs, image.ID)
-			}
-			matchesFromMatchMany, err := m.MatchMany(suite.testCtx, suite.imageSearcher, allIDs...)
-			require.NoError(t, err)
-			validateImageMatches(matchesFromMatchMany, allImages, c, t)
+				var allIDs []string
+				for _, image := range allImages {
+					allIDs = append(allIDs, image.ID)
+				}
+				matchesFromMatchMany, err := m.MatchMany(suite.testCtx, suite.imageSearcher, allIDs...)
+				require.NoError(t, err)
+				validateImageMatches(matchesFromMatchMany, allImages, c, t)
 
-			var matchingIDs []string
-			for id := range c.expectedViolations {
-				matchingIDs = append(matchingIDs, id)
+				var matchingIDs []string
+				for id := range c.expectedViolations {
+					matchingIDs = append(matchingIDs, id)
+				}
+				matchesFromExactlyMatchMany, err := m.MatchMany(suite.testCtx, suite.imageSearcher, matchingIDs...)
+				require.NoError(t, err)
+				validateImageMatches(matchesFromExactlyMatchMany, allImages, c, t)
 			}
-			matchesFromExactlyMatchMany, err := m.MatchMany(suite.testCtx, suite.imageSearcher, matchingIDs...)
-			require.NoError(t, err)
-			validateImageMatches(matchesFromExactlyMatchMany, allImages, c, t)
 
 			for id, violations := range c.expectedViolations {
 				// Test match one

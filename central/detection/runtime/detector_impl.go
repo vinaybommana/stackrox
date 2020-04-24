@@ -3,10 +3,13 @@ package runtime
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	"github.com/stackrox/rox/central/deployment/datastore"
 	"github.com/stackrox/rox/central/detection"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/sac"
+	"github.com/stackrox/rox/pkg/utils"
 )
 
 var (
@@ -24,6 +27,9 @@ func (d *detectorImpl) PolicySet() detection.PolicySet {
 }
 
 func (d *detectorImpl) AlertsForDeployments(deploymentIDs ...string) ([]*storage.Alert, error) {
+	if features.BooleanPolicyLogic.Enabled() {
+		return nil, utils.Should(errors.New("search-based policy evaluation is deprecated"))
+	}
 	executor := newAlertCollectingExecutor(executorCtx, d.deployments, deploymentIDs...)
 	err := d.policySet.ForEach(executor)
 	if err != nil {
@@ -34,6 +40,9 @@ func (d *detectorImpl) AlertsForDeployments(deploymentIDs ...string) ([]*storage
 }
 
 func (d *detectorImpl) AlertsForPolicy(policyID string) ([]*storage.Alert, error) {
+	if features.BooleanPolicyLogic.Enabled() {
+		return nil, utils.Should(errors.New("search-based policy evaluation is deprecated"))
+	}
 	executor := newAlertCollectingExecutor(executorCtx, d.deployments)
 	err := d.policySet.ForOne(policyID, executor)
 	if err != nil {
