@@ -257,4 +257,34 @@ describe('Violations page', () => {
             .should('include', 'pagination.sortOption.field=Violation Time');
         cy.get('@alerts').its('url').should('include', 'pagination.sortOption.reversed=true');
     });
+
+    it('should sort violations when clicking on a table header', () => {
+        // first click will sort in direct order
+        cy.get(ViolationsPageSelectors.clusterTableHeader).click();
+        cy.wait('@alerts')
+            .its('url')
+            .should(
+                'include',
+                'pagination.sortOption.field=Cluster&pagination.sortOption.reversed=false'
+            );
+        cy.get(ViolationsPageSelectors.firstPanelTableRow).should('contain', 'aaa_remote');
+
+        // second click will sort in reverse order
+        cy.fixture('alerts/alerts.json').then((alertsData) => {
+            const reverseSortedAlerts = {
+                alerts: alertsData.alerts.sort(
+                    (a, b) => -1 * a.deployment.clusterName.localeCompare(b.deployment.clusterName)
+                ),
+            };
+            cy.route('GET', api.alerts.alerts, reverseSortedAlerts).as('alerts');
+        });
+        cy.get(ViolationsPageSelectors.clusterTableHeader).click();
+        cy.wait('@alerts')
+            .its('url')
+            .should(
+                'include',
+                'pagination.sortOption.field=Cluster&pagination.sortOption.reversed=true'
+            );
+        cy.get(ViolationsPageSelectors.firstPanelTableRow).should('contain', 'zzz_remote');
+    });
 });
