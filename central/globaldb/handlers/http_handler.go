@@ -29,12 +29,7 @@ const (
 
 // BackupDB is a handler that writes a consistent view of the databases to the HTTP response.
 func BackupDB(boltDB *bolt.DB, badgerDB *badger.DB) http.Handler {
-	return serializeDB(boltDB, badgerDB, false)
-}
-
-// ExportDB is a handler that writes a consistent view of the databases without secrets to the HTTP response.
-func ExportDB(boltDB *bolt.DB, badgerDB *badger.DB) http.Handler {
-	return serializeDB(boltDB, badgerDB, true)
+	return serializeDB(boltDB, badgerDB)
 }
 
 func logAndWriteErrorMsg(w http.ResponseWriter, code int, t string, args ...interface{}) {
@@ -100,7 +95,7 @@ func RestoreDB(boltDB *bolt.DB, badgerDB *badger.DB) http.Handler {
 	})
 }
 
-func serializeDB(boltDB *bolt.DB, badgerDB *badger.DB, scrubSecrets bool) http.HandlerFunc {
+func serializeDB(boltDB *bolt.DB, badgerDB *badger.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		log.Info("Starting DB backup ...")
 		filename := time.Now().Format(dbFileFormat)
@@ -108,7 +103,7 @@ func serializeDB(boltDB *bolt.DB, badgerDB *badger.DB, scrubSecrets bool) http.H
 		w.Header().Set("Content-Type", "application/zip")
 		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
 
-		if err := export.Backup(req.Context(), boltDB, badgerDB, w, scrubSecrets); err != nil {
+		if err := export.Backup(req.Context(), boltDB, badgerDB, w); err != nil {
 			logAndWriteErrorMsg(w, http.StatusInternalServerError, "could not create database backup: %v", err)
 			return
 		}
