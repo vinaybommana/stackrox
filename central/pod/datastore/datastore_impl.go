@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/central/globaldb"
 	"github.com/stackrox/rox/central/metrics"
@@ -204,20 +203,7 @@ func (ds *datastoreImpl) UpsertPod(ctx context.Context, pod *storage.Pod) error 
 			return errors.Wrapf(err, "retrieving pod %q from store", pod.GetName())
 		}
 		if found {
-			pod.Started = oldPod.Started
 			mergeContainerInstances(pod, oldPod)
-		}
-
-		// Need to compute the start time if we don't already know it.
-		if pod.Started == nil {
-			var earliest *types.Timestamp
-			for _, instance := range pod.GetLiveInstances() {
-				startTime := instance.GetStarted()
-				if earliest == nil || earliest.Compare(startTime) > 0 {
-					earliest = startTime
-				}
-			}
-			pod.Started = earliest
 		}
 
 		if err := ds.podStore.Upsert(pod); err != nil {

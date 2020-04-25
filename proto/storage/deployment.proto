@@ -99,7 +99,7 @@ message Pod {
     // Must be a list of lists, so we can perform search queries (does not work for maps that aren't <string, string>)
     // There is one bucket (list) per container name.
     repeated ContainerInstanceList terminated_instances = 7 [(gogoproto.moretags) = "search:\"-\""];
-    // Time the first known container started
+    // Time Kubernetes reports the pod was created.
     google.protobuf.Timestamp started                   = 8;
 
     message ContainerInstanceList {

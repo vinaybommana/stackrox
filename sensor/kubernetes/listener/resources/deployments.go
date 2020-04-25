@@ -3,6 +3,7 @@ package resources
 import (
 	"sort"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/generated/internalapi/central"
 	"github.com/stackrox/rox/generated/storage"
@@ -228,12 +229,19 @@ func (d *deploymentHandler) processPodEvent(owningDeploymentID string, k8sPod *v
 			},
 		}
 	}
+
+	started, err := types.TimestampProto(k8sPod.GetCreationTimestamp().Time)
+	if err != nil {
+		log.Errorf("converting start time from Kubernetes (%v) to proto: %v", k8sPod.GetCreationTimestamp().Time, err)
+	}
+
 	p := &storage.Pod{
 		Id:           uid,
 		Name:         k8sPod.GetName(),
 		DeploymentId: owningDeploymentID,
 		ClusterId:    clusterid.Get(),
 		Namespace:    k8sPod.Namespace,
+		Started:      started,
 	}
 
 	// Assume we only receive one status per live container, so we can blindly append.
