@@ -15,27 +15,25 @@ exports[`should show a container restart event marker 1`] = `
         data-testid="restart-event"
         height="10"
         version="1.1"
-        viewBox="0 0 16 15"
+        viewBox="0 0 16 16"
         width="10"
         xmlns="http://www.w3.org/2000/svg"
       >
         <g
-          fill="none"
-          fill-rule="evenodd"
-          id="Singles"
-          stroke="none"
-          stroke-width="1"
+          transform="matrix(1,0,0,1,-650,-843)"
         >
           <g
-            fill="#FF9064"
-            id="iqt-timeline"
-            transform="translate(-650.000000, -843.000000)"
+            id="Singles"
           >
-            <path
-              d="M659.202024,844.183144 L665.813796,855.451253 C666.197113,856.10452 665.969636,856.939849 665.305712,857.317013 C665.094692,857.43689 664.855321,857.5 664.611656,857.5 L651.388112,857.5 C650.621479,857.5 650,856.888496 650,856.134169 C650,855.894415 650.064139,855.658885 650.185972,855.451253 L656.797744,844.183144 C657.18106,843.529877 658.030016,843.306051 658.69394,843.683215 C658.90496,843.803092 659.080192,843.975511 659.202024,844.183144 Z"
-              id="Polygon-Copy-5"
-              transform="translate(658.000000, 850.500000) scale(1, -1) translate(-658.000000, -850.500000) "
-            />
+            <g
+              fill="#FF9064"
+              id="iqt-timeline"
+            >
+              <path
+                d="M659.202,844.183L665.814,855.451C666.197,856.105 665.97,856.94 665.306,857.317C665.095,857.437 664.855,857.5 664.612,857.5L651.388,857.5C650.621,857.5 650,856.888 650,856.134C650,855.894 650.064,855.659 650.186,855.451L656.798,844.183C657.181,843.53 658.03,843.306 658.694,843.683C658.905,843.803 659.08,843.976 659.202,844.183Z"
+                id="Polygon-Copy-5"
+              />
+            </g>
           </g>
         </g>
       </svg>
@@ -64,20 +62,22 @@ exports[`should show a container termination event marker 1`] = `
         xmlns="http://www.w3.org/2000/svg"
       >
         <g
-          transform="matrix(1,0,0,1,-650,-843)"
+          fill="none"
+          fill-rule="evenodd"
+          id="Singles"
+          stroke="none"
+          stroke-width="1"
         >
           <g
-            id="Singles"
+            fill="#FF9064"
+            id="iqt-timeline"
+            transform="translate(-650.000000, -843.000000)"
           >
-            <g
-              fill="#FF9064"
-              id="iqt-timeline"
-            >
-              <path
-                d="M659.202,844.183L665.814,855.451C666.197,856.105 665.97,856.94 665.306,857.317C665.095,857.437 664.855,857.5 664.612,857.5L651.388,857.5C650.621,857.5 650,856.888 650,856.134C650,855.894 650.064,855.659 650.186,855.451L656.798,844.183C657.181,843.53 658.03,843.306 658.694,843.683C658.905,843.803 659.08,843.976 659.202,844.183Z"
-                id="Polygon-Copy-5"
-              />
-            </g>
+            <path
+              d="M659.202024,844.183144 L665.813796,855.451253 C666.197113,856.10452 665.969636,856.939849 665.305712,857.317013 C665.094692,857.43689 664.855321,857.5 664.611656,857.5 L651.388112,857.5 C650.621479,857.5 650,856.888496 650,856.134169 C650,855.894415 650.064139,855.658885 650.185972,855.451253 L656.797744,844.183144 C657.18106,843.529877 658.030016,843.306051 658.69394,843.683215 C658.90496,843.803092 659.080192,843.975511 659.202024,844.183144 Z"
+              id="Polygon-Copy-5"
+              transform="translate(658.000000, 850.500000) scale(1, -1) translate(-658.000000, -850.500000) "
+            />
           </g>
         </g>
       </svg>
@@ -99,53 +99,6 @@ exports[`should show a policy violation event marker 1`] = `
     >
       <svg
         data-testid="policy-violation-event"
-        height="10"
-        version="1.1"
-        viewBox="0 0 15 15"
-        width="10"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <g
-          fill="none"
-          fill-rule="evenodd"
-          id="Singles"
-          stroke="none"
-          stroke-width="1"
-        >
-          <g
-            fill="#5677DD"
-            id="iqt-timeline"
-            transform="translate(-689.000000, -673.000000)"
-          >
-            <rect
-              height="14.5799992"
-              id="Rectangle-Copy-38"
-              rx="2.42999987"
-              width="14.5799992"
-              x="689"
-              y="673.1"
-            />
-          </g>
-        </g>
-      </svg>
-    </g>
-  </svg>
-</DocumentFragment>
-`;
-
-exports[`should show a process activity event marker 1`] = `
-<DocumentFragment>
-  <svg
-    data-testid="timeline-main-view"
-    height="100"
-    width="100"
-  >
-    <g
-      data-testid="timeline-event-marker"
-      transform="translate(NaN, -5)"
-    >
-      <svg
-        data-testid="process-activity-event"
         height="10"
         version="1.1"
         viewBox="0 0 15 15"
@@ -188,6 +141,53 @@ exports[`should show a process activity event marker 1`] = `
                 />
               </g>
             </g>
+          </g>
+        </g>
+      </svg>
+    </g>
+  </svg>
+</DocumentFragment>
+`;
+
+exports[`should show a process activity event marker 1`] = `
+<DocumentFragment>
+  <svg
+    data-testid="timeline-main-view"
+    height="100"
+    width="100"
+  >
+    <g
+      data-testid="timeline-event-marker"
+      transform="translate(NaN, -5)"
+    >
+      <svg
+        data-testid="process-activity-event"
+        height="10"
+        version="1.1"
+        viewBox="0 0 15 15"
+        width="10"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <g
+          fill="none"
+          fill-rule="evenodd"
+          id="Singles"
+          stroke="none"
+          stroke-width="1"
+        >
+          <g
+            fill="#5677DD"
+            id="iqt-timeline"
+            transform="translate(-689.000000, -673.000000)"
+          >
+            <rect
+              height="14.5799992"
+              id="Rectangle-Copy-38"
+              rx="2.42999987"
+              width="14.5799992"
+              x="689"
+              y="673.1"
+            />
           </g>
         </g>
       </svg>

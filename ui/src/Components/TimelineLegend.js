@@ -15,12 +15,12 @@ const TimelineLegend = () => {
     const content = (
         <TooltipOverlay>
             <div className="flex items-center mb-2">
-                <PolicyViolationIcon width={ICON_SIZE} />
-                <span className="ml-2">Policy Violation</span>
-            </div>
-            <div className="flex items-center mb-2">
                 <ProcessActivityIcon width={ICON_SIZE} />
                 <span className="ml-2">Process Activity</span>
+            </div>
+            <div className="flex items-center mb-2">
+                <PolicyViolationIcon width={ICON_SIZE} />
+                <span className="ml-2">Process Activity with Violation</span>
             </div>
             <div className="flex items-center mb-2">
                 <WhitelistedProcessActivityIcon width={ICON_SIZE} />
