@@ -9,7 +9,7 @@ const getPodEvents = (pods, selectedEventType) => {
     const podsWithEvents = pods.map(({ id, name, inactive, startTime, events, containerCount }) => {
         const filteredEvents = events.filter(filterByEventType(selectedEventType));
         const formattedTime = inactive ? 'Inactive' : format(startTime, timelineStartTimeFormat);
-        const processedEvents = processEvents(filteredEvents, startTime);
+        const processedEvents = processEvents(filteredEvents);
         const hasContainers = containerCount > 0;
         return {
             type: graphTypes.POD,

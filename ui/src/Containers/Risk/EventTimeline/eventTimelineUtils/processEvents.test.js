@@ -2,7 +2,6 @@ import processEvents from './processEvents';
 
 describe('processEvents', () => {
     it('should add a field to the event object to show the difference in milliseconds between the event time and entity start time', () => {
-        const startTime = '2020-04-20T15:00:00Z';
         const events = [
             {
                 timestamp: '2020-04-20T16:00:00Z',
@@ -15,20 +14,20 @@ describe('processEvents', () => {
             },
         ];
 
-        const value = processEvents(events, startTime);
+        const value = processEvents(events);
 
         expect(value).toEqual([
             {
                 timestamp: '2020-04-20T16:00:00Z',
-                differenceInMilliseconds: 3600000,
+                differenceInMilliseconds: 0,
             },
             {
                 timestamp: '2020-04-20T20:00:00Z',
-                differenceInMilliseconds: 18000000,
+                differenceInMilliseconds: 14400000,
             },
             {
                 timestamp: '2020-04-21T15:00:00Z',
-                differenceInMilliseconds: 86400000,
+                differenceInMilliseconds: 82800000,
             },
         ]);
     });

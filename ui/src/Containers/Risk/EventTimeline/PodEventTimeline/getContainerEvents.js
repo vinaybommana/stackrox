@@ -19,7 +19,7 @@ export const getContainerEvents = (containers, selectedEventType) => {
     const containersWithEvents = containers.map(({ id, name, startTime, events }) => {
         const filteredEvents = events.filter(filterByEventType(selectedEventType));
         const formattedTime = startTime ? format(startTime, dateTimeFormat) : 'N/A';
-        const processedEvents = processEvents(filteredEvents, startTime);
+        const processedEvents = processEvents(filteredEvents);
         return {
             type: graphTypes.CONTAINER,
             id,

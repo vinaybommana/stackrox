@@ -7,6 +7,7 @@ import Minimap from 'Components/TimelineGraph/Minimap';
 import Pagination from 'Components/TimelineGraph/Pagination';
 
 const absoluteMinTimeRange = 0;
+const defaultAbsoluteMaxTimeRange = 10;
 const MARGIN = 20;
 
 const TimelineGraph = ({
@@ -18,8 +19,10 @@ const TimelineGraph = ({
     onPageChange,
     absoluteMaxTimeRange,
 }) => {
+    const adjustedAbsoluteMaxTimeRange =
+        absoluteMaxTimeRange === 0 ? defaultAbsoluteMaxTimeRange : absoluteMaxTimeRange; // we don't want to show a range of 0 to 0
     const [minTimeRange, setMinTimeRange] = useState(absoluteMinTimeRange);
-    const [maxTimeRange, setMaxTimeRange] = useState(absoluteMaxTimeRange);
+    const [maxTimeRange, setMaxTimeRange] = useState(adjustedAbsoluteMaxTimeRange);
 
     const names = data.map(({ type, id, name, subText, hasChildren }) => ({
         type,
@@ -57,7 +60,7 @@ const TimelineGraph = ({
                     <Minimap
                         minTimeRange={absoluteMinTimeRange}
                         setMinTimeRange={setMinTimeRange}
-                        maxTimeRange={absoluteMaxTimeRange}
+                        maxTimeRange={adjustedAbsoluteMaxTimeRange}
                         setMaxTimeRange={setMaxTimeRange}
                         data={data}
                         numRows={pageSize}
@@ -95,7 +98,7 @@ TimelineGraph.propTypes = {
 
 TimelineGraph.defaultProps = {
     data: [],
-    absoluteMaxTimeRange: 3600000 * 24, // default to 24 hours
+    absoluteMaxTimeRange: defaultAbsoluteMaxTimeRange,
 };
 
 export default TimelineGraph;
