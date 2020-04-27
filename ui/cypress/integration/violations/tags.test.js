@@ -87,11 +87,11 @@ describe('Violation Page: Tags', () => {
         cy.wait('@alerts');
 
         cy.get(selectors.rows).should('have.length', 2);
-        cy.get(selectors.rows).each((row) => {
-            cy.wrap(row).click({ force: true });
+        for (let row = 0; row < 2; row += 1) {
+            cy.get(`${selectors.rows}:eq(${row})`).click({ force: true });
             cy.wait(['@alertById', '@getTags', '@tagsAutocomplete']);
             cy.get(selectors.sidePanel.tags.values).contains(tag).should('have.length', 1);
-        });
+        }
     });
 
     it('should suggest autocompletion for existing tags', () => {
