@@ -10,6 +10,7 @@ import ReduxMultiSelectField from 'Components/forms/ReduxMultiSelectField';
 import ReduxMultiSelectCreatableField from 'Components/forms/ReduxMultiSelectCreatableField';
 import ReduxNumericInputField from 'Components/forms/ReduxNumericInputField';
 import ReduxToggleField from 'Components/forms/ReduxToggleField';
+import ReduxRadioButtonGroupField from 'Components/forms/ReduxRadioButtonGroupField';
 import RestrictToScope from './RestrictToScope';
 import WhitelistScope from './WhitelistScope';
 
@@ -39,6 +40,15 @@ export default function Field({ field, name }) {
                     disabled={field.disabled}
                     reverse={field.reverse}
                     className="self-center"
+                />
+            );
+        case 'radioGroup':
+            return (
+                <ReduxRadioButtonGroupField
+                    name={path}
+                    key={path}
+                    buttons={field.radioButtons}
+                    groupClassName="w-full"
                 />
             );
         case 'select':

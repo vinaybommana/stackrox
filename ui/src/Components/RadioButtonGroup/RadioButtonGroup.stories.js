@@ -52,3 +52,17 @@ export const withSelectableButtons = () => {
         </MemoryRouter>
     );
 };
+
+export const withNoHeaderText = () => {
+    // eslint-disable-next-line
+    const [selected, setSelected] = useState('All');
+    const buttons = [{ text: 'Fixable' }, { text: 'All' }];
+    function onClick(data) {
+        setSelected(data);
+    }
+    return (
+        <MemoryRouter>
+            <RadioButtonGroup buttons={buttons} selected={selected} onClick={onClick} />
+        </MemoryRouter>
+    );
+};

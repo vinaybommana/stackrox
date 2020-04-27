@@ -354,16 +354,17 @@ const policyConfigurationDescriptor = [
     {
         label: 'Image is NOT Scanned',
         name: 'Unscanned Image',
+        longName: 'Image Scan Status',
         jsonpath: 'fields.noScanExists',
         category: policyCriteriaCategories.IMAGE_CONTENTS,
-        type: 'toggle',
-        options: [
+        type: 'radioGroup',
+        radioButtons: [
             {
-                label: 'Scanned',
+                text: 'Scanned',
                 value: false,
             },
             {
-                label: 'Not scanned',
+                text: 'Not scanned',
                 value: true,
             },
         ],
@@ -617,16 +618,17 @@ const policyConfigurationDescriptor = [
     {
         label: 'Writable Volume',
         name: 'Writable Volume',
+        longName: 'Mounted Volume Writability',
         jsonpath: 'fields.volumePolicy.readOnly',
         category: policyCriteriaCategories.STORAGE,
-        type: 'toggle',
-        option: [
+        type: 'radioGroup',
+        radioButtons: [
             {
-                label: 'Writable',
+                text: 'Writable',
                 value: true,
             },
             {
-                label: 'Read-only',
+                text: 'Read-only',
                 value: false,
             },
         ],
@@ -668,16 +670,17 @@ const policyConfigurationDescriptor = [
     {
         label: 'Privileged',
         name: 'Privileged Container',
+        longName: 'Privileged Container Status',
         jsonpath: 'fields.privileged',
         category: policyCriteriaCategories.CONTAINER_CONFIGURATION,
-        type: 'toggle',
-        options: [
+        type: 'radioGroup',
+        radioButtons: [
             {
-                label: 'Privileged Container',
+                text: 'Privileged Container',
                 value: true,
             },
             {
-                label: 'Not a Privileged Container',
+                text: 'Not a Privileged Container',
                 value: false,
             },
         ],
@@ -691,16 +694,17 @@ const policyConfigurationDescriptor = [
     {
         label: 'Read-Only Root Filesystem',
         name: 'Read-Only Root Filesystem',
+        longName: 'Root Filesystem Writability',
         jsonpath: 'fields.readOnlyRootFs',
         category: policyCriteriaCategories.CONTAINER_CONFIGURATION,
-        type: 'toggle',
-        options: [
+        type: 'radioGroup',
+        radioButtons: [
             {
-                label: 'Read-Only',
+                text: 'Read-Only',
                 value: true,
             },
             {
-                label: 'Writable',
+                text: 'Writable',
                 value: false,
             },
         ],
@@ -803,16 +807,17 @@ const policyConfigurationDescriptor = [
     {
         label: 'Writable Host Mount',
         name: 'Writable Host Mount',
+        longName: 'Host Mount Writability',
         jsonpath: 'fields.hostMountPolicy.readOnly',
         category: policyCriteriaCategories.PROCESS_ACTIVITY,
-        type: 'toggle',
-        options: [
+        type: 'radioGroup',
+        radioButtons: [
             {
-                label: 'Writable',
+                text: 'Writable',
                 value: true,
             },
             {
-                label: 'Read-only',
+                text: 'Read-only',
                 value: false,
             },
         ],
@@ -827,12 +832,13 @@ const policyConfigurationDescriptor = [
     {
         label: 'Whitelists Enabled',
         name: 'Unexpected Process Executed',
+        longName: 'Process Whitelist Status',
         jsonpath: 'fields.whitelistEnabled',
         category: policyCriteriaCategories.PROCESS_ACTIVITY,
-        type: 'toggle',
-        options: [
-            { label: 'Unexpected Process', value: true },
-            { label: 'Expected Process', value: false },
+        type: 'radioGroup',
+        radioButtons: [
+            { text: 'Unexpected Process', value: true },
+            { text: 'Expected Process', value: false },
         ],
         required: false,
         default: false,

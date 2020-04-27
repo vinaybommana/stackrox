@@ -1,13 +1,15 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const RadioButtonGroup = ({ headerText, buttons, selected, onClick }) => {
+const RadioButtonGroup = ({ headerText, buttons, selected, onClick, groupClassName }) => {
     function onClickHandler(data) {
         const value = data.target.getAttribute('value');
         onClick(value);
     }
+    const selectedValue = selected === 'true';
 
-    const content = buttons.map(({ text }, index) => {
+    const content = buttons.map(({ text, value }, index) => {
+        const buttonValue = value !== undefined ? value || value === 'true' : text;
         return (
             <button
                 key={text}
@@ -15,40 +17,48 @@ const RadioButtonGroup = ({ headerText, buttons, selected, onClick }) => {
                 className={`flex flex-1 justify-center py-1 px-2 text-sm font-600 font-condensed text-base-600 hover:text-primary-600 uppercase ${
                     index !== 0 ? 'border-l border-base-400' : ''
                 } ${
-                    selected === text
+                    selectedValue === buttonValue
                         ? 'bg-primary-200 text-primary-700 hover:text-primary-700 hover:bg-primary-200'
                         : 'hover:bg-base-200 bg-base-100'
                 }`}
                 onClick={onClickHandler}
-                value={text}
+                value={buttonValue}
             >
                 {text}
             </button>
         );
     });
     return (
-        <div className="text-xs flex flex-col uppercase rounded border-2 h-10 border-base-400 text-center font-condensed text-base-600 font-600">
-            <div className="bg-base-100 border-b-2 border-base-400 px-2 text-base-500">
-                {headerText}
-            </div>
+        <div
+            className={`text-xs flex flex-col uppercase rounded border-2 h-10 border-base-400 text-center font-condensed text-base-600 font-600 ${groupClassName}`}
+        >
+            {headerText && (
+                <div className="bg-base-100 border-b-2 border-base-400 px-2 text-base-500">
+                    {headerText}
+                </div>
+            )}
             <div className="flex h-full">{content}</div>
         </div>
     );
 };
 
 RadioButtonGroup.propTypes = {
-    headerText: PropTypes.string.isRequired,
+    headerText: PropTypes.string,
     buttons: PropTypes.arrayOf(
         PropTypes.shape({
             text: PropTypes.string.isRequired,
+            value: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]),
         })
     ).isRequired,
-    selected: PropTypes.string,
+    selected: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]),
     onClick: PropTypes.func.isRequired,
+    groupClassName: PropTypes.string,
 };
 
 RadioButtonGroup.defaultProps = {
+    headerText: null,
     selected: null,
+    groupClassName: '',
 };
 
 export default RadioButtonGroup;

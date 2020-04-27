@@ -12,17 +12,20 @@ import PolicyFieldCard from './PolicyFieldCard';
 import { policyConfiguration } from './descriptors';
 import { getPolicyCriteriaFieldKeys } from './utils';
 
-const getEmptyPolicyFieldCard = (fieldKey) => ({
-    field_name: fieldKey.name,
-    boolean_operator: 'OR',
-    values: [
-        {
-            value: '',
-        },
-    ],
-    negate: false,
-    fieldKey,
-});
+const getEmptyPolicyFieldCard = (fieldKey) => {
+    const defaultValue = fieldKey.defaultValue !== undefined ? fieldKey.defaultValue : '';
+    return {
+        field_name: fieldKey.name,
+        boolean_operator: 'OR',
+        values: [
+            {
+                value: defaultValue,
+            },
+        ],
+        negate: false,
+        fieldKey,
+    };
+};
 
 function PolicySection({ fields, sectionName, removeSectionHandler }) {
     const allFields = fields.getAll();

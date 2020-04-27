@@ -70,7 +70,7 @@ function PolicyFieldCard({
                         />
                     ))}
                     {/* this is because there can't be multiple boolean values */}
-                    {fieldKey.type !== 'toggle' && (
+                    {fieldKey.type !== 'radioGroup' && (
                         <div className="flex flex-col pt-2">
                             <div className="flex justify-center">
                                 <Button

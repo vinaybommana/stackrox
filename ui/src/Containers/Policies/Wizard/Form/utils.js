@@ -75,6 +75,7 @@ export function postFormatEnforcementField(policy) {
 }
 
 export function parseValueStr(value) {
+    if (typeof value !== 'string') return value;
     const valueArr = value.split('=');
     // for nested policy criteria fields
     if (valueArr.length === 2) {
@@ -139,6 +140,7 @@ function postFormatNestedPolicyFields(policy) {
                     valueIdx
                 ] = { value: formatValueStr(value) };
             });
+            delete serverPolicy.policy_sections[sectionIdx].policy_groups[groupIdx].fieldKey;
         });
     });
     return serverPolicy;
