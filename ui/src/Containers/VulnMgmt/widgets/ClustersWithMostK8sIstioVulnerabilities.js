@@ -86,9 +86,9 @@ const processData = (data, workflowState, limit) => {
                 : 'These CVEs were not patched in the current Kubernetes version of this cluster.';
 
             const indicatorIcon = isGKECluster ? (
-                <HelpCircle className="w-4 h-4 text-warning-700" />
+                <HelpCircle className="w-4 h-4 text-warning-700 ml-2" />
             ) : (
-                <AlertCircle className="w-4 h-4 text-alert-700" />
+                <AlertCircle className="w-4 h-4 text-alert-700 ml-2" />
             );
 
             const k8sIstioContent = (
@@ -110,8 +110,7 @@ const processData = (data, workflowState, limit) => {
                             </div>
                         </Tooltip>
                         <Tooltip content={<TooltipOverlay>{indicationTooltipText}</TooltipOverlay>}>
-                            {/* https://github.com/feathericons/react-feather/issues/56 */}
-                            <div className="ml-2">{indicatorIcon}</div>
+                            {indicatorIcon}
                         </Tooltip>
                     </div>
                     <Tooltip content={<TooltipOverlay>Istio Vulnerabilities</TooltipOverlay>}>

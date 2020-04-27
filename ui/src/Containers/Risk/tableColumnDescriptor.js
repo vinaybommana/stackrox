@@ -20,10 +20,7 @@ function DeploymentNameColumn({ original }) {
                     <Tooltip
                         content={<TooltipOverlay>Abnormal processes discovered</TooltipOverlay>}
                     >
-                        {/* https://github.com/feathericons/react-feather/issues/56 */}
-                        <div>
-                            <Icon.Circle className="h-2 w-2 text-alert-400" fill="#ffebf1" />
-                        </div>
+                        <Icon.Circle className="h-2 w-2 text-alert-400" fill="#ffebf1" />
                     </Tooltip>
                 )}
                 {!isSuspicious && <Icon.Circle className="h-2 w-2" />}
