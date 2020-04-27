@@ -28,6 +28,8 @@ type DataStore interface {
 	UpsertPod(ctx context.Context, pod *storage.Pod) error
 
 	RemovePod(ctx context.Context, id string) error
+
+	GetPodIDs() ([]string, error)
 }
 
 // New creates a pod datastore based on BadgerDB

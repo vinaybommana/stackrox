@@ -307,3 +307,7 @@ func (ds *datastoreImpl) RemovePod(ctx context.Context, id string) error {
 			sac.ResourceScopeKeys(resources.Indicator)))
 	return ds.indicators.RemoveProcessIndicatorsByPod(deleteIndicatorsCtx, id)
 }
+
+func (ds *datastoreImpl) GetPodIDs() ([]string, error) {
+	return ds.podStore.GetKeys()
+}

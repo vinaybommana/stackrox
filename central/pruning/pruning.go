@@ -130,25 +130,51 @@ func (g *garbageCollectorImpl) removeOrphanedResources() {
 		return
 	}
 	deploymentSet := set.NewFrozenStringSet(deploymentIDs...)
-	g.removeOrphanedProcesses(deploymentSet)
+	if features.PodDeploymentSeparation.Enabled() {
+		podIDs, err := g.pods.GetPodIDs()
+		if err != nil {
+			log.Error(errors.Wrap(err, "unable to fetch pod IDs in pruning"))
+			return
+		}
+		g.removeOrphanedProcesses(deploymentSet, set.NewFrozenStringSet(podIDs...))
+	} else {
+		g.removeOrphanedProcesses(deploymentSet, set.NewFrozenStringSet())
+	}
 	g.removeOrphanedProcessWhitelists(deploymentSet)
 	g.markOrphanedAlertsAsResolved(deploymentSet)
 	g.removeOrphanedNetworkFlows(deploymentSet)
 }
 
-func (g *garbageCollectorImpl) removeOrphanedProcesses(deployments set.FrozenStringSet) {
+func (g *garbageCollectorImpl) removeOrphanedProcesses(deploymentIDs, podIDs set.FrozenStringSet) {
 	var processesToPrune []string
 	now := types.TimestampNow()
-	err := g.processes.WalkAll(pruningCtx, func(pi *storage.ProcessIndicator) error {
-		if deployments.Contains(pi.GetDeploymentId()) {
+	var err error
+	if features.PodDeploymentSeparation.Enabled() {
+		err = g.processes.WalkAll(pruningCtx, func(pi *storage.ProcessIndicator) error {
+			if pi.GetPodUid() != "" && podIDs.Contains(pi.GetPodUid()) {
+				return nil
+			}
+			if pi.GetPodUid() == "" && deploymentIDs.Contains(pi.GetDeploymentId()) {
+				return nil
+			}
+			if protoutils.Sub(now, pi.GetSignal().GetTime()) < orphanWindow {
+				return nil
+			}
+			processesToPrune = append(processesToPrune, pi.GetId())
 			return nil
-		}
-		if protoutils.Sub(now, pi.GetSignal().GetTime()) < orphanWindow {
+		})
+	} else {
+		err = g.processes.WalkAll(pruningCtx, func(pi *storage.ProcessIndicator) error {
+			if deploymentIDs.Contains(pi.GetDeploymentId()) {
+				return nil
+			}
+			if protoutils.Sub(now, pi.GetSignal().GetTime()) < orphanWindow {
+				return nil
+			}
+			processesToPrune = append(processesToPrune, pi.GetId())
 			return nil
-		}
-		processesToPrune = append(processesToPrune, pi.GetId())
-		return nil
-	})
+		})
+	}
 	if err != nil {
 		log.Error(errors.Wrap(err, "unable to walk processes and mark for pruning"))
 		return

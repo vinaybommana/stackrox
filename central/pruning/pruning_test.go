@@ -651,11 +651,19 @@ func newIndicatorWithDeployment(id string, age time.Duration, deploymentID strin
 	}
 }
 
+func newIndicatorWithDeploymentAndPod(id string, age time.Duration, deploymentID, podUID string) *storage.ProcessIndicator {
+	indicator := newIndicatorWithDeployment(id, age, deploymentID)
+	indicator.PodUid = podUID
+	return indicator
+}
+
 func TestRemoveOrphanedProcesses(t *testing.T) {
 	cases := []struct {
+		sepEnabled        bool
 		name              string
 		initialProcesses  []*storage.ProcessIndicator
 		deployments       set.FrozenStringSet
+		pods              set.FrozenStringSet
 		expectedDeletions []string
 	}{
 		{
@@ -666,6 +674,7 @@ func TestRemoveOrphanedProcesses(t *testing.T) {
 				newIndicatorWithDeployment("pi3", 1*time.Hour, "dep3"),
 			},
 			deployments:       set.NewFrozenStringSet(),
+			pods:              set.NewFrozenStringSet(),
 			expectedDeletions: []string{"pi1", "pi2", "pi3"},
 		},
 		{
@@ -676,6 +685,7 @@ func TestRemoveOrphanedProcesses(t *testing.T) {
 				newIndicatorWithDeployment("pi3", 20*time.Minute, "dep3"),
 			},
 			deployments:       set.NewFrozenStringSet(),
+			pods:              set.NewFrozenStringSet(),
 			expectedDeletions: []string{},
 		},
 		{
@@ -686,6 +696,7 @@ func TestRemoveOrphanedProcesses(t *testing.T) {
 				newIndicatorWithDeployment("pi3", 1*time.Hour, "dep3"),
 			},
 			deployments:       set.NewFrozenStringSet("dep1", "dep2", "dep3"),
+			pods:              set.NewFrozenStringSet(),
 			expectedDeletions: []string{},
 		},
 		{
@@ -696,6 +707,90 @@ func TestRemoveOrphanedProcesses(t *testing.T) {
 				newIndicatorWithDeployment("pi3", 1*time.Hour, "dep3"),
 			},
 			deployments:       set.NewFrozenStringSet("dep3"),
+			pods:              set.NewFrozenStringSet(),
+			expectedDeletions: []string{"pi1"},
+		},
+		{
+			name: "no pods but pods referenced - remove some indicators",
+			initialProcesses: []*storage.ProcessIndicator{
+				newIndicatorWithDeploymentAndPod("pi1", 1*time.Hour, "dep1", "pod1"),
+				newIndicatorWithDeploymentAndPod("pi2", 20*time.Minute, "dep2", "pod2"),
+				newIndicatorWithDeploymentAndPod("pi3", 1*time.Hour, "dep3", "pod3"),
+			},
+			deployments:       set.NewFrozenStringSet("dep3"),
+			pods:              set.NewFrozenStringSet(),
+			expectedDeletions: []string{"pi1"},
+		},
+		{
+			sepEnabled: true,
+			name:       "no deployments nor pods - remove all old indicators",
+			initialProcesses: []*storage.ProcessIndicator{
+				newIndicatorWithDeploymentAndPod("pi1", 1*time.Hour, "dep1", "pod1"),
+				newIndicatorWithDeploymentAndPod("pi2", 1*time.Hour, "dep2", "pod2"),
+				newIndicatorWithDeploymentAndPod("pi3", 1*time.Hour, "dep3", "pod3"),
+			},
+			deployments:       set.NewFrozenStringSet(),
+			pods:              set.NewFrozenStringSet(),
+			expectedDeletions: []string{"pi1", "pi2", "pi3"},
+		},
+		{
+			sepEnabled: true,
+			name:       "no deployments nor pods - remove no new orphaned indicators",
+			initialProcesses: []*storage.ProcessIndicator{
+				newIndicatorWithDeploymentAndPod("pi1", 20*time.Minute, "dep1", "pod1"),
+				newIndicatorWithDeploymentAndPod("pi2", 20*time.Minute, "dep2", "pod2"),
+				newIndicatorWithDeploymentAndPod("pi3", 20*time.Minute, "dep3", "pod3"),
+			},
+			deployments:       set.NewFrozenStringSet(),
+			pods:              set.NewFrozenStringSet(),
+			expectedDeletions: []string{},
+		},
+		{
+			sepEnabled: true,
+			name:       "all pods separate deployments - remove no indicators",
+			initialProcesses: []*storage.ProcessIndicator{
+				newIndicatorWithDeploymentAndPod("pi1", 1*time.Hour, "dep1", "pod1"),
+				newIndicatorWithDeploymentAndPod("pi2", 1*time.Hour, "dep2", "pod2"),
+				newIndicatorWithDeploymentAndPod("pi3", 1*time.Hour, "dep3", "pod3"),
+			},
+			deployments:       set.NewFrozenStringSet("dep1", "dep2", "dep3"),
+			pods:              set.NewFrozenStringSet("pod1", "pod2", "pod3"),
+			expectedDeletions: []string{},
+		},
+		{
+			sepEnabled: true,
+			name:       "all pods same deployment - remove no indicators",
+			initialProcesses: []*storage.ProcessIndicator{
+				newIndicatorWithDeploymentAndPod("pi1", 1*time.Hour, "dep1", "pod1"),
+				newIndicatorWithDeploymentAndPod("pi2", 1*time.Hour, "dep1", "pod2"),
+				newIndicatorWithDeploymentAndPod("pi3", 1*time.Hour, "dep1", "pod3"),
+			},
+			deployments:       set.NewFrozenStringSet("dep1"),
+			pods:              set.NewFrozenStringSet("pod1", "pod2", "pod3"),
+			expectedDeletions: []string{},
+		},
+		{
+			sepEnabled: true,
+			name:       "some pods separate deployments - remove some indicators",
+			initialProcesses: []*storage.ProcessIndicator{
+				newIndicatorWithDeploymentAndPod("pi1", 1*time.Hour, "dep1", "pod1"),
+				newIndicatorWithDeploymentAndPod("pi2", 20*time.Minute, "dep2", "pod2"),
+				newIndicatorWithDeploymentAndPod("pi3", 1*time.Hour, "dep3", "pod3"),
+			},
+			deployments:       set.NewFrozenStringSet("dep3"),
+			pods:              set.NewFrozenStringSet("pod3"),
+			expectedDeletions: []string{"pi1"},
+		},
+		{
+			sepEnabled: true,
+			name:       "some pods same deployment - remove some indicators",
+			initialProcesses: []*storage.ProcessIndicator{
+				newIndicatorWithDeploymentAndPod("pi1", 1*time.Hour, "dep1", "pod1"),
+				newIndicatorWithDeploymentAndPod("pi2", 20*time.Minute, "dep1", "pod2"),
+				newIndicatorWithDeploymentAndPod("pi3", 1*time.Hour, "dep1", "pod3"),
+			},
+			deployments:       set.NewFrozenStringSet("dep1"),
+			pods:              set.NewFrozenStringSet("pod3"),
 			expectedDeletions: []string{"pi1"},
 		},
 	}
@@ -707,6 +802,13 @@ func TestRemoveOrphanedProcesses(t *testing.T) {
 			gci := &garbageCollectorImpl{
 				processes: processes,
 			}
+
+			if !c.sepEnabled {
+				envIsolator := testutils.NewEnvIsolator(t)
+				envIsolator.Setenv(features.PodDeploymentSeparation.EnvVar(), "false")
+				defer envIsolator.RestoreAll()
+			}
+
 			processes.EXPECT().WalkAll(pruningCtx, gomock.Any()).DoAndReturn(
 				func(ctx context.Context, fn func(pi *storage.ProcessIndicator) error) error {
 					for _, a := range c.initialProcesses {
@@ -715,7 +817,7 @@ func TestRemoveOrphanedProcesses(t *testing.T) {
 					return nil
 				})
 			processes.EXPECT().RemoveProcessIndicators(pruningCtx, testutils.AssertionMatcher(assert.ElementsMatch, c.expectedDeletions))
-			gci.removeOrphanedProcesses(c.deployments)
+			gci.removeOrphanedProcesses(c.deployments, c.pods)
 		})
 	}
 }
