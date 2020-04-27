@@ -7,15 +7,15 @@ import (
 )
 
 func init() {
-	workloadRegistry["default"] = defaultWorkload
+	workloadRegistry["high-alert"] = highAlertWorkload
 }
 
 var (
-	defaultWorkload = &workload{
+	highAlertWorkload = &workload{
 		DeploymentWorkload: []deploymentWorkload{
 			{
 				DeploymentType: kubernetes.Deployment,
-				NumDeployments: 2500,
+				NumDeployments: 1000,
 				PodWorkload: podWorkload{
 					NumPods:           5,
 					NumContainers:     3,
@@ -23,7 +23,7 @@ var (
 
 					ProcessWorkload: processWorkload{
 						ProcessInterval: 30 * time.Second, // deployments * pods / rate = process / second
-						AlertRate:       0.001,            // 0.1% of all processes will trigger a runtime alert
+						AlertRate:       0.05,             // 5% of all processes will trigger a runtime alert
 					},
 				},
 				UpdateInterval:    100 * time.Second,

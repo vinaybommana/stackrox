@@ -12,6 +12,7 @@ import (
 	"github.com/stackrox/rox/pkg/pointers"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -249,19 +250,19 @@ func getContainer() corev1.Container {
 				},
 			},
 		},
-		Resources:       corev1.ResourceRequirements{},
+		Resources: corev1.ResourceRequirements{
+			Limits: corev1.ResourceList{
+				corev1.ResourceCPU:    resource.MustParse("1"),
+				corev1.ResourceMemory: resource.MustParse("1G"),
+			},
+			Requests: corev1.ResourceList{
+				corev1.ResourceCPU:    resource.MustParse("1"),
+				corev1.ResourceMemory: resource.MustParse("1G"),
+			},
+		},
 		VolumeMounts:    nil,
 		ImagePullPolicy: "Always",
-		SecurityContext: &corev1.SecurityContext{
-			Capabilities: &corev1.Capabilities{
-				Add: []corev1.Capability{
-					"CAP_SYS_ADMIN",
-					"CAP_NEW_RAW",
-				},
-			},
-			Privileged:             pointers.Bool(true),
-			ReadOnlyRootFilesystem: pointers.Bool(false),
-		},
+		SecurityContext: &corev1.SecurityContext{},
 	}
 }
 
