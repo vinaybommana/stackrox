@@ -133,7 +133,7 @@ func newRegistry(integration *storage.ImageIntegration) (*ecr, error) {
 	}
 
 	endpoint := conf.GetEndpoint()
-	if conf.GetEndpoint() == "" {
+	if endpoint == "" {
 		endpoint = fmt.Sprintf("ecr.%s.amazonaws.com", conf.GetRegion())
 	}
 

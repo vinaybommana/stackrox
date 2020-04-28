@@ -69,7 +69,7 @@ func newS3(integration *storage.ExternalBackup) (*s3, error) {
 	}
 
 	endpoint := conf.GetEndpoint()
-	if conf.GetEndpoint() == "" {
+	if endpoint == "" {
 		endpoint = fmt.Sprintf("s3.%s.amazonaws.com", conf.GetRegion())
 	}
 
