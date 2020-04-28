@@ -38,6 +38,7 @@ interface OrchestratorMain {
     def getDeploymentNodeSelectors(Deployment deployment)
     def getDeploymentCount(String ns)
     Set<String> getDeploymentSecrets(Deployment deployment)
+    def createPortForward(int port, Deployment deployment)
 
     //DaemonSets
     def createDaemonSet(DaemonSet daemonSet)

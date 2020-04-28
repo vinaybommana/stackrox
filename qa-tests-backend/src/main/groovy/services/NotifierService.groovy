@@ -163,7 +163,10 @@ class NotifierService extends BaseService {
      * @param legacy Does this integration provide the full URL path or just the base
      * @param name Splunk Integration name
      */
-    static NotifierOuterClass.Notifier getSplunkIntegrationConfig(boolean legacy, String name)  throws Exception {
+    static NotifierOuterClass.Notifier getSplunkIntegrationConfig(
+            boolean legacy,
+            String serviceName,
+            String name)  throws Exception {
         String splunkIntegration = "splunk-Integration"
         String prePackagedToken = "00000000-0000-0000-0000-000000000000"
 
@@ -178,7 +181,7 @@ class NotifierService extends BaseService {
                         .setHttpToken(prePackagedToken)
                         .setInsecure(true)
                         .setHttpEndpoint(String.format(
-                                "https://splunk-collector.qa:8088%s",
+                                "https://${serviceName}.qa:8088%s",
                                 legacy ? "/services/collector/event" : "")))
                 .build()
     }

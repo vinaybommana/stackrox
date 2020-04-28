@@ -227,15 +227,23 @@ class PagerDutyNotifier extends Notifier {
 }
 
 class SplunkNotifier extends Notifier {
-    def splunkLbIp = ""
+    def splunkPort
 
-    SplunkNotifier(boolean legacy, String lbIp, String integrationName = "Splunk Test") {
-        splunkLbIp = lbIp
-        notifier = NotifierService.getSplunkIntegrationConfig(legacy, integrationName)
+    SplunkNotifier(boolean legacy, String collectorServiceName, int port, String integrationName = "Splunk Test") {
+        splunkPort = port
+        notifier = NotifierService.getSplunkIntegrationConfig(legacy, collectorServiceName, integrationName)
+    }
+
+    def createNotifier() {
+        println "validating splunk deployment is ready to accept events before creating notifier..."
+        withRetry(20, 2) {
+            SplunkUtil.createSearch(splunkPort)
+        }
+        notifier = NotifierService.addNotifier(notifier)
     }
 
     void validateViolationNotification(Policy policy, Deployment deployment) {
-        def response = SplunkUtil.waitForSplunkAlerts(splunkLbIp, 60)
+        def response = SplunkUtil.waitForSplunkAlerts(splunkPort, 30)
 
         assert response.find { it.deployment.id == deployment.deploymentUid }
         assert response.find { it.deployment.name == deployment.name }

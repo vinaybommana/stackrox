@@ -1,4 +1,5 @@
 import groups.Notifiers
+import io.fabric8.kubernetes.client.LocalPortForward
 import io.stackrox.proto.storage.PolicyOuterClass
 import io.stackrox.proto.storage.NotifierOuterClass
 import groups.BAT
@@ -21,8 +22,6 @@ import spock.lang.Unroll
 import objects.Deployment
 import objects.Service
 import util.Env
-import org.junit.Assume
-import orchestratormanager.OrchestratorTypes
 import common.Constants
 
 class IntegrationsTest extends BaseSpecification {
@@ -151,48 +150,50 @@ ObOdSTZUQI4TZOXOpJCpa97CnqroNi7RrT05JOfoe/DPmhoJmF4AUrnd/YUb8pgF
     @Category(Integration)
     def "Verify Splunk Integration (legacy mode: #legacy)"() {
         given:
-        "Only run on non-OpenShift until we can fix the route issue in CI"
-        Assume.assumeTrue(Env.mustGetOrchestratorType() != OrchestratorTypes.OPENSHIFT)
         "the integration is tested"
+        def uid = UUID.randomUUID()
+        def deploymentName = "splunk-${uid}"
         orchestrator.createImagePullSecret("qa-stackrox", Env.mustGetDockerIOUserName(),
                  Env.mustGetDockerIOPassword(), Constants.ORCHESTRATOR_NAMESPACE)
         Deployment deployment =
             new Deployment()
                 .setNamespace(Constants.ORCHESTRATOR_NAMESPACE)
-                .setName("splunk")
+                .setName(deploymentName)
                 .setImage("stackrox/splunk-test-repo:6.6.0")
                 .addPort (8000)
                 .addPort (8088)
                 .addPort(8089)
                 .addAnnotation("test", "annotation")
                 .setEnv([ "SPLUNK_START_ARGS": "--accept-license", "SPLUNK_USER": "root" ])
-                .addLabel("app", "splunk")
+                .addLabel("app", deploymentName)
                 .setPrivilegedFlag(true)
                 .addVolume("test", "/tmp")
                 .addImagePullSecret("qa-stackrox")
         orchestrator.createDeployment(deployment)
 
-        Service httpSvc = new Service("splunk-http", Constants.ORCHESTRATOR_NAMESPACE)
-                 .addLabel("app", "splunk")
+        Service httpSvc = new Service("splunk-http-${uid}", Constants.ORCHESTRATOR_NAMESPACE)
+                 .addLabel("app", deploymentName)
                  .addPort(8000, "TCP")
                  .setType(Service.Type.CLUSTERIP)
         orchestrator.createService(httpSvc)
 
-        Service  collectorSvc = new Service("splunk-collector", Constants.ORCHESTRATOR_NAMESPACE)
-                .addLabel("app", "splunk")
+        Service  collectorSvc = new Service("splunk-collector-${uid}", Constants.ORCHESTRATOR_NAMESPACE)
+                .addLabel("app", deploymentName)
                 .addPort(8088, "TCP")
                 .setType(Service.Type.CLUSTERIP)
         orchestrator.createService(collectorSvc)
 
-        Service httpsSvc = new Service("splunk-https", Constants.ORCHESTRATOR_NAMESPACE)
-                .addLabel("app", "splunk")
+        Service httpsSvc = new Service("splunk-https-${uid}", Constants.ORCHESTRATOR_NAMESPACE)
+                .addLabel("app", deploymentName)
                 .addPort(8089, "TCP")
-                .setType(Service.Type.LOADBALANCER)
+                .setType(Service.Type.CLUSTERIP)
         orchestrator.createService(httpsSvc)
+
+        LocalPortForward splunkPortForward = orchestrator.createPortForward(8089, deployment)
 
         when:
         "call the grpc API for the splunk integration."
-        SplunkNotifier notifier = new SplunkNotifier(legacy, httpsSvc.loadBalancerIP)
+        SplunkNotifier notifier = new SplunkNotifier(legacy, collectorSvc.name, splunkPortForward.localPort)
         notifier.createNotifier()
 
         and:
@@ -200,7 +201,7 @@ ObOdSTZUQI4TZOXOpJCpa97CnqroNi7RrT05JOfoe/DPmhoJmF4AUrnd/YUb8pgF
         PolicyOuterClass.Policy.Builder policy = Services.getPolicyByName("Latest tag").toBuilder()
 
         def nginxName = "nginx-spl-violation"
-        policy.setName(policy.name + " ")
+        policy.setName("${policy.name} ${uid}")
               .setId("") // set ID to empty so that a new policy is created and not overwrite the original latest tag
               .addScope(ScopeOuterClass.Scope.newBuilder()
                 .setLabel(ScopeOuterClass.Scope.Label.newBuilder()
@@ -229,9 +230,9 @@ ObOdSTZUQI4TZOXOpJCpa97CnqroNi7RrT05JOfoe/DPmhoJmF4AUrnd/YUb8pgF
             orchestrator.deleteDeployment(deployment)
             orchestrator.deleteDeployment(nginxdeployment)
         }
-        orchestrator.deleteService("splunk-collector", Constants.ORCHESTRATOR_NAMESPACE)
-        orchestrator.deleteService("splunk-http", Constants.ORCHESTRATOR_NAMESPACE)
-        orchestrator.deleteService("splunk-https", Constants.ORCHESTRATOR_NAMESPACE)
+        orchestrator.deleteService(httpSvc.name, httpSvc.namespace)
+        orchestrator.deleteService(collectorSvc.name, collectorSvc.namespace)
+        orchestrator.deleteService(httpsSvc.name, httpsSvc.namespace)
         orchestrator.deleteSecret("qa-stackrox", Constants.ORCHESTRATOR_NAMESPACE)
         if (policy != null) {
             CreatePolicyService.deletePolicy(policyId)

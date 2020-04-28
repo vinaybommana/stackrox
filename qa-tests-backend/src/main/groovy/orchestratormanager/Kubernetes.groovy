@@ -325,6 +325,26 @@ class Kubernetes implements OrchestratorMain {
         return this.deployments.inNamespace(ns).list().getItems().collect { it.metadata.name }
     }
 
+    def createPortForward(int port, Deployment deployment, String podName = "") {
+        if (deployment.pods.size() == 0) {
+            throw new KubernetesClientException(
+                    "Error creating port-forward: Could not get pod details from deployment.")
+        }
+        if (deployment.pods.size() > 1 && podName.equals("")) {
+            throw new KubernetesClientException(
+                    "Error creating port-forward: Deployment contains more than 1 pod, but no pod was specified.")
+        }
+        return deployment.pods.size() == 1 ?
+                this.client.pods()
+                        .inNamespace(deployment.namespace)
+                        .withName(deployment.pods.get(0).name)
+                        .portForward(port) :
+                this.client.pods()
+                        .inNamespace(deployment.namespace)
+                        .withName(podName)
+                        .portForward(port)
+    }
+
     /*
         DaemonSet Methods
     */
@@ -565,8 +585,10 @@ class Kubernetes implements OrchestratorMain {
 
     def deleteService(String name, String namespace = this.namespace) {
         withRetry(2, 3) {
+            println "${name}: Service deleting..."
             client.services().inNamespace(namespace).withName(name).delete()
         }
+        println "${name}: Service deleted"
     }
 
     def waitForServiceDeletion(objects.Service service) {
