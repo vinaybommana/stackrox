@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import { eventTypes, rootTypes } from 'constants/timelineTypes';
 import NotFoundMessage from 'Components/NotFoundMessage';
 import TimelineLegend from 'Components/TimelineLegend';
+import ReduxPDFExportButton from 'Containers/ReduxPDFExportButton';
 import EventTypeSelect from './EventTypeSelect';
 import DeploymentEventTimeline from './DeploymentEventTimeline';
 import PodEventTimeline from './PodEventTimeline';
@@ -61,6 +62,9 @@ const EventTimeline = ({ deploymentId }) => {
             />
             <div className="ml-3">
                 <TimelineLegend />
+            </div>
+            <div className="ml-3">
+                <ReduxPDFExportButton fileName="Event Timeline Report" pdfId="capture-timeline" />
             </div>
         </>
     );

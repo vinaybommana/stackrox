@@ -4,7 +4,7 @@ import * as Icon from 'react-feather';
 import onClickOutside from 'react-onclickoutside';
 
 import downloadCsv from 'services/ComplianceDownloadService';
-import PDFExportButton from 'Components/PDFExportButton';
+import WorkflowPDFExportButton from 'Components/WorkflowPDFExportButton';
 import Button from 'Components/Button';
 import useCaseTypes from 'constants/useCaseTypes';
 import entityTypes from 'constants/entityTypes';
@@ -122,7 +122,7 @@ class ExportButton extends Component {
                 <ul className=" bg-base-100 border-2 border-primary-600 rounded">
                     <li className="p-4 border-b border-base-400">
                         <div className="flex uppercase">
-                            <PDFExportButton
+                            <WorkflowPDFExportButton
                                 id={this.props.pdfId}
                                 className={`${btnClassName}  ${
                                     this.isCsvSupported() ? 'mr-2' : 'w-full'

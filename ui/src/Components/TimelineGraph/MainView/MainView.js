@@ -16,7 +16,7 @@ const MainView = ({ data, minTimeRange, maxTimeRange, numRows, margin }) => {
     }, []);
 
     return (
-        <svg data-testid="timeline-main-view" width="100%" height="100%" ref={refAnchor}>
+        <svg data-testid="timeline-main-view" width="700px" height="400px" ref={refAnchor}>
             <Axis
                 translateX={0}
                 translateY={AXIS_HEIGHT}

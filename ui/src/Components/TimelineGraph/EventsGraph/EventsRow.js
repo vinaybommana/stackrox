@@ -22,6 +22,7 @@ const EventsRow = ({
             data-testid="timeline-events-row"
             key={entityName}
             transform={`translate(${translateX}, ${translateY})`}
+            fill="transparent"
         >
             <rect
                 fill={isOdd ? 'var(--tertiary-200)' : 'var(--base-100)'}

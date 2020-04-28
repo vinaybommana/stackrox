@@ -25,6 +25,8 @@ const EventsGraph = ({
         <g
             data-testid="timeline-events-graph"
             transform={`translate(${translateX}, ${translateY})`}
+            height={rowHeight}
+            width={width}
         >
             {data.map((datum, index) => {
                 const { id, name, events } = datum;

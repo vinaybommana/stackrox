@@ -32,12 +32,12 @@ const TimelineGraph = ({
         hasChildren,
     }));
     return (
-        <div className="flex flex-1 flex-col h-full" data-testid="timeline-graph">
-            <div className="flex h-full w-full">
-                <div className="w-1/4 border-r border-base-300">
+        <div className="flex flex-1 flex-col" data-testid="timeline-graph">
+            <div className="flex w-full" id="capture-timeline">
+                <div className="w-1/4 min-w-55 border-r border-base-300">
                     <NameList names={names} onClick={goToNextView} />
                 </div>
-                <div className="w-3/4">
+                <div>
                     <MainView
                         data={data}
                         minTimeRange={minTimeRange}
@@ -48,7 +48,7 @@ const TimelineGraph = ({
                 </div>
             </div>
             <div className="flex border-t border-base-300">
-                <div className="w-1/4 p-3 border-r border-base-300 font-700">
+                <div className="w-1/4 min-w-55 p-3 border-r border-base-300 font-700">
                     <Pagination
                         currentPage={currentPage}
                         totalSize={totalSize}
@@ -56,7 +56,7 @@ const TimelineGraph = ({
                         onChange={onPageChange}
                     />
                 </div>
-                <div className="w-3/4 font-700">
+                <div className="font-700">
                     <Minimap
                         minTimeRange={absoluteMinTimeRange}
                         setMinTimeRange={setMinTimeRange}

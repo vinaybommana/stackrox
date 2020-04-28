@@ -40,7 +40,7 @@ const MiniMap = ({
     const brushableViewHeight = Math.max(0, height - AXIS_HEIGHT);
 
     return (
-        <svg data-testid="timeline-minimap" width="100%" height="100%">
+        <svg data-testid="timeline-minimap" width="700px" height="150px">
             <EventsGraph
                 translateX={0}
                 translateY={0}

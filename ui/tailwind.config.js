@@ -36,7 +36,7 @@ module.exports = {
             lg: remCalc('1250'),
             xl: remCalc('1440'),
             xxl: remCalc('1812'),
-            xxxl: remCalc('2125')
+            xxxl: remCalc('2125'),
         },
         colors: {
             transparent: 'transparent',
@@ -130,13 +130,13 @@ module.exports = {
             'alert-600': 'var(--alert-600)',
             'alert-700': 'var(--alert-700)',
             'alert-800': 'var(--alert-800)',
-            'alert-900': 'var(--alert-900)'
+            'alert-900': 'var(--alert-900)',
         },
         letterSpacing: {
             tight: `-${remCalc('1')}`,
             normal: '0',
             wide: remCalc('.5'),
-            widest: remCalc('1')
+            widest: remCalc('1'),
         },
         fontFamily: {
             condensed: ['Open Sans Condensed', 'sans-serif'],
@@ -152,7 +152,7 @@ module.exports = {
                 'Fira Sans',
                 'Droid Sans',
                 'Helvetica Neue',
-                'sans-serif'
+                'sans-serif',
             ],
             serif: [
                 'Constantia',
@@ -164,9 +164,9 @@ module.exports = {
                 'Bitstream Vera Serif',
                 'Liberation Serif',
                 'Georgia',
-                'serif'
+                'serif',
             ],
-            mono: ['Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace']
+            mono: ['Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace'],
         },
         fontSize: {
             '2xs': remCalc('9'),
@@ -179,7 +179,7 @@ module.exports = {
             '3xl': remCalc('20'),
             '4xl': remCalc('24'),
             '5xl': remCalc('30'),
-            '6xl': remCalc('40')
+            '6xl': remCalc('40'),
         },
         fontWeight: {
             '100': 100,
@@ -190,39 +190,37 @@ module.exports = {
             '600': 600,
             '700': 700,
             '800': 800,
-            '900': 900
+            '900': 900,
         },
         lineHeight: {
             none: 1,
             tight: 1.25,
             normal: 1.5,
-            loose: 2
+            loose: 2,
         },
-        textColor: theme => theme('colors'),
-        backgroundColor: theme => theme('colors'),
+        textColor: (theme) => theme('colors'),
+        backgroundColor: (theme) => theme('colors'),
         borderWidth: {
             default: '1px',
             '0': '0',
             '2': '2px',
             '3': '3px',
             '4': '4px',
-            '8': '8px'
+            '8': '8px',
         },
-        borderColor: theme => {
+        borderColor: (theme) => {
             const colors = theme('colors');
-            return Object.assign(
-                {
-                    default: colors['grey-light']
-                },
-                colors
-            );
+            return {
+                default: colors['grey-light'],
+                ...colors,
+            };
         },
         borderRadius: {
             none: '0',
             sm: remCalc('2'),
             default: remCalc('4'),
             lg: remCalc('8'),
-            full: '9999px'
+            full: '9999px',
         },
         width: {
             auto: 'auto',
@@ -262,7 +260,7 @@ module.exports = {
             '5/6': '83.33333%',
             '9/10': '93%',
             full: '100%',
-            screen: '100vw'
+            screen: '100vw',
         },
         height: {
             auto: 'auto',
@@ -290,7 +288,7 @@ module.exports = {
             '64': '16rem',
             '72': '20rem',
             full: '100%',
-            screen: '100vh'
+            screen: '100vh',
         },
         minWidth: {
             '0': '0',
@@ -330,7 +328,7 @@ module.exports = {
             full: '100%',
             fit: 'fit-content',
             min: 'min-content',
-            max: 'max-content'
+            max: 'max-content',
         },
         minHeight: {
             '0': '0',
@@ -368,7 +366,7 @@ module.exports = {
             '1/8': '12.5%',
             '5/6': '83.33333%',
             full: '100%',
-            screen: '100vh'
+            screen: '100vh',
         },
         maxWidth: {
             '1': '0.25rem',
@@ -414,11 +412,11 @@ module.exports = {
             full: '100%',
             fit: 'fit-content',
             min: 'min-content',
-            max: 'max-content'
+            max: 'max-content',
         },
         maxHeight: {
             full: '100%',
-            screen: '100vh'
+            screen: '100vh',
         },
         padding: {
             px: '1px',
@@ -432,7 +430,7 @@ module.exports = {
             '7': '1.75rem',
             '8': '2rem',
             '10': '2.5rem',
-            '12': '3rem'
+            '12': '3rem',
         },
         margin: {
             auto: 'auto',
@@ -453,17 +451,18 @@ module.exports = {
             '-3': '-0.75rem',
             '-4': '-1rem',
             '-6': '-1.5rem',
-            '-8': '-2rem'
+            '-8': '-2rem',
         },
         boxShadow: {
             default: '0 2px 8px 0 hsla(0, 0%, 0%, 0.14)',
             md: '0 8px 8px 0 hsla(0, 0%, 0%, 0.04), 0 2px 4px 0 hsla(0, 0%, 0%, 0.17)',
             lg: '0 8px 8px 0 hsla(0, 0%, 0%, 0.04), 0 2px 4px 0 hsla(0, 0%, 0%, 0.17)',
             inner: 'inset 0 0px 8px 0 hsla(0, 0%, 0%, .25)',
-            none: 'none'
+            none: 'none',
         },
         zIndex: {
             auto: 'auto',
+            '-1': -1,
             '0': 0,
             '1': 1,
             '10': 10,
@@ -471,14 +470,15 @@ module.exports = {
             '30': 30,
             '40': 40,
             '50': 50,
-            '60': 60
+            '60': 60,
+            '70': 70,
         },
         fill: {
-            current: 'currentColor'
+            current: 'currentColor',
         },
         stroke: {
-            current: 'currentColor'
-        }
+            current: 'currentColor',
+        },
     },
     variants: {
         appearance: ['responsive', 'first-child', 'last-child', 'before', 'after'],
@@ -490,7 +490,7 @@ module.exports = {
             'before',
             'after',
             'hover',
-            'focus'
+            'focus',
         ],
         backgroundPosition: ['responsive', 'first-child', 'last-child', 'before', 'after'],
         backgroundRepeat: ['responsive', 'first-child', 'last-child', 'before', 'after'],
@@ -503,7 +503,7 @@ module.exports = {
             'before',
             'after',
             'hover',
-            'focus'
+            'focus',
         ],
         borderRadius: ['responsive', 'first-child', 'last-child', 'before', 'after'],
         borderStyle: ['responsive', 'first-child', 'last-child', 'before', 'after'],
@@ -528,7 +528,7 @@ module.exports = {
             'before',
             'after',
             'hover',
-            'focus'
+            'focus',
         ],
         height: ['responsive', 'first-child', 'last-child', 'before', 'after'],
         lineHeight: ['responsive', 'first-child', 'last-child', 'before', 'after'],
@@ -563,7 +563,7 @@ module.exports = {
             'before',
             'after',
             'hover',
-            'focus'
+            'focus',
         ],
         textDecoration: [
             'responsive',
@@ -572,7 +572,7 @@ module.exports = {
             'before',
             'after',
             'hover',
-            'focus'
+            'focus',
         ],
         textTransform: [
             'responsive',
@@ -581,7 +581,7 @@ module.exports = {
             'before',
             'after',
             'hover',
-            'focus'
+            'focus',
         ],
         letterSpacing: ['responsive', 'first-child', 'last-child', 'before', 'after'],
         userSelect: ['responsive', 'first-child', 'last-child', 'before', 'after'],
@@ -590,7 +590,7 @@ module.exports = {
         whitespace: ['responsive', 'first-child', 'last-child', 'before', 'after'],
         wordBreak: ['responsive', 'first-child', 'last-child', 'before', 'after'],
         width: ['responsive', 'first-child', 'last-child', 'before', 'after'],
-        zIndex: ['responsive', 'hover', 'first-child', 'last-child', 'before', 'after']
+        zIndex: ['responsive', 'hover', 'first-child', 'last-child', 'before', 'after'],
     },
     plugins: [
         customFormsPlugin,
@@ -615,10 +615,10 @@ module.exports = {
             });
         },
         getGradientClasses({
-            variants: ['responsive', 'first-child', 'last-child', 'before', 'after', 'hover']
+            variants: ['responsive', 'first-child', 'last-child', 'before', 'after', 'hover'],
         }),
         getObjectFitClasses({
-            variants: ['responsive', 'first-child', 'last-child', 'before', 'after']
+            variants: ['responsive', 'first-child', 'last-child', 'before', 'after'],
         }),
         getGridClasses({
             gaps: {
@@ -634,9 +634,9 @@ module.exports = {
                 '8': '2rem',
                 '10': '2.5rem',
                 '12': '3rem',
-                '16': '4rem'
+                '16': '4rem',
             },
-            variants: ['responsive', 'first-child', 'last-child', 'before', 'after']
+            variants: ['responsive', 'first-child', 'last-child', 'before', 'after'],
         }),
         getOrderClasses({
             positive: {
@@ -645,16 +645,16 @@ module.exports = {
                 '2': 2,
                 '3': 3,
                 '4': 4,
-                '5': 5
+                '5': 5,
             },
             negative: {
                 '-1': -1,
                 '-2': -2,
                 '-3': -3,
                 '-4': -4,
-                '-5': -5
+                '-5': -5,
             },
-            variants: ['responsive', 'first-child', 'last-child', 'before', 'after']
+            variants: ['responsive', 'first-child', 'last-child', 'before', 'after'],
         }),
         getColumnClasses({
             index: {
@@ -663,12 +663,12 @@ module.exports = {
                 '2': 2,
                 '3': 3,
                 '4': 4,
-                '5': 5
+                '5': 5,
             },
-            variants: ['responsive', 'first-child', 'last-child', 'before', 'after']
-        })
+            variants: ['responsive', 'first-child', 'last-child', 'before', 'after'],
+        }),
     ],
     corePlugins: {
-        container: false
-    }
+        container: false,
+    },
 };

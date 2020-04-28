@@ -59,11 +59,7 @@ const EventTimelineOverview = ({ deploymentId }) => {
                 loading={loading}
             />
             {isModalOpen && (
-                <Modal
-                    isOpen={isModalOpen}
-                    onRequestClose={hideEventTimelineGraph}
-                    className="w-2/3 h-full"
-                >
+                <Modal isOpen={isModalOpen} onRequestClose={hideEventTimelineGraph}>
                     <EventTimeline deploymentId={deploymentId} />
                 </Modal>
             )}

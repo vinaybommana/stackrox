@@ -39,7 +39,6 @@ import LicenseReminder from 'Containers/License/LicenseReminder';
 
 import ErrorBoundary from 'Containers/ErrorBoundary';
 import UnreachableWarning from 'Containers/UnreachableWarning';
-import Loader from 'Components/Loader';
 import AppWrapper from './AppWrapper';
 
 const AsyncApiDocsPage = asyncComponent(() => import('Containers/Docs/ApiPage'));
@@ -67,7 +66,6 @@ class MainPage extends Component {
         globalSearchView: PropTypes.bool.isRequired,
         cliDownloadView: PropTypes.bool.isRequired,
         metadata: PropTypes.shape({ stale: PropTypes.bool.isRequired }),
-        pdfLoadingStatus: PropTypes.bool,
         featureFlags: PropTypes.arrayOf(
             PropTypes.shape({
                 envVar: PropTypes.string.isRequired,
@@ -78,7 +76,6 @@ class MainPage extends Component {
 
     static defaultProps = {
         metadata: { stale: false },
-        pdfLoadingStatus: false,
     };
 
     onSearchCloseHandler = (toURL) => {
@@ -91,13 +88,6 @@ class MainPage extends Component {
         if (toURL && typeof toURL === 'string') this.props.history.push(toURL);
     };
 
-    renderPDFLoader = () =>
-        this.props.pdfLoadingStatus && (
-            <div className="absolute left-0 top-0 bg-base-100 z-60 mt-20 w-full h-full text-tertiary-800">
-                <Loader message="Exporting..." />
-            </div>
-        );
-
     renderSearchModal = () => {
         if (!this.props.globalSearchView) return '';
         return <SearchModal className="h-full w-full" onClose={this.onSearchCloseHandler} />;
@@ -109,11 +99,7 @@ class MainPage extends Component {
     };
 
     renderRouter = () => (
-        <section
-            className={`flex flex-col h-full w-full relative ${
-                this.props.pdfLoadingStatus ? '' : 'overflow-auto'
-            }`}
-        >
+        <section className="flex flex-col h-full w-full relative overflow-auto">
             <ErrorBoundary>
                 <Switch>
                     <ProtectedRoute path={dashboardPath} component={AsyncDashboardPage} />
@@ -147,7 +133,6 @@ class MainPage extends Component {
                     <ProtectedRoute path={clustersPath} component={AsyncClustersPage} />
                     <Redirect from={mainPath} to={dashboardPath} />
                 </Switch>
-                {this.renderPDFLoader()}
             </ErrorBoundary>
         </section>
     );
@@ -201,7 +186,6 @@ const mapStateToProps = createStructuredSelector({
     globalSearchView: selectors.getGlobalSearchView,
     cliDownloadView: selectors.getCLIDownloadView,
     metadata: selectors.getMetadata,
-    pdfLoadingStatus: selectors.getPdfLoadingStatus,
     featureFlags: selectors.getFeatureFlags,
 });
 

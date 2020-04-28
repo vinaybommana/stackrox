@@ -27,7 +27,7 @@ const defaultPageLandscapeWidth = 297;
 const defaultPagePotraitWidth = 210;
 const WIDGET_WIDTH = 203;
 
-class PDFExportButton extends Component {
+class WorkflowPDFExportButton extends Component {
     static propTypes = {
         id: PropTypes.string,
         options: PropTypes.shape({
@@ -95,6 +95,7 @@ class PDFExportButton extends Component {
 
             const promise = html2canvas(clonedNode, {
                 scale: 3,
+                allowTaint: true,
             }).then((canvas) => {
                 Object.assign(canvas, {
                     className: clonedNode.className.replace('pdf-page', 'pdf-page-image'),
@@ -309,4 +310,4 @@ const mapDispatchToProps = {
     setPDFSuccessState: actions.fetchPdf.success,
 };
 
-export default connect(null, mapDispatchToProps)(PDFExportButton);
+export default connect(null, mapDispatchToProps)(WorkflowPDFExportButton);
