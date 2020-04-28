@@ -742,6 +742,12 @@ const formDescriptors = {
                 placeholder: '0123456789',
             },
             {
+                label: 'Endpoint',
+                jsonpath: 'ecr.endpoint',
+                type: 'text',
+                placeholder: 'ecr.us-west-2.amazonaws.com',
+            },
+            {
                 label: 'Region',
                 jsonpath: 'ecr.region',
                 type: 'text',
@@ -966,6 +972,12 @@ const formDescriptors = {
                 jsonpath: 's3.objectPrefix',
                 type: 'text',
                 placeholder: '',
+            },
+            {
+                label: 'Endpoint',
+                jsonpath: 's3.endpoint',
+                type: 'text',
+                placeholder: 's3.us-west-2.amazonaws.com',
             },
             {
                 label: 'Region',

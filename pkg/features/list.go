@@ -39,7 +39,4 @@ var (
 
 	// PolicyImportExport feature flag enables policy import and export
 	PolicyImportExport = registerFeature("Enable Import/Export for Analyst Workflow", "ROX_POLICY_IMPORT_EXPORT", false)
-
-	// CustomEndpoints feature flag enables custom endpoints for S3 and ECR integrations
-	CustomEndpoints = registerFeature("Enable Custom Endpoints for S3 and ECR integrations", "ROX_CUSTOM_ENDPOINTS", false)
 )
