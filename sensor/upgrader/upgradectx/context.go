@@ -84,6 +84,9 @@ func Create(ctx context.Context, config *config.UpgraderConfig) (*UpgradeContext
 	for _, gvk := range common.StateResourceTypes {
 		expectedGVKs[gvk] = struct{}{}
 	}
+	if config.Owner != nil {
+		expectedGVKs[config.Owner.GVK] = struct{}{}
+	}
 
 	resourceMap, err := resources.GetAvailableResources(k8sClientSet.Discovery(), expectedGVKs)
 	if err != nil {
