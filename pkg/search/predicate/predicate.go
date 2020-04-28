@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/pkg/search"
+	"github.com/stackrox/rox/pkg/search/fieldmap"
 	"github.com/stackrox/rox/pkg/utils"
 )
 
@@ -52,7 +53,7 @@ func (f predicateFunc) Matches(instance interface{}) bool {
 
 // Factory object stores the specs for each when walking the query.
 type Factory struct {
-	searchFields FieldMap
+	searchFields fieldmap.FieldMap
 	searchPaths  wrappedOptionsMap
 	exampleObj   interface{}
 }
@@ -60,7 +61,7 @@ type Factory struct {
 // NewFactory returns a new predicate factory for the type of the given object.
 func NewFactory(prefix string, obj interface{}) Factory {
 	return Factory{
-		searchFields: mapSearchTagsToFieldPaths(obj),
+		searchFields: fieldmap.MapSearchTagsToFieldPaths(obj),
 		searchPaths: wrappedOptionsMap{
 			optionsMap: search.Walk(v1.SearchCategory(-1), prefix, obj),
 			prefix:     fmt.Sprintf("%s.", prefix),
@@ -220,7 +221,7 @@ func (tb Factory) match(q *v1.MatchFieldQuery) (internalPredicate, error) {
 
 func (tb Factory) matchLinked(q *v1.MatchLinkedFieldsQuery) (internalPredicate, error) {
 	// Find the longest common path with all of the linked fields.
-	var commonPath FieldPath
+	var commonPath fieldmap.FieldPath
 	for _, fieldQuery := range q.GetQuery() {
 		path := tb.searchFields.Get(fieldQuery.GetField())
 		if path == nil {
@@ -285,11 +286,11 @@ func (tb Factory) matchLinked(q *v1.MatchLinkedFieldsQuery) (internalPredicate, 
 	return createPathPredicate(reflect.TypeOf(tb.exampleObj), commonPath, linked)
 }
 
-func (tb Factory) createPredicate(fullPath string, path FieldPath, value string) (internalPredicate, error) {
+func (tb Factory) createPredicate(fullPath string, path fieldmap.FieldPath, value string) (internalPredicate, error) {
 	return tb.createPredicateWithRootType(reflect.TypeOf(tb.exampleObj), fullPath, path, value)
 }
 
-func (tb Factory) createPredicateWithRootType(rootTy reflect.Type, fullPath string, path FieldPath, value string) (internalPredicate, error) {
+func (tb Factory) createPredicateWithRootType(rootTy reflect.Type, fullPath string, path fieldmap.FieldPath, value string) (internalPredicate, error) {
 	// Create the predicate for the search field value.
 	pred, err := createBasePredicate(fullPath, path[len(path)-1].Type, value)
 	if err != nil {
@@ -369,7 +370,7 @@ func andOf(preds ...internalPredicate) internalPredicate {
 // Recursive predicate manufacturing from the input field path.
 ///////////////////////////////////////////////////////////////
 
-func createPathPredicate(parentType reflect.Type, path FieldPath, pred internalPredicate) (internalPredicate, error) {
+func createPathPredicate(parentType reflect.Type, path fieldmap.FieldPath, pred internalPredicate) (internalPredicate, error) {
 	if len(path) == 0 {
 		return pred, nil
 	}

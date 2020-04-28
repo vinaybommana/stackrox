@@ -1,13 +1,14 @@
-package predicate
+package fieldmap
 
 import (
 	"reflect"
 	"strings"
 )
 
-func mapSearchTagsToFieldPaths(toWalk interface{}) map[string]FieldPath {
-	fieldMap := make(map[string]FieldPath)
-	VisitFields(toWalk, func(fieldPath FieldPath) {
+// MapSearchTagsToFieldPaths creates a FieldMap, by walking the given object.
+func MapSearchTagsToFieldPaths(toWalk interface{}) FieldMap {
+	fieldMap := make(FieldMap)
+	visitFields(toWalk, func(fieldPath FieldPath) bool {
 		// Current field is the last field in the path.
 		currentField := fieldPath[len(fieldPath)-1]
 
@@ -15,16 +16,18 @@ func mapSearchTagsToFieldPaths(toWalk interface{}) map[string]FieldPath {
 		protoTag, oneofTag := getProtobufTags(currentField)
 		if protoTag == "" && oneofTag == "" {
 			// Skip non-protobuf fields.
-			return
+			return false
 		}
 
 		// Get the search tags for the field.
 		searchTag := getSearchTagForField(currentField)
-		if searchTag == "-" || searchTag == "" {
-			return
+		if searchTag == "-" {
+			return false
 		}
-
-		fieldMap[strings.ToLower(searchTag)] = fieldPath
+		if searchTag != "" {
+			fieldMap[strings.ToLower(searchTag)] = fieldPath
+		}
+		return true
 	})
 	return fieldMap
 }
