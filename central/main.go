@@ -248,7 +248,7 @@ func main() {
 }
 
 func ensureDB() {
-	err := version.Ensure(globaldb.GetGlobalDB(), globaldb.GetGlobalBadgerDB())
+	err := version.Ensure(globaldb.GetGlobalDB(), globaldb.GetGlobalBadgerDB(), globaldb.GetRocksDB())
 	if err != nil {
 		log.Panicf("DB version check failed. You may need to run migrations: %v", err)
 	}

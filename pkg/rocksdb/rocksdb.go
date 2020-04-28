@@ -22,5 +22,6 @@ func NewTemp(name string) (*gorocksdb.DB, string, error) {
 func New(path string) (*gorocksdb.DB, error) {
 	opts := gorocksdb.NewDefaultOptions()
 	opts.SetCreateIfMissing(true)
+	opts.SetCompression(gorocksdb.LZ4Compression)
 	return gorocksdb.OpenDb(opts, path)
 }

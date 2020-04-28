@@ -3,8 +3,6 @@ package runner
 import (
 	"fmt"
 
-	"github.com/dgraph-io/badger"
-	bolt "github.com/etcd-io/bbolt"
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/migrator/log"
 	"github.com/stackrox/rox/migrator/migrations"
@@ -13,10 +11,10 @@ import (
 )
 
 // Run runs the migrator.
-func Run(boltDB *bolt.DB, badgerDB *badger.DB) error {
-	dbSeqNum, err := getCurrentSeqNum(boltDB, badgerDB)
+func Run(databases *types.Databases) error {
+	dbSeqNum, err := getCurrentSeqNum(databases)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "getting current seq num")
 	}
 	currSeqNum := pkgMigrations.CurrentDBVersionSeqNum
 	if dbSeqNum > currSeqNum {
@@ -29,23 +27,20 @@ func Run(boltDB *bolt.DB, badgerDB *badger.DB) error {
 	}
 	log.WriteToStderrf("Found DB at version %d, which is less than what we expect (%d). Running migrations...",
 		dbSeqNum, currSeqNum)
-	return runMigrations(boltDB, badgerDB, dbSeqNum)
+	return runMigrations(databases, dbSeqNum)
 }
 
-func runMigrations(boltDB *bolt.DB, badgerDB *badger.DB, startingSeqNum int) error {
+func runMigrations(databases *types.Databases, startingSeqNum int) error {
 	for seqNum := startingSeqNum; seqNum < pkgMigrations.CurrentDBVersionSeqNum; seqNum++ {
 		migration, ok := migrations.Get(seqNum)
 		if !ok {
 			return fmt.Errorf("no migration found starting at %d", startingSeqNum)
 		}
-		err := migration.Run(&types.Databases{
-			BoltDB:   boltDB,
-			BadgerDB: badgerDB,
-		})
+		err := migration.Run(databases)
 		if err != nil {
 			return errors.Wrapf(err, "error running migration starting at %d", startingSeqNum)
 		}
-		err = updateVersion(boltDB, badgerDB, &migration.VersionAfter)
+		err = updateVersion(databases, &migration.VersionAfter)
 		if err != nil {
 			return errors.Wrapf(err, "failed to update version after migration %d", startingSeqNum)
 		}
