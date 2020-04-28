@@ -25,7 +25,7 @@ type metadataAndQB struct {
 var (
 	AddCaps                = newFieldWithFieldLabelQueryBuilder("Add Capabilities", search.AddCapabilities, negationForbidden)
 	CVE                    = newFieldWithFieldLabelQueryBuilder("CVE", search.CVE)
-	CVSS                   = newFieldWithFieldLabelQueryBuilder("CVSS", search.CVSS, operatorsForbidden)
+	CVSS                   = newFieldWithFieldLabelQueryBuilder("CVSS", search.CVSS, negationForbidden)
 	ContainerCPULimit      = newFieldWithFieldLabelQueryBuilder("Container CPU Limit", search.CPUCoresLimit, operatorsForbidden)
 	ContainerCPURequest    = newFieldWithFieldLabelQueryBuilder("Container CPU Request", search.CPUCoresRequest, operatorsForbidden)
 	ContainerMemLimit      = newFieldWithFieldLabelQueryBuilder("Container Memory Limit", search.MemoryLimit, operatorsForbidden)

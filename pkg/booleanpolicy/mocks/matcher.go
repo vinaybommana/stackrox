@@ -8,7 +8,7 @@ import (
 	context "context"
 	gomock "github.com/golang/mock/gomock"
 	storage "github.com/stackrox/rox/generated/storage"
-	booleanpolicy "github.com/stackrox/rox/pkg/booleanpolicy"
+	searchbasedpolicies "github.com/stackrox/rox/pkg/searchbasedpolicies"
 	reflect "reflect"
 )
 
@@ -36,10 +36,10 @@ func (m *MockMatcher) EXPECT() *MockMatcherMockRecorder {
 }
 
 // MatchOne mocks base method
-func (m *MockMatcher) MatchOne(ctx context.Context, deployment *storage.Deployment, images []*storage.Image, pi *storage.ProcessIndicator) (booleanpolicy.Violations, error) {
+func (m *MockMatcher) MatchOne(ctx context.Context, deployment *storage.Deployment, images []*storage.Image, pi *storage.ProcessIndicator) (searchbasedpolicies.Violations, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "MatchOne", ctx, deployment, images, pi)
-	ret0, _ := ret[0].(booleanpolicy.Violations)
+	ret0, _ := ret[0].(searchbasedpolicies.Violations)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

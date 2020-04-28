@@ -5,6 +5,8 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/booleanpolicy"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/policyutils"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/predicate"
@@ -39,6 +41,12 @@ type builderImpl struct {
 
 // ForPolicy returns a matcher for the given policy and options.
 func (mb *builderImpl) ForPolicy(policy *storage.Policy) (searchbasedpolicies.Matcher, error) {
+	if booleanpolicy.IsBooleanPolicy(policy) {
+		if !features.BooleanPolicyLogic.Enabled() {
+			return nil, fmt.Errorf("policy %+v boolean logic is not enabled", policy)
+		}
+		return booleanpolicy.BuildMatcher(policy)
+	}
 	if policy.GetName() == "" {
 		return nil, fmt.Errorf("policy %+v doesn't have a name", policy)
 	}

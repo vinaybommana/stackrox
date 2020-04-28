@@ -11,7 +11,9 @@ import (
 	clusterDataStore "github.com/stackrox/rox/central/cluster/datastore"
 	notifierDataStore "github.com/stackrox/rox/central/notifier/datastore"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/booleanpolicy"
 	"github.com/stackrox/rox/pkg/errorhelpers"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/policies"
 	"github.com/stackrox/rox/pkg/scopecomp"
 	"github.com/stackrox/rox/pkg/searchbasedpolicies/matcher"
@@ -66,6 +68,7 @@ func (s *policyValidator) internalValidate(policy *storage.Policy, additionalVal
 	s.removeEnforcementsForMissingLifecycles(policy)
 
 	errorList := errorhelpers.NewErrorList("policy invalid")
+	errorList.AddError(s.validateVersion(policy))
 	errorList.AddError(s.validateName(policy))
 	errorList.AddError(s.validateDescription(policy))
 	errorList.AddError(s.validateCompilableForLifecycle(policy))
@@ -83,6 +86,13 @@ func (s *policyValidator) internalValidate(policy *storage.Policy, additionalVal
 func (s *policyValidator) validateName(policy *storage.Policy) error {
 	if policy.GetName() == "" || !s.nameValidator.MatchString(policy.GetName()) {
 		return errors.New("policy must have a name, at least 5 chars long, and contain no punctuation or special characters")
+	}
+	return nil
+}
+
+func (s *policyValidator) validateVersion(policy *storage.Policy) error {
+	if !features.BooleanPolicyLogic.Enabled() && booleanpolicy.IsBooleanPolicy(policy) {
+		return errors.New("boolean policies are not enabled")
 	}
 	return nil
 }

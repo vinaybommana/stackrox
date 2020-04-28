@@ -7,6 +7,7 @@ import (
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/predicate"
+	"github.com/stackrox/rox/pkg/searchbasedpolicies"
 	"github.com/stackrox/rox/pkg/searchbasedpolicies/builders"
 )
 
@@ -62,16 +63,16 @@ func matchWithPredicateTuple(predicates predicateTuple, deployment *storage.Depl
 
 // MatchOne returns detection against the deployment and images using predicate matching
 // The deployment parameter can be nil in the case of image detection
-func (m *matcherImpl) MatchOne(ctx context.Context, deployment *storage.Deployment, images []*storage.Image, indicator *storage.ProcessIndicator) (Violations, error) {
+func (m *matcherImpl) MatchOne(ctx context.Context, deployment *storage.Deployment, images []*storage.Image, indicator *storage.ProcessIndicator) (searchbasedpolicies.Violations, error) {
 	var allViolations []*storage.Alert_Violation
 	for _, tuple := range m.predicates {
 		violations, err := matchWithPredicateTuple(tuple, deployment, images, indicator)
 		if err != nil {
-			return Violations{}, err
+			return searchbasedpolicies.Violations{}, err
 		}
 		allViolations = append(allViolations, violations...)
 	}
-	violations := Violations{
+	violations := searchbasedpolicies.Violations{
 		AlertViolations: allViolations,
 	}
 	if indicator != nil {

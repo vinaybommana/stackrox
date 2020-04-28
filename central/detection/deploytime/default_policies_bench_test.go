@@ -36,7 +36,7 @@ func BenchmarkDefaultPolicies(b *testing.B) {
 		}
 	}
 
-	detection := NewDetector(policySet, nil)
+	detection := NewDetector(policySet)
 
 	dep := fixtures.GetDeployment()
 	images := fixtures.DeploymentImages()

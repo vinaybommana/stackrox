@@ -23,7 +23,6 @@ import (
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/expiringcache"
-	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/policies"
 	"github.com/stackrox/rox/pkg/process/filter"
 	processWhitelistPkg "github.com/stackrox/rox/pkg/processwhitelist"
@@ -274,13 +273,6 @@ func (m *managerImpl) UpsertPolicy(policy *storage.Policy) error {
 		if err := m.deploytimeDetector.PolicySet().UpsertPolicy(policy); err != nil {
 			return errors.Wrapf(err, "adding policy %s to deploy time detector", policy.GetName())
 		}
-		if !features.BooleanPolicyLogic.Enabled() {
-			deployTimeAlerts, err := m.deploytimeDetector.AlertsForPolicy(policy.GetId())
-			if err != nil {
-				return errors.Wrapf(err, "error generating deploy-time alerts for policy %s", policy.GetName())
-			}
-			presentAlerts = append(presentAlerts, deployTimeAlerts...)
-		}
 	} else {
 		err := m.deploytimeDetector.PolicySet().RemovePolicy(policy.GetId())
 		if err != nil {
@@ -291,13 +283,6 @@ func (m *managerImpl) UpsertPolicy(policy *storage.Policy) error {
 	if policies.AppliesAtRunTime(policy) {
 		if err := m.runtimeDetector.PolicySet().UpsertPolicy(policy); err != nil {
 			return errors.Wrapf(err, "adding policy %s to runtime detector", policy.GetName())
-		}
-		if !features.BooleanPolicyLogic.Enabled() {
-			runTimeAlerts, err := m.runtimeDetector.AlertsForPolicy(policy.GetId())
-			if err != nil {
-				return errors.Wrapf(err, "error generating runtime alerts for policy %s", policy.GetName())
-			}
-			presentAlerts = append(presentAlerts, runTimeAlerts...)
 		}
 	} else {
 		err := m.runtimeDetector.PolicySet().RemovePolicy(policy.GetId())

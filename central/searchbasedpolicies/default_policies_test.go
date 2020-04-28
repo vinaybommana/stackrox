@@ -567,13 +567,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 	javaLineage := []string{"/bin/bash", "/mnt/scripts/run_server.sh", "/bin/java"}
 	fixtureDepJavaIndicator := suite.mustAddIndicator(fixtureDep.GetId(), "/bin/bash", "-attack", "/bin/bash", javaLineage, 0)
 
-	// Find all the deployments indexed.
-	allDeployments, err := suite.deploymentIndexer.Search(search.EmptyQuery())
-	suite.NoError(err)
-
-	allImages, err := suite.imageIndexer.Search(search.EmptyQuery())
-	suite.NoError(err)
-
 	deploymentTestCases := []testCase{
 		{
 			policyName: "Latest tag",
@@ -1053,27 +1046,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		suite.T().Run(fmt.Sprintf("%s (on deployments)", c.policyName), func(t *testing.T) {
 			m, err := suite.matcherBuilder.ForPolicy(p)
 			require.NoError(t, err)
-			if !features.BooleanPolicyLogic.Enabled() {
-				matches, err := m.Match(suite.matchCtx, suite.deploymentSearcher)
-				require.NoError(t, err)
-				validateDeploymentMatches(matches, allDeployments, c, t)
-
-				var allIDs []string
-				for _, deployment := range allDeployments {
-					allIDs = append(allIDs, deployment.ID)
-				}
-				matchesFromMatchMany, err := m.MatchMany(suite.matchCtx, suite.deploymentSearcher, allIDs...)
-				require.NoError(t, err)
-				validateDeploymentMatches(matchesFromMatchMany, allDeployments, c, t)
-
-				var matchingIDs []string
-				for id := range c.expectedViolations {
-					matchingIDs = append(matchingIDs, id)
-				}
-				matchesFromExactlyMatchMany, err := m.MatchMany(suite.matchCtx, suite.deploymentSearcher, matchingIDs...)
-				require.NoError(t, err)
-				validateDeploymentMatches(matchesFromExactlyMatchMany, allDeployments, c, t)
-			}
 
 			for id, violations := range c.expectedViolations {
 				// Test match one only if we aren't testing processes
@@ -1337,28 +1309,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		suite.T().Run(fmt.Sprintf("%s (on images)", c.policyName), func(t *testing.T) {
 			m, err := suite.matcherBuilder.ForPolicy(p)
 			require.NoError(t, err)
-			if !features.BooleanPolicyLogic.Enabled() {
-				matches, err := m.Match(suite.testCtx, suite.imageSearcher)
-				require.NoError(t, err)
-				validateImageMatches(matches, allImages, c, t)
-
-				var allIDs []string
-				for _, image := range allImages {
-					allIDs = append(allIDs, image.ID)
-				}
-				matchesFromMatchMany, err := m.MatchMany(suite.testCtx, suite.imageSearcher, allIDs...)
-				require.NoError(t, err)
-				validateImageMatches(matchesFromMatchMany, allImages, c, t)
-
-				var matchingIDs []string
-				for id := range c.expectedViolations {
-					matchingIDs = append(matchingIDs, id)
-				}
-				matchesFromExactlyMatchMany, err := m.MatchMany(suite.testCtx, suite.imageSearcher, matchingIDs...)
-				require.NoError(t, err)
-				validateImageMatches(matchesFromExactlyMatchMany, allImages, c, t)
-			}
-
 			for id, violations := range c.expectedViolations {
 				// Test match one
 				gotFromMatchOne, err := m.MatchOne(suite.testCtx, nil, []*storage.Image{suite.images[id]}, nil)
@@ -1394,81 +1344,6 @@ func (suite *DefaultPoliciesTestSuite) TestMapPolicyMatchOne() {
 	matched, err = m.MatchOne(suite.testCtx, validAnnotation, nil, nil)
 	suite.NoError(err)
 	suite.Empty(matched.AlertViolations)
-}
-
-func validateImageMatches(matches map[string]searchbasedpolicies.Violations, allImages []search.Result, c testCase, t *testing.T) {
-	if len(c.shouldNotMatch) > 0 {
-		assert.Nil(t, c.expectedViolations, "Don't specify expected violations and shouldNotMatch")
-		for id := range c.shouldNotMatch {
-			_, exists := matches[id]
-			assert.False(t, exists, "Should not have matched %s", id)
-		}
-
-		for _, imageResult := range allImages {
-			id := imageResult.ID
-			_, shouldNotMatch := c.shouldNotMatch[id]
-			if shouldNotMatch {
-				continue
-			}
-			match, exists := matches[id]
-			require.True(t, exists, "Should have matched %s. Got %+v", id, matches)
-			if c.sampleViolationForMatched != "" {
-				assert.Equal(t, c.sampleViolationForMatched, match.AlertViolations[0].GetMessage())
-			}
-		}
-		return
-	}
-
-	for id, violations := range c.expectedViolations {
-		got, ok := matches[id]
-		if !assert.True(t, ok, "Id '%s' didn't match, but should have. Got: %+v", id, matches) {
-			continue
-		}
-		assert.ElementsMatch(t, violations.AlertViolations, got.AlertViolations, "Expected violations %+v don't match what we got %+v", violations, got)
-		assert.Equal(t, violations.ProcessViolation, got.ProcessViolation, "Expected violations %+v don't match what we got %+v", violations, got)
-	}
-	assert.Len(t, matches, len(c.expectedViolations))
-}
-
-func validateDeploymentMatches(matches map[string]searchbasedpolicies.Violations, allDeployments []search.Result, c testCase, t *testing.T) {
-	if len(c.shouldNotMatch) > 0 {
-		assert.Nil(t, c.expectedViolations, "Don't specify expected violations and shouldNotMatch")
-		for id := range c.shouldNotMatch {
-			_, exists := matches[id]
-			assert.False(t, exists, "Should not have matched %s", id)
-		}
-		for _, depResult := range allDeployments {
-			id := depResult.ID
-			_, shouldNotMatch := c.shouldNotMatch[id]
-			if shouldNotMatch {
-				continue
-			}
-			match, exists := matches[id]
-			assert.True(t, exists, "Should have matched %s", id)
-			if exists && c.sampleViolationForMatched != "" {
-				assert.Equal(t, c.sampleViolationForMatched, match.AlertViolations[0].GetMessage())
-			}
-		}
-		return
-	}
-
-	for id, violations := range c.expectedViolations {
-		got, ok := matches[id]
-		if !assert.True(t, ok, "Id '%s' didn't match, but should have. Got: %+v", id, matches) {
-			continue
-		}
-		// Make checks case insensitive due to differences in regex
-		for _, a := range violations.AlertViolations {
-			a.Message = strings.ToLower(a.Message)
-		}
-		for _, a := range got.AlertViolations {
-			a.Message = strings.ToLower(a.Message)
-		}
-		assert.ElementsMatch(t, violations.AlertViolations, got.AlertViolations, "Expected violations %+v don't match what we got %+v", violations, got)
-		assert.Equal(t, violations.ProcessViolation, got.ProcessViolation)
-
-	}
-	assert.Len(t, matches, len(c.expectedViolations))
 }
 
 func (suite *DefaultPoliciesTestSuite) TestRuntimePolicyFieldsCompile() {

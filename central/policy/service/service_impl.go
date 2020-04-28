@@ -469,62 +469,7 @@ func (s *serviceImpl) predicateBasedDryRunPolicy(ctx context.Context, cancelCtx 
 
 // DryRunPolicy runs a dry run of the policy and determines what deployments would violate it
 func (s *serviceImpl) DryRunPolicy(ctx context.Context, request *storage.Policy) (*v1.DryRunResponse, error) {
-	if features.BooleanPolicyLogic.Enabled() {
-		return s.predicateBasedDryRunPolicy(ctx, ctx, request)
-	}
-
-	if err := s.validator.validate(ctx, request); err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
-	}
-
-	var resp v1.DryRunResponse
-	// Dry runs do not apply to policies with whitelists or runtime lifecycle stage because they are evaluated
-	// through the process indicator pipeline
-	if request.GetFields().GetWhitelistEnabled() || sliceutils.Find(request.GetLifecycleStages(), storage.LifecycleStage_RUNTIME) != -1 {
-		return &resp, nil
-	}
-
-	searchBasedMatcher, err := s.testMatchBuilder.ForPolicy(request)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("couldn't construct matcher: %s", err))
-	}
-
-	compiledPolicy, err := detection.NewCompiledPolicy(request, searchBasedMatcher)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid policy: %v", err)
-	}
-
-	violationsPerDeployment, err := searchBasedMatcher.Match(ctx, s.deployments)
-	if err != nil {
-		return nil, status.Error(codes.Internal, fmt.Sprintf("failed policy matching: %s", err))
-	}
-
-	for deploymentID, violations := range violationsPerDeployment {
-		if len(violations.AlertViolations) == 0 && violations.ProcessViolation == nil {
-			continue
-		}
-		deployment, exists, err := s.deployments.GetDeployment(ctx, deploymentID)
-		if err != nil {
-			return nil, status.Error(codes.Internal, fmt.Sprintf("retrieving deployment '%s': %s", deploymentID, err))
-		}
-		if !exists {
-			// Maybe the deployment was deleted around the time of the dry-run.
-			continue
-		}
-		if !compiledPolicy.AppliesTo(deployment) {
-			continue
-		}
-		// Collect the violation messages as strings for the output.
-		convertedViolations := make([]string, 0, len(violations.AlertViolations))
-		for _, violation := range violations.AlertViolations {
-			convertedViolations = append(convertedViolations, violation.GetMessage())
-		}
-		if violations.ProcessViolation != nil {
-			convertedViolations = append(convertedViolations, violations.ProcessViolation.GetMessage())
-		}
-		resp.Alerts = append(resp.Alerts, &v1.DryRunResponse_Alert{Deployment: deployment.GetName(), Violations: convertedViolations})
-	}
-	return &resp, nil
+	return s.predicateBasedDryRunPolicy(ctx, ctx, request)
 }
 
 // GetPolicyCategories returns the categories of all policies.

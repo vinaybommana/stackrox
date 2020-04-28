@@ -8,8 +8,10 @@ import (
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/bolthelper"
+	"github.com/stackrox/rox/pkg/booleanpolicy"
 	"github.com/stackrox/rox/pkg/defaults"
 	"github.com/stackrox/rox/pkg/errorhelpers"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/set"
 )
@@ -99,6 +101,9 @@ func addDefaults(store Store) {
 	}
 	var count int
 	for _, p := range policies {
+		if !features.BooleanPolicyLogic.Enabled() && booleanpolicy.IsBooleanPolicy(p) {
+			continue
+		}
 		// If the ID or Name already exists then ignore
 		if policyIDSet.Contains(p.GetId()) || policyNameSet.Contains(p.GetName()) {
 			continue

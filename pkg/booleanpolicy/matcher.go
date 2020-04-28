@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/search/predicate"
+	"github.com/stackrox/rox/pkg/searchbasedpolicies"
 )
 
 var (
@@ -14,17 +15,11 @@ var (
 	processFactory    = predicate.NewFactory("process_indicator", (*storage.ProcessIndicator)(nil))
 )
 
-// Violations represents a list of violation sub-objects.
-type Violations struct {
-	ProcessViolation *storage.Alert_ProcessViolation
-	AlertViolations  []*storage.Alert_Violation
-}
-
 // Matcher matches objects against a policy.
 //go:generate mockgen-wrapper
 type Matcher interface {
 	// MatchOne matches the policy against the passed deployment and images
-	MatchOne(ctx context.Context, deployment *storage.Deployment, images []*storage.Image, pi *storage.ProcessIndicator) (Violations, error)
+	MatchOne(ctx context.Context, deployment *storage.Deployment, images []*storage.Image, pi *storage.ProcessIndicator) (searchbasedpolicies.Violations, error)
 }
 
 // BuildMatcher builds a matcher for the given policy.
