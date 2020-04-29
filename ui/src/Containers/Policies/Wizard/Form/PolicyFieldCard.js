@@ -33,14 +33,15 @@ function PolicyFieldCard({
     }
 
     const borderColorClass = isNegated ? 'border-accent-400' : 'border-base-400';
+    const headerText = isNegated ? fieldKey.negatedName : fieldKey.longName || fieldKey.name;
     return (
         <>
             <div className={`bg-base-200 border-2 ${borderColorClass} rounded`}>
                 <div className={`border-b-2 ${borderColorClass} flex`}>
                     <div className="flex flex-1 font-700 p-2 pl-3 text-base-600 text-sm uppercase items-center">
-                        {fieldKey.longName || fieldKey.name}:
+                        {headerText}:
                     </div>
-                    {fieldKey.canNegate && (
+                    {fieldKey.negatedName && (
                         <div className={`flex items-center p-2 border-l-2 ${borderColorClass}`}>
                             <label
                                 htmlFor={toggleFieldName}
