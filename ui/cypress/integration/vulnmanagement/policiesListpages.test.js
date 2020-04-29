@@ -32,4 +32,17 @@ describe('Policies list Page and its entity detail page , related entities sub l
                 allChecksForEntities(url.list.policies, 'deployment');
         });
     });
+
+    // regression test for ROX-4752
+    it('should show Privileged criterion when present in the policy', () => {
+        cy.visit(url.list.policies);
+
+        cy.get(`${selectors.tableRows}:contains('Privileged')`).click();
+
+        cy.get('[data-testid="widget-body"] [data-testid="privileged"]')
+            .invoke('text')
+            .then((criterionText) => {
+                expect(criterionText).to.contain('Yes');
+            });
+    });
 });

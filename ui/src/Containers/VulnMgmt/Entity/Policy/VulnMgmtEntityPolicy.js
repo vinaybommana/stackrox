@@ -109,6 +109,7 @@ const VulmMgmtEntityPolicy = ({
                         port
                         protocol
                     }
+                    privileged
                     processPolicy {
                         ancestor
                         args
