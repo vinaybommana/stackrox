@@ -53,7 +53,7 @@ func ConvertPolicyFieldsToSections(fields *storage.PolicyFields) *storage.Policy
 }
 
 func convertImageScanAge(fields *storage.PolicyFields) []*storage.PolicyGroup {
-	if fields.GetSetScanAgeDays() != nil {
+	if fields.GetSetScanAgeDays() == nil {
 		return nil
 	}
 
@@ -66,7 +66,7 @@ func convertImageScanAge(fields *storage.PolicyFields) []*storage.PolicyGroup {
 }
 
 func convertNoScanExists(fields *storage.PolicyFields) []*storage.PolicyGroup {
-	if fields.GetSetNoScanExists() != nil {
+	if fields.GetSetNoScanExists() == nil {
 		return nil
 	}
 
@@ -79,31 +79,61 @@ func convertNoScanExists(fields *storage.PolicyFields) []*storage.PolicyGroup {
 }
 
 func convertEnv(fields *storage.PolicyFields) []*storage.PolicyGroup {
-	return []*storage.PolicyGroup{convertKeyValuePolicy(fields.GetEnv(), "Env")}
+	p := fields.GetEnv()
+	if p == nil {
+		return nil
+	}
+
+	return []*storage.PolicyGroup{
+		{
+			FieldName: "Environment Variable",
+			Values:    getPolicyValues(fmt.Sprintf("%s=%s=%s", p.GetEnvVarSource(), p.GetKey(), p.GetValue())),
+		},
+	}
 }
 
 func convertRequiredLabel(fields *storage.PolicyFields) []*storage.PolicyGroup {
-	return []*storage.PolicyGroup{convertKeyValuePolicy(fields.GetRequiredLabel(), "Required Label")}
+	if p := convertKeyValuePolicy(fields.GetRequiredLabel(), "Required Label"); p != nil {
+		return []*storage.PolicyGroup{p}
+	}
+
+	return nil
 }
 
 func convertRequiredAnnotation(fields *storage.PolicyFields) []*storage.PolicyGroup {
-	return []*storage.PolicyGroup{convertKeyValuePolicy(fields.GetRequiredAnnotation(), "Required Annotation")}
+	if p := convertKeyValuePolicy(fields.GetRequiredAnnotation(), "Required Annotation"); p != nil {
+		return []*storage.PolicyGroup{p}
+	}
+
+	return nil
 }
 
 func convertDisallowedAnnotation(fields *storage.PolicyFields) []*storage.PolicyGroup {
-	return []*storage.PolicyGroup{convertKeyValuePolicy(fields.GetRequiredLabel(), "Disallowed Annotation")}
+	if p := convertKeyValuePolicy(fields.GetDisallowedAnnotation(), "Disallowed Annotation"); p != nil {
+		return []*storage.PolicyGroup{p}
+	}
+
+	return nil
 }
 
 func convertRequiredImageLabel(fields *storage.PolicyFields) []*storage.PolicyGroup {
-	return []*storage.PolicyGroup{convertKeyValuePolicy(fields.GetRequiredImageLabel(), "Required Image Label")}
+	if p := convertKeyValuePolicy(fields.GetRequiredImageLabel(), "Required Image Label"); p != nil {
+		return []*storage.PolicyGroup{p}
+	}
+
+	return nil
 }
 
 func convertDisallowedImageLabel(fields *storage.PolicyFields) []*storage.PolicyGroup {
-	return []*storage.PolicyGroup{convertKeyValuePolicy(fields.GetDisallowedImageLabel(), "Disallowed Image Label")}
+	if p := convertKeyValuePolicy(fields.GetDisallowedImageLabel(), "Disallowed Image Label"); p != nil {
+		return []*storage.PolicyGroup{p}
+	}
+
+	return nil
 }
 
 func convertPrivileged(fields *storage.PolicyFields) []*storage.PolicyGroup {
-	if fields.GetSetPrivileged() != nil {
+	if fields.GetSetPrivileged() == nil {
 		return nil
 	}
 
@@ -115,7 +145,7 @@ func convertPrivileged(fields *storage.PolicyFields) []*storage.PolicyGroup {
 }
 
 func convertWhitelistEnabled(fields *storage.PolicyFields) []*storage.PolicyGroup {
-	if fields.GetSetWhitelist() != nil {
+	if fields.GetSetWhitelist() == nil {
 		return nil
 	}
 
@@ -213,7 +243,7 @@ func convertImageAgeDays(fields *storage.PolicyFields) []*storage.PolicyGroup {
 }
 
 func convertDockerFileLineRule(fields *storage.PolicyFields) []*storage.PolicyGroup {
-	// TODO
+	// TODO(ROX-4720): Update convertor for missing fields.
 	return nil
 }
 
@@ -243,7 +273,7 @@ func convertNumericalPolicy(p *storage.NumericalPolicy, fieldName string) *stora
 		return nil
 	}
 
-	op := ""
+	op := p.GetOp().String()
 	switch p.GetOp() {
 	case storage.Comparator_EQUALS:
 		op = "="
@@ -259,18 +289,14 @@ func convertNumericalPolicy(p *storage.NumericalPolicy, fieldName string) *stora
 		utils.Should(errors.Errorf("invalid op for numerical policy: %+v", p))
 	}
 
-	if op != "" {
-		return &storage.PolicyGroup{
-			FieldName: fieldName,
-			Values: []*storage.PolicyValue{
-				{
-					Value: fmt.Sprintf("%s %f", op, p.GetValue()),
-				},
+	return &storage.PolicyGroup{
+		FieldName: fieldName,
+		Values: []*storage.PolicyValue{
+			{
+				Value: fmt.Sprintf("%s %f", op, p.GetValue()),
 			},
-		}
+		},
 	}
-
-	return nil
 }
 
 func convertComponent(fields *storage.PolicyFields) []*storage.PolicyGroup {
