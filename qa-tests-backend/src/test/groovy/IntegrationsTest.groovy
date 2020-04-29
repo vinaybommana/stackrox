@@ -15,6 +15,8 @@ import objects.PagerDutyNotifier
 import objects.SlackNotifier
 import objects.SplunkNotifier
 import objects.TeamsNotifier
+import orchestratormanager.OrchestratorTypes
+import org.junit.Assume
 import org.junit.experimental.categories.Category
 import services.CreatePolicyService
 import services.NetworkPolicyService
@@ -150,6 +152,10 @@ ObOdSTZUQI4TZOXOpJCpa97CnqroNi7RrT05JOfoe/DPmhoJmF4AUrnd/YUb8pgF
     @Category(Integration)
     def "Verify Splunk Integration (legacy mode: #legacy)"() {
         given:
+        "Assume cluster is not OS"
+        Assume.assumeTrue(Env.mustGetOrchestratorType() != OrchestratorTypes.OPENSHIFT)
+
+        and:
         "the integration is tested"
         def uid = UUID.randomUUID()
         def deploymentName = "splunk-${uid}"
