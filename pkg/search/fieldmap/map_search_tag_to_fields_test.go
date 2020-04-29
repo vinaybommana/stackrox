@@ -15,13 +15,13 @@ type nestedSecond struct {
 }
 
 type nestedFirst struct {
-	B            string       `search:"B" protobuf:"blah"`
-	NestedSecond nestedSecond `protobuf:"blah"`
+	B            string        `search:"B" protobuf:"blah"`
+	NestedSecond *nestedSecond `protobuf:"blah"`
 }
 
 type testObj struct {
 	A             int           `search:"A" protobuf:"blah"`
-	Nested        nestedFirst   `protobuf:"blah"`
+	Nested        []nestedFirst `protobuf:"blah"`
 	NestedIgnored nestedIgnored `protobuf:"blah" search:"-"`
 }
 

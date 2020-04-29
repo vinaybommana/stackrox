@@ -9,3 +9,8 @@ func Bool(b bool) *bool {
 func Int32(i int32) *int32 {
 	return &i
 }
+
+// Int returns a pointer of the passed int
+func Int(i int) *int {
+	return &i
+}
