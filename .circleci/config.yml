@@ -1465,6 +1465,27 @@ jobs:
   # Jobs independent from build / compilation (like style checks, static code analysis, unit tests)
   ###
 
+  slack-notify:
+    executor: custom
+    resource_class: small
+    steps:
+      - run:
+          name: Send Slack notification with Workflow link
+          command: |
+            if [[ "$CIRCLE_TAG" =~ .*-nightly-.* ]]; then
+              webhook_url="$NIGHTLY_WORKFLOW_NOTIFY_WEBHOOK"
+            elif [[ "$CIRCLE_TAG" =~ ^\d+(\.\d+)*(-rc.\d+)?$ ]]; then
+              webhook_url="$RELEASE_WORKFLOW_NOTIFY_WEBHOOK"
+            else
+              exit 0
+            fi
+
+            jq -n \
+              --arg workflow_id "$CIRCLE_WORKFLOW_ID" \
+              --arg tag "$CIRCLE_TAG" \
+              '{"text": "CircleCI build for tag `\($tag)` started! Check the status of the build under the following URL: https://circleci.com/workflow-run/\($workflow_id)"}' \
+            | curl -XPOST -d @- -H 'Content-Type: application/json' "$webhook_url"
+
   unit-tests:
     executor: custom
     resource_class: xlarge
@@ -3575,6 +3596,8 @@ workflows:
 
   build_all:
     jobs:
+      - slack-notify:
+          <<: *runOnAllTagsWithDockerIOPullCtx
       - style-checks:
           <<: *runOnAllTagsWithDockerIOPullCtx
       - check-generated-files-up-to-date:
