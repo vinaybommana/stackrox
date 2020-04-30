@@ -41,7 +41,7 @@ const APITokenDetails = ({ token, metadata }) => (
     <div className="p-4 w-full" data-testid="api-token-details">
         <Token token={token} />
         <LabeledValue label="Name" value={metadata.name} />
-        <LabeledValue label="Role" value={metadata.role} />
+        <LabeledValue label="Roles" value={metadata.roles.join(', ')} />
         <LabeledValue label="Issued" value={formatDate(metadata.issuedAt)} />
         <LabeledValue label="Expiration" value={formatDate(metadata.expiration)} />
         <LabeledValue label="Revoked" value={metadata.revoked ? 'Yes' : 'No'} />
@@ -52,7 +52,7 @@ APITokenDetails.propTypes = {
     token: PropTypes.string,
     metadata: PropTypes.shape({
         name: PropTypes.string.isRequired,
-        role: PropTypes.string.isRequired,
+        roles: PropTypes.arrayOf(PropTypes.string).isRequired,
         issuedAt: PropTypes.string.isRequired,
         expiration: PropTypes.string.isRequired,
         revoked: PropTypes.bool.isRequired,

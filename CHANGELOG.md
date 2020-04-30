@@ -5,8 +5,16 @@ All notable changes to this project that require documentation updates will be d
 - Detection APIs were not properly handling suppressed CVEs and they were being included in evaluation. This is now resolved.
 - Previously, the Scanner deployment did not mount the additional CA secret and thus would fail to scan self-signed registries. This is resolved.
 - AWS S3 and AWS ECR integrations now accept an endpoint to work with non public AWS endpoints.
--  UI: Fixed the display of the Privileged field when viewing a policy in the Vulnerability Management section (ROX-4752)
-
+- UI: Fixed the display of the Privileged field when viewing a policy in the Vulnerability Management section (ROX-4752)
+- API changes/deprecations related to supporting multiple roles:
+  - `GenerateToken(/v1/apitokens/generate)`: the singular `role` field in the request field is deprecated; please use
+    the array field `roles`.
+  - `GetAPIToken(/v1/apitokens/{id})`, `GetAPITokens(/v1/apitokens)`: the singular `role` field in the response payload
+    is deprecated; please use the array field `roles`.
+  - Audit logs: the singular `user.role` field in the audit message payload is deprecated; please use the singular
+    `user.permissions` field for the effective permissions of the user, and the array field `user.roles` for all the
+    the individual roles associated with a user.
+  
 ## [42.0]
 - All `/v1/` API endpoints now support pretty-printing.  Make requests with the `?pretty` path parameter to receive pretty-printed json responses.
 - UI: added "Deployment Name" property in side panel for Deployment Details on Violations and Risk pages.

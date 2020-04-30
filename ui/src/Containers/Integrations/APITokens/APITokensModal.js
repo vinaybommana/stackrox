@@ -26,7 +26,7 @@ class APITokensModal extends Component {
             PropTypes.shape({
                 id: PropTypes.string.isRequired,
                 name: PropTypes.string.isRequired,
-                role: PropTypes.string.isRequired,
+                roles: PropTypes.arrayOf(PropTypes.string).isRequired,
             })
         ).isRequired,
         tokenGenerationWizardOpen: PropTypes.bool.isRequired,
@@ -38,7 +38,7 @@ class APITokensModal extends Component {
         currentGeneratedToken: PropTypes.string,
         currentGeneratedTokenMetadata: PropTypes.shape({
             name: PropTypes.string.isRequired,
-            role: PropTypes.string.isRequired,
+            roles: PropTypes.arrayOf(PropTypes.string).isRequired,
         }),
     };
 
@@ -112,7 +112,7 @@ class APITokensModal extends Component {
 
         const columns = [
             { accessor: 'name', Header: 'Name' },
-            { accessor: 'role', Header: 'Role' },
+            { id: 'roles', accessor: (row) => row.roles.join(', '), Header: 'Roles' },
             {
                 Header: '',
                 accessor: '',

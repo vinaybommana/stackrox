@@ -81,14 +81,14 @@ describe('API Token Creation Flow', () => {
         cy.get(selectors.buttons.generate).click();
         cy.get(selectors.apiTokenBox);
         cy.get(selectors.apiTokenDetailsDiv).contains(`Name:${randomTokenName}`);
-        cy.get(selectors.apiTokenDetailsDiv).contains('Role:Admin');
+        cy.get(selectors.apiTokenDetailsDiv).contains('Roles:Admin');
     });
 
     it('should show the generated API token in the table, and be clickable', () => {
         cy.get(selectors.apiTokenTile).click();
         cy.get(`.rt-tr:contains("${randomTokenName}")`).click();
         cy.get(selectors.apiTokenDetailsDiv).contains(`Name:${randomTokenName}`);
-        cy.get(selectors.apiTokenDetailsDiv).contains('Role:Admin');
+        cy.get(selectors.apiTokenDetailsDiv).contains('Roles:Admin');
     });
 
     it('should be able to revoke the API token', () => {

@@ -200,7 +200,7 @@ func (suite *IndicatorDataStoreTestSuite) ctxWithUIDAndRole(ctx context.Context,
 	identity.EXPECT().FullName().AnyTimes().Return(userID)
 	identity.EXPECT().FriendlyName().AnyTimes().Return(userID)
 	identity.EXPECT().User().AnyTimes().Return(nil)
-	identity.EXPECT().Role().AnyTimes().Return(role.DefaultRolesByName[roleName])
+	identity.EXPECT().Permissions().AnyTimes().Return(role.DefaultRolesByName[roleName])
 
 	return authn.ContextWithIdentity(ctx, identity, suite.T())
 }
