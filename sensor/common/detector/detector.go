@@ -79,6 +79,10 @@ type detectorImpl struct {
 	deploymentProcessingMap  map[string]int64
 	deploymentProcessingLock sync.RWMutex
 
+	// This lock ensures that processing is done one at a time
+	// When a policy is updated, we will reflush the deployments cache back through detection
+	deploymentDetectionLock sync.Mutex
+
 	enricher        *enricher
 	deploymentStore *deploymentStore
 	whitelistEval   whitelist.Evaluator
@@ -131,7 +135,7 @@ func (d *detectorImpl) serializeDeployTimeOutput() {
 				var isMostRecentUpdate bool
 				concurrency.WithRLock(&d.deploymentProcessingLock, func() {
 					value, exists := d.deploymentProcessingMap[alertResults.GetDeploymentId()]
-					isMostRecentUpdate = !exists || result.timestamp > value
+					isMostRecentUpdate = !exists || result.timestamp >= value
 					if isMostRecentUpdate {
 						d.deploymentProcessingMap[alertResults.GetDeploymentId()] = result.timestamp
 					}
@@ -212,6 +216,13 @@ func (d *detectorImpl) processPolicySync(sync *central.PolicySync) error {
 	})
 	d.deduper.reset()
 
+	// Take deployment lock and flush
+	concurrency.WithLock(&d.deploymentDetectionLock, func() {
+		for _, deployment := range d.deploymentStore.getAll() {
+			d.processDeploymentNoLock(deployment, central.ResourceAction_UPDATE_RESOURCE)
+		}
+	})
+
 	if d.admCtrlSettingsMgr != nil {
 		d.admCtrlSettingsMgr.UpdatePolicies(sync.GetPolicies())
 	}
@@ -290,6 +301,13 @@ func (d *detectorImpl) markDeploymentForProcessing(id string) {
 }
 
 func (d *detectorImpl) ProcessDeployment(deployment *storage.Deployment, action central.ResourceAction) {
+	d.deploymentDetectionLock.Lock()
+	defer d.deploymentDetectionLock.Unlock()
+
+	d.processDeploymentNoLock(deployment, action)
+}
+
+func (d *detectorImpl) processDeploymentNoLock(deployment *storage.Deployment, action central.ResourceAction) {
 	switch action {
 	case central.ResourceAction_REMOVE_RESOURCE:
 		d.deploymentStore.removeDeployment(deployment.GetId())
