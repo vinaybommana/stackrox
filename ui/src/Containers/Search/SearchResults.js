@@ -85,6 +85,8 @@ const getLink = (item, id) => {
     let link = '/main';
     if (item === 'SECRETS') {
         link = `${link}/configmanagement`;
+    } else if (item === 'IMAGES') {
+        link = `${link}/vulnerability-management`;
     }
     return `${link}/${lowerCase(item)}${id ? `/${id}` : ''}`;
 };
