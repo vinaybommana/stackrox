@@ -12,22 +12,30 @@ type Match struct {
 	Value interface{}
 }
 
+// GetPath implements the traverseutil.PathHolder interface.
+func (m Match) GetPath() *traverseutil.Path {
+	return m.Path
+}
+
 // A Result is the result of evaluating a query on an object.
 type Result struct {
-	Matches []Match
+	Matches map[string][]Match
+}
+
+func newResult() *Result {
+	return &Result{Matches: make(map[string][]Match)}
 }
 
 func mergeResults(results []*Result) *Result {
 	if len(results) == 0 {
 		return nil
 	}
-	var totalLen int
+
+	merged := &Result{Matches: make(map[string][]Match)}
 	for _, r := range results {
-		totalLen += len(r.Matches)
-	}
-	merged := &Result{Matches: make([]Match, 0, totalLen)}
-	for _, r := range results {
-		merged.Matches = append(merged.Matches, r.Matches...)
+		for field, matches := range r.Matches {
+			merged.Matches[field] = append(merged.Matches[field], matches...)
+		}
 	}
 	return merged
 }

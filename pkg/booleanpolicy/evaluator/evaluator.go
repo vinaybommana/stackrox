@@ -48,7 +48,7 @@ func NewFactory(obj interface{}) Factory {
 
 // GenerateEvaluator generates an evaluator that will evaluate the given query
 // on objects of the factory's type.
-func (f *Factory) GenerateEvaluator(q query.Query) (Evaluator, error) {
+func (f *Factory) GenerateEvaluator(q *query.Query) (Evaluator, error) {
 	internal, err := f.generateInternalEvaluator(q)
 	if err != nil {
 		return nil, err
@@ -71,49 +71,92 @@ func wrapInternal(ie internalEvaluator) Evaluator {
 	})
 }
 
-func (f *Factory) generateInternalEvaluator(q query.Query) (internalEvaluator, error) {
-	switch underlying := q.GetUnderlying().(type) {
-	case *query.Disjunction:
-		return f.generateDisjunction(underlying)
-	case *query.Conjunction:
-		return f.generateConjunction(underlying)
-	case *query.LinkedConjunction:
-		return f.generateLinkedConjunction(underlying)
-	case *query.Negation:
-		return f.generateNegation(underlying)
-	case *query.BaseQuery:
-		return f.generateBase(underlying)
-	case nil:
-		return alwaysFalse, nil
+func (f *Factory) generateInternalEvaluator(q *query.Query) (internalEvaluator, error) {
+	// The field queries are implicitly a linked conjunction. This means that all field queries must match,
+	// AND that their matches must be in the same object.
+	// The notion of linking is a bit complicated -- the easiest way to get a sense of what it entails is to look
+	// at the test cases in TestLinked.
+	fieldEvaluators := make([]internalEvaluator, 0, len(q.FieldQueries))
+	for _, fq := range q.FieldQueries {
+		eval, err := f.generateInternalEvaluatorForFieldQuery(fq)
+		if err != nil {
+			return nil, errors.Wrapf(err, "compiling field query: %v", fq)
+		}
+
+		// If one of them is alwaysFalse, then our conjunction is alwaysFalse.
+		if eval == alwaysFalse {
+			return alwaysFalse, nil
+		}
+		if eval != alwaysTrue {
+			fieldEvaluators = append(fieldEvaluators, eval)
+		}
+	}
+	switch len(fieldEvaluators) {
+	case 0:
+		return alwaysTrue, nil
+	case 1:
+		// Simplify the case where there's just one.
+		return fieldEvaluators[0], nil
 	default:
-		return alwaysFalse, utils.Should(errors.Errorf("unknown query type: %T", underlying))
+		return internalEvaluatorFunc(func(path *traverseutil.Path, value reflect.Value) (*Result, bool) {
+			fieldsToPaths := make(map[string][]traverseutil.PathHolder)
+			for _, fieldEval := range fieldEvaluators {
+				result, matches := fieldEval.Evaluate(path, value)
+				if !matches {
+					return nil, false
+				}
+				for field, matches := range result.Matches {
+					for _, match := range matches {
+						fieldsToPaths[field] = append(fieldsToPaths[field], match)
+					}
+				}
+			}
+			filteredFieldsToPaths, matched, err := traverseutil.FilterPathsToLinkedMatches(fieldsToPaths)
+			if err != nil {
+				utils.Should(errors.Wrap(err, "filtering paths to linked matches"))
+				return nil, false
+			}
+			if !matched {
+				return nil, false
+			}
+			r := newResult()
+			for field, matches := range filteredFieldsToPaths {
+				for _, match := range matches {
+					r.Matches[field] = append(r.Matches[field], match.(Match))
+				}
+			}
+			return r, true
+		}), nil
 	}
 }
 
-func (f *Factory) generateDisjunction(q *query.Disjunction) (internalEvaluator, error) {
-	return nil, nil
-}
-
-func (f *Factory) generateConjunction(q *query.Conjunction) (internalEvaluator, error) {
-	return nil, nil
-}
-
-func (f *Factory) generateLinkedConjunction(q *query.LinkedConjunction) (internalEvaluator, error) {
-	return nil, nil
-}
-
-func (f *Factory) generateNegation(q *query.Negation) (internalEvaluator, error) {
-	return nil, nil
-}
-
-func (f *Factory) generateBase(q *query.BaseQuery) (internalEvaluator, error) {
+// generateInternalEvaluatorForFieldQuery generates an internal evaluator for a specific field query.
+func (f *Factory) generateInternalEvaluatorForFieldQuery(q *query.FieldQuery) (internalEvaluator, error) {
 	fieldPath := f.searchFields.Get(q.Field)
+	// This happens for the case where we're in a factory for images, but are querying a field that exists only
+	// on deployments. It's irrelevant to the image query if that's the case.
 	if len(fieldPath) == 0 {
 		return alwaysTrue, nil
 	}
-	baseEvaluator, err := createBaseEvaluator(fieldPath[len(fieldPath)-1].Type, q.Value)
-	if err != nil {
-		return nil, errors.Wrapf(err, "generating base query: %v", q)
+
+	baseType := fieldPath[len(fieldPath)-1].Type
+	individualEvaluators := make([]internalEvaluator, 0, len(q.Values))
+	for _, val := range q.Values {
+		eval, err := createBaseEvaluator(q.Field, baseType, val)
+		if err != nil {
+			return nil, errors.Wrapf(err, "invalid value for field %s: %s", q.Field, val)
+		}
+		individualEvaluators = append(individualEvaluators, eval)
+	}
+
+	var baseEvaluator internalEvaluator
+	switch len(individualEvaluators) {
+	case 0:
+		return nil, errors.Errorf("invalid query %v: no values", q)
+	case 1:
+		baseEvaluator = individualEvaluators[0]
+	default:
+		return nil, errors.New("NOT IMPLEMENTED")
 	}
 
 	pathEvaluator, err := wrapEvaluatorInPath(f.rootType, fieldPath, baseEvaluator)
