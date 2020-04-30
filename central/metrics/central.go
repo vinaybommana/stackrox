@@ -131,6 +131,14 @@ var (
 		Help:      "Histogram of how long a datastore function takes",
 		Buckets:   prometheus.ExponentialBuckets(4, 2, 8),
 	}, []string{"Type", "Function"})
+
+	functionSegmentDurationHistogramVec = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: metrics.PrometheusNamespace,
+		Subsystem: metrics.CentralSubsystem.String(),
+		Name:      "function_segment_duration",
+		Help:      "Histogram of how long a particular segment within a function takes",
+		Buckets:   prometheus.ExponentialBuckets(4, 2, 8),
+	}, []string{"Segment"})
 )
 
 func startTimeToMS(t time.Time) float64 {
@@ -210,4 +218,9 @@ func IncrementDBCacheCounter(op string, t string) {
 // SetDatastoreFunctionDuration is a histogram for datastore function timing
 func SetDatastoreFunctionDuration(start time.Time, resourceType, function string) {
 	datastoreFunctionDurationHistogramVec.With(prometheus.Labels{"Type": resourceType, "Function": function}).Observe(startTimeToMS(start))
+}
+
+// SetFunctionSegmentDuration times a specific segment within a function
+func SetFunctionSegmentDuration(start time.Time, segment string) {
+	functionSegmentDurationHistogramVec.With(prometheus.Labels{"Segment": segment}).Observe(startTimeToMS(start))
 }

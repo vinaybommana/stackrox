@@ -1,9 +1,10 @@
-package store
+package bolt
 
 import (
 	"testing"
 
 	bolt "github.com/etcd-io/bbolt"
+	"github.com/stackrox/rox/central/processwhitelist/store"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/bolthelper"
 	"github.com/stackrox/rox/pkg/fixtures"
@@ -21,7 +22,7 @@ type ProcessWhitelistStoreTestSuite struct {
 
 	db *bolt.DB
 
-	store Store
+	store store.Store
 }
 
 func (suite *ProcessWhitelistStoreTestSuite) SetupSuite() {
@@ -31,7 +32,7 @@ func (suite *ProcessWhitelistStoreTestSuite) SetupSuite() {
 	}
 
 	suite.db = db
-	suite.store, err = New(db, storecache.NewMapBackedCache())
+	suite.store, err = NewStore(db, storecache.NewMapBackedCache())
 	suite.NoError(err)
 }
 
@@ -40,7 +41,7 @@ func (suite *ProcessWhitelistStoreTestSuite) TearDownSuite() {
 }
 
 func (suite *ProcessWhitelistStoreTestSuite) getAndCompare(whitelist *storage.ProcessWhitelist) {
-	gotWhitelist, err := suite.store.GetWhitelist(whitelist.Id)
+	gotWhitelist, _, err := suite.store.Get(whitelist.Id)
 	suite.NoError(err)
 	suite.Equal(whitelist, gotWhitelist)
 }
@@ -48,13 +49,13 @@ func (suite *ProcessWhitelistStoreTestSuite) getAndCompare(whitelist *storage.Pr
 func (suite *ProcessWhitelistStoreTestSuite) createAndStore() *storage.ProcessWhitelist {
 	whitelist := fixtures.GetProcessWhitelistWithID()
 	suite.NotNil(whitelist)
-	err := suite.store.AddWhitelist(whitelist)
+	err := suite.store.Upsert(whitelist)
 	suite.NoError(err)
 	return whitelist
 }
 
 func (suite *ProcessWhitelistStoreTestSuite) TestGetNonExistant() {
-	whitelist, err := suite.store.GetWhitelist("Not an ID")
+	whitelist, _, err := suite.store.Get("Not an ID")
 	suite.NoError(err)
 	suite.Nil(whitelist)
 }
@@ -64,9 +65,9 @@ func (suite *ProcessWhitelistStoreTestSuite) TestAddGetDeleteWhitelist() {
 
 	suite.getAndCompare(whitelist)
 
-	err := suite.store.DeleteWhitelist(whitelist.Id)
+	err := suite.store.Delete(whitelist.Id)
 	suite.NoError(err)
-	gotWhitelist, err := suite.store.GetWhitelist(whitelist.Id)
+	gotWhitelist, _, err := suite.store.Get(whitelist.Id)
 	suite.NoError(err)
 	suite.Nil(gotWhitelist)
 }
@@ -75,20 +76,8 @@ func (suite *ProcessWhitelistStoreTestSuite) TestUpdateWhitelist() {
 	whitelist := suite.createAndStore()
 
 	whitelist.Elements = []*storage.WhitelistElement{fixtures.GetWhitelistElement("JosephRules")}
-	err := suite.store.UpdateWhitelist(whitelist)
+	err := suite.store.Upsert(whitelist)
 	suite.NoError(err)
 
 	suite.getAndCompare(whitelist)
-}
-
-func (suite *ProcessWhitelistStoreTestSuite) TestUpdateNotExists() {
-	whitelist := fixtures.GetProcessWhitelistWithID()
-	err := suite.store.UpdateWhitelist(whitelist)
-	suite.Error(err)
-}
-
-func (suite *ProcessWhitelistStoreTestSuite) TestAddAlreadyExists() {
-	whitelist := suite.createAndStore()
-	err := suite.store.AddWhitelist(whitelist)
-	suite.Error(err)
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/stackrox/rox/migrator/log"
 	"github.com/stackrox/rox/migrator/migrations"
 	"github.com/stackrox/rox/migrator/types"
+	"github.com/stackrox/rox/pkg/features"
 	pkgMigrations "github.com/stackrox/rox/pkg/migrations"
 )
 
@@ -43,6 +44,13 @@ func runMigrations(databases *types.Databases, startingSeqNum int) error {
 		err = updateVersion(databases, &migration.VersionAfter)
 		if err != nil {
 			return errors.Wrapf(err, "failed to update version after migration %d", startingSeqNum)
+		}
+
+		// If feature flag is on, then drop all BadgerDB data as RocksDB is completely up to date
+		if features.RocksDB.Enabled() {
+			if err := databases.BadgerDB.DropAll(); err != nil {
+				return errors.Wrap(err, "error dropping all data from Badger")
+			}
 		}
 		log.WriteToStderrf("Successfully updated DB from version %d to %d", seqNum, migration.VersionAfter.GetSeqNum())
 	}

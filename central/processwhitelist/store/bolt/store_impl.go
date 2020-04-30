@@ -1,4 +1,4 @@
-package store
+package bolt
 
 import (
 	"time"
@@ -6,6 +6,7 @@ import (
 	bbolt "github.com/etcd-io/bbolt"
 	proto "github.com/gogo/protobuf/proto"
 	metrics "github.com/stackrox/rox/central/metrics"
+	"github.com/stackrox/rox/central/processwhitelist/store"
 	storage "github.com/stackrox/rox/generated/storage"
 	protoCrud "github.com/stackrox/rox/pkg/bolthelper/crud/proto"
 	ops "github.com/stackrox/rox/pkg/metrics"
@@ -16,7 +17,7 @@ var (
 	bucketName = []byte("processWhitelists2")
 )
 
-type store struct {
+type storeImpl struct {
 	crud protoCrud.MessageCrud
 	db   *bbolt.DB
 }
@@ -29,40 +30,36 @@ func alloc() proto.Message {
 	return new(storage.ProcessWhitelist)
 }
 
-func newStore(db *bbolt.DB, cache storecache.Cache) (*store, error) {
+// NewStore returns a new process whitelist store based on Bolt
+func NewStore(db *bbolt.DB, cache storecache.Cache) (store.Store, error) {
 	newCrud, err := protoCrud.NewMessageCrud(db, bucketName, key, alloc)
 	if err != nil {
 		return nil, err
 	}
 	newCrud = protoCrud.NewCachedMessageCrud(newCrud, cache, "Whitelist", metrics.IncrementDBCacheCounter)
-	return &store{crud: newCrud, db: db}, nil
+	return &storeImpl{crud: newCrud, db: db}, nil
 }
 
-func (s *store) AddWhitelist(whitelist *storage.ProcessWhitelist) error {
-	defer metrics.SetBoltOperationDurationTime(time.Now(), ops.Add, "Whitelist")
-	return s.crud.Create(whitelist)
-}
-
-func (s *store) DeleteWhitelist(id string) error {
+func (s *storeImpl) Delete(id string) error {
 	defer metrics.SetBoltOperationDurationTime(time.Now(), ops.Remove, "Whitelist")
 	_, _, err := s.crud.Delete(id)
 	return err
 }
 
-func (s *store) GetWhitelist(id string) (*storage.ProcessWhitelist, error) {
+func (s *storeImpl) Get(id string) (*storage.ProcessWhitelist, bool, error) {
 	defer metrics.SetBoltOperationDurationTime(time.Now(), ops.Get, "Whitelist")
 	msg, err := s.crud.Read(id)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	if msg == nil {
-		return nil, nil
+		return nil, false, nil
 	}
 	whitelist := msg.(*storage.ProcessWhitelist)
-	return whitelist, nil
+	return whitelist, true, nil
 }
 
-func (s *store) GetWhitelists(ids []string) ([]*storage.ProcessWhitelist, []int, error) {
+func (s *storeImpl) GetMany(ids []string) ([]*storage.ProcessWhitelist, []int, error) {
 	if len(ids) == 0 {
 		return nil, nil, nil
 	}
@@ -78,26 +75,13 @@ func (s *store) GetWhitelists(ids []string) ([]*storage.ProcessWhitelist, []int,
 	return storedKeys, missingIndices, nil
 }
 
-func (s *store) ListWhitelists() ([]*storage.ProcessWhitelist, error) {
-	defer metrics.SetBoltOperationDurationTime(time.Now(), ops.GetAll, "Whitelist")
-	msgs, err := s.crud.ReadAll()
-	if err != nil {
-		return nil, err
-	}
-	storedKeys := make([]*storage.ProcessWhitelist, len(msgs))
-	for i, msg := range msgs {
-		storedKeys[i] = msg.(*storage.ProcessWhitelist)
-	}
-	return storedKeys, nil
-}
-
-func (s *store) UpdateWhitelist(whitelist *storage.ProcessWhitelist) error {
-	defer metrics.SetBoltOperationDurationTime(time.Now(), ops.Update, "Whitelist")
-	_, _, err := s.crud.Update(whitelist)
+func (s *storeImpl) Upsert(whitelist *storage.ProcessWhitelist) error {
+	defer metrics.SetBoltOperationDurationTime(time.Now(), ops.Upsert, "Whitelist")
+	_, _, err := s.crud.Upsert(whitelist)
 	return err
 }
 
-func (s *store) WalkAll(fn func(whitelist *storage.ProcessWhitelist) error) error {
+func (s *storeImpl) Walk(fn func(whitelist *storage.ProcessWhitelist) error) error {
 	defer metrics.SetBoltOperationDurationTime(time.Now(), ops.GetMany, "Whitelist")
 	return s.db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(bucketName)

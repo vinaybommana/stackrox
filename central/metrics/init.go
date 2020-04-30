@@ -27,5 +27,6 @@ func init() {
 		riskProcessingHistogramVec,
 		totalCacheOperationsCounter,
 		datastoreFunctionDurationHistogramVec,
+		functionSegmentDurationHistogramVec,
 	)
 }

@@ -32,13 +32,5 @@ func migrate(databases *types.Databases) error {
 	if err := migrateBolt(databases); err != nil {
 		return errors.Wrap(err, "migrating bolt -> rocksdb")
 	}
-
-	// Write out version for rocksdb
-
-	// Drop all from badger
-	if err := databases.BadgerDB.DropAll(); err != nil {
-		return errors.Wrap(err, "error dropping all data from Badger")
-	}
-
 	return nil
 }

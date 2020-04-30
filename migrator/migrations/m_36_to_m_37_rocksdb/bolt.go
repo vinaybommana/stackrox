@@ -10,6 +10,7 @@ import (
 var (
 	boltBucketsToMigrate = []string{
 		"risk",
+		"processWhitelists2",
 	}
 
 	separator = []byte("\x00")
