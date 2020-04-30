@@ -1,4 +1,4 @@
-package predicate
+package basematchers
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 )
 
 // Produce a predicate for the given numerical or date time query.
-var (
+const (
 	lessThanOrEqualTo    = "<="
 	greaterThanOrEqualTo = ">="
 	lessThan             = "<"
@@ -64,17 +64,13 @@ func floatComparator(cmp string) (func(a, b float64) bool, error) {
 	}
 }
 
-func getNumericComparator(value string) (comparator string, string string) {
+func parseNumericPrefix(value string) (prefix string, trimmedValue string) {
 	// The order which these checks are executed must be maintained.
-	// If we for instance look for "<" before "<=", we will never find "<=" because "<" will be found as it's prefix.
-	if strings.HasPrefix(value, lessThanOrEqualTo) {
-		return lessThanOrEqualTo, strings.TrimPrefix(value, lessThanOrEqualTo)
-	} else if strings.HasPrefix(value, greaterThanOrEqualTo) {
-		return greaterThanOrEqualTo, strings.TrimPrefix(value, greaterThanOrEqualTo)
-	} else if strings.HasPrefix(value, lessThan) {
-		return lessThan, strings.TrimPrefix(value, lessThan)
-	} else if strings.HasPrefix(value, greaterThan) {
-		return greaterThan, strings.TrimPrefix(value, greaterThan)
+	// If we for instance look for "<" before "<=", we will never find "<=" because "<" will be found as its prefix.
+	for _, prefix := range []string{lessThanOrEqualTo, greaterThanOrEqualTo, lessThan, greaterThan} {
+		if strings.HasPrefix(value, prefix) {
+			return prefix, value[len(prefix):]
+		}
 	}
 	return "", value
 }
