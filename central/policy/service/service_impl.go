@@ -22,6 +22,7 @@ import (
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/auth/permissions"
 	"github.com/stackrox/rox/pkg/backgroundtasks"
+	"github.com/stackrox/rox/pkg/booleanpolicy"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/detection"
 	"github.com/stackrox/rox/pkg/errorhelpers"
@@ -374,7 +375,7 @@ func (s *serviceImpl) predicateBasedDryRunPolicy(ctx context.Context, cancelCtx 
 
 	// Dry runs do not apply to policies with whitelists or runtime lifecycle stage because they are evaluated
 	// through the process indicator pipeline
-	if request.GetFields().GetWhitelistEnabled() || sliceutils.Find(request.GetLifecycleStages(), storage.LifecycleStage_RUNTIME) != -1 {
+	if (features.BooleanPolicyLogic.Enabled() && booleanpolicy.IsWhitelistEnabled(request)) || request.GetFields().GetWhitelistEnabled() || sliceutils.Find(request.GetLifecycleStages(), storage.LifecycleStage_RUNTIME) != -1 {
 		return &resp, nil
 	}
 

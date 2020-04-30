@@ -6,12 +6,14 @@ import (
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/internalapi/central"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/booleanpolicy"
 	"github.com/stackrox/rox/pkg/centralsensor"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/detection"
 	"github.com/stackrox/rox/pkg/detection/deploytime"
 	"github.com/stackrox/rox/pkg/detection/runtime"
 	"github.com/stackrox/rox/pkg/expiringcache"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/logging"
 	options "github.com/stackrox/rox/pkg/search/options/deployments"
 	"github.com/stackrox/rox/pkg/searchbasedpolicies/matcher"
@@ -203,10 +205,10 @@ func (d *detectorImpl) processPolicySync(sync *central.PolicySync) error {
 		return isLifecycleStage(p, storage.LifecycleStage_DEPLOY)
 	})
 	reconcilePolicySets(sync, d.runtimeDetector.PolicySet(), func(p *storage.Policy) bool {
-		return isLifecycleStage(p, storage.LifecycleStage_RUNTIME) && !p.GetFields().GetWhitelistEnabled()
+		return isLifecycleStage(p, storage.LifecycleStage_RUNTIME) && !(p.GetFields().GetWhitelistEnabled() || (features.BooleanPolicyLogic.Enabled() && booleanpolicy.IsWhitelistEnabled(p)))
 	})
 	reconcilePolicySets(sync, d.runtimeWhitelistDetector.PolicySet(), func(p *storage.Policy) bool {
-		return isLifecycleStage(p, storage.LifecycleStage_RUNTIME) && p.GetFields().GetWhitelistEnabled()
+		return isLifecycleStage(p, storage.LifecycleStage_RUNTIME) && (p.GetFields().GetWhitelistEnabled() || (features.BooleanPolicyLogic.Enabled() && booleanpolicy.IsWhitelistEnabled(p)))
 	})
 	d.deduper.reset()
 
