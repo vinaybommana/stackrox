@@ -3597,7 +3597,12 @@ workflows:
   build_all:
     jobs:
       - slack-notify:
-          <<: *runOnAllTagsWithDockerIOPullCtx
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+          context: docker-io-pull
       - style-checks:
           <<: *runOnAllTagsWithDockerIOPullCtx
       - check-generated-files-up-to-date:
