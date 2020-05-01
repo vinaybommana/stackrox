@@ -346,6 +346,9 @@ func MatchNoneQuery() *v1.Query {
 
 // NewConjunctionQuery takes in a variadic of queries and creates a conjunction query from them
 func NewConjunctionQuery(q ...*v1.Query) *v1.Query {
+	if len(q) == 1 {
+		return q[0]
+	}
 	return &v1.Query{
 		Query: &v1.Query_Conjunction{
 			Conjunction: &v1.ConjunctionQuery{
@@ -357,6 +360,10 @@ func NewConjunctionQuery(q ...*v1.Query) *v1.Query {
 
 // NewDisjunctionQuery takes in a variadic of queries and creates a disjunction query from them
 func NewDisjunctionQuery(q ...*v1.Query) *v1.Query {
+	if len(q) == 1 {
+		return q[0]
+	}
+
 	return &v1.Query{
 		Query: &v1.Query_Disjunction{
 			Disjunction: &v1.DisjunctionQuery{
