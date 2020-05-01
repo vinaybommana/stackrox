@@ -8,8 +8,9 @@ import (
 // It contains the matched value, as well as the path
 // within the object that was taken to reach the value.
 type Match struct {
-	Path  *traverseutil.Path
-	Value interface{}
+	Path *traverseutil.Path
+	// Values represents a list of human-friendly representations of the matched value.
+	Values []string
 }
 
 // GetPath implements the traverseutil.PathHolder interface.

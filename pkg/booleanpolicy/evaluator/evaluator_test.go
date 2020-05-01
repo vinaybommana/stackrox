@@ -149,8 +149,8 @@ func TestSimpleBase(t *testing.T) {
 			},
 			expectedResult: &Result{Matches: map[string][]Match{
 				"SecondA": {
-					{Path: traverseutil.PathFromSteps(t, "NestedSlice", 0, "SecondNestedSlice", 1, "SecondNestedValA"), Value: "blaappy"},
-					{Path: traverseutil.PathFromSteps(t, "NestedSlice", 1, "SecondNestedSlice", 0, "SecondNestedValA"), Value: "happy"},
+					{Path: traverseutil.PathFromSteps(t, "NestedSlice", 0, "SecondNestedSlice", 1, "SecondNestedValA"), Values: []string{"blaappy"}},
+					{Path: traverseutil.PathFromSteps(t, "NestedSlice", 1, "SecondNestedSlice", 0, "SecondNestedValA"), Values: []string{"happy"}},
 				},
 			},
 			},
@@ -175,8 +175,8 @@ func TestLinked(t *testing.T) {
 				},
 			},
 			expectedResult: &Result{Matches: map[string][]Match{
-				"A": {{Path: traverseutil.PathFromSteps(t, "NestedSlice", 1, "NestedValA"), Value: "A1"}},
-				"B": {{Path: traverseutil.PathFromSteps(t, "NestedSlice", 1, "NestedValB"), Value: "B1"}},
+				"A": {{Path: traverseutil.PathFromSteps(t, "NestedSlice", 1, "NestedValA"), Values: []string{"A1"}}},
+				"B": {{Path: traverseutil.PathFromSteps(t, "NestedSlice", 1, "NestedValB"), Values: []string{"B1"}}},
 			}},
 		},
 		{
@@ -211,9 +211,9 @@ func TestLinked(t *testing.T) {
 				},
 			},
 			expectedResult: &Result{Matches: map[string][]Match{
-				"TopLevelA": {{Path: traverseutil.PathFromSteps(t, "ValA"), Value: "TopLevelValA"}},
-				"A":         {{Path: traverseutil.PathFromSteps(t, "NestedSlice", 1, "NestedValA"), Value: "A1"}},
-				"B":         {{Path: traverseutil.PathFromSteps(t, "NestedSlice", 1, "NestedValB"), Value: "B1"}},
+				"TopLevelA": {{Path: traverseutil.PathFromSteps(t, "ValA"), Values: []string{"TopLevelValA"}}},
+				"A":         {{Path: traverseutil.PathFromSteps(t, "NestedSlice", 1, "NestedValA"), Values: []string{"A1"}}},
+				"B":         {{Path: traverseutil.PathFromSteps(t, "NestedSlice", 1, "NestedValB"), Values: []string{"B1"}}},
 			}},
 		},
 		{
@@ -251,4 +251,139 @@ func TestLinked(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestCompound(t *testing.T) {
+	runTestCases(t, []testCase{
+		{
+			desc: "simple compound query, OR, matches",
+			obj: &TopLevel{
+				NestedSlice: []Nested{
+					{NestedValA: "A0", NestedValB: "B0"},
+					{NestedValA: "A1", NestedValB: "B1"},
+				},
+			},
+			q: &query.Query{
+				FieldQueries: []*query.FieldQuery{
+					{Field: "A", Values: []string{"A0", "A1"}, Operator: query.Or},
+				},
+			},
+			expectedResult: &Result{Matches: map[string][]Match{
+				"A": {
+					{Path: traverseutil.PathFromSteps(t, "NestedSlice", 0, "NestedValA"), Values: []string{"A0"}},
+					{Path: traverseutil.PathFromSteps(t, "NestedSlice", 1, "NestedValA"), Values: []string{"A1"}},
+				},
+			}},
+		},
+		{
+			desc: "simple compound query, OR, does not match",
+			obj: &TopLevel{
+				NestedSlice: []Nested{
+					{NestedValA: "A0", NestedValB: "B0"},
+					{NestedValA: "A1", NestedValB: "B1"},
+				},
+			},
+			q: &query.Query{
+				FieldQueries: []*query.FieldQuery{
+					{Field: "A", Values: []string{"A2", "A3"}, Operator: query.Or},
+				},
+			},
+		},
+		{
+			desc: "simple compound query, AND, does not match",
+			obj: &TopLevel{
+				NestedSlice: []Nested{
+					{NestedValA: "A0", NestedValB: "B0"},
+					{NestedValA: "A1", NestedValB: "B1"},
+				},
+			},
+			q: &query.Query{
+				FieldQueries: []*query.FieldQuery{
+					{Field: "A", Values: []string{"A0", "A1"}, Operator: query.And},
+				},
+			},
+		},
+		{
+			desc: "simple compound query, AND, matches",
+			obj: &TopLevel{
+				NestedSlice: []Nested{
+					{NestedValA: "A0", NestedValB: "B0"},
+					{NestedValA: "A1", NestedValB: "B1"},
+				},
+			},
+			q: &query.Query{
+				FieldQueries: []*query.FieldQuery{
+					{Field: "A", Values: []string{"r/A.*", "r/.*1"}, Operator: query.And},
+				},
+			},
+			expectedResult: &Result{Matches: map[string][]Match{
+				"A": {{Path: traverseutil.PathFromSteps(t, "NestedSlice", 1, "NestedValA"), Values: []string{"A1"}}},
+			}},
+		},
+		{
+			desc: "compound query, OR, negated, matches",
+			obj: &TopLevel{
+				NestedSlice: []Nested{
+					{NestedValA: "A0", NestedValB: "B0"},
+					{NestedValA: "A1", NestedValB: "B1"},
+				},
+			},
+			q: &query.Query{
+				FieldQueries: []*query.FieldQuery{
+					{Field: "A", Values: []string{"A2", "A1"}, Operator: query.Or, Negate: true},
+				},
+			},
+			expectedResult: &Result{Matches: map[string][]Match{
+				"A": {
+					{Path: traverseutil.PathFromSteps(t, "NestedSlice", 0, "NestedValA"), Values: []string{"A0"}},
+				},
+			}},
+		},
+		{
+			desc: "compound query, OR, negated, does not match",
+			obj: &TopLevel{
+				NestedSlice: []Nested{
+					{NestedValA: "A0", NestedValB: "B0"},
+					{NestedValA: "A1", NestedValB: "B1"},
+				},
+			},
+			q: &query.Query{
+				FieldQueries: []*query.FieldQuery{
+					{Field: "A", Values: []string{"A0", "A1"}, Operator: query.Or, Negate: true},
+				},
+			},
+		},
+		{
+			desc: "compound query, AND, negated, does not match",
+			obj: &TopLevel{
+				NestedSlice: []Nested{
+					{NestedValA: "A0", NestedValB: "B0"},
+					{NestedValA: "A1", NestedValB: "B1"},
+				},
+			},
+			q: &query.Query{
+				FieldQueries: []*query.FieldQuery{
+					{Field: "A", Values: []string{`r/A.*`, `r/.*\d`}, Operator: query.And, Negate: true},
+				},
+			},
+		},
+		{
+			desc: "simple compound query, AND, negated, matches",
+			obj: &TopLevel{
+				NestedSlice: []Nested{
+					{NestedValA: "A0", NestedValB: "B0"},
+					{NestedValA: "A1", NestedValB: "B1"},
+				},
+			},
+			q: &query.Query{
+				FieldQueries: []*query.FieldQuery{
+					{Field: "A", Values: []string{"r/A.*", "r/.*1"}, Operator: query.And, Negate: true},
+				},
+			},
+			expectedResult: &Result{Matches: map[string][]Match{
+				"A": {{Path: traverseutil.PathFromSteps(t, "NestedSlice", 0, "NestedValA"), Values: []string{"A0"}}},
+			}},
+		},
+	})
+
 }

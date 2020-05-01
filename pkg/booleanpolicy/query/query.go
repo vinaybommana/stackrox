@@ -1,6 +1,7 @@
 package query
 
 // An Operator denotes how to combine multiple values.
+//go:generate stringer -type=Operator
 type Operator int
 
 // This block enumerates valid operators.

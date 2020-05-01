@@ -140,23 +140,9 @@ func (f *Factory) generateInternalEvaluatorForFieldQuery(q *query.FieldQuery) (i
 	}
 
 	baseType := fieldPath[len(fieldPath)-1].Type
-	individualEvaluators := make([]internalEvaluator, 0, len(q.Values))
-	for _, val := range q.Values {
-		eval, err := createBaseEvaluator(q.Field, baseType, val)
-		if err != nil {
-			return nil, errors.Wrapf(err, "invalid value for field %s: %s", q.Field, val)
-		}
-		individualEvaluators = append(individualEvaluators, eval)
-	}
-
-	var baseEvaluator internalEvaluator
-	switch len(individualEvaluators) {
-	case 0:
-		return nil, errors.Errorf("invalid query %v: no values", q)
-	case 1:
-		baseEvaluator = individualEvaluators[0]
-	default:
-		return nil, errors.New("NOT IMPLEMENTED")
+	baseEvaluator, err := createBaseEvaluator(q.Field, baseType, q.Values, q.Negate, q.Operator)
+	if err != nil {
+		return nil, errors.Wrapf(err, "invalid query %v", q)
 	}
 
 	pathEvaluator, err := wrapEvaluatorInPath(f.rootType, fieldPath, baseEvaluator)
