@@ -60,7 +60,7 @@ func New(policies datastore.DataStore,
 		metadataCache: metadataCache,
 		scanCache:     scanCache,
 
-		validator:              newPolicyValidator(notifiers, clusters, deploymentMatcherBuilder, imageMatcherBuilder),
+		validator:              newPolicyValidator(notifiers, deploymentMatcherBuilder, imageMatcherBuilder),
 		dryRunPolicyJobManager: backgroundTaskManager,
 	}
 }

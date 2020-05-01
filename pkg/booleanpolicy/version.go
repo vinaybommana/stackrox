@@ -6,7 +6,8 @@ import (
 
 const (
 	// Version is the current version of boolean policies that is handled by this package.
-	Version = "1"
+	Version       = "1"
+	legacyVersion = ""
 )
 
 // IsBooleanPolicy returns true if the policy has policy version equal to the current version of boolean policies

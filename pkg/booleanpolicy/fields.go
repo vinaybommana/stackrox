@@ -1,6 +1,8 @@
 package booleanpolicy
 
 import (
+	"regexp"
+
 	"github.com/stackrox/rox/pkg/search"
 )
 
@@ -19,55 +21,60 @@ type metadataAndQB struct {
 	operatorsForbidden bool
 	negationForbidden  bool
 	qb                 queryBuilder
+	valueRegex         *regexp.Regexp
 }
 
 // This block enumerates field short names.
 var (
-	AddCaps                = newFieldWithFieldLabelQueryBuilder("Add Capabilities", search.AddCapabilities, negationForbidden)
-	CVE                    = newFieldWithFieldLabelQueryBuilder("CVE", search.CVE)
-	CVSS                   = newFieldWithFieldLabelQueryBuilder("CVSS", search.CVSS, negationForbidden)
-	ContainerCPULimit      = newFieldWithFieldLabelQueryBuilder("Container CPU Limit", search.CPUCoresLimit, operatorsForbidden)
-	ContainerCPURequest    = newFieldWithFieldLabelQueryBuilder("Container CPU Request", search.CPUCoresRequest, operatorsForbidden)
-	ContainerMemLimit      = newFieldWithFieldLabelQueryBuilder("Container Memory Limit", search.MemoryLimit, operatorsForbidden)
-	ContainerMemRequest    = newFieldWithFieldLabelQueryBuilder("Container Memory Request", search.MemoryRequest, operatorsForbidden)
-	DisallowedAnnotation   = newFieldWithTODOQueryBuilder("Disallowed Annotation")
-	DisallowedImageLabel   = newFieldWithTODOQueryBuilder("Disallowed Image Label")
-	DockerfileLine         = newFieldWithTODOQueryBuilder("Dockerfile Line")
-	DropCaps               = newFieldWithFieldLabelQueryBuilder("Drop Capabilities", search.DropCapabilities, negationForbidden)
-	EnvironmentVariable    = newFieldWithTODOQueryBuilder("Environment Variable")
-	FixedBy                = newFieldWithFieldLabelQueryBuilder("FixedBy", search.FixedBy)
-	ImageAge               = newFieldWithTODOQueryBuilder("Image Age")
-	ImageComponent         = newFieldWithFieldLabelQueryBuilder("Image Component", search.Component)
-	ImageRegistry          = newFieldWithFieldLabelQueryBuilder("Image Registry", search.ImageRegistry)
-	ImageRemote            = newFieldWithFieldLabelQueryBuilder("Image Remote", search.ImageRemote, negationForbidden)
-	ImageScanAge           = newFieldWithTODOQueryBuilder("Image Scan Age")
-	ImageTag               = newFieldWithFieldLabelQueryBuilder("Image Tag", search.ImageTag)
-	MinimumRBACPermissions = newFieldWithTODOQueryBuilder("Minimum RBAC Permissions")
-	Port                   = newFieldWithFieldLabelQueryBuilder("Port", search.Port)
-	PortExposure           = newFieldWithTODOQueryBuilder("Port Exposure Method")
-	Privileged             = newFieldWithFieldLabelQueryBuilder("Privileged", search.Privileged, negationForbidden, operatorsForbidden)
-	ProcessAncestor        = newFieldWithFieldLabelQueryBuilder("Process Ancestor", search.ProcessAncestor)
-	ProcessArguments       = newFieldWithFieldLabelQueryBuilder("Process Arguments", search.ProcessArguments)
-	ProcessName            = newFieldWithFieldLabelQueryBuilder("Process Name", search.ProcessName)
-	ProcessUID             = newFieldWithFieldLabelQueryBuilder("Process UID", search.ProcessUID)
-	Protocol               = newFieldWithFieldLabelQueryBuilder("Protocol", search.PortProtocol)
-	ReadOnlyRootFS         = newFieldWithFieldLabelQueryBuilder("Read-Only Root Filesystem", search.ReadOnlyRootFilesystem, negationForbidden, operatorsForbidden)
-	RequiredAnnotation     = newFieldWithTODOQueryBuilder("Required Annotation")
-	RequiredImageLabel     = newFieldWithTODOQueryBuilder("Required Image Label")
-	RequiredLabel          = newFieldWithTODOQueryBuilder("Required Label")
-	UnscannedImage         = newFieldWithTODOQueryBuilder("Unscanned Image")
-	VolumeDestination      = newFieldWithFieldLabelQueryBuilder("Volume Destination", search.VolumeDestination)
-	VolumeName             = newFieldWithFieldLabelQueryBuilder("Volume Name", search.VolumeName)
-	VolumeSource           = newFieldWithFieldLabelQueryBuilder("Volume Source", search.VolumeSource)
-	VolumeType             = newFieldWithFieldLabelQueryBuilder("Volume Type", search.VolumeType)
-	WhitelistsEnabled      = newFieldWithTODOQueryBuilder("Unexpected Process Executed")
-	WritableHostMount      = newFieldWithTODOQueryBuilder("Writable Host Mount")
-	WritableVolume         = newFieldWithTODOQueryBuilder("Writable Volume")
+	AddCaps                = newFieldWithFieldLabelQueryBuilder("Add Capabilities", search.AddCapabilities, capabilitiesValueRegex, negationForbidden)
+	CVE                    = newFieldWithFieldLabelQueryBuilder("CVE", search.CVE, stringValueRegex)
+	CVSS                   = newFieldWithFieldLabelQueryBuilder("CVSS", search.CVSS, comparatorDecimalValueRegex, operatorsForbidden)
+	ContainerCPULimit      = newFieldWithFieldLabelQueryBuilder("Container CPU Limit", search.CPUCoresLimit, integerValueRegex, operatorsForbidden)
+	ContainerCPURequest    = newFieldWithFieldLabelQueryBuilder("Container CPU Request", search.CPUCoresRequest, integerValueRegex, operatorsForbidden)
+	ContainerMemLimit      = newFieldWithFieldLabelQueryBuilder("Container Memory Limit", search.MemoryLimit, integerValueRegex, operatorsForbidden)
+	ContainerMemRequest    = newFieldWithFieldLabelQueryBuilder("Container Memory Request", search.MemoryRequest, integerValueRegex, operatorsForbidden)
+	DisallowedAnnotation   = newFieldWithFieldLabelQueryBuilder("Disallowed Annotation", "", keyValueValueRegex, negationForbidden)
+	DisallowedImageLabel   = newFieldWithFieldLabelQueryBuilder("Disallowed Image Label", "", keyValueValueRegex, negationForbidden)
+	DockerfileLine         = newFieldWithFieldLabelQueryBuilder("Dockerfile Line", "", dockerfileLineValueRegex, negationForbidden)
+	DropCaps               = newFieldWithFieldLabelQueryBuilder("Drop Capabilities", search.DropCapabilities, capabilitiesValueRegex, negationForbidden)
+	EnvironmentVariable    = newFieldWithFieldLabelQueryBuilder("Environment Variable", "", environmentVariableWithSourceRegex, negationForbidden)
+	FixedBy                = newFieldWithFieldLabelQueryBuilder("Fixed By", search.FixedBy, stringValueRegex)
+	ImageAge               = newFieldWithFieldLabelQueryBuilder("Image Age", "", integerValueRegex, negationForbidden, operatorsForbidden)
+	ImageComponent         = newFieldWithFieldLabelQueryBuilder("Image Component", search.Component, keyValueValueRegex)
+	ImageRegistry          = newFieldWithFieldLabelQueryBuilder("Image Registry", search.ImageRegistry, stringValueRegex)
+	ImageRemote            = newFieldWithFieldLabelQueryBuilder("Image Remote", search.ImageRemote, stringValueRegex, negationForbidden)
+	ImageScanAge           = newFieldWithFieldLabelQueryBuilder("Image Scan Age", "", integerValueRegex, negationForbidden, operatorsForbidden)
+	ImageTag               = newFieldWithFieldLabelQueryBuilder("Image Tag", search.ImageTag, stringValueRegex)
+	MinimumRBACPermissions = newFieldWithFieldLabelQueryBuilder("Minimum RBAC Permissions", "", rbacPermissionValueRegex, operatorsForbidden)
+	Port                   = newFieldWithFieldLabelQueryBuilder("Port", search.Port, integerValueRegex)
+	PortExposure           = newFieldWithFieldLabelQueryBuilder("Port Exposure Method", "", portExposureValueRegex)
+	Privileged             = newFieldWithFieldLabelQueryBuilder("Privileged", search.Privileged, booleanValueRegex, negationForbidden, operatorsForbidden)
+	ProcessAncestor        = newFieldWithFieldLabelQueryBuilder("Process Ancestor", search.ProcessAncestor, stringValueRegex)
+	ProcessArguments       = newFieldWithFieldLabelQueryBuilder("Process Arguments", search.ProcessArguments, stringValueRegex)
+	ProcessName            = newFieldWithFieldLabelQueryBuilder("Process Name", search.ProcessName, stringValueRegex)
+	ProcessUID             = newFieldWithFieldLabelQueryBuilder("Process UID", search.ProcessUID, stringValueRegex)
+	Protocol               = newFieldWithFieldLabelQueryBuilder("Protocol", search.PortProtocol, stringValueRegex)
+	ReadOnlyRootFS         = newFieldWithFieldLabelQueryBuilder("Read-Only Root Filesystem", search.ReadOnlyRootFilesystem, booleanValueRegex, negationForbidden, operatorsForbidden)
+	RequiredAnnotation     = newFieldWithFieldLabelQueryBuilder("Required Annotation", "", keyValueValueRegex, negationForbidden)
+	RequiredImageLabel     = newFieldWithFieldLabelQueryBuilder("Required Image Label", "", keyValueValueRegex, negationForbidden)
+	RequiredLabel          = newFieldWithFieldLabelQueryBuilder("Required Label", "", keyValueValueRegex, negationForbidden)
+	UnscannedImage         = newFieldWithFieldLabelQueryBuilder("Unscanned Image", "", booleanValueRegex)
+	VolumeDestination      = newFieldWithFieldLabelQueryBuilder("Volume Destination", search.VolumeDestination, stringValueRegex)
+	VolumeName             = newFieldWithFieldLabelQueryBuilder("Volume Name", search.VolumeName, stringValueRegex)
+	VolumeSource           = newFieldWithFieldLabelQueryBuilder("Volume Source", search.VolumeSource, stringValueRegex)
+	VolumeType             = newFieldWithFieldLabelQueryBuilder("Volume Type", search.VolumeType, stringValueRegex)
+	WhitelistsEnabled      = newFieldWithFieldLabelQueryBuilder("Unexpected Process Executed", "", booleanValueRegex, negationForbidden, operatorsForbidden)
+	WritableHostMount      = newFieldWithFieldLabelQueryBuilder("Writable Host Mount", "", booleanValueRegex, negationForbidden, operatorsForbidden)
+	WritableVolume         = newFieldWithFieldLabelQueryBuilder("Writable Volume", "", booleanValueRegex, negationForbidden, operatorsForbidden)
 )
 
-func newFieldWithFieldLabelQueryBuilder(fieldName string, fieldLabel search.FieldLabel, options ...option) string {
+func newFieldWithFieldLabelQueryBuilder(fieldName string, fieldLabel search.FieldLabel, valueRegex *regexp.Regexp, options ...option) string {
 	m := metadataAndQB{
-		qb: &fieldLabelBasedQueryBuilder{fieldName: fieldName, fieldLabel: fieldLabel},
+		valueRegex: valueRegex,
+	}
+	// TEMPORARY: this indicates fields for which we haven't indicated the relevant query builder yet.
+	if fieldLabel != "" {
+		m.qb = &fieldLabelBasedQueryBuilder{fieldName: fieldName, fieldLabel: fieldLabel}
 	}
 	for _, o := range options {
 		switch o {
@@ -78,10 +85,5 @@ func newFieldWithFieldLabelQueryBuilder(fieldName string, fieldLabel search.Fiel
 		}
 	}
 	fieldsToQB[fieldName] = &m
-	return fieldName
-}
-
-// TEMPORARY: this indicates fields for which we haven't indicated the relevant query builder yet.
-func newFieldWithTODOQueryBuilder(fieldName string) string {
 	return fieldName
 }

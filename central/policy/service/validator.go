@@ -8,7 +8,6 @@ import (
 
 	mapset "github.com/deckarep/golang-set"
 	"github.com/pkg/errors"
-	clusterDataStore "github.com/stackrox/rox/central/cluster/datastore"
 	notifierDataStore "github.com/stackrox/rox/central/notifier/datastore"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/booleanpolicy"
@@ -24,10 +23,9 @@ var (
 	defaultDescriptionValidator = regexp.MustCompile(`^[^\$]{1,256}$`)
 )
 
-func newPolicyValidator(notifierStorage notifierDataStore.DataStore, clusterStorage clusterDataStore.DataStore, deploymentMatcherBuilder, imageMatcherBuilder matcher.Builder) *policyValidator {
+func newPolicyValidator(notifierStorage notifierDataStore.DataStore, deploymentMatcherBuilder, imageMatcherBuilder matcher.Builder) *policyValidator {
 	return &policyValidator{
 		notifierStorage:          notifierStorage,
-		clusterStorage:           clusterStorage,
 		deploymentMatcherBuilder: deploymentMatcherBuilder,
 		imageMatcherBuilder:      imageMatcherBuilder,
 		nameValidator:            defaultNameValidator,
@@ -40,7 +38,6 @@ type validationFunc func(*storage.Policy) error
 // policyValidator validates the incoming policy.
 type policyValidator struct {
 	notifierStorage          notifierDataStore.DataStore
-	clusterStorage           clusterDataStore.DataStore
 	deploymentMatcherBuilder matcher.Builder
 	imageMatcherBuilder      matcher.Builder
 

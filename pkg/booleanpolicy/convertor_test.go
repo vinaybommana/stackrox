@@ -26,7 +26,7 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 			expectedPolicySection: &storage.PolicySection{
 				PolicyGroups: []*storage.PolicyGroup{
 					{
-						FieldName: "cvss",
+						FieldName: "CVSS",
 						Values: []*storage.PolicyValue{
 							{
 								Value: ">= 7.000000",
@@ -45,7 +45,7 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 			expectedPolicySection: &storage.PolicySection{
 				PolicyGroups: []*storage.PolicyGroup{
 					{
-						FieldName: "Fixed by",
+						FieldName: "Fixed By",
 						Values: []*storage.PolicyValue{
 							{
 								Value: "pkg=4",
@@ -79,12 +79,12 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 					},
 
 					{
-						FieldName: "Process Args",
+						FieldName: "Process Arguments",
 						Values:    []*storage.PolicyValue{{Value: "--arg 1"}},
 					},
 
 					{
-						FieldName: "Process Uid",
+						FieldName: "Process UID",
 						Values:    []*storage.PolicyValue{{Value: "123"}},
 					},
 				},
@@ -355,7 +355,7 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 			expectedPolicySection: &storage.PolicySection{
 				PolicyGroups: []*storage.PolicyGroup{
 					{
-						FieldName: "cve",
+						FieldName: "CVE",
 						Values: []*storage.PolicyValue{
 							{
 								Value: "cve",
@@ -510,7 +510,7 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 			expectedPolicySection: &storage.PolicySection{
 				PolicyGroups: []*storage.PolicyGroup{
 					{
-						FieldName: "Whitelist enabled",
+						FieldName: "Unexpected Process Executed",
 						Values: []*storage.PolicyValue{
 							{
 								Value: "true",

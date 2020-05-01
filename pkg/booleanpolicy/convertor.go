@@ -36,6 +36,17 @@ var fieldsConverters = []individualFieldConverter{
 	convertCvss,
 }
 
+// CloneAndEnsureConverted returns a clone of the input that is upgraded if it is a legacy policy.
+func CloneAndEnsureConverted(legacyPolicy *storage.Policy) *storage.Policy {
+	p := legacyPolicy.Clone()
+	if p.GetPolicyVersion() == legacyVersion {
+		p.PolicyVersion = Version
+		p.PolicySections = append(p.PolicySections, ConvertPolicyFieldsToSections(p.GetFields()))
+		p.Fields.Reset()
+	}
+	return p
+}
+
 // ConvertPolicyFieldsToSections converts policy fields (version = "") to policy sections (version = "2.0").
 func ConvertPolicyFieldsToSections(fields *storage.PolicyFields) *storage.PolicySection {
 	var pgs []*storage.PolicyGroup
@@ -59,7 +70,7 @@ func convertImageScanAge(fields *storage.PolicyFields) []*storage.PolicyGroup {
 
 	return []*storage.PolicyGroup{
 		{
-			FieldName: "Image Scan Age",
+			FieldName: ImageScanAge,
 			Values:    getPolicyValues(fields.GetScanAgeDays()),
 		},
 	}
@@ -72,7 +83,7 @@ func convertNoScanExists(fields *storage.PolicyFields) []*storage.PolicyGroup {
 
 	return []*storage.PolicyGroup{
 		{
-			FieldName: "Unscanned Image",
+			FieldName: UnscannedImage,
 			Values:    getPolicyValues(fields.GetNoScanExists()),
 		},
 	}
@@ -86,14 +97,14 @@ func convertEnv(fields *storage.PolicyFields) []*storage.PolicyGroup {
 
 	return []*storage.PolicyGroup{
 		{
-			FieldName: "Environment Variable",
+			FieldName: EnvironmentVariable,
 			Values:    getPolicyValues(fmt.Sprintf("%s=%s=%s", p.GetEnvVarSource(), p.GetKey(), p.GetValue())),
 		},
 	}
 }
 
 func convertRequiredLabel(fields *storage.PolicyFields) []*storage.PolicyGroup {
-	if p := convertKeyValuePolicy(fields.GetRequiredLabel(), "Required Label"); p != nil {
+	if p := convertKeyValuePolicy(fields.GetRequiredLabel(), RequiredLabel); p != nil {
 		return []*storage.PolicyGroup{p}
 	}
 
@@ -101,7 +112,7 @@ func convertRequiredLabel(fields *storage.PolicyFields) []*storage.PolicyGroup {
 }
 
 func convertRequiredAnnotation(fields *storage.PolicyFields) []*storage.PolicyGroup {
-	if p := convertKeyValuePolicy(fields.GetRequiredAnnotation(), "Required Annotation"); p != nil {
+	if p := convertKeyValuePolicy(fields.GetRequiredAnnotation(), RequiredAnnotation); p != nil {
 		return []*storage.PolicyGroup{p}
 	}
 
@@ -109,7 +120,7 @@ func convertRequiredAnnotation(fields *storage.PolicyFields) []*storage.PolicyGr
 }
 
 func convertDisallowedAnnotation(fields *storage.PolicyFields) []*storage.PolicyGroup {
-	if p := convertKeyValuePolicy(fields.GetDisallowedAnnotation(), "Disallowed Annotation"); p != nil {
+	if p := convertKeyValuePolicy(fields.GetDisallowedAnnotation(), DisallowedAnnotation); p != nil {
 		return []*storage.PolicyGroup{p}
 	}
 
@@ -117,7 +128,7 @@ func convertDisallowedAnnotation(fields *storage.PolicyFields) []*storage.Policy
 }
 
 func convertRequiredImageLabel(fields *storage.PolicyFields) []*storage.PolicyGroup {
-	if p := convertKeyValuePolicy(fields.GetRequiredImageLabel(), "Required Image Label"); p != nil {
+	if p := convertKeyValuePolicy(fields.GetRequiredImageLabel(), RequiredImageLabel); p != nil {
 		return []*storage.PolicyGroup{p}
 	}
 
@@ -125,7 +136,7 @@ func convertRequiredImageLabel(fields *storage.PolicyFields) []*storage.PolicyGr
 }
 
 func convertDisallowedImageLabel(fields *storage.PolicyFields) []*storage.PolicyGroup {
-	if p := convertKeyValuePolicy(fields.GetDisallowedImageLabel(), "Disallowed Image Label"); p != nil {
+	if p := convertKeyValuePolicy(fields.GetDisallowedImageLabel(), DisallowedImageLabel); p != nil {
 		return []*storage.PolicyGroup{p}
 	}
 
@@ -138,7 +149,7 @@ func convertPrivileged(fields *storage.PolicyFields) []*storage.PolicyGroup {
 	}
 
 	return []*storage.PolicyGroup{{
-		FieldName: "Privileged",
+		FieldName: Privileged,
 		Values:    getPolicyValues(fields.GetPrivileged()),
 	},
 	}
@@ -150,7 +161,7 @@ func convertWhitelistEnabled(fields *storage.PolicyFields) []*storage.PolicyGrou
 	}
 
 	return []*storage.PolicyGroup{{
-		FieldName: "Whitelist enabled",
+		FieldName: WhitelistsEnabled,
 		Values:    getPolicyValues(fields.GetWhitelistEnabled()),
 	}}
 }
@@ -162,7 +173,7 @@ func convertFixedBy(fields *storage.PolicyFields) []*storage.PolicyGroup {
 	}
 
 	return []*storage.PolicyGroup{{
-		FieldName: "Fixed by",
+		FieldName: FixedBy,
 		Values:    getPolicyValues(p),
 	}}
 }
@@ -173,7 +184,7 @@ func convertReadOnlyRootFs(fields *storage.PolicyFields) []*storage.PolicyGroup 
 	}
 
 	return []*storage.PolicyGroup{{
-		FieldName: "Read-Only Root Filesystem",
+		FieldName: ReadOnlyRootFS,
 		Values:    getPolicyValues(fields.GetReadOnlyRootFs()),
 	}}
 }
@@ -209,21 +220,21 @@ func convertImageNamePolicy(fields *storage.PolicyFields) []*storage.PolicyGroup
 	var res []*storage.PolicyGroup
 	if p.GetRegistry() != "" {
 		res = append(res, &storage.PolicyGroup{
-			FieldName: "Image Registry",
+			FieldName: ImageRegistry,
 			Values:    getPolicyValues(p.GetRegistry()),
 		})
 	}
 
 	if p.GetRemote() != "" {
 		res = append(res, &storage.PolicyGroup{
-			FieldName: "Image Remote",
+			FieldName: ImageRemote,
 			Values:    getPolicyValues(p.GetRemote()),
 		})
 	}
 
 	if p.GetTag() != "" {
 		res = append(res, &storage.PolicyGroup{
-			FieldName: "Image Tag",
+			FieldName: ImageTag,
 			Values:    getPolicyValues(p.GetTag()),
 		})
 	}
@@ -237,7 +248,7 @@ func convertImageAgeDays(fields *storage.PolicyFields) []*storage.PolicyGroup {
 	}
 
 	return []*storage.PolicyGroup{{
-		FieldName: "Image Age",
+		FieldName: ImageAge,
 		Values:    getPolicyValues(fields.GetImageAgeDays()),
 	}}
 }
@@ -253,7 +264,7 @@ func convertCvss(fields *storage.PolicyFields) []*storage.PolicyGroup {
 		return nil
 	}
 
-	return []*storage.PolicyGroup{convertNumericalPolicy(p, "cvss")}
+	return []*storage.PolicyGroup{convertNumericalPolicy(p, CVSS)}
 }
 
 func convertCve(fields *storage.PolicyFields) []*storage.PolicyGroup {
@@ -263,7 +274,7 @@ func convertCve(fields *storage.PolicyFields) []*storage.PolicyGroup {
 	}
 
 	return []*storage.PolicyGroup{{
-		FieldName: "cve",
+		FieldName: CVE,
 		Values:    getPolicyValues(p),
 	}}
 }
@@ -423,14 +434,14 @@ func convertProcessPolicy(fields *storage.PolicyFields) []*storage.PolicyGroup {
 
 	if p.GetArgs() != "" {
 		res = append(res, &storage.PolicyGroup{
-			FieldName: "Process Args",
+			FieldName: "Process Arguments",
 			Values:    getPolicyValues(p.GetArgs()),
 		})
 	}
 
 	if p.GetUid() != "" {
 		res = append(res, &storage.PolicyGroup{
-			FieldName: "Process Uid",
+			FieldName: "Process UID",
 			Values:    getPolicyValues(p.GetUid()),
 		})
 	}
