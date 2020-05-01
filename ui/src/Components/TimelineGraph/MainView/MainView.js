@@ -5,7 +5,16 @@ import { getWidth, getHeight } from 'utils/d3Utils';
 import Axis, { AXIS_HEIGHT } from '../Axis';
 import EventsGraph from '../EventsGraph';
 
-const MainView = ({ data, minTimeRange, maxTimeRange, numRows, margin }) => {
+const MainView = ({
+    data,
+    minTimeRange,
+    maxTimeRange,
+    absoluteMinTimeRange,
+    absoluteMaxTimeRange,
+    numRows,
+    margin,
+    onZoomChange,
+}) => {
     const refAnchor = useRef(null);
     const [width, setWidth] = useState(0);
     const [height, setHeight] = useState(0);
@@ -29,11 +38,14 @@ const MainView = ({ data, minTimeRange, maxTimeRange, numRows, margin }) => {
                 translateY={AXIS_HEIGHT}
                 minTimeRange={minTimeRange}
                 maxTimeRange={maxTimeRange}
+                absoluteMinTimeRange={absoluteMinTimeRange}
+                absoluteMaxTimeRange={absoluteMaxTimeRange}
                 data={data}
                 width={width}
                 height={height}
                 numRows={numRows}
                 margin={margin}
+                onZoomChange={onZoomChange}
             />
         </svg>
     );
@@ -45,6 +57,9 @@ MainView.propTypes = {
     data: PropTypes.arrayOf(PropTypes.object).isRequired,
     numRows: PropTypes.number.isRequired,
     margin: PropTypes.number,
+    absoluteMinTimeRange: PropTypes.number.isRequired,
+    absoluteMaxTimeRange: PropTypes.number.isRequired,
+    onZoomChange: PropTypes.func.isRequired,
 };
 
 MainView.defaultProps = {

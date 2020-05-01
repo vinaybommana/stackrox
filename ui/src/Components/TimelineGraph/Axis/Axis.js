@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { scaleLinear } from 'd3-scale';
 import { axisTop, axisBottom } from 'd3-axis';
 
-import selectors from 'Components/TimelineGraph/MainView/selectors';
+import mainViewSelector from 'Components/TimelineGraph/MainView/selectors';
 import { getWidth } from 'utils/d3Utils';
 import D3Anchor from 'Components/D3Anchor';
 import getTimeDiffTickFormat from './getTimeDiffTickFormat';
@@ -24,7 +24,7 @@ export const AXIS_HEIGHT = 12;
 const Axis = ({ translateX, translateY, minDomain, maxDomain, direction, margin }) => {
     // the "container" argument is a reference to the container for the D3-related element
     function onUpdate(container) {
-        const width = getWidth(selectors.svgSelector);
+        const width = getWidth(mainViewSelector);
         const minRange = margin;
         const maxRange = width - margin;
         const scale = scaleLinear().domain([minDomain, maxDomain]).range([minRange, maxRange]);
@@ -51,13 +51,14 @@ Axis.propTypes = {
     translateY: PropTypes.number,
     minDomain: PropTypes.number.isRequired,
     maxDomain: PropTypes.number.isRequired,
-    direction: PropTypes.oneOf(DIRECTIONS).isRequired,
+    direction: PropTypes.oneOf(DIRECTIONS),
 };
 
 Axis.defaultProps = {
     margin: 0,
     translateX: 0,
     translateY: 0,
+    direction: 'top',
 };
 
 export default Axis;

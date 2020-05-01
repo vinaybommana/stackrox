@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import EventsRow from './EventsRow';
+import ZoomableOverlay from './ZoomableOverlay';
 
 const MAX_ROW_HEIGHT = 48;
 const MIN_ROW_HEIGHT = 0;
@@ -12,11 +13,14 @@ const EventsGraph = ({
     translateY,
     minTimeRange,
     maxTimeRange,
+    absoluteMinTimeRange,
+    absoluteMaxTimeRange,
     height,
     width,
     numRows,
     margin,
     isHeightAdjustable,
+    onZoomChange,
 }) => {
     const rowHeight = isHeightAdjustable
         ? Math.min(Math.max(MIN_ROW_HEIGHT, Math.floor(height / numRows) - 1), MAX_ROW_HEIGHT)
@@ -28,6 +32,17 @@ const EventsGraph = ({
             height={rowHeight}
             width={width}
         >
+            {onZoomChange && ( // we don't want to show this in the minimap
+                <ZoomableOverlay
+                    translateX={0}
+                    translateY={0}
+                    width={width}
+                    height={height}
+                    absoluteMinTimeRange={absoluteMinTimeRange}
+                    absoluteMaxTimeRange={absoluteMaxTimeRange}
+                    onZoomChange={onZoomChange}
+                />
+            )}
             {data.map((datum, index) => {
                 const { id, name, events } = datum;
                 const isOddRow = index % 2 !== 0;
@@ -62,6 +77,9 @@ EventsGraph.propTypes = {
     translateX: PropTypes.number,
     translateY: PropTypes.number,
     isHeightAdjustable: PropTypes.bool,
+    absoluteMinTimeRange: PropTypes.number,
+    absoluteMaxTimeRange: PropTypes.number,
+    onZoomChange: PropTypes.func,
 };
 
 EventsGraph.defaultProps = {
@@ -69,6 +87,9 @@ EventsGraph.defaultProps = {
     translateX: 0,
     translateY: 0,
     isHeightAdjustable: false,
+    onZoomChange: null,
+    absoluteMinTimeRange: null,
+    absoluteMaxTimeRange: null,
 };
 
 export default EventsGraph;

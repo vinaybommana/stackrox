@@ -4,7 +4,7 @@ import { scaleLinear } from 'd3-scale';
 
 import { getWidth } from 'utils/d3Utils';
 import { eventTypes } from 'constants/timelineTypes';
-import selectors from 'Components/TimelineGraph/MainView/selectors';
+import mainViewSelector from 'Components/TimelineGraph/MainView/selectors';
 import D3Anchor from 'Components/D3Anchor';
 import PolicyViolationEvent from './PolicyViolationEvent';
 import RestartEvent from './RestartEvent';
@@ -29,7 +29,7 @@ const EventMarker = ({
 }) => {
     // the "container" argument is a reference to the container for the D3-related element
     function onUpdate(container) {
-        const width = getWidth(selectors.svgSelector);
+        const width = getWidth(mainViewSelector);
         const minRange = margin;
         const maxRange = width - margin;
         const xScale = scaleLinear()

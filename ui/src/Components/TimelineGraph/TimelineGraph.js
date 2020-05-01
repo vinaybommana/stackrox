@@ -31,6 +31,13 @@ const TimelineGraph = ({
         subText,
         hasChildren,
     }));
+
+    function onSelectionChange(selection) {
+        if (!selection) return;
+        setMinTimeRange(selection.start);
+        setMaxTimeRange(selection.end);
+    }
+
     return (
         <div className="flex flex-1 flex-col" data-testid="timeline-graph">
             <div className="flex w-full" id="capture-timeline">
@@ -42,8 +49,11 @@ const TimelineGraph = ({
                         data={data}
                         minTimeRange={minTimeRange}
                         maxTimeRange={maxTimeRange}
+                        absoluteMinTimeRange={absoluteMinTimeRange}
+                        absoluteMaxTimeRange={absoluteMaxTimeRange}
                         numRows={pageSize}
                         margin={MARGIN}
+                        onZoomChange={onSelectionChange}
                     />
                 </div>
             </div>
@@ -59,9 +69,10 @@ const TimelineGraph = ({
                 <div className="font-700">
                     <Minimap
                         minTimeRange={absoluteMinTimeRange}
-                        setMinTimeRange={setMinTimeRange}
                         maxTimeRange={adjustedAbsoluteMaxTimeRange}
-                        setMaxTimeRange={setMaxTimeRange}
+                        minBrushTimeRange={minTimeRange}
+                        maxBrushTimeRange={maxTimeRange}
+                        onBrushSelectionChange={onSelectionChange}
                         data={data}
                         numRows={pageSize}
                     />

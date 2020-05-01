@@ -1,41 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { scaleLinear } from 'd3-scale';
 
-import selectors from 'Components/TimelineGraph/Minimap/selectors';
+import miniMapSelector from 'Components/TimelineGraph/Minimap/selectors';
 import { getWidth, getHeight } from 'utils/d3Utils';
 import EventsGraph from 'Components/TimelineGraph/EventsGraph';
 import Axis, { AXIS_HEIGHT } from '../Axis';
-import Brush from './Brush';
+import BrushableOverlay from './BrushableOverlay';
 
 const MiniMap = ({
     minTimeRange,
     maxTimeRange,
-    setMinTimeRange,
-    setMaxTimeRange,
+    minBrushTimeRange,
+    maxBrushTimeRange,
     data,
     numRows,
     margin,
+    onBrushSelectionChange,
 }) => {
     const [width, setWidth] = useState(0);
     const [height, setHeight] = useState(0);
 
     useEffect(() => {
-        setWidth(getWidth(selectors.svgSelector));
-        setHeight(getHeight(selectors.svgSelector));
+        setWidth(getWidth(miniMapSelector));
+        setHeight(getHeight(miniMapSelector));
     }, []);
-
-    function onSelectionChange(selection) {
-        const minRange = margin;
-        const maxRange = width - margin;
-        const scale = scaleLinear()
-            .domain([minTimeRange, maxTimeRange])
-            .range([minRange, maxRange]);
-        const newMinTimeRange = selection ? scale.invert(selection.start) : minTimeRange;
-        const newMaxTimeRange = selection ? scale.invert(selection.end) : maxTimeRange;
-        setMinTimeRange(newMinTimeRange);
-        setMaxTimeRange(newMaxTimeRange);
-    }
 
     const brushableViewHeight = Math.max(0, height - AXIS_HEIGHT);
 
@@ -53,12 +41,16 @@ const MiniMap = ({
                 margin={margin}
                 isHeightAdjustable
             />
-            <Brush
+            <BrushableOverlay
                 translateX={0}
                 translateY={0}
                 width={width}
                 height={brushableViewHeight}
-                onSelectionChange={onSelectionChange}
+                minTimeRange={minBrushTimeRange}
+                maxTimeRange={maxBrushTimeRange}
+                absoluteMinTimeRange={minTimeRange}
+                absoluteMaxTimeRange={maxTimeRange}
+                onBrushSelectionChange={onBrushSelectionChange}
                 margin={margin}
             />
             <Axis
@@ -76,11 +68,12 @@ const MiniMap = ({
 MiniMap.propTypes = {
     minTimeRange: PropTypes.number.isRequired,
     maxTimeRange: PropTypes.number.isRequired,
-    setMinTimeRange: PropTypes.func.isRequired,
-    setMaxTimeRange: PropTypes.func.isRequired,
+    onBrushSelectionChange: PropTypes.func.isRequired,
     data: PropTypes.arrayOf(PropTypes.object).isRequired,
     numRows: PropTypes.number.isRequired,
     margin: PropTypes.number,
+    minBrushTimeRange: PropTypes.number.isRequired,
+    maxBrushTimeRange: PropTypes.number.isRequired,
 };
 
 MiniMap.defaultProps = {

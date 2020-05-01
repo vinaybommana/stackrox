@@ -25,6 +25,7 @@ const EventsRow = ({
             fill="transparent"
         >
             <rect
+                className="pointer-events-none"
                 fill={isOdd ? 'var(--tertiary-200)' : 'var(--base-100)'}
                 stroke="var(--base-300)"
                 height={height}
