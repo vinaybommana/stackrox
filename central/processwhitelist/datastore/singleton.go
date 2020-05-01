@@ -28,9 +28,9 @@ func initialize() {
 	var storage store.Store
 	var err error
 	if features.RocksDB.Enabled() {
-		storage, err = bolt.NewStore(globaldb.GetGlobalDB(), storecache.NewMapBackedCache())
-	} else {
 		storage = rocksdb.New(globaldb.GetRocksDB())
+	} else {
+		storage, err = bolt.NewStore(globaldb.GetGlobalDB(), storecache.NewMapBackedCache())
 	}
 	utils.Must(err)
 
