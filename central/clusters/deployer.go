@@ -68,6 +68,10 @@ func FieldsFromClusterAndRenderOpts(c *storage.Cluster, opts RenderOptions) (map
 		}
 	}
 
+	command := "kubectl"
+	if c.Type == storage.ClusterType_OPENSHIFT_CLUSTER {
+		command = "oc"
+	}
 	fields := map[string]interface{}{
 		"ClusterName": c.Name,
 		"ClusterType": c.Type.String(),
@@ -89,6 +93,8 @@ func FieldsFromClusterAndRenderOpts(c *storage.Cluster, opts RenderOptions) (map
 
 		"EnvVars":             envVars,
 		"AdmissionController": false,
+
+		"K8sCommand": command,
 	}
 
 	if features.AdmissionControlService.Enabled() && c.AdmissionController {

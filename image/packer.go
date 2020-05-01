@@ -45,11 +45,15 @@ var (
 	k8sScriptsFileMap = map[string]string{
 		"sensor/kubernetes/sensor.sh":        "templates/sensor.sh",
 		"sensor/kubernetes/delete-sensor.sh": "templates/delete-sensor.sh",
+		"common/ca-setup.sh":                 "templates/ca-setup-sensor.sh",
+		"common/delete-ca.sh":                "templates/delete-ca-sensor.sh",
 	}
 
 	osScriptsFileMap = map[string]string{
 		"sensor/openshift/sensor.sh":        "templates/sensor.sh",
 		"sensor/openshift/delete-sensor.sh": "templates/delete-sensor.sh",
+		"common/ca-setup.sh":                "templates/ca-setup-sensor.sh",
+		"common/delete-ca.sh":               "templates/delete-ca-sensor.sh",
 	}
 )
 

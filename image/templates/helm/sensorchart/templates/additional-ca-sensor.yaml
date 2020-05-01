@@ -7,6 +7,6 @@ kind: Secret
 metadata:
   labels:
     auto-upgrade.stackrox.io/component: sensor
-  name: additional-ca
+  name: additional-ca-sensor
   namespace: stackrox
 type: Opaque
