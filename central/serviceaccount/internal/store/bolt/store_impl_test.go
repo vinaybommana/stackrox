@@ -1,9 +1,10 @@
-package store
+package bolt
 
 import (
 	"testing"
 
 	bolt "github.com/etcd-io/bbolt"
+	"github.com/stackrox/rox/central/serviceaccount/internal/store"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/bolthelper"
 	"github.com/stackrox/rox/pkg/storecache"
@@ -20,7 +21,7 @@ type ServiceAccountStoreTestSuite struct {
 
 	db *bolt.DB
 
-	store Store
+	store store.Store
 }
 
 func (suite *ServiceAccountStoreTestSuite) SetupSuite() {
@@ -30,7 +31,7 @@ func (suite *ServiceAccountStoreTestSuite) SetupSuite() {
 	}
 
 	suite.db = db
-	suite.store, err = New(db, storecache.NewMapBackedCache())
+	suite.store, err = NewBoltStore(db, storecache.NewMapBackedCache())
 	suite.Require().NoError(err)
 }
 
@@ -49,17 +50,21 @@ func (suite *ServiceAccountStoreTestSuite) TestServiceAccounts() {
 	}
 
 	for _, sa := range serviceAccounts {
-		err := suite.store.UpsertServiceAccount(sa)
+		err := suite.store.Upsert(sa)
 		suite.NoError(err)
 	}
 
 	// Get all service accounts
-	retrievedServiceAccounts, err := suite.store.ListServiceAccounts()
-	suite.Nil(err)
-	suite.ElementsMatch(serviceAccounts, retrievedServiceAccounts)
+	var retrievedServiceAccounts []*storage.ServiceAccount
+	err := suite.store.Walk(func(sa *storage.ServiceAccount) error {
+		retrievedServiceAccounts = append(retrievedServiceAccounts, sa)
+		return nil
+	})
+	suite.NoError(err)
+	suite.Equal(serviceAccounts, retrievedServiceAccounts)
 
 	for _, s := range serviceAccounts {
-		sa, exists, err := suite.store.GetServiceAccount(s.GetId())
+		sa, exists, err := suite.store.Get(s.GetId())
 		suite.NoError(err)
 		suite.True(exists)
 		suite.Equal(s, sa)

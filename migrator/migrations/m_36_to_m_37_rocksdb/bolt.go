@@ -11,6 +11,9 @@ var (
 	boltBucketsToMigrate = []string{
 		"risk",
 		"processWhitelists2",
+		"service_accounts",
+		"k8sroles",
+		"rolebindings",
 	}
 
 	separator = []byte("\x00")
