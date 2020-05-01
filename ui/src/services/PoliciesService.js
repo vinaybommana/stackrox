@@ -211,13 +211,23 @@ export function startDryRun(policy) {
 }
 
 /**
- * Gets a dry run for a given policy.
+ * Gets a dry run for a given job ID.
  *
- * @param {!object} policy
+ * @param {!string} jobId
  * @returns {Promise<AxiosResponse, Error>}
  */
 export function checkDryRun(jobId) {
     return axios.get(`${baseUrl}/dryrunjob/${jobId}`);
+}
+
+/**
+ * Cancels a dry run for a given job ID.
+ *
+ * @param {!string} jobId
+ * @returns {Promise<AxiosResponse, Error>}
+ */
+export function cancelDryRun(jobId) {
+    return axios.delete(`${baseUrl}/dryrunjob/${jobId}`);
 }
 
 /**

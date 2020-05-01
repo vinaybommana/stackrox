@@ -117,6 +117,7 @@ describe('Policies Sagas', () => {
                 [select(selectors.getPoliciesSearchOptions), []],
                 [call(service.fetchPolicy, policyId), dynamic(fetchMock)],
                 [select(selectors.getWizardPolicy), policy],
+                [select(selectors.getWizardDryRun), { jobId: null }],
                 [call(service.fetchPolicyCategories), { response: policyCategories }],
                 [call(service.fetchPolicies, { query: '' }), {}],
             ])
@@ -175,6 +176,7 @@ describe('Policies Sagas', () => {
             .provide([
                 [select(selectors.getPoliciesSearchOptions), []],
                 [select(selectors.getWizardPolicy), policy],
+                [select(selectors.getWizardDryRun), { jobId: null }],
                 [call(service.createPolicy, policy), dynamic(createMock)],
                 [call(service.fetchPolicies, { query: '' }), {}],
             ])
@@ -194,6 +196,7 @@ describe('Policies Sagas', () => {
             .provide([
                 [select(selectors.getPoliciesSearchOptions), []],
                 [select(selectors.getWizardPolicy), policy],
+                [select(selectors.getWizardDryRun), { jobId: null }],
                 [call(service.savePolicy, policy), dynamic(saveMock)],
                 [call(service.fetchPolicy, policy.id), {}],
                 [call(service.fetchPolicies, { query: '' }), {}],
@@ -226,7 +229,7 @@ describe('Policies Sagas', () => {
             .silentRun();
     });
 
-    it('should start, check, and set dry run state from PRPREVIEW to PREVIEW wizard state', () => {
+    it('should start, check, and set dry run state from PREPREVIEW to PREVIEW wizard state', () => {
         const jobId = '1234';
         const dryRunJobMock = jest.fn().mockReturnValueOnce({ data: { jobId } });
         const dryRunMock = jest

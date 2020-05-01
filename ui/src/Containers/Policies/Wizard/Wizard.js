@@ -10,6 +10,7 @@ import { actions as pageActions } from 'reducers/policies/page';
 import { actions as tableActions } from 'reducers/policies/table';
 import { actions as wizardActions } from 'reducers/policies/wizard';
 import WizardPanel from 'Containers/Policies/Wizard/WizardPanel';
+import wizardStages from 'Containers/Policies/Wizard/wizardStages';
 import {
     policyStatus,
     policyDetails,
@@ -27,15 +28,17 @@ function Wizard({
     setWizardPolicy,
     selectPolicyId,
     fieldGroups,
+    setWizardStage,
 }) {
     const onClose = useCallback(() => {
         closeWizard();
         setWizardPolicy({ name: '' });
         selectPolicyId('');
+        setWizardStage(wizardStages.details);
         history.push({
             pathname: `/main/policies`,
         });
-    }, [closeWizard, history, setWizardPolicy, selectPolicyId]);
+    }, [closeWizard, history, setWizardPolicy, selectPolicyId, setWizardStage]);
 
     if (!wizardOpen) return null;
 
@@ -62,6 +65,7 @@ Wizard.propTypes = {
     setWizardPolicy: PropTypes.func.isRequired,
     selectPolicyId: PropTypes.func.isRequired,
     fieldGroups: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+    setWizardStage: PropTypes.func.isRequired,
 };
 
 Wizard.defaultProps = {
@@ -115,6 +119,7 @@ const mapDispatchToProps = {
     closeWizard: pageActions.closeWizard,
     selectPolicyId: tableActions.selectPolicyId,
     setWizardPolicy: wizardActions.setWizardPolicy,
+    setWizardStage: wizardActions.setWizardStage,
 };
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(Wizard));

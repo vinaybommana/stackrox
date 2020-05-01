@@ -240,6 +240,13 @@ function* checkDryRun() {
     }
 }
 
+function* cancelDryRun() {
+    const { jobId } = yield select(selectors.getWizardDryRun);
+    if (jobId) {
+        yield call(service.cancelDryRun, jobId);
+    }
+}
+
 export function* loadPoliciesPage() {
     yield all([fork(filterPoliciesPageBySearch), fork(getPolicyCategories)]);
 }
@@ -293,6 +300,10 @@ function* watchWizardState() {
         const { stage } = yield take(wizardTypes.SET_WIZARD_STAGE);
         const policy = yield select(selectors.getWizardPolicy);
         switch (stage) {
+            case wizardStages.details:
+            case wizardStages.edit:
+                yield fork(cancelDryRun);
+                break;
             case wizardStages.prepreview:
                 yield fork(startDryRun, policy);
                 break;
