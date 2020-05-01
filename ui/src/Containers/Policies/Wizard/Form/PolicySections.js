@@ -6,15 +6,15 @@ import reduxFormPropTypes from 'constants/reduxFormPropTypes';
 import PolicySection from './PolicySection';
 
 const emptyPolicySection = {
-    section_name: '',
-    policy_groups: [],
+    sectionName: '',
+    policyGroups: [],
 };
 
 function PolicySections({ fields }) {
     function addPolicySectionHandler() {
         const newPolicySection = {
             ...emptyPolicySection,
-            section_name: `policy section ${fields.length}`,
+            sectionName: `policy section ${fields.length}`,
         };
         fields.push(newPolicySection);
     }
@@ -35,9 +35,9 @@ function PolicySections({ fields }) {
                 return (
                     <FieldArray
                         key={name}
-                        name={`${name}.policy_groups`}
+                        name={`${name}.policyGroups`}
                         component={PolicySection}
-                        sectionName={`${name}.section_name`}
+                        sectionName={`${name}.sectionName`}
                         removeSectionHandler={removeSectionHandler(i)}
                     />
                 );

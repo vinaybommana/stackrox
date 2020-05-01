@@ -11,7 +11,7 @@ function BooleanPolicySection() {
     return (
         <DndProvider backend={Backend}>
             <div className="w-full flex">
-                <FieldArray name="policy_sections" component={PolicySections} />
+                <FieldArray name="policySections" component={PolicySections} />
                 <PolicyBuilderKeys keys={policyConfiguration.descriptor} />
             </div>
         </DndProvider>

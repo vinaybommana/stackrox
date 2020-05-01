@@ -98,16 +98,16 @@ export function parseValueStr(value) {
 }
 
 function preFormatNestedPolicyFields(policy) {
-    if (!policy.policy_sections) return policy;
+    if (!policy.policySections) return policy;
 
     const clientPolicy = { ...policy };
     // itreating through each value in a policy group in a policy section to parse value string
-    policy.policy_sections.forEach((policySection, sectionIdx) => {
-        const { policy_groups: policyGroups } = policySection;
+    policy.policySections.forEach((policySection, sectionIdx) => {
+        const { policyGroups } = policySection;
         policyGroups.forEach((policyGroup, groupIdx) => {
             const { values } = policyGroup;
             values.forEach((value, valueIdx) => {
-                clientPolicy.policy_sections[sectionIdx].policy_groups[groupIdx].values[
+                clientPolicy.policySections[sectionIdx].policyGroups[groupIdx].values[
                     valueIdx
                 ] = parseValueStr(value.value);
             });
@@ -127,20 +127,20 @@ export function formatValueStr({ source, key, value }) {
 }
 
 function postFormatNestedPolicyFields(policy) {
-    if (!policy.policy_sections) return policy;
+    if (!policy.policySections) return policy;
 
     const serverPolicy = { ...policy };
     // itereating through each value in a policy group in a policy section to format to a flat value string
-    policy.policy_sections.forEach((policySection, sectionIdx) => {
-        const { policy_groups: policyGroups } = policySection;
+    policy.policySections.forEach((policySection, sectionIdx) => {
+        const { policyGroups } = policySection;
         policyGroups.forEach((policyGroup, groupIdx) => {
             const { values } = policyGroup;
             values.forEach((value, valueIdx) => {
-                serverPolicy.policy_sections[sectionIdx].policy_groups[groupIdx].values[
-                    valueIdx
-                ] = { value: formatValueStr(value) };
+                serverPolicy.policySections[sectionIdx].policyGroups[groupIdx].values[valueIdx] = {
+                    value: formatValueStr(value),
+                };
             });
-            delete serverPolicy.policy_sections[sectionIdx].policy_groups[groupIdx].fieldKey;
+            delete serverPolicy.policySections[sectionIdx].policyGroups[groupIdx].fieldKey;
         });
     });
     return serverPolicy;

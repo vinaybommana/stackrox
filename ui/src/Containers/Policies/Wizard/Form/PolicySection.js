@@ -15,8 +15,8 @@ import { getPolicyCriteriaFieldKeys } from './utils';
 const getEmptyPolicyFieldCard = (fieldKey) => {
     const defaultValue = fieldKey.defaultValue !== undefined ? fieldKey.defaultValue : '';
     return {
-        field_name: fieldKey.name,
-        boolean_operator: 'OR',
+        fieldName: fieldKey.name,
+        booleanOperator: 'OR',
         values: [
             {
                 value: defaultValue,
@@ -38,7 +38,7 @@ function PolicySection({ fields, sectionName, removeSectionHandler }) {
             fields.push(newPolicyFieldCard);
         },
         canDrop: ({ fieldKey }) => {
-            return !allFields.find((field) => field.field_name === fieldKey.name);
+            return !allFields.find((field) => field.fieldName === fieldKey.name);
         },
         collect: (monitor) => ({
             isOver: monitor.isOver(),
@@ -68,11 +68,10 @@ function PolicySection({ fields, sectionName, removeSectionHandler }) {
                 <div className="p-2">
                     {fields.map((name, i) => {
                         const field = fields.get(i);
-                        const { field_name: fieldName } = field;
                         let { fieldKey } = field;
                         if (!fieldKey) {
                             fieldKey = policyConfiguration.descriptor.find(
-                                (fieldObj) => fieldObj.name === fieldName
+                                (fieldObj) => fieldObj.name === field.fieldName
                             );
                         }
                         return (
@@ -80,7 +79,7 @@ function PolicySection({ fields, sectionName, removeSectionHandler }) {
                                 key={name}
                                 name={`${name}.values`}
                                 component={PolicyFieldCard}
-                                booleanOperatorName={`${name}.boolean_operator`}
+                                booleanOperatorName={`${name}.booleanOperator`}
                                 removeFieldHandler={removeFieldHandler(i)}
                                 fieldKey={fieldKey}
                                 toggleFieldName={`${name}.negate`}

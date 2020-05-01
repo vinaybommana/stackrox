@@ -49,6 +49,7 @@ export default function Field({ field, name }) {
                     key={path}
                     buttons={field.radioButtons}
                     groupClassName="w-full"
+                    useBoolean
                 />
             );
         case 'select':
