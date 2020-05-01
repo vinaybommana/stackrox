@@ -41,6 +41,7 @@ func init() {
 			"timestamp: Time",
 			"args: String!",
 			"uid: Int!",
+			"parentName: String",
 			"parentUid: Int!",
 			"whitelisted: Boolean!",
 		}, "DeploymentEvent"),
@@ -151,6 +152,7 @@ type ProcessActivityEventResolver struct {
 	timestamp           time.Time
 	args                string
 	uid                 int32
+	parentName          *string
 	parentUID           int32
 	containerInstanceID string
 	canReadWhitelist    bool
@@ -182,7 +184,18 @@ func (resolver *ProcessActivityEventResolver) UID() int32 {
 	return resolver.uid
 }
 
+// ParentName returns the process's parent's name, if it exists, and null otherwise.
+func (resolver *ProcessActivityEventResolver) ParentName() *string {
+	return resolver.parentName
+}
+
 // ParentUID returns the process's parent's UID.
+// Any value greater than or equal to 0 indicates a parent's UID.
+// -1 indicates the parent's UID is unknown or the process does not have a parent.
+// This should be used in tandem with ParentName if the exact state of the UID is desired.
+//
+// If ParentName is not null, a ParentUID of -1 implies the UID is unknown.
+// If ParentName is null, then ParentUID will always be -1.
 func (resolver *ProcessActivityEventResolver) ParentUID() int32 {
 	return resolver.parentUID
 }
@@ -239,10 +252,16 @@ func (resolver *Resolver) getProcessActivityEvents(ctx context.Context, query *v
 			continue
 		}
 		// -1 indicates we do not have parent UID information (either no parent exists or we do not know its UID).
+		var parentName *string
 		parentUID := int32(-1)
-		if len(indicator.GetSignal().GetLineageInfo()) > 0 {
+		if lineageInfo := indicator.GetSignal().GetLineageInfo(); len(lineageInfo) > 0 {
 			// This process's direct parent should be the first entry.
-			parentUID = int32(indicator.GetSignal().GetLineageInfo()[0].GetParentUid())
+			name := lineageInfo[0].GetParentExecFilePath()
+			parentName = &name
+			parentUID = int32(lineageInfo[0].GetParentUid())
+		} else if lineage := indicator.GetSignal().GetLineage(); len(lineage) > 0 {
+			// This process's direct parent should be the first entry.
+			parentName = &lineage[0]
 		}
 		processEvents = append(processEvents, &ProcessActivityEventResolver{
 			id:                  graphql.ID(indicator.GetId()),
@@ -250,6 +269,7 @@ func (resolver *Resolver) getProcessActivityEvents(ctx context.Context, query *v
 			timestamp:           timestamp,
 			args:                indicator.GetSignal().GetArgs(),
 			uid:                 int32(indicator.GetSignal().GetUid()),
+			parentName:          parentName,
 			parentUID:           parentUID,
 			containerInstanceID: indicator.GetSignal().GetContainerId(),
 			canReadWhitelist:    canReadWhitelist,
