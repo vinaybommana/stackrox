@@ -14,6 +14,7 @@ import (
 	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/predicate"
+	"github.com/stackrox/rox/pkg/set"
 	"github.com/stackrox/rox/pkg/sync"
 )
 
@@ -97,7 +98,8 @@ func (m *k8sCVEManager) updateCVEs(newCVEs []*schema.NVDCVEFeedJSON10DefCVEItem)
 
 func (m *k8sCVEManager) updateCVEsInDB(embeddedCVEs []*storage.EmbeddedVulnerability) error {
 	cves := converter.EmbeddedCVEsToProtoCVEs(embeddedCVEs...)
-	ret := make([]converter.ClusterCVEParts, 0, len(cves))
+	newCVEs := make([]converter.ClusterCVEParts, 0, len(cves))
+	newCVEIDs := set.NewStringSet()
 	for _, cve := range cves {
 		clusters, err := m.cveMatcher.GetAffectedClusters(m.nvdCVEs[cve.GetId()])
 		if err != nil {
@@ -107,7 +109,12 @@ func (m *k8sCVEManager) updateCVEsInDB(embeddedCVEs []*storage.EmbeddedVulnerabi
 		if len(clusters) == 0 {
 			continue
 		}
-		ret = append(ret, converter.NewClusterCVEParts(cve, clusters, m.nvdCVEs[cve.GetId()]))
+		newCVEIDs.Add(cve.GetId())
+		newCVEs = append(newCVEs, converter.NewClusterCVEParts(cve, clusters, m.nvdCVEs[cve.GetId()]))
 	}
-	return m.cveDataStore.UpsertClusterCVEs(cveElevatedCtx, ret...)
+
+	if err := m.cveDataStore.UpsertClusterCVEs(cveElevatedCtx, newCVEs...); err != nil {
+		return err
+	}
+	return reconcileCVEsInDB(m.cveDataStore, storage.CVE_K8S_CVE, newCVEIDs)
 }
