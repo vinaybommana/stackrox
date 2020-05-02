@@ -45,14 +45,13 @@ func runMigrations(databases *types.Databases, startingSeqNum int) error {
 		if err != nil {
 			return errors.Wrapf(err, "failed to update version after migration %d", startingSeqNum)
 		}
-
-		// If feature flag is on, then drop all BadgerDB data as RocksDB is completely up to date
-		if features.RocksDB.Enabled() {
-			if err := databases.BadgerDB.DropAll(); err != nil {
-				return errors.Wrap(err, "error dropping all data from Badger")
-			}
-		}
 		log.WriteToStderrf("Successfully updated DB from version %d to %d", seqNum, migration.VersionAfter.GetSeqNum())
+	}
+	// If feature flag is on, then drop all BadgerDB data as RocksDB is completely up to date
+	if features.RocksDB.Enabled() {
+		if err := databases.BadgerDB.DropAll(); err != nil {
+			return errors.Wrap(err, "error dropping all data from Badger")
+		}
 	}
 	return nil
 }
