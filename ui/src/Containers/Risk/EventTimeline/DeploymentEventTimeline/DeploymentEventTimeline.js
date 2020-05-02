@@ -62,7 +62,7 @@ const DeploymentEventTimeline = ({
     const absoluteMaxTimeRange = getLargestDifferenceInMilliseconds(timelineData);
 
     return (
-        <Panel header={header} headerComponents={headerComponents}>
+        <Panel header={header} headerComponents={headerComponents} id="event-timeline">
             <TimelineGraph
                 data={timelineData}
                 goToNextView={goToNextView}

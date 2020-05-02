@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 const TileContent = ({
+    dataTestId,
     className,
     superText,
     subText,
@@ -12,7 +13,10 @@ const TileContent = ({
     textWrap,
 }) => {
     return (
-        <div className={`flex flex-col text-center justify-around ${textColorClass} ${className}`}>
+        <div
+            className={`flex flex-col text-center justify-around ${textColorClass} ${className}`}
+            data-testid={dataTestId}
+        >
             {superText !== null && (
                 <div className="text-3xl tracking-widest pb-1" data-testid="tileLinkSuperText">
                     {superText}
@@ -41,6 +45,7 @@ const TileContent = ({
 };
 
 TileContent.propTypes = {
+    dataTestId: PropTypes.string,
     className: PropTypes.string,
     superText: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     subText: PropTypes.string,
@@ -52,6 +57,7 @@ TileContent.propTypes = {
 };
 
 TileContent.defaultProps = {
+    dataTestId: 'tile-content',
     className: '',
     superText: null,
     subText: null,

@@ -5,12 +5,13 @@ import { Activity, Maximize2 } from 'react-feather';
 
 import TileContent from 'Components/TileContent';
 
-const TimelineOverview = ({ type, total, counts, onClick }) => {
+const TimelineOverview = ({ dataTestId, type, total, counts, onClick }) => {
     return (
         <button
             type="button"
             className="w-full bg-base-100 border border-base-300 border-primary-300 cursor-pointer flex hover:bg-primary-200 hover:border-primary-300 justify-between leading-normal items-stretch"
             onClick={onClick}
+            data-testid={dataTestId}
         >
             <TileContent
                 className={
@@ -40,6 +41,7 @@ const TimelineOverview = ({ type, total, counts, onClick }) => {
 };
 
 TimelineOverview.propTypes = {
+    dataTestId: PropTypes.string,
     type: PropTypes.string.isRequired,
     total: PropTypes.number.isRequired,
     counts: PropTypes.arrayOf(
@@ -52,6 +54,7 @@ TimelineOverview.propTypes = {
 };
 
 TimelineOverview.defaultProps = {
+    dataTestId: 'timeline-overview',
     counts: [],
 };
 

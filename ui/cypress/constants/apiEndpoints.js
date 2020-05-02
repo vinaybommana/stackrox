@@ -55,6 +55,8 @@ export const risks = {
         autocomplete: 'autocomplete',
         getProcessTags: 'getProcessTags',
         getProcessComments: 'getProcessComments',
+        getDeploymentEventTimeline: 'getDeploymentEventTimeline',
+        getPodEventTimeline: 'getPodEventTimeline',
     },
 };
 

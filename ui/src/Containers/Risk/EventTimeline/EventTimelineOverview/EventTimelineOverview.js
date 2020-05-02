@@ -52,6 +52,7 @@ const EventTimelineOverview = ({ deploymentId }) => {
     return (
         <>
             <TimelineOverview
+                dataTestId="event-timeline-overview"
                 type={graphObjectTypes.EVENT}
                 total={numTotalEvents}
                 counts={counts}

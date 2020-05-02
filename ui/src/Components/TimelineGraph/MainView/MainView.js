@@ -25,7 +25,7 @@ const MainView = ({
     }, []);
 
     return (
-        <svg data-testid="timeline-main-view" width="700px" height="400px" ref={refAnchor}>
+        <svg data-testid="timeline-main-view" width="700px" height="500px" ref={refAnchor}>
             <Axis
                 translateX={0}
                 translateY={AXIS_HEIGHT}

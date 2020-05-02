@@ -14,7 +14,7 @@ const NameListItem = ({ id, type, name, subText, hasChildren, onClick }) => {
             <HeaderWithSubText header={name} subText={subText} />
             {hasChildren && (
                 <Button
-                    dataTestId="timeline-name-list-item-expander"
+                    dataTestId="timeline-drill-down-button"
                     className="absolute bg-base-100 border border-primary-300 center-y py-1 right-0 rounded transform translate-x-1/2 hover:bg-primary-200"
                     onClick={onClickHandler}
                     icon={<ChevronRight className="h-4 w-4 text-base-700" />}

@@ -47,7 +47,7 @@ export const selectors = {
     whitelistDeploymentRow: '.rt-tr:contains("metadata-proxy-v0.1")',
     bulkAddTagsButton: '[data-testid="bulk-add-tags-button"]',
     addTagsDialog: scopeSelectors('.ReactModal__Content', {
-        ...selectSelectors,
+        ...selectSelectors.multiSelect,
         confirmButton: 'button:contains("Confirm")',
         cancelButton: 'button:contains("Cancel")',
     }),

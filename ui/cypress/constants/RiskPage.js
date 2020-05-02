@@ -1,6 +1,9 @@
 import tableSelectors from '../selectors/table';
 import { processTagsSelectors } from '../selectors/tags';
 import { processCommentsSelectors, commentsDialogSelectors } from '../selectors/comments';
+import selectSelectors from '../selectors/select';
+import paginationSelectors from '../selectors/pagination';
+import tooltipSelectors from '../selectors/tooltip';
 import scopeSelectors from '../helpers/scopeSelectors';
 
 export const url = '/main/risk';
@@ -23,6 +26,42 @@ const sidePanelSelectors = scopeSelectors('[data-testid="panel"]:eq(1)', {
     processDiscoveryTab: 'button[data-testid="tab"]:contains("Process Discovery")',
 
     cancelButton: 'button[data-testid="cancel"]',
+});
+
+const eventSelectors = {
+    policyViolation: ' [data-testid="policy-violation-event"]',
+    processActivity: '[data-testid="process-activity-event"]',
+    whitelistedProcessActivity: '[data-testid="whitelisted-process-activity-event"]',
+    restart: '[data-testid="restart-event"]',
+    termination: '[data-testid="termination-event"]',
+};
+
+const eventTimelineOverviewSelectors = scopeSelectors('[data-testid="event-timeline-overview"]', {
+    eventCounts: '[data-testid="tile-content"] [data-testid="tileLinkSuperText"]',
+    totalNumEventsText: '[data-testid="tile-content"]:first [data-testid="tile-link-value"]',
+});
+
+const eventTimelineSelectors = scopeSelectors('[data-testid="event-timeline"]', {
+    panelHeader: scopeSelectors('[data-testid="event-timeline-header"]', {
+        header: '[data-testid="header"]',
+    }),
+    backButton: '[data-testid="timeline-back-button"]',
+    select: selectSelectors.singleSelect,
+    legend: '[data-testid="timeline-legend"]',
+    timeline: scopeSelectors('[data-testid="timeline-graph"]', {
+        namesList: scopeSelectors('ul[data-testid="timeline-names-list"]', {
+            listOfNames: '> li',
+            firstListedName: '> li:first [data-testid="header"]',
+            drillDownButtonInFirstRow: '[data-testid="timeline-drill-down-button"]:first',
+        }),
+        pagination: paginationSelectors,
+        mainView: scopeSelectors('[data-testid="timeline-main-view"]', {
+            event: eventSelectors,
+            eventsInFirstRow:
+                '[data-testid="timeline-events-row"]:first [data-testid="timeline-event-marker"]',
+            allEvents: '[data-testid="timeline-event-marker"]',
+        }),
+    }),
 });
 
 export const selectors = {
@@ -55,4 +94,14 @@ export const selectors = {
     networkNodeLink: '[data-testid="network-node-link"]',
     sidePanel: sidePanelSelectors,
     commentsDialog: commentsDialogSelectors,
+    eventTimeline: eventTimelineSelectors,
+    eventTimelineOverview: eventTimelineOverviewSelectors,
+    eventTimelineOverviewButton: 'button[data-testid="event-timeline-overview"]',
+    tooltip: {
+        ...tooltipSelectors,
+        legendContents: `${tooltipSelectors.overlay} > div`,
+        legendContent: {
+            event: eventSelectors,
+        },
+    },
 };

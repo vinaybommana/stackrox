@@ -64,7 +64,11 @@ const PodEventTimeline = ({
     const numTotalContainers = data?.pod?.containerCount || 0;
 
     return (
-        <Panel headerTextComponent={headerTextComponent} headerComponents={headerComponents}>
+        <Panel
+            headerTextComponent={headerTextComponent}
+            headerComponents={headerComponents}
+            id="event-timeline"
+        >
             <TimelineGraph
                 data={timelineData}
                 goToNextView={goToNextView}

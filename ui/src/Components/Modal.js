@@ -4,6 +4,7 @@ import ReactModal from 'react-modal';
 
 const Modal = (props) => (
     <ReactModal
+        data-testid="modal"
         isOpen={props.isOpen}
         onRequestClose={props.onRequestClose}
         contentLabel="Modal"

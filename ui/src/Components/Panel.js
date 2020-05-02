@@ -20,7 +20,9 @@ const Panel = (props) => (
                     </div>
                 )}
                 {props.headerTextComponent ? (
-                    props.headerTextComponent
+                    <div className="flex" data-testid={`${props.id}-header`}>
+                        {props.headerTextComponent}
+                    </div>
                 ) : (
                     <div
                         className={`overflow-hidden mx-4 flex text-base-600 items-center tracking-wide leading-normal font-700 ${
