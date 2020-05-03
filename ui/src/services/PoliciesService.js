@@ -293,6 +293,8 @@ export function exportPolicies(policyIds) {
  * @param {!array} array of policies
  * @returns {Promise<AxiosResponse, Error>} fulfilled in case of success or rejected with an error
  */
-export function importPolicies(policies) {
-    return axios.post(`${baseUrl}/import`, { policies, metadata: {} });
+export function importPolicies(policies, metadata = {}) {
+    return axios
+        .post(`${baseUrl}/import`, { policies, metadata })
+        .then((response) => response?.data);
 }

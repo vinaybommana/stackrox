@@ -333,7 +333,9 @@ describe('Policies page', () => {
                 method: 'POST',
                 url: 'v1/policies/export',
                 status: 400,
-                response: { message: 'Some policies could not be retrieved.' },
+                response: {
+                    message: 'Some policies could not be retrieved.',
+                },
             }).as('policyExport');
 
             cy.get(selectors.tableFirstRow).click();
@@ -359,6 +361,19 @@ describe('Policies page', () => {
 
             cy.get(selectors.policyImportModal.cancel).click();
             cy.get(selectors.policyImportModal.content).should('not.exist');
+        });
+
+        // @TODO: the .attachFile command is added by cypress-file-upload
+        //   and that package is unstable currently,
+        //   see: https://github.com/abramenal/cypress-file-upload
+        //   workarounds required until the plugin fixes
+        //   https://github.com/abramenal/cypress-file-upload/issues/175
+        it.skip('should list the policy ID of a selected file', () => {
+            cy.get(selectors.importPolicyButton).click();
+
+            cy.get('input[type="file"]').attachFile('test.json');
+
+            cy.get(selectors.policyImportModal.imports).eq(0).should('exist');
         });
     });
 });

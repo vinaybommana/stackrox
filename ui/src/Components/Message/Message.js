@@ -51,7 +51,7 @@ function Message(props) {
 }
 
 Message.propTypes = {
-    message: PropTypes.string.isRequired,
+    message: PropTypes.oneOfType([PropTypes.string, PropTypes.element]).isRequired,
     type: PropTypes.oneOf(['warn', 'error', 'info', 'guidance', 'loading']),
 };
 

@@ -68,6 +68,7 @@ export const selectors = {
         fileInput: '[data-testid="policy-import-modal-content"] input[type="file"]',
         cancel: '[data-testid="custom-modal-cancel"]',
         confirm: '[data-testid="custom-modal-confirm"]',
+        imports: '[data-testid="policies-to-import"]',
     },
     searchInput: '.react-select__input > input',
     sidePanel: '[data-testid="side-panel"]',

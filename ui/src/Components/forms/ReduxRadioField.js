@@ -10,7 +10,7 @@ const ReduxRadioField = ({ name, value, id, disabled, onChange }) => (
         onChange={onChange}
         component="input"
         type="radio"
-        className="form-radio"
+        className="form-radio border-base-600 text-base-600"
         value={value}
         disabled={disabled}
     />
