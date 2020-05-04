@@ -1,3 +1,7 @@
+import static Services.getViolationsWithTimeout
+
+import io.stackrox.proto.storage.AlertOuterClass
+import services.AlertService
 import objects.Deployment
 import objects.NetworkPolicy
 import objects.NetworkPolicyTypes
@@ -107,6 +111,9 @@ class ReconciliationTest extends BaseSpecification {
             assert Services.getPods().findAll { it.deploymentId == dep.getDeploymentUid() }.size() == 1
         }
 
+        def violations = getViolationsWithTimeout("testing123", "Latest Tag", 30)
+        assert violations.size() == 1
+
         NetworkPolicy policy = new NetworkPolicy("do-nothing")
                 .setNamespace(ns)
                 .addPodSelector()
@@ -164,6 +171,10 @@ class ReconciliationTest extends BaseSpecification {
         assert numSecrets == 0
 
         verifyReconciliationStats(true)
+
+        // Verify Latest Tag alert is marked as stale
+        def violation = AlertService.getViolation(violations[0].getId())
+        assert violation.state == AlertOuterClass.ViolationState.RESOLVED
     }
 
 }
