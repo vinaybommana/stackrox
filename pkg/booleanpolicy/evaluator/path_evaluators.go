@@ -69,7 +69,7 @@ func traversePtrToField(parentType reflect.Type, field reflect.StructField, eval
 	}
 
 	return internalEvaluatorFunc(func(path *traverseutil.Path, instance reflect.Value) (*Result, bool) {
-		if isNil(instance) {
+		if instance.IsNil() {
 			return nil, false
 		}
 		return nestedEvaluator.Evaluate(path, instance.Elem())
@@ -79,18 +79,10 @@ func traversePtrToField(parentType reflect.Type, field reflect.StructField, eval
 func traverseStructToField(field reflect.StructField, evaluator internalEvaluator) (internalEvaluator, error) {
 	return internalEvaluatorFunc(func(path *traverseutil.Path, instance reflect.Value) (*Result, bool) {
 		nextValue := instance.FieldByIndex(field.Index)
-		if isNil(nextValue) {
+		// We cannot traverse into a nil interface.
+		if nextValue.Kind() == reflect.Interface && nextValue.IsNil() {
 			return nil, false
 		}
 		return evaluator.Evaluate(path.WithFieldTraversed(field.Name), nextValue)
 	}), nil
-}
-
-func isNil(f reflect.Value) bool {
-	switch f.Kind() {
-	// Don't return nil for nil Reflect.Maps.  Map base predicates should operate on nil maps
-	case reflect.Ptr, reflect.UnsafePointer, reflect.Interface, reflect.Slice:
-		return f.IsNil()
-	}
-	return false
 }

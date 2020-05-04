@@ -14,3 +14,8 @@ func Int32(i int32) *int32 {
 func Int(i int) *int {
 	return &i
 }
+
+// String returns a pointer to the passed string.
+func String(s string) *string {
+	return &s
+}
