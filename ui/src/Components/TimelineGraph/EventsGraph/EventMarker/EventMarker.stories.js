@@ -32,7 +32,10 @@ export const processActivityEvent = () => {
             <EventMarker
                 name="event"
                 type="ProcessActivityEvent"
-                uid={0}
+                args="-g daemon off;"
+                parentName={null}
+                parentUid={-1}
+                uid={1000}
                 timestamp="2020-04-20T20:20:20.358227916Z"
                 differenceInMilliseconds={50}
                 translateX={0}
@@ -51,7 +54,10 @@ export const whitelistedProcessActivityEvent = () => {
             <EventMarker
                 name="event"
                 type="ProcessActivityEvent"
-                uid={0}
+                args="-g daemon off;"
+                parentName={null}
+                parentUid={-1}
+                uid={1000}
                 whitelisted
                 timestamp="2020-04-20T20:20:20.358227916Z"
                 differenceInMilliseconds={50}

@@ -6,13 +6,32 @@ import EventTooltip from 'Components/TimelineGraph/EventsGraph/EventTooltip';
 import ProcessActivityIcon from './ProcessActivityIcon';
 import WhitelistedProcessActivityIcon from './WhitelistedProcessActivityIcon';
 
-const ProcessActivityEvent = ({ name, args, type, uid, timestamp, whitelisted, width, height }) => {
+const ProcessActivityEvent = ({
+    name,
+    args,
+    type,
+    uid,
+    parentName,
+    parentUid,
+    timestamp,
+    whitelisted,
+    width,
+    height,
+}) => {
     const elementHeight = height || width;
     return (
         // We wrap the tooltip within the specific event Components because the Tooltip Component
         // doesn't seem to work when wrapping it around the rendered html one level above. I suspect
         // it doesn't work because the D3Anchor renders a <g> while this renders an svg element
-        <EventTooltip name={name} args={args} type={type} uid={uid} timestamp={timestamp}>
+        <EventTooltip
+            name={name}
+            args={args}
+            type={type}
+            uid={uid}
+            parentName={parentName}
+            parentUid={parentUid}
+            timestamp={timestamp}
+        >
             {whitelisted ? (
                 <WhitelistedProcessActivityIcon height={elementHeight} width={width} />
             ) : (
@@ -27,6 +46,8 @@ ProcessActivityEvent.propTypes = {
     args: PropTypes.string,
     type: PropTypes.oneOf(Object.values(eventTypes)).isRequired,
     uid: PropTypes.number,
+    parentName: PropTypes.string,
+    parentUid: PropTypes.number,
     timestamp: PropTypes.string.isRequired,
     whitelisted: PropTypes.bool,
     width: PropTypes.number.isRequired,
@@ -35,6 +56,8 @@ ProcessActivityEvent.propTypes = {
 
 ProcessActivityEvent.defaultProps = {
     uid: null,
+    parentName: null,
+    parentUid: null,
     args: null,
     whitelisted: false,
     height: null,

@@ -36,6 +36,8 @@ export const PROCESS_ACTIVITY_EVENT_FRAGMENT = gql`
         args
         timestamp
         uid
+        parentName
+        parentUid
         whitelisted
     }
 `;

@@ -38,6 +38,8 @@ const EventsRow = ({
                     name,
                     args,
                     uid,
+                    parentName,
+                    parentUid,
                     reason,
                     whitelisted,
                     differenceInMilliseconds,
@@ -48,6 +50,8 @@ const EventsRow = ({
                         name={name}
                         args={args}
                         uid={uid}
+                        parentName={parentName}
+                        parentUid={parentUid}
                         reason={reason}
                         type={type}
                         timestamp={timestamp}

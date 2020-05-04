@@ -16,6 +16,8 @@ const EventMarker = ({
     args,
     type,
     uid,
+    parentName,
+    parentUid,
     reason,
     timestamp,
     whitelisted,
@@ -61,6 +63,8 @@ const EventMarker = ({
                     args={args}
                     type={type}
                     uid={uid}
+                    parentName={parentName}
+                    parentUid={parentUid}
                     timestamp={timestamp}
                     whitelisted={whitelisted}
                     width={size}
@@ -87,6 +91,8 @@ EventMarker.propTypes = {
     args: PropTypes.string,
     type: PropTypes.string.isRequired,
     uid: PropTypes.number,
+    parentName: PropTypes.string,
+    parentUid: PropTypes.number,
     reason: PropTypes.string,
     timestamp: PropTypes.string.isRequired,
     whitelisted: PropTypes.bool,
@@ -101,6 +107,8 @@ EventMarker.propTypes = {
 
 EventMarker.defaultProps = {
     uid: null,
+    parentName: null,
+    parentUid: null,
     args: null,
     reason: null,
     whitelisted: false,

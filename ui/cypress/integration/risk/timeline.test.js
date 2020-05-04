@@ -206,27 +206,14 @@ describe('Risk Page Event Timeline', () => {
 
     describe('Event Details', () => {
         /**
-         * Finds the single event in the mock data for a specified type and returns the timestamp
-         * @param {Object[]} json - the mock data in JSON
-         * @param {string} type - the event type
-         * @param {bool} isWhitelisted - indicates if we're looking for a whitelisted process activity
-         * @returns {string} - the timestamp of the event
-         */
-        function getEventTimeByType(json, type, isWhitelisted = false) {
-            return json.data.pods[0].events.filter(
-                (event) => event.type === type && isWhitelisted === !!event.whitelisted
-            )[0].timestamp;
-        }
-
-        /**
-         * Finds an event based on the event type and returns the formatted timestamp
-         * @param {string} type - the event type
-         * @param {bool} isWhitelisted - indicates if we're looking for a whitelisted process activity
+         * Finds an event based on the event id and returns the formatted timestamp
+         * @param {string} id - the event id
          * @returns {Promise<string>} - a promise that, once resolved, will return the formatted timestamp of an event for the specified event typee
          */
-        function getTimeByType(type, isWhitelisted = false) {
+        function getFormattedEventTimeById(id) {
             return cy.fixture('risks/eventTimeline/deploymentEventTimeline.json').then((json) => {
-                const eventTime = getEventTimeByType(json, type, isWhitelisted);
+                const eventTime = json.data.pods[0].events.find((event) => event.id === id)
+                    .timestamp;
                 const formattedEventTime = Cypress.moment(eventTime).format(
                     '[Event time:] MM/DD/YYYY | h:mm:ssA'
                 );
@@ -257,12 +244,14 @@ describe('Risk Page Event Timeline', () => {
             // the body should include the following
             cy.get(selectors.tooltip.body).contains('Type: Policy Violation');
             // since the displayed time depends on the time zone, we don't want to check against a  hardcoded value
-            getTimeByType('PolicyViolationEvent').then((formattedEventTime) => {
-                cy.get(selectors.tooltip.body).contains(formattedEventTime);
-            });
+            getFormattedEventTimeById('d7a275e1-1bba-47e7-92a1-42340c759883').then(
+                (formattedEventTime) => {
+                    cy.get(selectors.tooltip.body).contains(formattedEventTime);
+                }
+            );
         });
 
-        it('shows the process activity event details', () => {
+        it('shows the process activity event details for a process with no parent', () => {
             setRoutes();
             // mocking data to thoroughly test the event details
             cy.route(
@@ -276,20 +265,138 @@ describe('Risk Page Event Timeline', () => {
             cy.wait('@getDeploymentEventTimeline');
 
             // trigger the tooltip
-            cy.get(selectors.eventTimeline.timeline.mainView.event.processActivity).trigger(
-                'mouseenter'
-            );
+            cy.get(
+                `${selectors.eventTimeline.timeline.mainView.event.processActivity}:eq(0)`
+            ).trigger('mouseenter');
 
             // the header should include the event name
-            cy.get(selectors.tooltip.title).contains('/bin/bash');
+            cy.get(selectors.tooltip.title).contains('/usr/sbin/nginx');
             // the body should include the following
             cy.get(selectors.tooltip.body).contains('Type: Process Activity');
-            cy.get(selectors.tooltip.body).contains('Arguments: None');
-            cy.get(selectors.tooltip.body).contains('UID: 0');
+            cy.get(selectors.tooltip.body).contains('Arguments: -g daemon off;');
+            cy.get(selectors.tooltip.body).contains('Parent Name: No Parent');
+            cy.get(selectors.tooltip.body).should('not.contain', 'Parent UID: -1');
+            cy.get(selectors.tooltip.body).contains('UID: 1000');
             // since the displayed time depends on the time zone, we don't want to check against a  hardcoded value
-            getTimeByType('ProcessActivityEvent').then((formattedEventTime) => {
-                cy.get(selectors.tooltip.body).contains(formattedEventTime);
-            });
+            getFormattedEventTimeById('e7519642-958a-534b-8297-59de4560d4ab').then(
+                (formattedEventTime) => {
+                    cy.get(selectors.tooltip.body).contains(formattedEventTime);
+                }
+            );
+        });
+
+        it('shows the process activity event details for a process with a parent and unknown parent uid', () => {
+            setRoutes();
+            // mocking data to thoroughly test the event details
+            cy.route(
+                'POST',
+                api.graphql(api.risks.graphqlOps.getDeploymentEventTimeline),
+                'fixture:risks/eventTimeline/deploymentEventTimeline.json'
+            ).as('getDeploymentEventTimeline');
+
+            openEventTimeline();
+
+            cy.wait('@getDeploymentEventTimeline');
+
+            // trigger the tooltip
+            cy.get(
+                `${selectors.eventTimeline.timeline.mainView.event.processActivity}:eq(1)`
+            ).trigger('mouseenter');
+
+            // the header should include the event name
+            cy.get(selectors.tooltip.title).contains('/usr/sbin/nginx');
+            // the body should include the following
+            cy.get(selectors.tooltip.body).contains('Type: Process Activity');
+            cy.get(selectors.tooltip.body).contains('Arguments: -g daemon off;');
+            cy.get(selectors.tooltip.body).contains('Parent Name: /usr/sbin/nginx');
+            cy.get(selectors.tooltip.body).contains('Parent UID: Unknown');
+            cy.get(selectors.tooltip.body).contains('UID: 2000');
+            cy.get(selectors.tooltip.bodyContent.uidFieldValue).should(
+                'have.class',
+                'text-alert-600'
+            );
+            // since the displayed time depends on the time zone, we don't want to check against a  hardcoded value
+            getFormattedEventTimeById('e7519642-958a-534b-8246-59de4560d4ab').then(
+                (formattedEventTime) => {
+                    cy.get(selectors.tooltip.body).contains(formattedEventTime);
+                }
+            );
+        });
+
+        it('shows the process activity event details for a process with a uid change', () => {
+            setRoutes();
+            // mocking data to thoroughly test the event details
+            cy.route(
+                'POST',
+                api.graphql(api.risks.graphqlOps.getDeploymentEventTimeline),
+                'fixture:risks/eventTimeline/deploymentEventTimeline.json'
+            ).as('getDeploymentEventTimeline');
+
+            openEventTimeline();
+
+            cy.wait('@getDeploymentEventTimeline');
+
+            // trigger the tooltip
+            cy.get(
+                `${selectors.eventTimeline.timeline.mainView.event.processActivity}:eq(2)`
+            ).trigger('mouseenter');
+
+            // the header should include the event name
+            cy.get(selectors.tooltip.title).contains('/usr/sbin/nginx');
+            // the body should include the following
+            cy.get(selectors.tooltip.body).contains('Type: Process Activity');
+            cy.get(selectors.tooltip.body).contains('Arguments: -g daemon off;');
+            cy.get(selectors.tooltip.body).contains('Parent Name: /usr/sbin/nginx');
+            cy.get(selectors.tooltip.body).contains('Parent UID: 1000');
+            cy.get(selectors.tooltip.body).contains('UID: 3000');
+            cy.get(selectors.tooltip.bodyContent.uidFieldValue).should(
+                'have.class',
+                'text-alert-600'
+            );
+            // since the displayed time depends on the time zone, we don't want to check against a  hardcoded value
+            getFormattedEventTimeById('e7519642-958a-534b-8296-59de5560d4ab').then(
+                (formattedEventTime) => {
+                    cy.get(selectors.tooltip.body).contains(formattedEventTime);
+                }
+            );
+        });
+
+        it('shows the process activity event details for a process with no uid change', () => {
+            setRoutes();
+            // mocking data to thoroughly test the event details
+            cy.route(
+                'POST',
+                api.graphql(api.risks.graphqlOps.getDeploymentEventTimeline),
+                'fixture:risks/eventTimeline/deploymentEventTimeline.json'
+            ).as('getDeploymentEventTimeline');
+
+            openEventTimeline();
+
+            cy.wait('@getDeploymentEventTimeline');
+
+            // trigger the tooltip
+            cy.get(
+                `${selectors.eventTimeline.timeline.mainView.event.processActivity}:eq(3)`
+            ).trigger('mouseenter');
+
+            // the header should include the event name
+            cy.get(selectors.tooltip.title).contains('/usr/sbin/nginx');
+            // the body should include the following
+            cy.get(selectors.tooltip.body).contains('Type: Process Activity');
+            cy.get(selectors.tooltip.body).contains('Arguments: -g daemon off;');
+            cy.get(selectors.tooltip.body).contains('Parent Name: /usr/sbin/nginx');
+            cy.get(selectors.tooltip.body).contains('Parent UID: 4000');
+            cy.get(selectors.tooltip.body).contains('UID: 4000');
+            cy.get(selectors.tooltip.bodyContent.uidFieldValue).should(
+                'not.have.class',
+                'text-alert-600'
+            );
+            // since the displayed time depends on the time zone, we don't want to check against a  hardcoded value
+            getFormattedEventTimeById('e7519642-959a-534b-8296-59de4560d4ab').then(
+                (formattedEventTime) => {
+                    cy.get(selectors.tooltip.body).contains(formattedEventTime);
+                }
+            );
         });
 
         it('shows the whitelisted process activity event details', () => {
@@ -311,15 +418,17 @@ describe('Risk Page Event Timeline', () => {
             ).trigger('mouseenter');
 
             // the header should include the event name
-            cy.get(selectors.tooltip.title).contains('/usr/sbin/nginx');
+            cy.get(selectors.tooltip.title).contains('/bin/bash');
             // the body should include the following
             cy.get(selectors.tooltip.body).contains('Type: Process Activity');
-            cy.get(selectors.tooltip.body).contains('Arguments: -g daemon off;');
+            cy.get(selectors.tooltip.body).contains('Arguments: None');
             cy.get(selectors.tooltip.body).contains('UID: 0');
             // since the displayed time depends on the time zone, we don't want to check against a  hardcoded value
-            getTimeByType('ProcessActivityEvent', true).then((formattedEventTime) => {
-                cy.get(selectors.tooltip.body).contains(formattedEventTime);
-            });
+            getFormattedEventTimeById('fafd4c56-a4e0-5fd9-aed2-c77b462ca637').then(
+                (formattedEventTime) => {
+                    cy.get(selectors.tooltip.body).contains(formattedEventTime);
+                }
+            );
         });
 
         it('shows the container restart event details', () => {
@@ -343,12 +452,14 @@ describe('Risk Page Event Timeline', () => {
             // the body should include the following
             cy.get(selectors.tooltip.body).contains('Type: Container Restart');
             // since the displayed time depends on the time zone, we don't want to check against a  hardcoded value
-            getTimeByType('ContainerRestartEvent').then((formattedEventTime) => {
+            getFormattedEventTimeById(
+                'abd2f41e72e825a76c2ab8898e538aa046872dd95a77a6c7d715881174f9e013'
+            ).then((formattedEventTime) => {
                 cy.get(selectors.tooltip.body).contains(formattedEventTime);
             });
         });
 
-        it('shows the container restart event details', () => {
+        it('shows the container termination event details', () => {
             setRoutes();
             // mocking data to thoroughly test the event details
             cy.route(
@@ -372,7 +483,9 @@ describe('Risk Page Event Timeline', () => {
             cy.get(selectors.tooltip.body).contains('Type: Container Termination');
             cy.get(selectors.tooltip.body).contains('Reason: OOMKilled');
             // since the displayed time depends on the time zone, we don't want to check against a  hardcoded value
-            getTimeByType('ContainerTerminationEvent').then((formattedEventTime) => {
+            getFormattedEventTimeById(
+                '016963e1050fec95a53862373a6b5f0bff2a003cb9796ecfda492a9f7ce3214d'
+            ).then((formattedEventTime) => {
                 cy.get(selectors.tooltip.body).contains(formattedEventTime);
             });
         });

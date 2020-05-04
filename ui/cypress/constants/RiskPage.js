@@ -103,5 +103,8 @@ export const selectors = {
         legendContent: {
             event: eventSelectors,
         },
+        bodyContent: scopeSelectors(tooltipSelectors.body, {
+            uidFieldValue: `[data-testid="tooltip-uid-field-value"]`,
+        }),
     },
 };
