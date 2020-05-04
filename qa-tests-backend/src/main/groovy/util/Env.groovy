@@ -200,5 +200,45 @@ class Env {
     static String mustGetDockerIOPassword() {
         return mustGet("DOCKER_IO_PULL_PASSWORD")
     }
+
+    static String mustGetAWSAccessKeyID() {
+        return mustGet("AWS_ACCESS_KEY_ID")
+    }
+
+    static String mustGetAWSSecretAccessKey() {
+        return mustGet("AWS_SECRET_ACCESS_KEY")
+    }
+
+    static String mustGetAWSS3BucketName() {
+        return mustGet("AWS_S3_BACKUP_TEST_BUCKET_NAME") // stackrox-qa-backup-test
+    }
+
+    static String mustGetAWSS3BucketRegion() {
+        return mustGet("AWS_S3_BACKUP_TEST_BUCKET_REGION") // us-east-2
+    }
+
+    static String mustGetAWSECRRegistryID() {
+        return mustGet("AWS_ECR_REGISTRY_NAME") // 051999192406
+    }
+
+    static String mustGetAWSECRRegistryRegion() {
+        return mustGet("AWS_ECR_REGISTRY_REGION") // us-east-2
+    }
+
+    static String mustGetGCSBucketName() {
+        return mustGet("GCP_GCS_BACKUP_TEST_BUCKET_NAME") // stackrox-qa-gcs-test
+    }
+
+    static String mustGetGCSBucketRegion() {
+        return mustGet("GCP_GCS_BACKUP_TEST_BUCKET_REGION") // us-east-1
+    }
+
+    static String mustGetGCPAccessKeyID() {
+        return mustGet("GCP_ACCESS_KEY_ID")
+    }
+
+    static String mustGetGCPAccessKey() {
+        return mustGet("GCP_SECRET_ACCESS_KEY")
+    }
 }
 

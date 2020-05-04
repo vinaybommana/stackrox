@@ -17,6 +17,16 @@ class ImageIntegrationService extends BaseService {
         return ImageIntegrationServiceGrpc.newBlockingStub(getChannel())
     }
 
+    static testImageIntegration(ImageIntegrationOuterClass.ImageIntegration integration) {
+        try {
+            getImageIntegrationClient().testImageIntegration(integration)
+            return true
+        } catch (Exception e) {
+            println e.toString()
+            return false
+        }
+    }
+
     static createImageIntegration(ImageIntegrationOuterClass.ImageIntegration integration) {
         try {
             getImageIntegrationClient().testImageIntegration(integration)
@@ -179,6 +189,27 @@ class ImageIntegrationService extends BaseService {
                         .build()
 
         return createImageIntegration(integration)
+    }
+
+    static ImageIntegrationOuterClass.ImageIntegration getECRIntegrationConfig(
+            String name,
+            String registryID = Env.mustGetAWSECRRegistryID(),
+            String registryRegion = Env.mustGetAWSECRRegistryRegion(),
+            String endpoint = "",
+            String accessKeyId = Env.mustGetAWSAccessKeyID(),
+            String accessKey = Env.mustGetAWSSecretAccessKey()) {
+        return ImageIntegrationOuterClass.ImageIntegration.newBuilder()
+                .setName(name)
+                .setType("ecr")
+                .addAllCategories([ImageIntegrationCategory.REGISTRY])
+                .setEcr(ImageIntegrationOuterClass.ECRConfig.newBuilder()
+                        .setRegistryId(registryID)
+                        .setRegion(registryRegion)
+                        .setEndpoint(endpoint)
+                        .setAccessKeyId(accessKeyId)
+                        .setSecretAccessKey(accessKey)
+                )
+                .build()
     }
 
     static getIntegrationCategories(boolean includeScanner) {

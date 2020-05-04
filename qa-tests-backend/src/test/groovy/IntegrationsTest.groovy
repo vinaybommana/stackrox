@@ -19,6 +19,8 @@ import orchestratormanager.OrchestratorTypes
 import org.junit.Assume
 import org.junit.experimental.categories.Category
 import services.CreatePolicyService
+import services.ExternalBackupService
+import services.ImageIntegrationService
 import services.NetworkPolicyService
 import spock.lang.Unroll
 import objects.Deployment
@@ -375,5 +377,57 @@ ObOdSTZUQI4TZOXOpJCpa97CnqroNi7RrT05JOfoe/DPmhoJmF4AUrnd/YUb8pgF
                         .setName("policy-violation-generic-notification")
                         .addLabel("app", "policy-violation-generic-notification")
                         .setImage("nginx:latest")
+    }
+
+    @Unroll
+    @Category(Integration)
+    def "Verify AWS S3 Integration: #integrationName"() {
+        when:
+        "the integration is tested"
+        def backup = ExternalBackupService.getS3IntegrationConfig(integrationName, bucket, region, endpoint,
+                accessKeyId, accesskey)
+
+        then:
+        "verify test integration"
+        // Test integration for S3 performs test backup (and rollback).
+        assert ExternalBackupService.testExternalBackup(backup)
+
+        where:
+        "configurations are:"
+
+        integrationName       | bucket                       | region                         |
+                endpoint                                             | accessKeyId            |
+                accesskey
+        "S3 with endpoint"    | Env.mustGetAWSS3BucketName() | Env.mustGetAWSS3BucketRegion() |
+                "s3.${Env.mustGetAWSS3BucketRegion()}.amazonaws.com" | Env.mustGetAWSAccessKeyID() |
+                Env.mustGetAWSSecretAccessKey()
+        "S3 without endpoint" | Env.mustGetAWSS3BucketName() | Env.mustGetAWSS3BucketRegion() |
+                ""                                                   | Env.mustGetAWSAccessKeyID() |
+                Env.mustGetAWSSecretAccessKey()
+        "GCS"                 | Env.mustGetGCSBucketName()   | Env.mustGetGCSBucketRegion()   |
+                "storage.googleapis.com"                             | Env.mustGetGCPAccessKeyID() |
+                Env.mustGetGCPAccessKey()
+    }
+
+    @Unroll
+    @Category(Integration)
+    def "Verify AWS ECR Integration: #integrationName"() {
+        when:
+        "the integration is tested"
+        def registry = ImageIntegrationService.getECRIntegrationConfig(integrationName, registryID, region, endpoint)
+
+        then:
+        "verify test integration"
+        assert ImageIntegrationService.testImageIntegration(registry)
+
+        where:
+        "configurations are:"
+
+        integrationName        | registryID                    | region                            |
+                endpoint
+        "ECR with endpoint"    | Env.mustGetAWSECRRegistryID() | Env.mustGetAWSECRRegistryRegion() |
+                "ecr.${Env.mustGetAWSECRRegistryRegion()}.amazonaws.com"
+        "ECR without endpoint" | Env.mustGetAWSECRRegistryID() | Env.mustGetAWSECRRegistryRegion() |
+                ""
     }
 }
