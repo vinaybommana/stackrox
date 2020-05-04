@@ -3,6 +3,7 @@ import { selectors, url } from '../../constants/RiskPage';
 import * as api from '../../constants/apiEndpoints';
 
 import withAuth from '../../helpers/basicAuth';
+import checkFeatureFlag from '../../helpers/features';
 
 function setRoutes() {
     cy.server();
@@ -19,6 +20,13 @@ function openDeployment(deploymentName) {
 }
 
 describe('Risk Page Event Timeline - Timeline Overview', () => {
+    before(function () {
+        // skip the whole suite if timeline view ui isn't enabled
+        if (checkFeatureFlag('ROX_EVENT_TIMELINE_UI', false)) {
+            this.skip();
+        }
+    });
+
     withAuth();
 
     it('should show the correct number of events in the timeline overview', () => {

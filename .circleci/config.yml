@@ -124,7 +124,7 @@ setupLicense: &setupLicense
   run:
     name: Creating License Key
     command: |
-      if [[ -n "$CIRCLE_TAG" ]]; then
+      if [[ -n "$CIRCLE_TAG" ]] || .circleci/pr_has_label.sh "ci-release-build"; then
         echo "Issuing a CI license for testing the release build"
         ROX_LICENSE_KEY="$(licenses/ci.sh)"
       else
@@ -607,6 +607,15 @@ commands:
 
             echo "Isolating pods"
             kubectl -n stackrox apply -R -f tests/proxy/netpol/
+
+  setup-go-build-env:
+    steps:
+      - run:
+          name: Setup Go build environment
+          command: |
+            if .circleci/pr_has_label.sh "ci-release-build"; then
+              cci-export GOTAGS release
+            fi
 
   setup-dep-env:
     parameters:
@@ -1493,6 +1502,7 @@ jobs:
       - checkout
 
       - *restoreGoModCache
+      - setup-go-build-env
       - *restoreGradle
       - *restoreUI
 
@@ -1539,6 +1549,7 @@ jobs:
       - checkout
 
       - *restoreGoModCache
+      - setup-go-build-env
       - *restoreGradle
       - *restoreUI
 
@@ -1557,6 +1568,7 @@ jobs:
       - checkout
 
       - *restoreGoModCache
+      - setup-go-build-env
       - run:
           name: Ensure that generated files are up to date. (If this fails, run `make go-generated-srcs` and commit the result.)
           command: |
@@ -1588,6 +1600,7 @@ jobs:
       - checkout
 
       - *restoreGoModCache
+      - setup-go-build-env
 
       - *restoreGoBuildCache
 
@@ -1690,6 +1703,7 @@ jobs:
     steps:
       - checkout
       - *restoreGoModCache
+      - setup-go-build-env
       - *restoreGoBuildCache
       - run:
           name: Build the CLI
@@ -1726,6 +1740,7 @@ jobs:
     steps:
       - checkout
       - *restoreGoModCache
+      - setup-go-build-env
       - *restoreGoBuildCache
 
       - run:
@@ -1781,6 +1796,7 @@ jobs:
             ossls version
 
       - *restoreGoModCache
+      - setup-go-build-env
 
       - run:
           name: Generate OSS notice
@@ -1849,6 +1865,7 @@ jobs:
             ossls version
 
       - *restoreGoModCache
+      - setup-go-build-env
 
       - run:
           name: Generate OSS notice
@@ -2035,6 +2052,7 @@ jobs:
       - *refreshAlpineBaseImage
 
       - *restoreGoModCache
+      - setup-go-build-env
       - *restoreGoBuildCache
 
       - run:
@@ -2247,6 +2265,7 @@ jobs:
           at: /go/src/github.com/stackrox/rox
 
       - *restoreGoModCache
+      - setup-go-build-env
       - run:
           name: Retrieving missing dependencies
           command: make download-deps
