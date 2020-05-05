@@ -32,8 +32,8 @@ function openEventTimeline() {
     cy.get(selectors.eventTimelineOverviewButton).click();
 }
 
-describe('Risk Page Event Timeline', () => {
-    before(function () {
+describe('Risk Page Deployment Event Timeline', () => {
+    before(() => {
         // skip the whole suite if timeline view ui isn't enabled
         if (checkFeatureFlag('ROX_EVENT_TIMELINE_UI', false)) {
             this.skip();
@@ -240,13 +240,13 @@ describe('Risk Page Event Timeline', () => {
             );
 
             // the header should include the event name
-            cy.get(selectors.tooltip.title).contains('Ubuntu Package Manager Execution');
+            cy.get(selectors.tooltip.title).should('contain', 'Ubuntu Package Manager Execution');
             // the body should include the following
-            cy.get(selectors.tooltip.body).contains('Type: Policy Violation');
+            cy.get(selectors.tooltip.body).should('contain', 'Type: Policy Violation');
             // since the displayed time depends on the time zone, we don't want to check against a  hardcoded value
             getFormattedEventTimeById('d7a275e1-1bba-47e7-92a1-42340c759883').then(
                 (formattedEventTime) => {
-                    cy.get(selectors.tooltip.body).contains(formattedEventTime);
+                    cy.get(selectors.tooltip.body).should('contain', formattedEventTime);
                 }
             );
         });
@@ -270,17 +270,19 @@ describe('Risk Page Event Timeline', () => {
             ).trigger('mouseenter');
 
             // the header should include the event name
-            cy.get(selectors.tooltip.title).contains('/usr/sbin/nginx');
+            cy.get(selectors.tooltip.title).should('contain', '/usr/sbin/nginx');
             // the body should include the following
-            cy.get(selectors.tooltip.body).contains('Type: Process Activity');
-            cy.get(selectors.tooltip.body).contains('Arguments: -g daemon off;');
-            cy.get(selectors.tooltip.body).contains('Parent Name: No Parent');
+            cy.get(selectors.tooltip.body).should('contain', 'Type: Process Activity');
+            cy.get(selectors.tooltip.body).should('contain', 'Arguments: -g daemon off;');
+            // if there's no parent process, then the text should display "No Parent"
+            cy.get(selectors.tooltip.body).should('contain', 'Parent Name: No Parent');
+            // if there's no parent process, then we shouln't display the Parent UID
             cy.get(selectors.tooltip.body).should('not.contain', 'Parent UID: -1');
-            cy.get(selectors.tooltip.body).contains('UID: 1000');
+            cy.get(selectors.tooltip.body).should('contain', 'UID: 1000');
             // since the displayed time depends on the time zone, we don't want to check against a  hardcoded value
             getFormattedEventTimeById('e7519642-958a-534b-8297-59de4560d4ab').then(
                 (formattedEventTime) => {
-                    cy.get(selectors.tooltip.body).contains(formattedEventTime);
+                    cy.get(selectors.tooltip.body).should('contain', formattedEventTime);
                 }
             );
         });
@@ -304,13 +306,14 @@ describe('Risk Page Event Timeline', () => {
             ).trigger('mouseenter');
 
             // the header should include the event name
-            cy.get(selectors.tooltip.title).contains('/usr/sbin/nginx');
+            cy.get(selectors.tooltip.title).should('contain', '/usr/sbin/nginx');
             // the body should include the following
-            cy.get(selectors.tooltip.body).contains('Type: Process Activity');
-            cy.get(selectors.tooltip.body).contains('Arguments: -g daemon off;');
-            cy.get(selectors.tooltip.body).contains('Parent Name: /usr/sbin/nginx');
-            cy.get(selectors.tooltip.body).contains('Parent UID: Unknown');
-            cy.get(selectors.tooltip.body).contains('UID: 2000');
+            cy.get(selectors.tooltip.body).should('contain', 'Type: Process Activity');
+            cy.get(selectors.tooltip.body).should('contain', 'Arguments: -g daemon off;');
+            cy.get(selectors.tooltip.body).should('contain', 'Parent Name: /usr/sbin/nginx');
+            // if there's a parent process, and the parent uid is -1, it means that it's unknown
+            cy.get(selectors.tooltip.body).should('contain', 'Parent UID: Unknown');
+            cy.get(selectors.tooltip.body).should('contain', 'UID: 2000');
             cy.get(selectors.tooltip.bodyContent.uidFieldValue).should(
                 'have.class',
                 'text-alert-600'
@@ -318,7 +321,7 @@ describe('Risk Page Event Timeline', () => {
             // since the displayed time depends on the time zone, we don't want to check against a  hardcoded value
             getFormattedEventTimeById('e7519642-958a-534b-8246-59de4560d4ab').then(
                 (formattedEventTime) => {
-                    cy.get(selectors.tooltip.body).contains(formattedEventTime);
+                    cy.get(selectors.tooltip.body).should('contain', formattedEventTime);
                 }
             );
         });
@@ -342,13 +345,13 @@ describe('Risk Page Event Timeline', () => {
             ).trigger('mouseenter');
 
             // the header should include the event name
-            cy.get(selectors.tooltip.title).contains('/usr/sbin/nginx');
+            cy.get(selectors.tooltip.title).should('contain', '/usr/sbin/nginx');
             // the body should include the following
-            cy.get(selectors.tooltip.body).contains('Type: Process Activity');
-            cy.get(selectors.tooltip.body).contains('Arguments: -g daemon off;');
-            cy.get(selectors.tooltip.body).contains('Parent Name: /usr/sbin/nginx');
-            cy.get(selectors.tooltip.body).contains('Parent UID: 1000');
-            cy.get(selectors.tooltip.body).contains('UID: 3000');
+            cy.get(selectors.tooltip.body).should('contain', 'Type: Process Activity');
+            cy.get(selectors.tooltip.body).should('contain', 'Arguments: -g daemon off;');
+            cy.get(selectors.tooltip.body).should('contain', 'Parent Name: /usr/sbin/nginx');
+            cy.get(selectors.tooltip.body).should('contain', 'Parent UID: 1000');
+            cy.get(selectors.tooltip.body).should('contain', 'UID: 3000');
             cy.get(selectors.tooltip.bodyContent.uidFieldValue).should(
                 'have.class',
                 'text-alert-600'
@@ -356,7 +359,7 @@ describe('Risk Page Event Timeline', () => {
             // since the displayed time depends on the time zone, we don't want to check against a  hardcoded value
             getFormattedEventTimeById('e7519642-958a-534b-8296-59de5560d4ab').then(
                 (formattedEventTime) => {
-                    cy.get(selectors.tooltip.body).contains(formattedEventTime);
+                    cy.get(selectors.tooltip.body).should('contain', formattedEventTime);
                 }
             );
         });
@@ -380,13 +383,13 @@ describe('Risk Page Event Timeline', () => {
             ).trigger('mouseenter');
 
             // the header should include the event name
-            cy.get(selectors.tooltip.title).contains('/usr/sbin/nginx');
+            cy.get(selectors.tooltip.title).should('contain', '/usr/sbin/nginx');
             // the body should include the following
-            cy.get(selectors.tooltip.body).contains('Type: Process Activity');
-            cy.get(selectors.tooltip.body).contains('Arguments: -g daemon off;');
-            cy.get(selectors.tooltip.body).contains('Parent Name: /usr/sbin/nginx');
-            cy.get(selectors.tooltip.body).contains('Parent UID: 4000');
-            cy.get(selectors.tooltip.body).contains('UID: 4000');
+            cy.get(selectors.tooltip.body).should('contain', 'Type: Process Activity');
+            cy.get(selectors.tooltip.body).should('contain', 'Arguments: -g daemon off;');
+            cy.get(selectors.tooltip.body).should('contain', 'Parent Name: /usr/sbin/nginx');
+            cy.get(selectors.tooltip.body).should('contain', 'Parent UID: 4000');
+            cy.get(selectors.tooltip.body).should('contain', 'UID: 4000');
             cy.get(selectors.tooltip.bodyContent.uidFieldValue).should(
                 'not.have.class',
                 'text-alert-600'
@@ -394,7 +397,7 @@ describe('Risk Page Event Timeline', () => {
             // since the displayed time depends on the time zone, we don't want to check against a  hardcoded value
             getFormattedEventTimeById('e7519642-959a-534b-8296-59de4560d4ab').then(
                 (formattedEventTime) => {
-                    cy.get(selectors.tooltip.body).contains(formattedEventTime);
+                    cy.get(selectors.tooltip.body).should('contain', formattedEventTime);
                 }
             );
         });
@@ -418,15 +421,15 @@ describe('Risk Page Event Timeline', () => {
             ).trigger('mouseenter');
 
             // the header should include the event name
-            cy.get(selectors.tooltip.title).contains('/bin/bash');
+            cy.get(selectors.tooltip.title).should('contain', '/bin/bash');
             // the body should include the following
-            cy.get(selectors.tooltip.body).contains('Type: Process Activity');
-            cy.get(selectors.tooltip.body).contains('Arguments: None');
-            cy.get(selectors.tooltip.body).contains('UID: 0');
+            cy.get(selectors.tooltip.body).should('contain', 'Type: Process Activity');
+            cy.get(selectors.tooltip.body).should('contain', 'Arguments: None');
+            cy.get(selectors.tooltip.body).should('contain', 'UID: 0');
             // since the displayed time depends on the time zone, we don't want to check against a  hardcoded value
             getFormattedEventTimeById('fafd4c56-a4e0-5fd9-aed2-c77b462ca637').then(
                 (formattedEventTime) => {
-                    cy.get(selectors.tooltip.body).contains(formattedEventTime);
+                    cy.get(selectors.tooltip.body).should('contain', formattedEventTime);
                 }
             );
         });
@@ -448,14 +451,14 @@ describe('Risk Page Event Timeline', () => {
             cy.get(selectors.eventTimeline.timeline.mainView.event.restart).trigger('mouseenter');
 
             // the header should include the event name
-            cy.get(selectors.tooltip.title).contains('nginx');
+            cy.get(selectors.tooltip.title).should('contain', 'nginx');
             // the body should include the following
-            cy.get(selectors.tooltip.body).contains('Type: Container Restart');
+            cy.get(selectors.tooltip.body).should('contain', 'Type: Container Restart');
             // since the displayed time depends on the time zone, we don't want to check against a  hardcoded value
             getFormattedEventTimeById(
                 'abd2f41e72e825a76c2ab8898e538aa046872dd95a77a6c7d715881174f9e013'
             ).then((formattedEventTime) => {
-                cy.get(selectors.tooltip.body).contains(formattedEventTime);
+                cy.get(selectors.tooltip.body).should('contain', formattedEventTime);
             });
         });
 
@@ -478,15 +481,15 @@ describe('Risk Page Event Timeline', () => {
             );
 
             // the header should include the event name
-            cy.get(selectors.tooltip.title).contains('nginx');
+            cy.get(selectors.tooltip.title).should('contain', 'nginx');
             // the body should include the following
-            cy.get(selectors.tooltip.body).contains('Type: Container Termination');
-            cy.get(selectors.tooltip.body).contains('Reason: OOMKilled');
+            cy.get(selectors.tooltip.body).should('contain', 'Type: Container Termination');
+            cy.get(selectors.tooltip.body).should('contain', 'Reason: OOMKilled');
             // since the displayed time depends on the time zone, we don't want to check against a  hardcoded value
             getFormattedEventTimeById(
                 '016963e1050fec95a53862373a6b5f0bff2a003cb9796ecfda492a9f7ce3214d'
             ).then((formattedEventTime) => {
-                cy.get(selectors.tooltip.body).contains(formattedEventTime);
+                cy.get(selectors.tooltip.body).should('contain', formattedEventTime);
             });
         });
     });
