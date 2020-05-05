@@ -42,10 +42,12 @@ the tests in `src/test/groovy/` can be run directly from the command-line withou
 setting any environment variables. Cluster type and login data
 are inferred from the `central-deploy` directory.
 
-- To run tests, from within `qa-tests-backend` directory:
-  - A single test: `gradle test --tests=TestName`, where `TestName` is the name of the test, e.g, `TestSummary`
-  - A test group: `gradle test -Dgroups=GroupName`, where `GroupName` is the name of the test group, e.g, `BAT`
-  - A makefile target: `make -C qa-backend-tests smoke-test`
+To run tests, from within `qa-tests-backend` directory:
+
+- A single test: `gradle test --tests=TestName`, where `TestName` is the name of the test, e.g, `TestSummary`
+- A single test with filtering: `gradle test --tests=TestName.*filter*`, where `filter` is something to match in the test def string, e.g, `ComplianceTest.*CVE*` matches all feature tests that include `CVE`.
+- A test group: `gradle test -Dgroups=GroupName`, where `GroupName` is the name of the test group, e.g, `BAT`
+- A makefile target: `make -C qa-backend-tests smoke-test`
 
 ### Custom configuration
 If you have deployed the cluster differently or need to use a custom configuration, set `CLUSTER`, `API_HOSTNAME`, `PORT`,`ROX_USERNAME`, `ROX_PASSWORD` and other relevant integration credential environment variables.
