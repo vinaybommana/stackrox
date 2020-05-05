@@ -34,6 +34,11 @@ var fieldsConverters = []individualFieldConverter{
 	convertFixedBy,
 	convertReadOnlyRootFs,
 	convertCvss,
+	convertDropCapabilities,
+	convertAddCapabilities,
+	convertContainerResourcePolicy,
+	convertPermissionPolicy,
+	convertExposureLevelPolicy,
 }
 
 // CloneAndEnsureConverted returns a clone of the input that is upgraded if it is a legacy policy.
@@ -189,6 +194,14 @@ func convertReadOnlyRootFs(fields *storage.PolicyFields) []*storage.PolicyGroup 
 	}}
 }
 
+func getStringListPolicyValues(p []string) []*storage.PolicyValue {
+	ifaceSlice := make([]interface{}, len(p))
+	for i, pval := range p {
+		ifaceSlice[i] = pval
+	}
+	return getPolicyValues(ifaceSlice...)
+}
+
 func getPolicyValues(p ...interface{}) []*storage.PolicyValue {
 	vs := make([]*storage.PolicyValue, 0, len(p))
 	for _, v := range p {
@@ -254,8 +267,15 @@ func convertImageAgeDays(fields *storage.PolicyFields) []*storage.PolicyGroup {
 }
 
 func convertDockerFileLineRule(fields *storage.PolicyFields) []*storage.PolicyGroup {
-	// TODO(ROX-4720): Update convertor for missing fields.
-	return nil
+	lineRule := fields.GetLineRule()
+	if lineRule == nil {
+		return nil
+	}
+
+	return []*storage.PolicyGroup{{
+		FieldName: DockerfileLine,
+		Values:    getPolicyValues(fmt.Sprintf("%s=%s", lineRule.GetInstruction(), lineRule.GetValue())),
+	}}
 }
 
 func convertCvss(fields *storage.PolicyFields) []*storage.PolicyGroup {
@@ -285,9 +305,11 @@ func convertNumericalPolicy(p *storage.NumericalPolicy, fieldName string) *stora
 	}
 
 	op := p.GetOp().String()
+	opWhitespace := " "
 	switch p.GetOp() {
 	case storage.Comparator_EQUALS:
-		op = "="
+		op = ""
+		opWhitespace = ""
 	case storage.Comparator_GREATER_THAN:
 		op = ">"
 	case storage.Comparator_GREATER_THAN_OR_EQUALS:
@@ -304,7 +326,7 @@ func convertNumericalPolicy(p *storage.NumericalPolicy, fieldName string) *stora
 		FieldName: fieldName,
 		Values: []*storage.PolicyValue{
 			{
-				Value: fmt.Sprintf("%s %f", op, p.GetValue()),
+				Value: fmt.Sprintf("%s%s%f", op, opWhitespace, p.GetValue()),
 			},
 		},
 	}
@@ -317,7 +339,7 @@ func convertComponent(fields *storage.PolicyFields) []*storage.PolicyGroup {
 	}
 
 	return []*storage.PolicyGroup{{
-		FieldName: "Image Component",
+		FieldName: ImageComponent,
 		Values: []*storage.PolicyValue{
 			{
 				Value: fmt.Sprintf("%s=%s", p.GetName(), p.GetVersion()),
@@ -350,28 +372,28 @@ func convertVolumePolicy(fields *storage.PolicyFields) []*storage.PolicyGroup {
 	var res []*storage.PolicyGroup
 	if p.GetName() != "" {
 		res = append(res, &storage.PolicyGroup{
-			FieldName: "Volume Name",
+			FieldName: VolumeName,
 			Values:    getPolicyValues(p.GetName()),
 		})
 	}
 
 	if p.GetType() != "" {
 		res = append(res, &storage.PolicyGroup{
-			FieldName: "Volume Type",
+			FieldName: VolumeType,
 			Values:    getPolicyValues(p.GetType()),
 		})
 	}
 
 	if p.GetDestination() != "" {
 		res = append(res, &storage.PolicyGroup{
-			FieldName: "Volume Destination",
+			FieldName: VolumeDestination,
 			Values:    getPolicyValues(p.GetDestination()),
 		})
 	}
 
 	if p.GetSource() != "" {
 		res = append(res, &storage.PolicyGroup{
-			FieldName: "Volume Source",
+			FieldName: VolumeSource,
 			Values:    getPolicyValues(p.GetSource()),
 		})
 	}
@@ -379,7 +401,7 @@ func convertVolumePolicy(fields *storage.PolicyFields) []*storage.PolicyGroup {
 	ro := p.GetSetReadOnly()
 	if ro != nil {
 		res = append(res, &storage.PolicyGroup{
-			FieldName: "Writable Volume",
+			FieldName: WritableVolume,
 			Values:    getPolicyValues(!p.GetReadOnly()),
 		})
 	}
@@ -396,14 +418,14 @@ func convertPortPolicy(fields *storage.PolicyFields) []*storage.PolicyGroup {
 	var res []*storage.PolicyGroup
 	if p.GetPort() != 0 {
 		res = append(res, &storage.PolicyGroup{
-			FieldName: "Port",
+			FieldName: Port,
 			Values:    getPolicyValues(int64(p.GetPort())),
 		})
 	}
 
 	if p.GetProtocol() != "" {
 		res = append(res, &storage.PolicyGroup{
-			FieldName: "Protocol",
+			FieldName: Protocol,
 			Values:    getPolicyValues(p.GetProtocol()),
 		})
 	}
@@ -420,28 +442,28 @@ func convertProcessPolicy(fields *storage.PolicyFields) []*storage.PolicyGroup {
 	var res []*storage.PolicyGroup
 	if p.GetName() != "" {
 		res = append(res, &storage.PolicyGroup{
-			FieldName: "Process Name",
+			FieldName: ProcessName,
 			Values:    getPolicyValues(p.GetName()),
 		})
 	}
 
 	if p.GetAncestor() != "" {
 		res = append(res, &storage.PolicyGroup{
-			FieldName: "Process Ancestor",
+			FieldName: ProcessAncestor,
 			Values:    getPolicyValues(p.GetAncestor()),
 		})
 	}
 
 	if p.GetArgs() != "" {
 		res = append(res, &storage.PolicyGroup{
-			FieldName: "Process Arguments",
+			FieldName: ProcessArguments,
 			Values:    getPolicyValues(p.GetArgs()),
 		})
 	}
 
 	if p.GetUid() != "" {
 		res = append(res, &storage.PolicyGroup{
-			FieldName: "Process UID",
+			FieldName: ProcessUID,
 			Values:    getPolicyValues(p.GetUid()),
 		})
 	}
@@ -456,8 +478,135 @@ func convertHostMountPolicy(fields *storage.PolicyFields) []*storage.PolicyGroup
 	}
 
 	return []*storage.PolicyGroup{{
-		FieldName: "Writable Host Mount",
+		FieldName: WritableHostMount,
 		Values:    getPolicyValues(!p.GetReadOnly()),
 	},
+	}
+}
+
+func convertDropCapabilities(fields *storage.PolicyFields) []*storage.PolicyGroup {
+	dropCaps := fields.GetDropCapabilities()
+	if dropCaps == nil {
+		return nil
+	}
+
+	return []*storage.PolicyGroup{{
+		FieldName:       DropCaps,
+		BooleanOperator: storage.BooleanOperator_OR,
+		Values:          getStringListPolicyValues(dropCaps),
+	}}
+}
+
+func convertAddCapabilities(fields *storage.PolicyFields) []*storage.PolicyGroup {
+	addCaps := fields.GetAddCapabilities()
+	if addCaps == nil {
+		return nil
+	}
+
+	return []*storage.PolicyGroup{{
+		FieldName:       AddCaps,
+		BooleanOperator: storage.BooleanOperator_OR,
+		Values:          getStringListPolicyValues(addCaps),
+	}}
+}
+
+func convertContainerResourcePolicy(fields *storage.PolicyFields) []*storage.PolicyGroup {
+	resPolicy := fields.GetContainerResourcePolicy()
+	if resPolicy == nil {
+		return nil
+	}
+
+	var res []*storage.PolicyGroup
+	if resPolicy.GetCpuResourceLimit() != nil {
+		res = append(res, convertNumericalPolicy(resPolicy.GetCpuResourceLimit(), ContainerCPULimit))
+	}
+	if resPolicy.GetCpuResourceRequest() != nil {
+		res = append(res, convertNumericalPolicy(resPolicy.GetCpuResourceRequest(), ContainerCPURequest))
+	}
+	if resPolicy.GetMemoryResourceLimit() != nil {
+		res = append(res, convertNumericalPolicy(resPolicy.GetMemoryResourceLimit(), ContainerMemLimit))
+	}
+	if resPolicy.GetMemoryResourceRequest() != nil {
+		res = append(res, convertNumericalPolicy(resPolicy.GetMemoryResourceRequest(), ContainerMemRequest))
+	}
+	return res
+}
+
+func convertPermissionPolicy(fields *storage.PolicyFields) []*storage.PolicyGroup {
+	perPolicy := fields.GetPermissionPolicy()
+	if perPolicy == nil {
+		return nil
+	}
+
+	permissionLevel, err := getRBACPermissionName(perPolicy.GetPermissionLevel())
+	if err != nil {
+		return nil
+	}
+
+	return []*storage.PolicyGroup{
+		{
+			FieldName: MinimumRBACPermissions,
+			Values:    getPolicyValues(permissionLevel),
+		},
+	}
+}
+
+func getRBACPermissionName(level storage.PermissionLevel) (string, error) {
+	switch level {
+	case storage.PermissionLevel_UNSET:
+		return "UNSET", nil
+	case storage.PermissionLevel_NONE:
+		return "NONE", nil
+	case storage.PermissionLevel_DEFAULT:
+		return "DEFAULT", nil
+	case storage.PermissionLevel_ELEVATED_IN_NAMESPACE:
+		return "ELEVATED_IN_NAMESPACE", nil
+	case storage.PermissionLevel_ELEVATED_CLUSTER_WIDE:
+		return "ELEVATED_CLUSTER_WIDE", nil
+	case storage.PermissionLevel_CLUSTER_ADMIN:
+		return "CLUSTER_ADMIN", nil
+	default:
+		return "", errors.New("Invalid RBAC permission level")
+	}
+}
+
+func convertExposureLevelPolicy(fields *storage.PolicyFields) []*storage.PolicyGroup {
+	exposurePolicy := fields.GetPortExposurePolicy()
+	if exposurePolicy == nil {
+		return nil
+	}
+
+	levels := exposurePolicy.GetExposureLevels()
+	var levelStrings []string
+	for _, levelInt := range levels {
+		levelString, err := getExposureLevelName(levelInt)
+		if err != nil {
+			return nil
+		}
+		levelStrings = append(levelStrings, levelString)
+	}
+
+	return []*storage.PolicyGroup{
+		{
+			FieldName: PortExposure,
+			Values:    getStringListPolicyValues(levelStrings),
+		},
+	}
+}
+
+func getExposureLevelName(level storage.PortConfig_ExposureLevel) (string, error) {
+	switch level {
+	case storage.PortConfig_UNSET:
+		return "UNSET", nil
+	case storage.PortConfig_EXTERNAL:
+		return "EXTERNAL", nil
+	case storage.PortConfig_NODE:
+		return "NODE", nil
+	case storage.PortConfig_INTERNAL:
+		return "INTERNAL", nil
+	case storage.PortConfig_HOST:
+		return "HOST", nil
+	default:
+		return "", errors.New("Invalid port exposure level")
 	}
 }
