@@ -12,6 +12,7 @@ import (
 	"github.com/stackrox/rox/pkg/logging"
 	ops "github.com/stackrox/rox/pkg/metrics"
 	"github.com/stackrox/rox/pkg/db"
+	
 	"github.com/tecbot/gorocksdb"
 	generic "github.com/stackrox/rox/pkg/rocksdb/crud"
 )
@@ -50,12 +51,14 @@ func keyFunc(msg proto.Message) []byte {
 }
 
 // New returns a new Store instance using the provided rocksdb instance.
+
 func New(db *gorocksdb.DB) Store {
 	globaldb.RegisterBucket(bucket, "ProcessWhitelistResults")
 	return &storeImpl{
 		crud: generic.NewCRUD(db, bucket, keyFunc, alloc),
 	}
 }
+
 
 // Count returns the number of objects in the store
 func (b *storeImpl) Count() (int, error) {

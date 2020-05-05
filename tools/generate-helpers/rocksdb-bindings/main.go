@@ -25,6 +25,7 @@ import (
 	"github.com/stackrox/rox/pkg/logging"
 	ops "github.com/stackrox/rox/pkg/metrics"
 	"github.com/stackrox/rox/pkg/db"
+	{{if .Cache}}"github.com/stackrox/rox/pkg/db/mapcache"{{end}}
 	"github.com/tecbot/gorocksdb"
 	generic "github.com/stackrox/rox/pkg/rocksdb/crud"
 )
@@ -63,12 +64,26 @@ func keyFunc(msg proto.Message) []byte {
 }
 
 // New returns a new Store instance using the provided rocksdb instance.
+{{if .Cache}}
+func New(db *gorocksdb.DB) (Store, error) {
+	globaldb.RegisterBucket(bucket, "{{.Type}}")
+	baseCRUD := generic.NewCRUD(db, bucket, keyFunc, alloc)
+	cacheCRUD, err := mapcache.NewMapCache(baseCRUD, keyFunc)
+	if err != nil {
+		return nil, err
+	}
+	return &storeImpl{
+		crud: cacheCRUD,
+	}, nil
+}
+{{else}}
 func New(db *gorocksdb.DB) Store {
 	globaldb.RegisterBucket(bucket, "{{.Type}}")
 	return &storeImpl{
 		crud: generic.NewCRUD(db, bucket, keyFunc, alloc),
 	}
 }
+{{end}}
 
 // Count returns the number of objects in the store
 func (b *storeImpl) Count() (int, error) {
@@ -172,6 +187,7 @@ type properties struct {
 	Type    string
 	Bucket  string
 	KeyFunc string
+	Cache   bool
 }
 
 func main() {
@@ -187,12 +203,14 @@ func main() {
 	utils.Must(c.MarkFlagRequired("bucket"))
 
 	c.Flags().StringVar(&props.KeyFunc, "key-func", "GetId()", "the function on the object to retrieve the key")
+	c.Flags().BoolVar(&props.Cache, "cache", false, "where or not to add a fully inmem cache")
 
 	c.RunE = func(*cobra.Command, []string) error {
 		templateMap := map[string]interface{}{
 			"Type":    props.Type,
 			"Bucket":  props.Bucket,
 			"KeyFunc": props.KeyFunc,
+			"Cache":   props.Cache,
 		}
 
 		t := template.Must(template.New("gen").Parse(storeFile))

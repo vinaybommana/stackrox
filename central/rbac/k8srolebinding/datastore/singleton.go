@@ -25,15 +25,15 @@ var (
 
 func initialize() {
 	var storage store.Store
-	if features.RocksDB.Enabled() {
-		storage = rocksdb.New(globaldb.GetRocksDB())
-	} else {
-		var err error
-		storage, err = bolt.NewBoltStore(globaldb.GetGlobalDB(), storecache.NewMapBackedCache())
-		utils.Must(err)
-	}
-	index := index.New(globalindex.GetGlobalTmpIndex())
 	var err error
+	if features.RocksDB.Enabled() {
+		storage, err = rocksdb.New(globaldb.GetRocksDB())
+	} else {
+		storage, err = bolt.NewBoltStore(globaldb.GetGlobalDB(), storecache.NewMapBackedCache())
+	}
+	utils.Must(err)
+
+	index := index.New(globalindex.GetGlobalTmpIndex())
 	ad, err = New(storage, index, search.New(storage, index))
 	if err != nil {
 		log.Panicf("Failed to initialize secrets datastore: %s", err)

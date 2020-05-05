@@ -51,7 +51,7 @@ func (suite *ServiceAccountDataStoreTestSuite) SetupSuite() {
 	suite.db = db
 	suite.dir = dir
 
-	suite.storage = rocksdb.New(db)
+	suite.storage, err = rocksdb.New(db)
 	suite.Require().NoError(err)
 	suite.indexer = index.New(suite.bleveIndex)
 	suite.searcher = serviceAccountSearch.New(suite.storage, suite.indexer)
