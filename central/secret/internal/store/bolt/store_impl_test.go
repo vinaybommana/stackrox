@@ -1,9 +1,10 @@
-package store
+package bolt
 
 import (
 	"testing"
 
 	bolt "github.com/etcd-io/bbolt"
+	"github.com/stackrox/rox/central/secret/internal/store"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/bolthelper"
 	"github.com/stackrox/rox/pkg/testutils"
@@ -19,7 +20,7 @@ type SecretStoreTestSuite struct {
 
 	db *bolt.DB
 
-	store Store
+	store store.Store
 }
 
 func (suite *SecretStoreTestSuite) SetupSuite() {
@@ -47,30 +48,29 @@ func (suite *SecretStoreTestSuite) TestSecrets() {
 	}
 
 	for _, secret := range secrets {
-		err := suite.store.UpsertSecret(secret)
+		err := suite.store.Upsert(secret)
 		suite.NoError(err)
 	}
 
 	// Get all secrets
-	retrievedSecrets, err := suite.store.GetAllSecrets()
+	var retrievedSecrets []*storage.Secret
+	err := suite.store.Walk(func(secret *storage.Secret) error {
+		retrievedSecrets = append(retrievedSecrets, secret)
+		return nil
+	})
 	suite.Nil(err)
 	suite.ElementsMatch(secrets, retrievedSecrets)
 
 	for _, s := range secrets {
-		secret, exists, err := suite.store.GetSecret(s.GetId())
+		secret, exists, err := suite.store.Get(s.GetId())
 		suite.NoError(err)
 		suite.True(exists)
 		suite.Equal(s, secret)
 	}
 
-	// Get batch list secrets
-	retrievedListSecrets, _, err := suite.store.ListSecrets([]string{"secret1", "secret2"})
-	suite.Nil(err)
-	suite.Len(retrievedListSecrets, 2)
-
 	// Get batch secrets
 	var missing []int
-	retrievedSecrets, missing, err = suite.store.GetSecretsWithIds([]string{"secret1", "secret2", "non-existant"})
+	retrievedSecrets, missing, err = suite.store.GetMany([]string{"secret1", "secret2", "non-existant"})
 	suite.Nil(err)
 	suite.Len(retrievedSecrets, 2)
 	suite.Len(missing, 1)
