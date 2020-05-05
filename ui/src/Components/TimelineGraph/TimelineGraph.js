@@ -24,12 +24,13 @@ const TimelineGraph = ({
     const [minTimeRange, setMinTimeRange] = useState(absoluteMinTimeRange);
     const [maxTimeRange, setMaxTimeRange] = useState(adjustedAbsoluteMaxTimeRange);
 
-    const names = data.map(({ type, id, name, subText, hasChildren }) => ({
+    const names = data.map(({ type, id, name, subText, hasChildren, drillDownButtonTooltip }) => ({
         type,
         id,
         name,
         subText,
         hasChildren,
+        drillDownButtonTooltip,
     }));
 
     function onSelectionChange(selection) {

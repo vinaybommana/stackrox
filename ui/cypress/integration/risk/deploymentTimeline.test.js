@@ -574,4 +574,26 @@ describe('Risk Page Deployment Event Timeline', () => {
             );
         });
     });
+
+    describe('Drill Down Button Tooltip', () => {
+        it('should show a tooltip with the number of containers for a pod, when you hover over the drill down button', () => {
+            setRoutes();
+            // mocking data to test the drill down button tooltip
+            cy.route(
+                'POST',
+                api.graphql(api.risks.graphqlOps.getDeploymentEventTimeline),
+                'fixture:risks/eventTimeline/deploymentEventTimeline.json'
+            ).as('getDeploymentEventTimeline');
+
+            openEventTimeline();
+
+            cy.wait('@getDeploymentEventTimeline');
+
+            cy.get(selectors.eventTimeline.timeline.namesList.drillDownButtonInFirstRow).trigger(
+                'mouseenter'
+            );
+
+            cy.get(selectors.tooltip.overlay).should('contain', 'View 1 Container');
+        });
+    });
 });
