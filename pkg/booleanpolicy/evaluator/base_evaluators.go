@@ -7,6 +7,7 @@ import (
 
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
+	mapeval "github.com/stackrox/rox/pkg/booleanpolicy/evaluator/mapeval"
 	"github.com/stackrox/rox/pkg/booleanpolicy/evaluator/traverseutil"
 	"github.com/stackrox/rox/pkg/booleanpolicy/query"
 	"github.com/stackrox/rox/pkg/protoreflect"
@@ -123,8 +124,7 @@ func getMatcherGeneratorForKind(kind reflect.Kind) (baseMatcherGenerator, error)
 	case reflect.Array, reflect.Slice:
 		return generateSliceMatcher, nil
 	case reflect.Map:
-		// TODO(akshit)
-		return nil, errors.New("NOT IMPLEMENTED")
+		return generateMapMatcher, nil
 	case reflect.Bool:
 		return generateBoolMatcher, nil
 	case reflect.Int64, reflect.Int32, reflect.Int16, reflect.Int8, reflect.Int:
@@ -336,5 +336,21 @@ func generateEnumMatcher(value string, enumRef protoreflect.ProtoEnum) (baseMatc
 			matchedValue = strconv.Itoa(int(asInt))
 		}
 		return []valueMatchedPair{{value: matchedValue, matched: baseMatcher(asInt)}}
+	}, nil
+}
+
+func generateMapMatcher(value string, _ reflect.Type) (baseMatcherAndExtractor, error) {
+	baseMatcher, err := mapeval.Matcher(value)
+	if err != nil {
+		return nil, err
+	}
+
+	return func(instance reflect.Value) []valueMatchedPair {
+		if instance.Kind() != reflect.Map {
+			return nil
+		}
+
+		iter := instance.MapRange()
+		return []valueMatchedPair{{value: "", matched: baseMatcher(iter)}}
 	}, nil
 }

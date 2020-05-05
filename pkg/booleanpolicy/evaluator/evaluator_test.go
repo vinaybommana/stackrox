@@ -20,14 +20,15 @@ type TopLevel struct {
 	NestedSlice []Nested `protobuf:"blah"`
 
 	// These exist for testing base types.
-	ValBaseSlice []string         `search:"BaseSlice" protobuf:"blah"`
-	ValBasePtr   *string          `search:"BasePtr" protobuf:"blah"`
-	ValBaseBool  bool             `search:"BaseBool" protobuf:"blah"`
-	ValBaseTS    *types.Timestamp `search:"BaseTS" protobuf:"blah"`
-	ValBaseInt   int              `search:"BaseInt" protobuf:"blah"`
-	ValBaseUint  uint             `search:"BaseUint" protobuf:"blah"`
-	ValBaseFloat float64          `search:"BaseFloat" protobuf:"blah"`
-	ValBaseEnum  storage.Access   `search:"BaseEnum" protobuf:"blah"`
+	ValBaseSlice []string          `search:"BaseSlice" protobuf:"blah"`
+	ValBasePtr   *string           `search:"BasePtr" protobuf:"blah"`
+	ValBaseBool  bool              `search:"BaseBool" protobuf:"blah"`
+	ValBaseTS    *types.Timestamp  `search:"BaseTS" protobuf:"blah"`
+	ValBaseInt   int               `search:"BaseInt" protobuf:"blah"`
+	ValBaseUint  uint              `search:"BaseUint" protobuf:"blah"`
+	ValBaseFloat float64           `search:"BaseFloat" protobuf:"blah"`
+	ValBaseEnum  storage.Access    `search:"BaseEnum" protobuf:"blah"`
+	ValBaseMap   map[string]string `search:"BaseMap" protobuf:"blah"`
 }
 
 type Nested struct {
@@ -75,6 +76,312 @@ func runTestCases(t *testing.T, testCases []testCase) {
 		})
 
 	}
+}
+
+func TestMap(t *testing.T) {
+	qTopLevelBRequired := query.SimpleMatchFieldQuery("BaseMap", "!\t=happy")
+	qTopLevelBDisallowed := query.SimpleMatchFieldQuery("BaseMap", "x=3")
+	qTopLevelBDisallowedRequired := query.SimpleMatchFieldQuery("BaseMap", "x=3;\t!\t=happy")
+	qTopLevelBDisallowedRequired2 := query.SimpleMatchFieldQuery("BaseMap", "x=3;\t!\thappy=")
+	qTopLevelBRequiredDisjunction := query.SimpleMatchFieldQuery("BaseMap", "!\thappy=;\t!\t=lucky")
+	qTopLevelBRequiredConjunction := query.SimpleMatchFieldQuery("BaseMap", "!\thappy=,\t!\t=lucky")
+	qTopLevelBRequiredDisallowedConjunction := query.SimpleMatchFieldQuery("BaseMap", "!\thappy=,\t=lucky")
+	qComplexQuery := query.SimpleMatchFieldQuery("BaseMap", "!\thappy=,\t=lucky;\thappy=true")
+	runTestCases(t, []testCase{
+		{
+			desc: "simple map, required query, doesnt match",
+			q:    qTopLevelBRequired,
+			obj: &TopLevel{
+				ValA: "whatever",
+				ValBaseMap: map[string]string{
+					"x": "happy",
+				},
+			},
+		},
+
+		{
+			desc: "simple map, required query, matches",
+			q:    qTopLevelBRequired,
+			obj: &TopLevel{
+				ValA: "whatever",
+				ValBaseMap: map[string]string{
+					"x": "y",
+				},
+			},
+			expectedResult: resultWithSingleMatch("BaseMap", traverseutil.PathFromSteps(t, "ValBaseMap"), ""),
+		},
+
+		{
+			desc: "simple map, disallowed query, doesnt match",
+			q:    qTopLevelBDisallowed,
+			obj: &TopLevel{
+				ValA: "whatever",
+				ValBaseMap: map[string]string{
+					"x": "y",
+				},
+			},
+		},
+
+		{
+			desc: "simple map, disallowed query, matches",
+			q:    qTopLevelBDisallowed,
+			obj: &TopLevel{
+				ValA: "whatever",
+				ValBaseMap: map[string]string{
+					"b": "z",
+					"a": "y",
+					"x": "3",
+				},
+			},
+			expectedResult: resultWithSingleMatch("BaseMap", traverseutil.PathFromSteps(t, "ValBaseMap"), ""),
+		},
+
+		{
+			desc: "simple map, disallowed & required query, matches",
+			q:    qTopLevelBDisallowedRequired,
+			obj: &TopLevel{
+				ValA: "whatever",
+				ValBaseMap: map[string]string{
+					"b": "z",
+					"a": "y",
+					"x": "3",
+				},
+			},
+			expectedResult: resultWithSingleMatch("BaseMap", traverseutil.PathFromSteps(t, "ValBaseMap"), ""),
+		},
+
+		{
+			desc: "simple map, disallowed & required query, matches",
+			q:    qTopLevelBDisallowedRequired,
+			obj: &TopLevel{
+				ValA:       "whatever",
+				ValBaseMap: map[string]string{},
+			},
+			expectedResult: resultWithSingleMatch("BaseMap", traverseutil.PathFromSteps(t, "ValBaseMap"), ""),
+		},
+
+		{
+			desc: "simple map, disallowed & required query, does not match",
+			q:    qTopLevelBDisallowedRequired,
+			obj: &TopLevel{
+				ValA: "whatever",
+				ValBaseMap: map[string]string{
+					"a": "happy",
+				},
+			},
+		},
+
+		{
+			desc: "simple map, disallowed & required query, matches",
+			q:    qTopLevelBDisallowedRequired,
+			obj: &TopLevel{
+				ValA: "whatever",
+				ValBaseMap: map[string]string{
+					"happy": "a",
+				},
+			},
+			expectedResult: resultWithSingleMatch("BaseMap", traverseutil.PathFromSteps(t, "ValBaseMap"), ""),
+		},
+
+		{
+			desc: "simple map, disallowed & required query 2, matches",
+			q:    qTopLevelBDisallowedRequired2,
+			obj: &TopLevel{
+				ValA: "whatever",
+				ValBaseMap: map[string]string{
+					"b": "z",
+					"a": "y",
+					"x": "3",
+				},
+			},
+			expectedResult: resultWithSingleMatch("BaseMap", traverseutil.PathFromSteps(t, "ValBaseMap"), ""),
+		},
+
+		{
+			desc: "simple map, disallowed & required query 2, matches",
+			q:    qTopLevelBDisallowedRequired2,
+			obj: &TopLevel{
+				ValA:       "whatever",
+				ValBaseMap: map[string]string{},
+			},
+			expectedResult: resultWithSingleMatch("BaseMap", traverseutil.PathFromSteps(t, "ValBaseMap"), ""),
+		},
+
+		{
+			desc: "simple map, disallowed & required query 2, does not match",
+			q:    qTopLevelBDisallowedRequired2,
+			obj: &TopLevel{
+				ValA: "whatever",
+				ValBaseMap: map[string]string{
+					"happy": "a",
+				},
+			},
+		},
+
+		{
+			desc: "simple map, disallowed & required query 2, matches",
+			q:    qTopLevelBDisallowedRequired2,
+			obj: &TopLevel{
+				ValA: "whatever",
+				ValBaseMap: map[string]string{
+					"a": "happy",
+				},
+			},
+			expectedResult: resultWithSingleMatch("BaseMap", traverseutil.PathFromSteps(t, "ValBaseMap"), ""),
+		},
+
+		{
+			desc: "simple map, required disjunction query , matches",
+			q:    qTopLevelBRequiredDisjunction,
+			obj: &TopLevel{
+				ValA: "whatever",
+				ValBaseMap: map[string]string{
+					"a": "happy",
+				},
+			},
+			expectedResult: resultWithSingleMatch("BaseMap", traverseutil.PathFromSteps(t, "ValBaseMap"), ""),
+		},
+
+		{
+			desc: "simple map, required disjunction query , matches",
+			q:    qTopLevelBRequiredDisjunction,
+			obj: &TopLevel{
+				ValA: "whatever",
+				ValBaseMap: map[string]string{
+					"a": "lucky",
+				},
+			},
+			expectedResult: resultWithSingleMatch("BaseMap", traverseutil.PathFromSteps(t, "ValBaseMap"), ""),
+		},
+
+		{
+			desc: "simple map, required disjunction query , does not match",
+			q:    qTopLevelBRequiredDisjunction,
+			obj: &TopLevel{
+				ValA: "whatever",
+				ValBaseMap: map[string]string{
+					"happy": "lucky",
+				},
+			},
+		},
+
+		{
+			desc: "simple map, required conjunction query , does not match",
+			q:    qTopLevelBRequiredConjunction,
+			obj: &TopLevel{
+				ValA: "whatever",
+				ValBaseMap: map[string]string{
+					"happy": "lucky",
+				},
+			},
+		},
+
+		{
+			desc: "simple map, required conjunction query , does not match",
+			q:    qTopLevelBRequiredConjunction,
+			obj: &TopLevel{
+				ValA: "whatever",
+				ValBaseMap: map[string]string{
+					"a": "lucky",
+				},
+			},
+		},
+
+		{
+			desc: "simple map, required conjunction query , matches",
+			q:    qTopLevelBRequiredConjunction,
+			obj: &TopLevel{
+				ValA: "whatever",
+				ValBaseMap: map[string]string{
+					"lucky": "happy",
+				},
+			},
+			expectedResult: resultWithSingleMatch("BaseMap", traverseutil.PathFromSteps(t, "ValBaseMap"), ""),
+		},
+
+		{
+			desc: "simple map, required disallowed conjunction query , does not match",
+			q:    qTopLevelBRequiredDisallowedConjunction,
+			obj: &TopLevel{
+				ValA: "whatever",
+				ValBaseMap: map[string]string{
+					"happy": "lucky",
+				},
+			},
+		},
+
+		{
+			desc: "simple map, required disallowed conjunction query , matches",
+			q:    qTopLevelBRequiredDisallowedConjunction,
+			obj: &TopLevel{
+				ValA: "whatever",
+				ValBaseMap: map[string]string{
+					"a": "lucky",
+				},
+			},
+			expectedResult: resultWithSingleMatch("BaseMap", traverseutil.PathFromSteps(t, "ValBaseMap"), ""),
+		},
+
+		{
+			desc: "simple map, required disallowed conjunction query , does not match",
+			q:    qTopLevelBRequiredDisallowedConjunction,
+			obj: &TopLevel{
+				ValA: "whatever",
+				ValBaseMap: map[string]string{
+					"lucky": "happy",
+				},
+			},
+		},
+
+		{
+			desc: "simple map, complex query , does not match",
+			q:    qComplexQuery,
+			obj: &TopLevel{
+				ValA: "whatever",
+				ValBaseMap: map[string]string{
+					"happy": "lucky",
+				},
+			},
+		},
+
+		{
+			desc: "simple map, complex query , does not match",
+			q:    qComplexQuery,
+			obj: &TopLevel{
+				ValA: "whatever",
+				ValBaseMap: map[string]string{
+					"a":     "lucky",
+					"happy": "1",
+				},
+			},
+		},
+
+		{
+			desc: "simple map, complex query , matches",
+			q:    qComplexQuery,
+			obj: &TopLevel{
+				ValA: "whatever",
+				ValBaseMap: map[string]string{
+					"a":     "lucky",
+					"happy": "true",
+				},
+			},
+			expectedResult: resultWithSingleMatch("BaseMap", traverseutil.PathFromSteps(t, "ValBaseMap"), ""),
+		},
+
+		{
+			desc: "simple map, complex query , matches",
+			q:    qComplexQuery,
+			obj: &TopLevel{
+				ValA: "whatever",
+				ValBaseMap: map[string]string{
+					"lucky": "happy",
+					"happy": "true",
+				},
+			},
+			expectedResult: resultWithSingleMatch("BaseMap", traverseutil.PathFromSteps(t, "ValBaseMap"), ""),
+		},
+	})
 }
 
 func TestSimpleBase(t *testing.T) {
