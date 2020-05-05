@@ -14,7 +14,7 @@ var (
 
 	// EventTimelineUI enables the Event Timeline UI.
 	// NB: When removing this feature flag, remove references in ui/src/utils/featureFlags.js
-	EventTimelineUI = registerFeature("Enable Event Timeline UI", "ROX_EVENT_TIMELINE_UI", false)
+	EventTimelineUI = registerFeature("Enable Event Timeline UI", "ROX_EVENT_TIMELINE_UI", true)
 
 	// ImageLabelPolicy enables the Required Image Label policy type
 	ImageLabelPolicy = registerFeature("Enable the Required Image Label Policy", "ROX_REQUIRED_IMAGE_LABEL_POLICY", true)
