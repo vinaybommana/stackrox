@@ -14,6 +14,7 @@ var (
 		"service_accounts",
 		"k8sroles",
 		"rolebindings",
+		"processWhitelistResults",
 	}
 
 	separator = []byte("\x00")

@@ -59,7 +59,7 @@ func alloc() proto.Message {
 }
 
 func keyFunc(msg proto.Message) []byte {
-	return []byte(msg.(*storage.{{.Type}}).GetId())
+	return []byte(msg.(*storage.{{.Type}}).{{.KeyFunc}})
 }
 
 // New returns a new Store instance using the provided rocksdb instance.
@@ -169,8 +169,9 @@ func (b *storeImpl) GetKeysToIndex() ([]string, error) {
 `
 
 type properties struct {
-	Type   string
-	Bucket string
+	Type    string
+	Bucket  string
+	KeyFunc string
 }
 
 func main() {
@@ -185,10 +186,13 @@ func main() {
 	c.Flags().StringVar(&props.Bucket, "bucket", "", "the logical bucket of the objects")
 	utils.Must(c.MarkFlagRequired("bucket"))
 
+	c.Flags().StringVar(&props.KeyFunc, "key-func", "GetId()", "the function on the object to retrieve the key")
+
 	c.RunE = func(*cobra.Command, []string) error {
 		templateMap := map[string]interface{}{
-			"Type":   props.Type,
-			"Bucket": props.Bucket,
+			"Type":    props.Type,
+			"Bucket":  props.Bucket,
+			"KeyFunc": props.KeyFunc,
 		}
 
 		t := template.Must(template.New("gen").Parse(storeFile))

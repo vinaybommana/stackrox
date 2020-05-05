@@ -1,4 +1,4 @@
-package store
+package bolt
 
 import (
 	"testing"
@@ -18,24 +18,26 @@ func TestStore(t *testing.T) {
 	require.NoError(err)
 	defer utils.IgnoreError(db.Close)
 
-	store, err := New(db)
+	store, err := NewBoltStore(db)
 	require.NoError(err)
 
 	whitelistResults := &storage.ProcessWhitelistResults{
 		DeploymentId:      "BLAH",
 		WhitelistStatuses: []*storage.ContainerNameAndWhitelistStatus{{ContainerName: "BLAHHH"}},
 	}
-	err = store.UpsertWhitelistResults(whitelistResults)
+	err = store.Upsert(whitelistResults)
 	require.NoError(err)
 
-	retrievedResults, err := store.GetWhitelistResults("BLAH")
+	retrievedResults, exists, err := store.Get("BLAH")
 	require.NoError(err)
+	require.True(exists)
 	assert.Equal(whitelistResults, retrievedResults)
 
-	err = store.DeleteWhitelistResults("BLAH")
+	err = store.Delete("BLAH")
 	require.NoError(err)
 
-	retrievedResults, err = store.GetWhitelistResults("BLAH")
+	retrievedResults, exists, err = store.Get("BLAH")
 	require.NoError(err)
+	require.False(exists)
 	require.Nil(retrievedResults)
 }
