@@ -9,12 +9,13 @@ import (
 )
 
 // StreamGenerator writes a backup directly to a writer.
+//go:generate mockgen-wrapper
 type StreamGenerator interface {
 	WriteTo(ctx context.Context, writer io.Writer) error
 }
 
-// ZipToStream calls the input Zip generator and streams the output to an input writer.
-func ZipToStream(dGen ZipGenerator) StreamGenerator {
+// PutZipInStream calls the input Zip generator and streams the output to an input writer.
+func PutZipInStream(dGen ZipGenerator) StreamGenerator {
 	return &fromZipToStream{
 		zGen: dGen,
 	}

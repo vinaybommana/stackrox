@@ -550,13 +550,13 @@ func (defaultFactory) CustomRoutes() (customRoutes []routes.CustomRoute) {
 		{
 			Route:         "/db/backup",
 			Authorizer:    dbAuthz.DBReadAccessAuthorizer(),
-			ServerHandler: globaldbHandlers.BackupDB(globaldb.GetGlobalDB(), globaldb.GetGlobalBadgerDB()),
+			ServerHandler: globaldbHandlers.BackupDB(globaldb.GetGlobalDB(), globaldb.GetGlobalBadgerDB(), globaldb.GetRocksDB()),
 			Compression:   true,
 		},
 		{
 			Route:         "/db/restore",
 			Authorizer:    dbAuthz.DBWriteAccessAuthorizer(),
-			ServerHandler: globaldbHandlers.RestoreDB(globaldb.GetGlobalDB(), globaldb.GetGlobalBadgerDB()),
+			ServerHandler: globaldbHandlers.RestoreDB(globaldb.GetGlobalDB(), globaldb.GetGlobalBadgerDB(), globaldb.GetRocksDB()),
 		},
 		{
 			Route:         "/api/docs/swagger",

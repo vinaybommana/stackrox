@@ -26,10 +26,15 @@ var (
 
 // NewRocksDB creates a RockDB at the specified path
 func NewRocksDB(path string) (*gorocksdb.DB, error) {
+	return gorocksdb.OpenDb(GetRocksDBOptions(), path)
+}
+
+// GetRocksDBOptions returns the options used to open RocksDB.
+func GetRocksDBOptions() *gorocksdb.Options {
 	opts := gorocksdb.NewDefaultOptions()
 	opts.SetCreateIfMissing(true)
 	opts.SetCompression(gorocksdb.LZ4Compression)
-	return gorocksdb.OpenDb(opts, path)
+	return opts
 }
 
 // GetRocksDB returns the global rocksdb instance

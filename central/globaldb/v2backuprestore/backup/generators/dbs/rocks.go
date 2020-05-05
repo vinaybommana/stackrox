@@ -2,10 +2,17 @@ package dbs
 
 import (
 	"context"
+	"io/ioutil"
+	"os"
 	"syscall"
 
 	"github.com/pkg/errors"
+	"github.com/stackrox/rox/central/globaldb"
 	"github.com/tecbot/gorocksdb"
+)
+
+const (
+	tmpPath = "rocksdb"
 )
 
 // marginOfSafety is how much more free space we want available then the current DB space used before we perform a
@@ -26,44 +33,74 @@ type RocksBackup struct {
 }
 
 // WriteDirectory writes a backup of RocksDB to the input path.
-func (rgen *RocksBackup) WriteDirectory(ctx context.Context, path string) error {
-	err := checkSpace(rgen.db, path)
+func (rgen *RocksBackup) WriteDirectory(ctx context.Context) (string, error) {
+	path, err := findScratchPath(rgen.db)
 	if err != nil {
-		return errors.Wrap(err, "unable to check available space for backup")
+		return "", errors.Wrap(err, "could not find space sufficient for backup generation")
 	}
 
 	// Generate the backup files in the directory.
 	opts := gorocksdb.NewDefaultOptions()
 	backupEngine, err := gorocksdb.OpenBackupEngine(opts, path)
 	if err != nil {
-		return errors.Wrap(err, "error initializing backup process")
+		return "", errors.Wrap(err, "error initializing backup process")
 	}
 
 	// Check DB size vs. availability.
 	err = backupEngine.CreateNewBackup(rgen.db)
 	if err != nil {
-		return errors.Wrap(err, "error generating backup directory")
+		return "", errors.Wrap(err, "error generating backup directory")
 	}
-	return nil
+	return path, nil
 }
 
-// Use statfs_t to compare the used space in the 'from' path to the available space in the 'to' path.
-// If the available space in 'to' is less than 1.5 times the size of the used space in 'from', it returns an error.
-func checkSpace(db *gorocksdb.DB, toPath string) error {
+func findScratchPath(db *gorocksdb.DB) (string, error) {
+	requiredBytes := float64(getDBSizeBytes(db)) * (1.0 + marginOfSafety)
+
+	// Check tmp for space to produce a backup.
+	tmpDir, err := ioutil.TempDir("", tmpPath)
+	if err != nil {
+		return "", err
+	}
+	tmpBytesAvailable, err := getBytesAvailableIn(tmpDir)
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to calculates size of %s", tmpDir)
+	}
+	if float64(tmpBytesAvailable) > requiredBytes {
+		return tmpDir, nil
+	}
+
+	// If there isn't enough space there, try using PVC to create it.
+	pvcDir, err := ioutil.TempDir(globaldb.PVCPath, tmpPath)
+	if err != nil {
+		return "", err
+	}
+	pvcBytesAvailable, err := getBytesAvailableIn(pvcDir)
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to calculates size of %s", pvcDir)
+	}
+	if float64(pvcBytesAvailable) > requiredBytes {
+		return pvcDir, nil
+	}
+
+	// If neither had enough space, return an error.
+	return "", errors.Errorf("required %f bytes of space, found %f bytes in %s and %f bytes on PVC, cannot backup", requiredBytes, float64(tmpBytesAvailable), os.TempDir(), float64(pvcBytesAvailable))
+}
+
+// Use statfs_t to get the bytes available in the path.
+func getBytesAvailableIn(toPath string) (uint64, error) {
 	var stat syscall.Statfs_t
 	if err := syscall.Statfs(toPath, &stat); err != nil {
-		return err
+		return 0, err
 	}
-	availableBytes := stat.Bavail * uint64(stat.Bsize)
+	return stat.Bavail * uint64(stat.Bsize), nil
+}
 
-	// This calculates the approximate size of all files stored in the file system for rocks DB.
-	var fSizeTotal int64
+// Get the number of bytes used by files stored for the db.
+func getDBSizeBytes(db *gorocksdb.DB) uint64 {
+	var fSizeTotal uint64
 	for _, metadata := range db.GetLiveFilesMetaData() {
-		fSizeTotal += metadata.Size
+		fSizeTotal += uint64(metadata.Size)
 	}
-
-	if float64(availableBytes) < (float64(fSizeTotal) * (1.0 + marginOfSafety)) {
-		return errors.Errorf("rocksdb too large (%d bytes) to fit within backup path (%d bytes), we require a %f margin", fSizeTotal, availableBytes, marginOfSafety)
-	}
-	return nil
+	return fSizeTotal
 }

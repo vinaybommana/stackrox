@@ -10,12 +10,13 @@ import (
 )
 
 // FileGenerator is a generator that produces a backup in the form of a file.
+//go:generate mockgen-wrapper
 type FileGenerator interface {
 	WriteFile(ctx context.Context, path string) error
 }
 
-// StreamToFile calls a StreamGenerator and outputs the results to a file.
-func StreamToFile(sgen StreamGenerator) FileGenerator {
+// PutStreamInFile calls a StreamGenerator and outputs the results to a file.
+func PutStreamInFile(sgen StreamGenerator) FileGenerator {
 	return &fromStreamToFile{sgen: sgen}
 }
 
@@ -34,8 +35,8 @@ func (fgen *fromStreamToFile) WriteFile(ctx context.Context, path string) error 
 	return fgen.sgen.WriteTo(ctx, outFile)
 }
 
-// ZipToFile calls a ZipGenerator and outputs the results to a file.
-func ZipToFile(sgen ZipGenerator) FileGenerator {
+// PutZipInFile calls a ZipGenerator and outputs the results to a file.
+func PutZipInFile(sgen ZipGenerator) FileGenerator {
 	return &fromZipToFile{sgen: sgen}
 }
 
