@@ -207,10 +207,6 @@ func (s *serviceImpl) PostPolicy(ctx context.Context, request *storage.Policy) (
 		return nil, err
 	}
 
-	if features.BooleanPolicyLogic.Enabled() {
-		s.reassessPolicies()
-	}
-
 	return request, nil
 }
 
@@ -232,10 +228,6 @@ func (s *serviceImpl) PutPolicy(ctx context.Context, request *storage.Policy) (*
 
 	if err := s.syncPoliciesWithSensors(); err != nil {
 		return nil, err
-	}
-
-	if features.BooleanPolicyLogic.Enabled() {
-		s.reassessPolicies()
 	}
 
 	return &v1.Empty{}, nil
@@ -291,12 +283,8 @@ func (s *serviceImpl) ReassessPolicies(context.Context, *v1.Empty) (*v1.Empty, e
 	s.metadataCache.RemoveAll()
 	s.scanCache.RemoveAll()
 
-	s.reassessPolicies()
-	return &v1.Empty{}, nil
-}
-
-func (s *serviceImpl) reassessPolicies() {
 	s.reprocessor.ShortCircuit()
+	return &v1.Empty{}, nil
 }
 
 func (s *serviceImpl) SubmitDryRunPolicyJob(ctx context.Context, request *storage.Policy) (*v1.JobId, error) {
