@@ -1,8 +1,8 @@
-import React, { Component, memo } from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { createSelector, createStructuredSelector } from 'reselect';
-import { formValueSelector, change } from 'redux-form';
+import { reduxForm, formValueSelector, change } from 'redux-form';
 import sortBy from 'lodash/sortBy';
 
 import Select from 'Components/ReactSelect';
@@ -179,4 +179,7 @@ const mapDispatchToProps = (dispatch) => ({
     change: (field, value) => dispatch(change('policyCreationForm', field, value)),
 });
 
-export default memo(connect(mapStateToProps, mapDispatchToProps)(FieldGroupCards));
+export default reduxForm({
+    form: 'policyCreationForm',
+    enableReinitialize: true,
+})(connect(mapStateToProps, mapDispatchToProps)(FieldGroupCards));

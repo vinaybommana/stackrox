@@ -5,13 +5,21 @@ import ReduxAndOrOperatorField from 'Components/forms/ReduxAndOrOperatorField';
 import FormFieldRemoveButton from 'Components/FormFieldRemoveButton';
 import Field from './Field';
 
-function FieldValue({ name, length, booleanOperatorName, fieldKey, removeValueHandler, index }) {
+function FieldValue({
+    name,
+    length,
+    booleanOperatorName,
+    fieldKey,
+    removeValueHandler,
+    isLast,
+    readOnly,
+}) {
     return (
         <>
             <div className="flex">
-                <Field key={name} field={fieldKey} name={name} />
+                <Field key={name} field={fieldKey} name={name} readOnly={readOnly} />
                 {/* only show remove button if there is more than one value */}
-                {length > 1 && (
+                {!readOnly && length > 1 && (
                     <FormFieldRemoveButton
                         field={name}
                         onClick={removeValueHandler}
@@ -20,10 +28,10 @@ function FieldValue({ name, length, booleanOperatorName, fieldKey, removeValueHa
                 )}
             </div>
             {/* only show and/or operator if not at end of array */}
-            {index + 1 !== length && (
+            {!isLast && (
                 <ReduxAndOrOperatorField
                     name={booleanOperatorName}
-                    disabled={!fieldKey.canBooleanLogic}
+                    disabled={readOnly || !fieldKey.canBooleanLogic}
                 />
             )}
         </>
@@ -38,7 +46,12 @@ FieldValue.propTypes = {
     }).isRequired,
     booleanOperatorName: PropTypes.string.isRequired,
     removeValueHandler: PropTypes.func.isRequired,
-    index: PropTypes.number.isRequired,
+    isLast: PropTypes.bool.isRequired,
+    readOnly: PropTypes.bool,
+};
+
+FieldValue.defaultProps = {
+    readOnly: false,
 };
 
 export default FieldValue;

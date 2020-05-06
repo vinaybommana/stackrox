@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { useDrop } from 'react-dnd';
 import { Trash2 } from 'react-feather';
 import { Field, FieldArray } from 'redux-form';
 
@@ -10,60 +9,28 @@ import SectionHeaderInput from 'Components/SectionHeaderInput';
 import AndOrOperator from 'Components/AndOrOperator';
 import PolicyFieldCard from './PolicyFieldCard';
 import { policyConfiguration } from './descriptors';
-import { getPolicyCriteriaFieldKeys } from './utils';
+import { removeFieldArrayHandler } from './utils';
+import PolicySectionDropTarget from './PolicySectionDropTarget';
 
-const getEmptyPolicyFieldCard = (fieldKey) => {
-    const defaultValue = fieldKey.defaultValue !== undefined ? fieldKey.defaultValue : '';
-    return {
-        fieldName: fieldKey.name,
-        booleanOperator: 'OR',
-        values: [
-            {
-                value: defaultValue,
-            },
-        ],
-        negate: false,
-        fieldKey,
+function addPolicyFieldCardHandler(fields) {
+    return (newPolicyFieldCard) => {
+        fields.push(newPolicyFieldCard);
     };
-};
+}
 
-function PolicySection({ fields, sectionName, removeSectionHandler }) {
-    const allFields = fields.getAll();
-    const acceptedFields = getPolicyCriteriaFieldKeys(allFields);
-
-    const [{ isOver, canDrop }, drop] = useDrop({
-        accept: acceptedFields,
-        drop: ({ fieldKey }) => {
-            const newPolicyFieldCard = getEmptyPolicyFieldCard(fieldKey);
-            fields.push(newPolicyFieldCard);
-        },
-        canDrop: ({ fieldKey }) => {
-            return !allFields.find((field) => field.fieldName === fieldKey.name);
-        },
-        collect: (monitor) => ({
-            isOver: monitor.isOver(),
-            canDrop: monitor.canDrop(),
-        }),
-    });
-
-    function removeFieldHandler(index) {
-        return () => {
-            fields.remove(index);
-        };
-    }
-
-    const disabledDrop = !canDrop && isOver;
-
+function PolicySection({ fields, sectionName, removeSectionHandler, readOnly, isLast }) {
     return (
         <>
             <div className="bg-base-300 border-2 border-base-100 rounded">
                 <div className="flex justify-between items-center border-b-2 border-base-400">
-                    <Field name={sectionName} component={SectionHeaderInput} />
-                    <Button
-                        onClick={removeSectionHandler}
-                        icon={<Trash2 className="w-5 h-5" />}
-                        className="p-2 border-l-2 border-base-400 hover:bg-base-400"
-                    />
+                    <Field name={sectionName} component={SectionHeaderInput} readOnly={readOnly} />
+                    {!readOnly && (
+                        <Button
+                            onClick={removeSectionHandler}
+                            icon={<Trash2 className="w-5 h-5" />}
+                            className="p-2 border-l-2 border-base-400 hover:bg-base-400"
+                        />
+                    )}
                 </div>
                 <div className="p-2">
                     {fields.map((name, i) => {
@@ -80,25 +47,23 @@ function PolicySection({ fields, sectionName, removeSectionHandler }) {
                                 name={`${name}.values`}
                                 component={PolicyFieldCard}
                                 booleanOperatorName={`${name}.booleanOperator`}
-                                removeFieldHandler={removeFieldHandler(i)}
+                                removeFieldHandler={removeFieldArrayHandler(fields, i)}
                                 fieldKey={fieldKey}
                                 toggleFieldName={`${name}.negate`}
+                                readOnly={readOnly}
+                                isLast={i === fields.length - 1}
                             />
                         );
                     })}
-                    <div
-                        ref={drop}
-                        className={`${
-                            disabledDrop
-                                ? 'bg-base-300 border-base-400'
-                                : 'bg-base-200 border-base-300'
-                        } rounded border-2 border-dashed flex font-700 justify-center p-3 text-base-500 text-sm uppercase`}
-                    >
-                        Drop a policy field inside
-                    </div>
+                    {!readOnly && (
+                        <PolicySectionDropTarget
+                            allFields={fields.getAll()}
+                            addPolicyFieldCardHandler={addPolicyFieldCardHandler(fields)}
+                        />
+                    )}
                 </div>
             </div>
-            <AndOrOperator disabled />
+            {(!isLast || !readOnly) && <AndOrOperator disabled />}
         </>
     );
 }
@@ -107,6 +72,13 @@ PolicySection.propTypes = {
     ...reduxFormPropTypes,
     sectionName: PropTypes.string.isRequired,
     removeSectionHandler: PropTypes.func.isRequired,
+    readOnly: PropTypes.bool,
+    isLast: PropTypes.bool,
+};
+
+PolicySection.defaultProps = {
+    readOnly: false,
+    isLast: false,
 };
 
 export default PolicySection;

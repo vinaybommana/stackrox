@@ -183,3 +183,11 @@ export function getPolicyCriteriaFieldKeys(fields) {
     });
     return availableFieldKeys;
 }
+
+export function addFieldArrayHandler(fields, value) {
+    return () => fields.push(value);
+}
+
+export function removeFieldArrayHandler(fields, index) {
+    return () => fields.remove(index);
+}

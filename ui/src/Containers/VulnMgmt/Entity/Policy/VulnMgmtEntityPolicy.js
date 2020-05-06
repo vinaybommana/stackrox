@@ -43,6 +43,17 @@ const VulmMgmtEntityPolicy = ({
                 lastUpdated
                 enforcementActions
                 lifecycleStages
+                policySections {
+                    sectionName
+                    policyGroups {
+                      booleanOperator
+                      fieldName
+                      negate
+                      values {
+                        value
+                      }
+                    }
+                  }
                 fields {
                     addCapabilities
                     args

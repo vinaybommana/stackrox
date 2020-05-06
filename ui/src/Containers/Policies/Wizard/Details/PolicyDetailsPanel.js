@@ -8,7 +8,7 @@ import Panel from 'Components/Panel';
 import DetailsButtons from './DetailsButtons';
 import PolicyDetails from './PolicyDetails';
 
-function PolicyDetailsPanel({ header, wizardPolicy, onClose }) {
+function PolicyDetailsPanel({ header, wizardPolicy, onClose, initialValues }) {
     if (!wizardPolicy) return null;
 
     return (
@@ -19,7 +19,7 @@ function PolicyDetailsPanel({ header, wizardPolicy, onClose }) {
             id="side-panel"
             className="w-1/2"
         >
-            <PolicyDetails policy={wizardPolicy} />
+            <PolicyDetails policy={wizardPolicy} initialValues={initialValues} />
         </Panel>
     );
 }
@@ -30,6 +30,7 @@ PolicyDetailsPanel.propTypes = {
         name: PropTypes.string,
     }).isRequired,
     onClose: PropTypes.func.isRequired,
+    initialValues: PropTypes.shape({}).isRequired,
 };
 
 PolicyDetailsPanel.defaultProps = {

@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import Tabs from 'Components/Tabs';
 import TabContent from 'Components/TabContent';
 import EnforcementDetails from 'Containers/Violations/Enforcement/Details';
+import { preFormatPolicyFields } from 'Containers/Policies/Wizard/Form/utils';
 import DeploymentDetails from '../../Risk/DeploymentDetails';
 import ViolationsDetails from './ViolationsDetails';
 import PolicyDetails from '../../Policies/Wizard/Details/PolicyDetails';
@@ -16,6 +17,7 @@ const riskPanelTabs = [
 ];
 
 function ViolationTabs({ alert }) {
+    const initialValuesForPolicy = preFormatPolicyFields(alert.policy);
     return (
         <Tabs headers={riskPanelTabs}>
             <TabContent extraClasses="bg-base-0">
@@ -39,7 +41,7 @@ function ViolationTabs({ alert }) {
             </TabContent>
             <TabContent extraClasses="bg-base-0">
                 <div className="flex flex-1 flex-col">
-                    <PolicyDetails policy={alert.policy} />
+                    <PolicyDetails initialValues={initialValuesForPolicy} />
                 </div>
             </TabContent>
         </Tabs>

@@ -13,3 +13,9 @@ export const withHeader = () => {
     const inputProps = { value, onChange: (e) => setValue(e.target.value) };
     return <SectionHeaderInput input={inputProps} />;
 };
+
+export const withReadOnly = () => {
+    const [value, setValue] = useState('policy section 1');
+    const inputProps = { value, onChange: (e) => setValue(e.target.value) };
+    return <SectionHeaderInput input={inputProps} readOnly />;
+};

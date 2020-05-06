@@ -8,6 +8,7 @@ const RadioButtonGroup = ({
     onClick,
     groupClassName,
     useBoolean,
+    disabled,
 }) => {
     function onClickHandler(data) {
         const targetValue = data.target.getAttribute('value');
@@ -28,6 +29,7 @@ const RadioButtonGroup = ({
             }`}
             onClick={onClickHandler}
             value={value || text}
+            disabled={disabled}
         >
             {text}
         </button>
@@ -58,6 +60,7 @@ RadioButtonGroup.propTypes = {
     onClick: PropTypes.func.isRequired,
     groupClassName: PropTypes.string,
     useBoolean: PropTypes.bool,
+    disabled: PropTypes.bool,
 };
 
 RadioButtonGroup.defaultProps = {
@@ -65,6 +68,7 @@ RadioButtonGroup.defaultProps = {
     selected: null,
     groupClassName: '',
     useBoolean: false,
+    disabled: false,
 };
 
 export default RadioButtonGroup;

@@ -4,7 +4,7 @@ import { Edit, Check } from 'react-feather';
 
 import Button from 'Components/Button';
 
-function SectionHeaderInput({ input }) {
+function SectionHeaderInput({ input, readOnly }) {
     const [isEditing, setIsEditing] = useState(false);
     function editHandler() {
         setIsEditing(!isEditing);
@@ -16,13 +16,15 @@ function SectionHeaderInput({ input }) {
             {!isEditing && (
                 <>
                     <span className="p-2 text-base-600 font-700">{value}</span>
-                    <div className="hover:bg-base-400">
-                        <Button
-                            icon={<Edit className="w-5 h-5" />}
-                            onClick={editHandler}
-                            className="p-2"
-                        />
-                    </div>
+                    {!readOnly && (
+                        <div className="hover:bg-base-400">
+                            <Button
+                                icon={<Edit className="w-5 h-5" />}
+                                onClick={editHandler}
+                                className="p-2"
+                            />
+                        </div>
+                    )}
                 </>
             )}
             {isEditing && (
@@ -51,6 +53,11 @@ SectionHeaderInput.propTypes = {
         value: PropTypes.string,
         onChange: PropTypes.func.isRequired,
     }).isRequired,
+    readOnly: PropTypes.bool,
+};
+
+SectionHeaderInput.defaultProps = {
+    readOnly: false,
 };
 
 export default SectionHeaderInput;

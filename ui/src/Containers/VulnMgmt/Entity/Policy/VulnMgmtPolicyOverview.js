@@ -18,8 +18,11 @@ import ViolationsAcrossThisDeployment from 'Containers/Workflow/widgets/Violatio
 import { getDeploymentTableColumns } from 'Containers/VulnMgmt/List/Deployments/VulnMgmtListDeployments';
 import { updatePolicyDisabledState } from 'services/PoliciesService';
 import { entityGridContainerBaseClassName } from 'Containers/Workflow/WorkflowEntityPage';
+import BooleanPolicySection from 'Containers/Policies/Wizard/Form/BooleanPolicySection';
+import FeatureEnabled from 'Containers/FeatureEnabled';
+import { knownBackendFlags } from 'utils/featureFlags';
 import { pluralizeHas } from 'utils/textUtils';
-
+import { preFormatPolicyFields } from 'Containers/Policies/Wizard/Form/utils';
 import RelatedEntitiesSideList from '../RelatedEntitiesSideList';
 import TableWidget from '../TableWidget';
 import PolicyConfigurationFields from './PolicyConfigurationFields';
@@ -37,6 +40,7 @@ const emptyPolicy = {
     latestViolation: '',
     lifecycleStages: [],
     name: '',
+    policySections: [],
     policyStatus: '',
     rationale: '',
     remediation: '',
@@ -67,11 +71,14 @@ const VulnMgmtPolicyOverview = ({ data, entityContext, setRefreshTrigger }) => {
         enforcementActions,
         lifecycleStages,
         fields,
+        policySections,
         scope,
         whitelists,
         deployments,
     } = safeData;
     const [currentDisabledState, setCurrentDisabledState] = useState(disabled);
+
+    const initialValues = preFormatPolicyFields(safeData);
 
     function togglePolicy() {
         updatePolicyDisabledState(id, !currentDisabledState).then(() => {
@@ -277,6 +284,24 @@ const VulnMgmtPolicyOverview = ({ data, entityContext, setRefreshTrigger }) => {
                                 </div>
                             </Widget>
                         </div>
+                        {!!policySections.length && (
+                            <FeatureEnabled
+                                featureFlag={knownBackendFlags.ROX_BOOLEAN_POLICY_LOGIC}
+                            >
+                                <div className="sy-2">
+                                    <Widget
+                                        header="Policy Criteria"
+                                        className="pdf-page pdf-stretch h-full"
+                                    >
+                                        <BooleanPolicySection
+                                            readOnly
+                                            hasHeader={false}
+                                            initialValues={initialValues}
+                                        />
+                                    </Widget>
+                                </div>
+                            </FeatureEnabled>
+                        )}
                         <div className="sx-1">
                             <Metadata
                                 className="h-full w-full min-w-48 bg-base-100 pdf-page h-full"
