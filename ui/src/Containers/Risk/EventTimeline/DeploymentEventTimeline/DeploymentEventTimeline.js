@@ -64,6 +64,7 @@ const DeploymentEventTimeline = ({
     return (
         <Panel header={header} headerComponents={headerComponents} id="event-timeline">
             <TimelineGraph
+                key={selectedEventType}
                 data={timelineData}
                 goToNextView={goToNextView}
                 currentPage={currentPage}
