@@ -13,6 +13,107 @@ type testcase struct {
 	expectedPolicySection *storage.PolicySection
 }
 
+type convertTestCase struct {
+	desc     string
+	policy   *storage.Policy
+	expected *storage.Policy
+	hasError bool
+}
+
+func TestCloneAndEnsureConverted(t *testing.T) {
+	fields := &storage.PolicyFields{
+		Cvss: &storage.NumericalPolicy{
+			Op:    storage.Comparator_GREATER_THAN_OR_EQUALS,
+			Value: 7.0,
+		},
+	}
+	sections := []*storage.PolicySection{
+		{
+			PolicyGroups: []*storage.PolicyGroup{
+				{
+					FieldName: CVSS,
+					Values: []*storage.PolicyValue{
+						{
+							Value: ">= 7.000000",
+						},
+					},
+				},
+			},
+		},
+	}
+	cases := []convertTestCase{
+		{
+			desc:     "nil failure",
+			policy:   nil,
+			expected: nil,
+			hasError: true,
+		},
+		{
+			desc: "unknown version",
+			policy: &storage.Policy{
+				PolicyVersion: "-1",
+			},
+			expected: nil,
+			hasError: true,
+		},
+		{
+			desc: "empty sections",
+			policy: &storage.Policy{
+				PolicyVersion: Version,
+			},
+			expected: nil,
+			hasError: true,
+		},
+		{
+			desc: "empty fields",
+			policy: &storage.Policy{
+				PolicyVersion: legacyVersion,
+			},
+			expected: nil,
+			hasError: true,
+		},
+		{
+			desc: "valid conversion",
+			policy: &storage.Policy{
+				Fields: fields,
+			},
+			expected: &storage.Policy{
+				PolicyVersion:  Version,
+				PolicySections: sections,
+			},
+		},
+		{
+			desc: "valid conversion with legacy version",
+			policy: &storage.Policy{
+				PolicyVersion: legacyVersion,
+				Fields:        fields,
+			},
+			expected: &storage.Policy{
+				PolicyVersion:  Version,
+				PolicySections: sections,
+			},
+		},
+		{
+			desc: "valid noop",
+			policy: &storage.Policy{
+				PolicyVersion:  Version,
+				PolicySections: sections,
+			},
+			expected: &storage.Policy{
+				PolicyVersion:  Version,
+				PolicySections: sections,
+			},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			got, err := CloneAndEnsureConverted(tc.policy)
+			assert.Assert(t, tc.hasError == (err != nil))
+			assert.DeepEqual(t, tc.expected, got)
+		})
+	}
+}
+
 func TestConvertPolicyFieldsToSections(t *testing.T) {
 	tcs := []*testcase{
 		{

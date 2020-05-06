@@ -41,15 +41,27 @@ var fieldsConverters = []individualFieldConverter{
 	convertExposureLevelPolicy,
 }
 
-// CloneAndEnsureConverted returns a clone of the input that is upgraded if it is a legacy policy.
-func CloneAndEnsureConverted(legacyPolicy *storage.Policy) *storage.Policy {
-	p := legacyPolicy.Clone()
-	if p.GetPolicyVersion() == legacyVersion {
-		p.PolicyVersion = Version
-		p.PolicySections = append(p.PolicySections, ConvertPolicyFieldsToSections(p.GetFields()))
-		p.Fields.Reset()
+// CloneAndEnsureConverted returns a clone of the input that is upgraded if it is a legacy policy
+func CloneAndEnsureConverted(p *storage.Policy) (*storage.Policy, error) {
+	if p == nil {
+		return nil, errors.New("nil policy")
 	}
-	return p
+	if p.GetPolicyVersion() != legacyVersion && p.GetPolicyVersion() != Version {
+		return nil, errors.New("unknown version")
+	}
+	if p.GetPolicyVersion() == Version && p.GetPolicySections() == nil {
+		return nil, errors.New("empty sections")
+	}
+	if p.GetPolicyVersion() == legacyVersion && p.GetFields() == nil {
+		return nil, errors.New("empty fields")
+	}
+	converted := p.Clone()
+	if converted.GetPolicyVersion() == legacyVersion {
+		converted.PolicyVersion = Version
+		converted.PolicySections = append(converted.PolicySections, ConvertPolicyFieldsToSections(converted.GetFields()))
+		converted.Fields = nil
+	}
+	return converted, nil
 }
 
 // ConvertPolicyFieldsToSections converts policy fields (version = "") to policy sections (version = "2.0").

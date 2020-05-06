@@ -32,7 +32,8 @@ func (s *PolicyValueValidator) TestValidationDefaultPolicies() {
 
 	policies := make(map[string]*storage.Policy, len(defaultPolicies))
 	for _, legacyPolicy := range defaultPolicies {
-		policies[legacyPolicy.GetName()] = CloneAndEnsureConverted(legacyPolicy)
+		policies[legacyPolicy.GetName()], err = CloneAndEnsureConverted(legacyPolicy)
+		assert.Nil(s.T(), err)
 	}
 	for _, p := range policies {
 		s.T().Run(p.GetName(), func(t *testing.T) {
