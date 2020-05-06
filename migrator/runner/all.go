@@ -21,4 +21,5 @@ import (
 	_ "github.com/stackrox/rox/migrator/migrations/m_32_to_m_33_dackbox"
 	_ "github.com/stackrox/rox/migrator/migrations/m_33_to_m_34_graph_schema"
 	_ "github.com/stackrox/rox/migrator/migrations/m_34_to_m_35_apitoken_multiple_roles"
+	_ "github.com/stackrox/rox/migrator/migrations/m_35_to_m_36_normalize_clusters"
 )

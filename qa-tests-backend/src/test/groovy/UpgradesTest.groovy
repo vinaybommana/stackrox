@@ -59,6 +59,9 @@ class UpgradesTest extends BaseSpecification {
                                 .setBuildDate(Timestamp.newBuilder().setSeconds(1549394549).build())
                                 .build())
                         .build())
+                .setDynamicConfig(ClusterOuterClass.DynamicClusterConfig.newBuilder()
+                        .setAdmissionControllerConfig(ClusterOuterClass.AdmissionControllerConfig.newBuilder()
+                                .setTimeoutSeconds(3)))
                 .build()
 
         def cluster = ClusterOuterClass.Cluster.newBuilder(clusters.get(0))
