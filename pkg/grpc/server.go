@@ -29,6 +29,9 @@ import (
 	"github.com/stackrox/rox/pkg/netutil/pipeconn"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
+
+	// All our gRPC servers should support gzip
+	_ "google.golang.org/grpc/encoding/gzip"
 )
 
 const (
