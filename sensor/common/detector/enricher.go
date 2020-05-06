@@ -107,6 +107,14 @@ func (e *enricher) getImageFromCache(key imageCacheKey) (*storage.Image, bool) {
 func (e *enricher) runScan(containerIdx int, ci *storage.ContainerImage) imageChanResult {
 	key := getImageCacheKey(ci)
 
+	// If the container image says that the image is not pullable, don't even bother trying to scan
+	if ci.GetNotPullable() {
+		return imageChanResult{
+			image:        types.ToImage(ci),
+			containerIdx: containerIdx,
+		}
+	}
+
 	// Fast path
 	img, ok := e.getImageFromCache(key)
 	if ok {

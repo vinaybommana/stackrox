@@ -230,7 +230,7 @@ func (l *loopImpl) reprocessImage(id string, sema *semaphore.Weighted, wg *concu
 		log.Errorf("error fetching image %q from the database: %v", id, err)
 		return
 	}
-	if !exists {
+	if !exists || image.GetNotPullable() {
 		return
 	}
 
