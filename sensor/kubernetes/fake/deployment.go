@@ -3,11 +3,12 @@ package fake
 import (
 	"fmt"
 	"math/rand"
-	"strings"
 	"time"
 
 	"github.com/stackrox/rox/pkg/concurrency"
+	"github.com/stackrox/rox/pkg/containerid"
 	"github.com/stackrox/rox/pkg/fixtures"
+	"github.com/stackrox/rox/pkg/k8sutil"
 	"github.com/stackrox/rox/pkg/kubernetes"
 	"github.com/stackrox/rox/pkg/pointers"
 	appsv1 "k8s.io/api/apps/v1"
@@ -187,6 +188,7 @@ func getPod(replicaSet *appsv1.ReplicaSet) *corev1.Pod {
 			StartTime: &metav1.Time{
 				Time: time.Now(),
 			},
+			PodIP: generateAndAddIPToPool(),
 		},
 	}
 	populatePodContainerStatuses(pod)
@@ -352,14 +354,16 @@ func (w *WorkloadManager) manageDeploymentLifecycle(resources *deploymentResourc
 func populatePodContainerStatuses(pod *corev1.Pod) {
 	statuses := make([]corev1.ContainerStatus, 0, len(pod.Spec.Containers))
 	for _, container := range pod.Spec.Containers {
-		statuses = append(statuses, corev1.ContainerStatus{
+		status := corev1.ContainerStatus{
 			Name:        container.Name,
 			State:       corev1.ContainerState{},
 			Ready:       true,
 			Image:       container.Image,
 			ImageID:     fmt.Sprintf("docker-pullable://%s", container.Image),
 			ContainerID: fmt.Sprintf("docker://%s", randStringWithLength(63)),
-		})
+		}
+		containerPool.add(getShortContainerID(status.ContainerID))
+		statuses = append(statuses, status)
 	}
 	pod.Status.ContainerStatuses = statuses
 }
@@ -384,12 +388,20 @@ func (w *WorkloadManager) managePod(deploymentSig *concurrency.Signal, podWorklo
 			if err := client.Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
 				log.Errorf("error deleting pod: %v", err)
 			}
+			ipPool.remove(pod.Status.PodIP)
+
+			for _, cs := range pod.Status.ContainerStatuses {
+				containerPool.remove(getShortContainerID(cs.ContainerID))
+			}
+
 			podSig.Signal()
 
 			// New pod name and UUID
 			pod.Name = randString()
 			pod.UID = newUUID()
+			pod.Status.PodIP = generateAndAddIPToPool()
 			populatePodContainerStatuses(pod)
+
 			if _, err := client.Create(pod); err != nil {
 				log.Errorf("error creating pod: %v", err)
 			}
@@ -398,6 +410,11 @@ func (w *WorkloadManager) managePod(deploymentSig *concurrency.Signal, podWorklo
 			podDeadline = newTimerWithJitter(podWorkload.LifecycleDuration)
 		}
 	}
+}
+
+func getShortContainerID(id string) string {
+	_, runtimeID := k8sutil.ParseContainerRuntimeString(id)
+	return containerid.ShortContainerIDFromInstanceID(runtimeID)
 }
 
 func (w *WorkloadManager) manageProcessesForPod(podSig *concurrency.Signal, podWorkload podWorkload, pod *corev1.Pod) {
@@ -409,9 +426,8 @@ func (w *WorkloadManager) manageProcessesForPod(podSig *concurrency.Signal, podW
 		case <-ticker.C:
 			containerStatuses := pod.Status.ContainerStatuses
 			randomContainerStatus := containerStatuses[rand.Intn(len(containerStatuses))]
-			// pick container
-			containerID := strings.TrimPrefix(randomContainerStatus.ContainerID, "docker://")
 			// If less than the rate, then it's a bad process
+			containerID := getShortContainerID(randomContainerStatus.ContainerID)
 			if rand.Float32() < podWorkload.ProcessWorkload.AlertRate {
 				w.processes.Process(getBadProcess(containerID))
 			} else {

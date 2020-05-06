@@ -30,5 +30,12 @@ var (
 				LifecycleDuration: 10 * time.Minute,
 			},
 		},
+		NodeWorkload: nodeWorkload{
+			NumNodes: 1000,
+		},
+		NetworkWorkload: networkWorkload{
+			FlowInterval: 1 * time.Second,
+			BatchSize:    100,
+		},
 	}
 )

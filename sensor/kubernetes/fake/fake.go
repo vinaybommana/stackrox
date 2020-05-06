@@ -5,6 +5,7 @@ import (
 
 	"github.com/openshift/client-go/apps/clientset/versioned"
 	"github.com/stackrox/rox/pkg/logging"
+	"github.com/stackrox/rox/sensor/common/networkflow/manager"
 	"github.com/stackrox/rox/sensor/common/signal"
 	"github.com/stackrox/rox/sensor/kubernetes/client"
 	fake "github.com/stackrox/rox/sensor/kubernetes/fake/copied"
@@ -40,7 +41,8 @@ type WorkloadManager struct {
 	workload   *workload
 
 	// signals services
-	processes signal.Pipeline
+	processes      signal.Pipeline
+	networkManager manager.Manager
 }
 
 // Client returns the mock client
@@ -65,8 +67,9 @@ func NewWorkloadManager(workloadName string) *WorkloadManager {
 }
 
 // SetSignalHandlers sets the handlers that will accept runtime data to be mocked from collector
-func (w *WorkloadManager) SetSignalHandlers(processPipeline signal.Pipeline) {
+func (w *WorkloadManager) SetSignalHandlers(processPipeline signal.Pipeline, networkManager manager.Manager) {
 	w.processes = processPipeline
+	w.networkManager = networkManager
 }
 
 // clearActions periodically cleans up the fake client we're using. This needs to exist because we aren't
@@ -84,8 +87,13 @@ func (w *WorkloadManager) initializePreexistingResources() {
 
 	namespace := getNamespace()
 	namespace.Name = "default"
-
 	objects = append(objects, namespace)
+
+	nodes := w.getNodes(w.workload.NodeWorkload)
+	for _, node := range nodes {
+		objects = append(objects, node)
+	}
+
 	var resources []*deploymentResourcesToBeManaged
 	for _, deploymentWorkload := range w.workload.DeploymentWorkload {
 		for i := 0; i < deploymentWorkload.NumDeployments; i++ {
@@ -110,4 +118,6 @@ func (w *WorkloadManager) initializePreexistingResources() {
 	for _, resource := range resources {
 		go w.manageDeployment(resource)
 	}
+
+	go w.manageFlows(w.workload.NetworkWorkload)
 }

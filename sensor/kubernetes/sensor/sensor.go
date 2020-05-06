@@ -78,7 +78,7 @@ func CreateSensor(client client.Interface, workloadHandler *fake.WorkloadManager
 	)
 
 	if workloadHandler != nil {
-		workloadHandler.SetSignalHandlers(processPipeline)
+		workloadHandler.SetSignalHandlers(processPipeline, manager.Singleton())
 	}
 
 	apiServices := []grpc.APIService{

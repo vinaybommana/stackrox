@@ -17,6 +17,11 @@ type processWorkload struct {
 	AlertRate       float32
 }
 
+type networkWorkload struct {
+	FlowInterval time.Duration
+	BatchSize    int
+}
+
 type podWorkload struct {
 	NumPods           int
 	NumContainers     int
@@ -25,6 +30,12 @@ type podWorkload struct {
 	ProcessWorkload processWorkload
 }
 
+type nodeWorkload struct {
+	NumNodes int
+}
+
 type workload struct {
 	DeploymentWorkload []deploymentWorkload
+	NodeWorkload       nodeWorkload
+	NetworkWorkload    networkWorkload
 }
