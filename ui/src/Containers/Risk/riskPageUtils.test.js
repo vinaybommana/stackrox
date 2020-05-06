@@ -79,6 +79,14 @@ describe('riskPageUtils', () => {
     });
 
     describe('convertToRestSearch', () => {
+        it('should return an empty array when passed null', () => {
+            const pageSearch = null;
+
+            const restSearch = convertToRestSearch(pageSearch);
+
+            expect(restSearch).toEqual([]);
+        });
+
         it('should return an empty array for an empty object', () => {
             const pageSearch = {};
 

@@ -24,7 +24,10 @@ export function* getPolicies(filters) {
         const fetchedPolicIds = result.response.result.policies;
         if (fetchedPolicIds) {
             const policy = yield select(selectors.getWizardPolicy);
-            if (policy && fetchedPolicIds.find((id) => id === policy.id) === undefined) {
+            if (
+                policy?.id && // needed for policy-from-Risk-page-search, to prevent wizard from closing
+                fetchedPolicIds.find((id) => id === policy.id) === undefined
+            ) {
                 yield put(pageActions.closeWizard());
             }
         }

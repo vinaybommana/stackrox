@@ -298,3 +298,15 @@ export function importPolicies(policies, metadata = {}) {
         .post(`${baseUrl}/import`, { policies, metadata })
         .then((response) => response?.data);
 }
+
+/**
+ * Create an unsaved policy object from a query string
+ *
+ * @param {!string}                         query string of search params
+ * @returns {Promise<AxiosResponse, Error>} fulfilled in case of success or rejected with an error
+ */
+export function generatePolicyFromSearch(searchStr) {
+    return axios
+        .post(`${baseUrl}/from-search`, { searchParams: searchStr })
+        .then((response) => response?.data);
+}
