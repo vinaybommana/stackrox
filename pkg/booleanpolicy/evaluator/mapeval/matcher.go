@@ -9,9 +9,12 @@ import (
 )
 
 const (
-	disjunctionMarker    = ";\t"
-	conjunctionMarker    = ",\t"
-	shouldNotMatchMarker = "!\t"
+	// DisjunctionMarker marks a disjunction between conjunction groups in a query.
+	DisjunctionMarker = ";\t"
+	// ConjunctionMarker marks a conjunction between simpler key=value pairs in a query.
+	ConjunctionMarker = ",\t"
+	// ShouldNotMatchMarker adds a marker that indicates that a key=value pair should not be matched in a map.
+	ShouldNotMatchMarker = "!\t"
 )
 
 type kvElement struct {
@@ -26,7 +29,7 @@ type groupElement struct {
 }
 
 func convertConjunctionPairsToGroupElement(conjunctionPairsStr string) (*groupElement, error) {
-	ps := strings.Split(conjunctionPairsStr, conjunctionMarker)
+	ps := strings.Split(conjunctionPairsStr, ConjunctionMarker)
 	if len(ps) == 0 {
 		return nil, nil
 	}
@@ -37,7 +40,7 @@ func convertConjunctionPairsToGroupElement(conjunctionPairsStr string) (*groupEl
 			return nil, errors.Errorf("Invalid key-value expression: %s", p)
 		}
 
-		p, shouldNotMatchQuery := stringutils.MaybeTrimPrefix(p, shouldNotMatchMarker)
+		p, shouldNotMatchQuery := stringutils.MaybeTrimPrefix(p, ShouldNotMatchMarker)
 		key, value := stringutils.Split2(p, "=")
 		ele := &kvElement{value: value, key: key}
 		if shouldNotMatchQuery {
@@ -95,7 +98,7 @@ func Matcher(value string) (func(*reflect.MapIter) bool, error) {
 	// The first group implies that the map matches if key 'a' is absent, and b=1 is present.
 	// The second group implies that the map matches if c=2 is present.
 	var disjunctionGroups []*groupElement
-	for _, conjunctionPairsStr := range strings.Split(value, disjunctionMarker) {
+	for _, conjunctionPairsStr := range strings.Split(value, DisjunctionMarker) {
 		cg, err := convertConjunctionPairsToGroupElement(conjunctionPairsStr)
 		if err != nil {
 			return nil, err
