@@ -2,6 +2,8 @@
 All notable changes to this project that require documentation updates will be documented in this file.
 
 ## [NEXT RELEASE]
+
+## [43.0]
 - Detection APIs were not properly handling suppressed CVEs and they were being included in evaluation. This is now resolved.
 - Previously, the Scanner deployment did not mount the additional CA secret and thus would fail to scan self-signed registries. This is resolved.
 - AWS S3 and AWS ECR integrations now accept an endpoint to work with non public AWS endpoints.
