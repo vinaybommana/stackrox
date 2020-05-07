@@ -411,9 +411,9 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 			desc: "image name policy",
 			policyFields: &storage.PolicyFields{
 				ImageName: &storage.ImageNamePolicy{
-					Registry: "r",
-					Remote:   "r",
-					Tag:      "t",
+					Registry: "reg",
+					Remote:   "rem",
+					Tag:      "tag",
 				},
 			},
 			expectedPolicySection: &storage.PolicySection{
@@ -422,7 +422,7 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 						FieldName: ImageRegistry,
 						Values: []*storage.PolicyValue{
 							{
-								Value: "r",
+								Value: "reg",
 							},
 						},
 					},
@@ -431,7 +431,7 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 						FieldName: ImageRemote,
 						Values: []*storage.PolicyValue{
 							{
-								Value: "r",
+								Value: "r/.*rem.*",
 							},
 						},
 					},
@@ -440,7 +440,7 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 						FieldName: ImageTag,
 						Values: []*storage.PolicyValue{
 							{
-								Value: "t",
+								Value: "tag",
 							},
 						},
 					},

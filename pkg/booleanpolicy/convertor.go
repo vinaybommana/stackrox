@@ -6,6 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/utils"
 )
 
@@ -251,9 +252,10 @@ func convertImageNamePolicy(fields *storage.PolicyFields) []*storage.PolicyGroup
 	}
 
 	if p.GetRemote() != "" {
+		actualValue := fmt.Sprintf("%s.*%s.*", search.RegexPrefix, p.GetRemote())
 		res = append(res, &storage.PolicyGroup{
 			FieldName: ImageRemote,
-			Values:    getPolicyValues(p.GetRemote()),
+			Values:    getPolicyValues(actualValue),
 		})
 	}
 

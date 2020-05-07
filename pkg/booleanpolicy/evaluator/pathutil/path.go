@@ -29,26 +29,18 @@ func stepFromMapKey(key stepMapKey) step {
 
 // A Path represents a list of steps taken to traverse an object.
 // This includes struct field indirections and array indexing.
-// Paths are copy-on-write, and can therefore be treated as immutable.
 type Path struct {
 	steps []step
 }
 
-func (p *Path) cloneAndAddStep(newStep step) *Path {
-	newPath := &Path{steps: make([]step, len(p.steps)+1)}
-	copy(newPath.steps, p.steps)
-	newPath.steps[len(p.steps)] = newStep
-	return newPath
+// TraverseField adds a new step to Path that traverses a struct field.
+func (p *Path) TraverseField(fieldName string) *Path {
+	p.steps = append(p.steps, step{field: fieldName})
+	return p
 }
 
-// WithFieldTraversed returns a copy of path that adds a new step
-// that traverses a struct field.
-func (p *Path) WithFieldTraversed(fieldName string) *Path {
-	return p.cloneAndAddStep(step{field: fieldName})
-}
-
-// WithSliceIndexed returns a copy of path that adds a new step
-// that indexes into a slice.
-func (p *Path) WithSliceIndexed(index int) *Path {
-	return p.cloneAndAddStep(step{index: pointers.Int(index)})
+// IndexSlice adds a new step to Path that indexes into a slice.
+func (p *Path) IndexSlice(index int) *Path {
+	p.steps = append(p.steps, step{index: pointers.Int(index)})
+	return p
 }

@@ -2252,7 +2252,7 @@ jobs:
       - ROX_ADMISSION_CONTROL_SERVICE: true
       - ROX_ADMISSION_CONTROL_SERVICE_ENFORCE_ON_UPDATE: true
       - ROX_POLICY_IMPORT_EXPORT: true
-      - ROX_BOOLEAN_POLICY_LOGIC: true
+      - ROX_BOOLEAN_POLICY_LOGIC: false
 
     steps:
       - checkout
@@ -2527,7 +2527,7 @@ jobs:
       - ROX_SENSOR_DETECTION: true
       - ROX_ADMISSION_CONTROL_SERVICE: true
       - ROX_ADMISSION_CONTROL_ENFORCE_ON_UPDATE: true
-      - ROX_BOOLEAN_POLICY_LOGIC: true
+      - ROX_BOOLEAN_POLICY_LOGIC: false
 
     steps:
       - run-qa-tests:

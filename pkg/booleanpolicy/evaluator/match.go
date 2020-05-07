@@ -13,7 +13,7 @@ type Match struct {
 	Values []string
 }
 
-// GetPath implements the traverseutil.PathHolder interface.
+// GetPath implements the pathutil.PathHolder interface.
 func (m Match) GetPath() *pathutil.Path {
 	return m.Path
 }

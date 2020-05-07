@@ -69,7 +69,7 @@ func parseNumericPrefix(value string) (prefix string, trimmedValue string) {
 	// If we for instance look for "<" before "<=", we will never find "<=" because "<" will be found as its prefix.
 	for _, prefix := range []string{lessThanOrEqualTo, greaterThanOrEqualTo, lessThan, greaterThan} {
 		if strings.HasPrefix(value, prefix) {
-			return prefix, value[len(prefix):]
+			return prefix, strings.TrimSpace(value[len(prefix):])
 		}
 	}
 	return "", value

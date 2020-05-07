@@ -26,6 +26,10 @@ type FieldToMetaPathMap struct {
 	underlying map[string]MetaPath
 }
 
+func (m *FieldToMetaPathMap) maybeAdd(tag string, metaPath MetaPath) {
+	_ = m.add(tag, metaPath)
+}
+
 func (m *FieldToMetaPathMap) add(tag string, metaPath MetaPath) error {
 	lowerTag := strings.ToLower(tag)
 	if existingPath, exists := m.underlying[lowerTag]; exists {

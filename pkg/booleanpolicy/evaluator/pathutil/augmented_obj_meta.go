@@ -115,7 +115,7 @@ func (o *AugmentedObjMeta) MapSearchTagsToPaths() (pathMap *FieldToMetaPathMap, 
 func (o *AugmentedObjMeta) doMapSearchTagsToPaths(pathUntilThisObj MetaPath, outputMap *FieldToMetaPathMap) {
 	seenAugmentKeys := set.NewStringSet()
 
-	o.addPathsForSearchTags(o.typ, pathUntilThisObj, MetaPath{}, outputMap, seenAugmentKeys)
+	o.addPathsForSearchTags(nil, o.typ, pathUntilThisObj, MetaPath{}, outputMap, seenAugmentKeys)
 
 	// Validate that we've actually seen all the augment paths given to us when traversing the object.
 	// This is helpful to ensure that the passed paths don't match the actual paths in the object.
@@ -127,12 +127,32 @@ func (o *AugmentedObjMeta) doMapSearchTagsToPaths(pathUntilThisObj MetaPath, out
 	}
 }
 
-func (o *AugmentedObjMeta) addPathsForSearchTags(currentType reflect.Type, pathUntilThisObj, pathWithinThisObj MetaPath, outputMap *FieldToMetaPathMap, seenAugmentKeys set.StringSet) {
+func (o *AugmentedObjMeta) addPathsForSearchTags(parentType, currentType reflect.Type, pathUntilThisObj, pathWithinThisObj MetaPath, outputMap *FieldToMetaPathMap, seenAugmentKeys set.StringSet) {
 	switch currentType.Kind() {
 	case reflect.Struct:
 		o.addPathsForSearchTagsFromStruct(currentType, pathUntilThisObj, pathWithinThisObj, outputMap, seenAugmentKeys)
 	case reflect.Ptr, reflect.Array, reflect.Slice:
-		o.addPathsForSearchTags(currentType.Elem(), pathUntilThisObj, pathWithinThisObj, outputMap, seenAugmentKeys)
+		o.addPathsForSearchTags(currentType, currentType.Elem(), pathUntilThisObj, pathWithinThisObj, outputMap, seenAugmentKeys)
+	case reflect.Interface:
+		// assume that the interface type is a OneOf field, because everything else compiled from a proto will be a Ptr to a
+		// concrete type.
+		o.addPathsForSearchTagsFromInterface(parentType, currentType, pathUntilThisObj, pathWithinThisObj, outputMap, seenAugmentKeys)
+	}
+}
+
+func (o *AugmentedObjMeta) addPathsForSearchTagsFromInterface(parentType, currentType reflect.Type, pathUntilThisObj, pathWithinThisObj MetaPath, outputMap *FieldToMetaPathMap, seenAugmentKeys set.StringSet) {
+	ptrToParent := reflect.PtrTo(parentType)
+	method, ok := ptrToParent.MethodByName("XXX_OneofFuncs")
+	if !ok {
+		panic("XXX_OneofFuncs should exist for all protobuf oneofs")
+	}
+	out := method.Func.Call([]reflect.Value{reflect.New(parentType)})
+	actualOneOfFields := out[3].Interface().([]interface{})
+	for _, f := range actualOneOfFields {
+		typ := reflect.TypeOf(f)
+		if typ.Implements(currentType) {
+			o.addPathsForSearchTags(currentType, typ, pathUntilThisObj, pathWithinThisObj, outputMap, seenAugmentKeys)
+		}
 	}
 }
 
@@ -171,21 +191,27 @@ func (o *AugmentedObjMeta) addPathsForSearchTagsFromStruct(currentType reflect.T
 
 		// Get the search tags for the field.
 		searchTag, _ := stringutils.Split2(field.Tag.Get("search"), ",")
-		// End recursion here if it's a -.
-		if searchTag == "-" {
+		policyTag, _ := stringutils.Split2(field.Tag.Get("policy"), ",")
+		// End recursion here if it's ignored.
+		if searchTag == "-" || policyTag == "ignore" {
 			continue
 		}
 
 		// Create a new path through this field.
 		newPath := pathWithNewStep(pathWithinThisObj, MetaStep{FieldName: field.Name, Type: field.Type, StructFieldIndex: field.Index})
 		if searchTag != "" {
-			// Panic here is okay, it will be caught.
-			if err := outputMap.add(searchTag, concatPaths(pathUntilThisObj, newPath)); err != nil {
-				panic(err)
+			fullPath := concatPaths(pathUntilThisObj, newPath)
+			if policyTag == "prefer-parent" {
+				outputMap.maybeAdd(searchTag, fullPath)
+			} else {
+				if err := outputMap.add(searchTag, fullPath); err != nil {
+					// Panic here is okay, it will be caught.
+					panic(err)
+				}
 			}
 		}
 
-		o.addPathsForSearchTags(field.Type, pathUntilThisObj, newPath, outputMap, seenAugmentKeys)
+		o.addPathsForSearchTags(currentType, field.Type, pathUntilThisObj, newPath, outputMap, seenAugmentKeys)
 	}
 }
 

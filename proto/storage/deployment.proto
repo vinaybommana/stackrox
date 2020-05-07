@@ -43,7 +43,7 @@ message Deployment {
     repeated PortConfig ports                  = 24;
 
     int64 state_timestamp                      = 27 [(gogoproto.moretags) = "hash:\"ignore\" sensorhash:\"ignore\""]; // Internal use only
-    float risk_score                           = 29 [(gogoproto.moretags) = "search:\"Risk Score,hidden\""];
+    float risk_score                           = 29 [(gogoproto.moretags) = "search:\"Risk Score,hidden\" policy:\"ignore\""];
 
     repeated string process_tags               = 30 [(gogoproto.moretags) = "search:\"Process Tag,store\""];
 }
@@ -64,7 +64,7 @@ message Container {
     ContainerImage image                = 3 [(gogoproto.moretags) = "search_index:\"Image Sha\" search_xref:\"all\""];
     SecurityContext security_context    = 4;
     repeated Volume volumes             = 5;
-    repeated PortConfig ports           = 6;
+    repeated PortConfig ports           = 6 [(gogoproto.moretags) = "policy:\"ignore\""]; // Policies use the port config on the top-level deployment.
     repeated EmbeddedSecret secrets     = 7;
     Resources resources                 = 8;
 

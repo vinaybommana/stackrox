@@ -14,7 +14,7 @@ func wrapBaseEvaluator(baseEvaluator baseEvaluator) Evaluator {
 }
 
 func (f *Factory) wrapBaseEvaluatorWithPathTraversal(pathToBase pathutil.MetaPath, baseEvaluator baseEvaluator) (Evaluator, error) {
-	return wrapEvaluatorWithTraversal(f.objMeta.RootType(), pathToBase, wrapBaseEvaluator(baseEvaluator))
+	return wrapEvaluatorWithTraversal(f.rootType, pathToBase, wrapBaseEvaluator(baseEvaluator))
 }
 
 func wrapEvaluatorWithTraversal(currentType reflect.Type, pathToEvaluator pathutil.MetaPath, evaluator Evaluator) (Evaluator, error) {
@@ -39,9 +39,32 @@ func takeMetaStep(currentType reflect.Type, metaStep pathutil.MetaStep, evaluato
 		return takePtrMetaStep(currentType, metaStep, evaluator)
 	case reflect.Struct:
 		return takeStructMetaStep(metaStep, evaluator), nil
+	case reflect.Interface:
+		return takeInterfaceMetaStep(metaStep, evaluator), nil
 	default:
 		return nil, errors.Errorf("cannot follow: %+v", metaStep)
 	}
+}
+
+func takeInterfaceMetaStep(metaStep pathutil.MetaStep, evaluator Evaluator) Evaluator {
+	return evaluatorFunc(func(value pathutil.AugmentedValue) (*Result, bool) {
+		underlying := value.Underlying()
+		if underlying.IsNil() {
+			return nil, false
+		}
+		nextValue := value.Elem()
+		if nextValue.Underlying().Kind() == reflect.Ptr {
+			nextValue = nextValue.Elem()
+		}
+		if nextValue.Underlying().Kind() != reflect.Struct {
+			return nil, false
+		}
+		nextValue, found := nextValue.TakeStep(metaStep)
+		if !found {
+			return nil, false
+		}
+		return evaluator.Evaluate(nextValue)
+	})
 }
 
 func takeStructMetaStep(metaStep pathutil.MetaStep, evaluator Evaluator) Evaluator {

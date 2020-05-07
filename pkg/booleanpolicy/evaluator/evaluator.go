@@ -1,6 +1,8 @@
 package evaluator
 
 import (
+	"reflect"
+
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/pkg/booleanpolicy/evaluator/pathutil"
 	"github.com/stackrox/rox/pkg/booleanpolicy/query"
@@ -15,7 +17,7 @@ type Evaluator interface {
 // A Factory knows how to create evaluators.
 type Factory struct {
 	fieldToMetaPaths *pathutil.FieldToMetaPathMap
-	objMeta          *pathutil.AugmentedObjMeta
+	rootType         reflect.Type
 }
 
 // MustCreateNewFactory is like NewFactory, but panics if there's an error.
@@ -32,8 +34,8 @@ func NewFactory(objMeta *pathutil.AugmentedObjMeta) (Factory, error) {
 		return Factory{}, errors.Wrap(err, "mapping search tags to paths")
 	}
 	return Factory{
-		objMeta:          objMeta,
 		fieldToMetaPaths: fieldToMetaPaths,
+		rootType:         objMeta.RootType(),
 	}, nil
 }
 

@@ -139,12 +139,23 @@ func (v *augmentedValue) TakeStep(step MetaStep) (AugmentedValue, bool) {
 	key := stepMapKey(step.FieldName)
 	nextNode := v.currentNode.takeStep(key)
 	if step.StructFieldIndex != nil {
+		// This is a "static" struct -- traverse it directly.
 		newUnderlying = v.underlying.FieldByIndex(step.StructFieldIndex)
 		found = true
 	} else {
+		// See if this is an augmented path.
 		if value := nextNode.getValue(); value != nil {
 			newUnderlying = *value
 			found = true
+		} else {
+			// This specific case is hit when the field in the struct is an interface type,
+			// in which case StructFieldIndex will not be present.
+			if v.underlying.Kind() == reflect.Struct {
+				newUnderlying = v.underlying.FieldByName(step.FieldName)
+				if newUnderlying.IsValid() {
+					found = true
+				}
+			}
 		}
 	}
 	if !found {
