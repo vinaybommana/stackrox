@@ -1,4 +1,4 @@
-package traverseutil
+package pathutil
 
 import (
 	"fmt"
@@ -8,21 +8,13 @@ import (
 )
 
 type tree struct {
-	// key is always either string or int
-	children map[interface{}]*tree
+	children map[stepMapKey]*tree
 }
 
 func newTree() *tree {
 	return &tree{
-		children: make(map[interface{}]*tree),
+		children: make(map[stepMapKey]*tree),
 	}
-}
-
-func stepToKey(s step) interface{} {
-	if s.index != nil {
-		return *s.index
-	}
-	return s.field
 }
 
 func (t *tree) addPath(steps []step) {
@@ -30,7 +22,7 @@ func (t *tree) addPath(steps []step) {
 		return
 	}
 	firstStep, remainingSteps := steps[0], steps[1:]
-	key := stepToKey(firstStep)
+	key := firstStep.mapKey()
 	subTree := t.children[key]
 	if subTree == nil {
 		subTree = newTree()
@@ -104,7 +96,7 @@ func (t *tree) containsSteps(steps []step) bool {
 		return true
 	}
 	firstStep := steps[0]
-	child := t.children[stepToKey(firstStep)]
+	child := t.children[firstStep.mapKey()]
 	if child == nil {
 		return false
 	}

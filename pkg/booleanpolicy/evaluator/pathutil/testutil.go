@@ -1,4 +1,4 @@
-package traverseutil
+package pathutil
 
 import (
 	"testing"

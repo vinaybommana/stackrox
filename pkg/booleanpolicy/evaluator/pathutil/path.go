@@ -1,17 +1,35 @@
-package traverseutil
+package pathutil
 
 import (
 	"github.com/stackrox/rox/pkg/pointers"
 )
+
+// stepMapKey represents a "hash" of a step, which is comparable
+// and can be used as a map key.
+type stepMapKey interface{}
 
 type step struct {
 	field string
 	index *int
 }
 
+func (s *step) mapKey() stepMapKey {
+	if s.index != nil {
+		return *s.index
+	}
+	return s.field
+}
+
+func stepFromMapKey(key stepMapKey) step {
+	if asInt, ok := key.(int); ok {
+		return step{index: pointers.Int(asInt)}
+	}
+	return step{field: key.(string)}
+}
+
 // A Path represents a list of steps taken to traverse an object.
 // This includes struct field indirections and array indexing.
-// Paths are copy-on-write.
+// Paths are copy-on-write, and can therefore be treated as immutable.
 type Path struct {
 	steps []step
 }

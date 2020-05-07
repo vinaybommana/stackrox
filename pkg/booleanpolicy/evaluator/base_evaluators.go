@@ -7,8 +7,8 @@ import (
 
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
-	mapeval "github.com/stackrox/rox/pkg/booleanpolicy/evaluator/mapeval"
-	"github.com/stackrox/rox/pkg/booleanpolicy/evaluator/traverseutil"
+	"github.com/stackrox/rox/pkg/booleanpolicy/evaluator/mapeval"
+	"github.com/stackrox/rox/pkg/booleanpolicy/evaluator/pathutil"
 	"github.com/stackrox/rox/pkg/booleanpolicy/query"
 	"github.com/stackrox/rox/pkg/protoreflect"
 	"github.com/stackrox/rox/pkg/readable"
@@ -22,7 +22,18 @@ var (
 	timestampPtrType = reflect.TypeOf((*types.Timestamp)(nil))
 )
 
-func createBaseEvaluator(fieldName string, fieldType reflect.Type, values []string, negate bool, operator query.Operator) (internalEvaluator, error) {
+// A baseEvaluator is an evaluator that operates on an individual field at the leaf of an object.
+type baseEvaluator interface {
+	Evaluate(*pathutil.Path, reflect.Value) (*Result, bool)
+}
+
+type baseEvaluatorFunc func(*pathutil.Path, reflect.Value) (*Result, bool)
+
+func (f baseEvaluatorFunc) Evaluate(path *pathutil.Path, value reflect.Value) (*Result, bool) {
+	return f(path, value)
+}
+
+func createBaseEvaluator(fieldName string, fieldType reflect.Type, values []string, negate bool, operator query.Operator) (baseEvaluator, error) {
 	if len(values) == 0 {
 		return nil, errors.New("no values in query")
 	}
@@ -52,8 +63,8 @@ func createBaseEvaluator(fieldName string, fieldType reflect.Type, values []stri
 	return combineMatchersIntoEvaluator(fieldName, baseMatchers, operator), nil
 }
 
-func combineMatchersIntoEvaluator(fieldName string, matchers []baseMatcherAndExtractor, operator query.Operator) internalEvaluator {
-	return internalEvaluatorFunc(func(path *traverseutil.Path, instance reflect.Value) (*Result, bool) {
+func combineMatchersIntoEvaluator(fieldName string, matchers []baseMatcherAndExtractor, operator query.Operator) baseEvaluator {
+	return baseEvaluatorFunc(func(path *pathutil.Path, instance reflect.Value) (*Result, bool) {
 		matchingValues := set.NewStringSet()
 		var matches []string
 		for _, m := range matchers {
@@ -83,8 +94,8 @@ func combineMatchersIntoEvaluator(fieldName string, matchers []baseMatcherAndExt
 	})
 }
 
-func combineMatchersIntoEvaluatorNegated(fieldName string, matchers []baseMatcherAndExtractor, operator query.Operator) internalEvaluator {
-	return internalEvaluatorFunc(func(path *traverseutil.Path, instance reflect.Value) (*Result, bool) {
+func combineMatchersIntoEvaluatorNegated(fieldName string, matchers []baseMatcherAndExtractor, operator query.Operator) baseEvaluator {
+	return baseEvaluatorFunc(func(path *pathutil.Path, instance reflect.Value) (*Result, bool) {
 		matchingValues := set.NewStringSet()
 		for _, m := range matchers {
 			valuesAndMatches := m(instance)
@@ -151,7 +162,7 @@ type valueMatchedPair struct {
 	matched bool
 }
 
-func resultWithSingleMatch(fieldName string, path *traverseutil.Path, values ...string) *Result {
+func resultWithSingleMatch(fieldName string, path *pathutil.Path, values ...string) *Result {
 	return &Result{Matches: map[string][]Match{fieldName: {{Path: path, Values: values}}}}
 }
 

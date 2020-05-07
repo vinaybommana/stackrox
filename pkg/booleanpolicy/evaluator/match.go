@@ -1,20 +1,20 @@
 package evaluator
 
 import (
-	"github.com/stackrox/rox/pkg/booleanpolicy/evaluator/traverseutil"
+	"github.com/stackrox/rox/pkg/booleanpolicy/evaluator/pathutil"
 )
 
 // A Match represents a single match.
 // It contains the matched value, as well as the path
 // within the object that was taken to reach the value.
 type Match struct {
-	Path *traverseutil.Path
+	Path *pathutil.Path
 	// Values represents a list of human-friendly representations of the matched value.
 	Values []string
 }
 
 // GetPath implements the traverseutil.PathHolder interface.
-func (m Match) GetPath() *traverseutil.Path {
+func (m Match) GetPath() *pathutil.Path {
 	return m.Path
 }
 

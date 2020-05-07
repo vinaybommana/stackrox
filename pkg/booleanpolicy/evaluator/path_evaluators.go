@@ -1,56 +1,74 @@
 package evaluator
 
 import (
-	"fmt"
 	"reflect"
 
-	"github.com/stackrox/rox/pkg/booleanpolicy/evaluator/traverseutil"
-	"github.com/stackrox/rox/pkg/search/fieldmap"
+	"github.com/pkg/errors"
+	"github.com/stackrox/rox/pkg/booleanpolicy/evaluator/pathutil"
 )
 
-func wrapEvaluatorInPath(parentType reflect.Type, fieldPath fieldmap.FieldPath, evaluator internalEvaluator) (internalEvaluator, error) {
-	if len(fieldPath) == 0 {
+func wrapBaseEvaluator(baseEvaluator baseEvaluator) Evaluator {
+	return evaluatorFunc(func(value pathutil.AugmentedValue) (*Result, bool) {
+		return baseEvaluator.Evaluate(value.PathFromRoot(), value.Underlying())
+	})
+}
+
+func (f *Factory) wrapBaseEvaluatorWithPathTraversal(pathToBase pathutil.MetaPath, baseEvaluator baseEvaluator) (Evaluator, error) {
+	return wrapEvaluatorWithTraversal(f.objMeta.RootType(), pathToBase, wrapBaseEvaluator(baseEvaluator))
+}
+
+func wrapEvaluatorWithTraversal(currentType reflect.Type, pathToEvaluator pathutil.MetaPath, evaluator Evaluator) (Evaluator, error) {
+	// Base case
+	if len(pathToEvaluator) == 0 {
 		return evaluator, nil
 	}
 
-	first, rest := fieldPath[0], fieldPath[1:]
-	childEvaluator, err := wrapEvaluatorInPath(first.Type, rest, evaluator)
+	firstStep, remainingPath := pathToEvaluator[0], pathToEvaluator[1:]
+	childEvaluator, err := wrapEvaluatorWithTraversal(firstStep.Type, remainingPath, evaluator)
 	if err != nil {
 		return nil, err
 	}
-
-	// Wrap the predicate in field access.
-	return traverseParentToField(parentType, first, childEvaluator)
+	return takeMetaStep(currentType, firstStep, childEvaluator)
 }
 
-func traverseParentToField(parentType reflect.Type, field reflect.StructField, evaluator internalEvaluator) (constructedEvaluator internalEvaluator, err error) {
-	switch parentType.Kind() {
+func takeMetaStep(currentType reflect.Type, metaStep pathutil.MetaStep, evaluator Evaluator) (Evaluator, error) {
+	switch currentType.Kind() {
 	case reflect.Array, reflect.Slice:
-		return traverseSliceToField(parentType, field, evaluator)
+		return takeSliceMetaStep(currentType, metaStep, evaluator)
 	case reflect.Ptr:
-		return traversePtrToField(parentType, field, evaluator)
+		return takePtrMetaStep(currentType, metaStep, evaluator)
 	case reflect.Struct:
-		return traverseStructToField(field, evaluator)
+		return takeStructMetaStep(metaStep, evaluator), nil
 	default:
-		return alwaysFalse, fmt.Errorf("cannot follow: %+v", field)
+		return nil, errors.Errorf("cannot follow: %+v", metaStep)
 	}
 }
 
-func traverseSliceToField(parentType reflect.Type, field reflect.StructField, evaluator internalEvaluator) (internalEvaluator, error) {
-	nestedEvaluator, err := traverseParentToField(parentType.Elem(), field, evaluator)
+func takeStructMetaStep(metaStep pathutil.MetaStep, evaluator Evaluator) Evaluator {
+	return evaluatorFunc(func(value pathutil.AugmentedValue) (*Result, bool) {
+		nextValue, found := value.TakeStep(metaStep)
+		if !found {
+			return nil, false
+		}
+		return evaluator.Evaluate(nextValue)
+	})
+}
+
+func takeSliceMetaStep(currentType reflect.Type, metaStep pathutil.MetaStep, evaluator Evaluator) (Evaluator, error) {
+	nestedEvaluator, err := takeMetaStep(currentType.Elem(), metaStep, evaluator)
 	if err != nil {
 		return nil, err
 	}
 
-	return internalEvaluatorFunc(func(path *traverseutil.Path, instance reflect.Value) (*Result, bool) {
-		length := instance.Len()
+	return evaluatorFunc(func(value pathutil.AugmentedValue) (*Result, bool) {
+		length := value.Underlying().Len()
 		if length == 0 {
 			return nil, false
 		}
 
 		var results []*Result
 		for i := 0; i < length; i++ {
-			if res, matches := nestedEvaluator.Evaluate(path.WithSliceIndexed(i), instance.Index(i)); matches {
+			if res, matches := nestedEvaluator.Evaluate(value.Index(i)); matches {
 				results = append(results, res)
 			}
 		}
@@ -62,27 +80,16 @@ func traverseSliceToField(parentType reflect.Type, field reflect.StructField, ev
 
 }
 
-func traversePtrToField(parentType reflect.Type, field reflect.StructField, evaluator internalEvaluator) (internalEvaluator, error) {
-	nestedEvaluator, err := traverseParentToField(parentType.Elem(), field, evaluator)
+func takePtrMetaStep(currentType reflect.Type, metaStep pathutil.MetaStep, evaluator Evaluator) (Evaluator, error) {
+	nextStepEvaluator, err := takeMetaStep(currentType.Elem(), metaStep, evaluator)
 	if err != nil {
 		return nil, err
 	}
 
-	return internalEvaluatorFunc(func(path *traverseutil.Path, instance reflect.Value) (*Result, bool) {
-		if instance.IsNil() {
+	return evaluatorFunc(func(value pathutil.AugmentedValue) (*Result, bool) {
+		if value.Underlying().IsNil() {
 			return nil, false
 		}
-		return nestedEvaluator.Evaluate(path, instance.Elem())
-	}), nil
-}
-
-func traverseStructToField(field reflect.StructField, evaluator internalEvaluator) (internalEvaluator, error) {
-	return internalEvaluatorFunc(func(path *traverseutil.Path, instance reflect.Value) (*Result, bool) {
-		nextValue := instance.FieldByIndex(field.Index)
-		// We cannot traverse into a nil interface.
-		if nextValue.Kind() == reflect.Interface && nextValue.IsNil() {
-			return nil, false
-		}
-		return evaluator.Evaluate(path.WithFieldTraversed(field.Name), nextValue)
+		return nextStepEvaluator.Evaluate(value.Elem())
 	}), nil
 }
