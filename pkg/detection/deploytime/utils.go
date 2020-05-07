@@ -6,18 +6,9 @@ import (
 	ptypes "github.com/gogo/protobuf/types"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/alert/convert"
-	"github.com/stackrox/rox/pkg/detection"
 	"github.com/stackrox/rox/pkg/protoutils"
 	"github.com/stackrox/rox/pkg/uuid"
 )
-
-// AlertCollectingExecutor is the expansion of an executor that holds resulting alerts.
-type AlertCollectingExecutor interface {
-	detection.PolicyExecutor
-
-	GetAlerts() []*storage.Alert
-	ClearAlerts()
-}
 
 // PolicyDeploymentAndViolationsToAlert constructs an alert.
 func PolicyDeploymentAndViolationsToAlert(policy *storage.Policy, deployment *storage.Deployment, violations []*storage.Alert_Violation) *storage.Alert {

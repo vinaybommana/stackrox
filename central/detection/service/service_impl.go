@@ -288,13 +288,13 @@ func (s *serviceImpl) DetectDeployTime(ctx context.Context, req *apiV1.DeployDet
 	// If we have enforcement only, then check if any of the policies need enforcement. If not, then just exit with no alerts generated
 	if req.GetEnforcementOnly() {
 		var evaluationRequired bool
-		_ = s.policySet.ForEach(detection.FunctionAsExecutor(func(compiled detection.CompiledPolicy) error {
+		_ = s.policySet.ForEach(func(compiled detection.CompiledPolicy) error {
 			if isDeployTimeEnforcement(compiled.Policy().GetEnforcementActions()) {
 				evaluationRequired = true
 				return errors.New("not a real error, just early exits this foreach")
 			}
 			return nil
-		}))
+		})
 		if !evaluationRequired {
 			return &apiV1.DeployDetectionResponse{
 				Runs: []*apiV1.DeployDetectionResponse_Run{

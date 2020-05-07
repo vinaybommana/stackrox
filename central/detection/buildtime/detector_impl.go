@@ -22,7 +22,7 @@ func (d *detectorImpl) Detect(image *storage.Image) ([]*storage.Alert, error) {
 	}
 
 	var alerts []*storage.Alert
-	err := d.policySet.ForEach(detection.FunctionAsExecutor(func(compiled detection.CompiledPolicy) error {
+	err := d.policySet.ForEach(func(compiled detection.CompiledPolicy) error {
 		if compiled.Policy().GetDisabled() {
 			return nil
 		}
@@ -38,7 +38,7 @@ func (d *detectorImpl) Detect(image *storage.Image) ([]*storage.Alert, error) {
 			alerts = append(alerts, policyAndViolationsToAlert(compiled.Policy(), alertViolations))
 		}
 		return nil
-	}))
+	})
 	if err != nil {
 		return nil, err
 	}

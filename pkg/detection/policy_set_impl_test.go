@@ -39,12 +39,12 @@ func (suite *PolicyTestSuite) TestAddsCompilable() {
 	suite.NoError(err, "insertion should succeed")
 
 	hasMatch := false
-	suite.NoError(policySet.ForEach(FunctionAsExecutor(func(compiled CompiledPolicy) error {
+	suite.NoError(policySet.ForEach(func(compiled CompiledPolicy) error {
 		if compiled.Policy().GetId() == "1" {
 			hasMatch = true
 		}
 		return nil
-	})))
+	}))
 	suite.True(hasMatch, "policy set should contain a matching policy")
 }
 
@@ -56,21 +56,21 @@ func (suite *PolicyTestSuite) TestForOneSucceeds() {
 	err := policySet.UpsertPolicy(goodPolicy)
 	suite.NoError(err, "insertion should succeed")
 
-	err = policySet.ForOne("1", FunctionAsExecutor(func(compiled CompiledPolicy) error {
+	err = policySet.ForOne("1", func(compiled CompiledPolicy) error {
 		if compiled.Policy().GetId() != "1" {
 			return errors.New("wrong id served")
 		}
 		return nil
-	}))
+	})
 	suite.NoError(err, "for one should succeed since the policy exists")
 }
 
 func (suite *PolicyTestSuite) TestForOneFails() {
 	policySet := NewPolicySet(NewPolicyCompiler(suite.mockMatcherBuilder))
 
-	err := policySet.ForOne("1", FunctionAsExecutor(func(compiled CompiledPolicy) error {
+	err := policySet.ForOne("1", func(compiled CompiledPolicy) error {
 		return nil
-	}))
+	})
 	suite.Error(err, "for one should fail since no policies exist")
 }
 
@@ -83,12 +83,12 @@ func (suite *PolicyTestSuite) TestThrowsErrorForNotCompilable() {
 	suite.Error(err, "insertion should not succeed since the compile is set to fail")
 
 	hasMatch := false
-	suite.NoError(policySet.ForEach(FunctionAsExecutor(func(compiled CompiledPolicy) error {
+	suite.NoError(policySet.ForEach(func(compiled CompiledPolicy) error {
 		if compiled.Policy().GetId() == "1" {
 			hasMatch = true
 		}
 		return nil
-	})))
+	}))
 	suite.False(hasMatch, "policy set should not contain a matching policy")
 }
 
