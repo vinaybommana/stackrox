@@ -32,6 +32,7 @@ function FieldValue({
                 <ReduxAndOrOperatorField
                     name={booleanOperatorName}
                     disabled={readOnly || !fieldKey.canBooleanLogic}
+                    isCircular
                 />
             )}
         </>

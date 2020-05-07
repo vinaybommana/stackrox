@@ -32,3 +32,12 @@ export const withOr = () => {
 export const withAndOnly = () => <AndOrOperator value={BOOLEAN_LOGIC_VALUES.AND} disabled />;
 
 export const withOrOnly = () => <AndOrOperator value={BOOLEAN_LOGIC_VALUES.OR} disabled />;
+
+export const withCircularStyle = () => {
+    const [currentOperator, setCurrentOperator] = useState(BOOLEAN_LOGIC_VALUES.OR);
+
+    function onToggle() {
+        setCurrentOperator(toggleBooleanValue(currentOperator));
+    }
+    return <AndOrOperator value={currentOperator} onToggle={onToggle} isCircular />;
+};
