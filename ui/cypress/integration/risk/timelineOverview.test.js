@@ -20,7 +20,7 @@ function openDeployment(deploymentName) {
 }
 
 describe('Risk Page Event Timeline - Timeline Overview', () => {
-    before(function () {
+    before(() => {
         // skip the whole suite if timeline view ui isn't enabled
         if (checkFeatureFlag('ROX_EVENT_TIMELINE_UI', false)) {
             this.skip();
@@ -28,28 +28,6 @@ describe('Risk Page Event Timeline - Timeline Overview', () => {
     });
 
     withAuth();
-
-    it('should show the correct number of events in the timeline overview', () => {
-        setRoutes();
-        // select a deployment to open the side panel
-        openDeployment('collector');
-        // open the process discovery tab
-        cy.get(selectors.sidePanel.processDiscoveryTab).click();
-
-        let sumOfEvents = 0;
-
-        cy.get(selectors.eventTimelineOverview.eventCounts)
-            // go through each tile and count up the events
-            .each((element) => {
-                sumOfEvents += parseInt(element.text(), 10);
-            })
-            // compare the summed up number of events with the total number of events
-            .then(() => {
-                cy.get(selectors.eventTimelineOverview.totalNumEventsText).contains(
-                    `${sumOfEvents} EVENTS`
-                );
-            });
-    });
 
     it('should show the timeline graph when the overview is clicked', () => {
         setRoutes();

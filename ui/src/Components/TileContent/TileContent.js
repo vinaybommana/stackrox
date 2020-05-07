@@ -18,7 +18,7 @@ const TileContent = ({
             data-testid={dataTestId}
         >
             {superText !== null && (
-                <div className="text-3xl tracking-widest pb-1" data-testid="tileLinkSuperText">
+                <div className="text-2xl tracking-widest pb-1" data-testid="tileLinkSuperText">
                     {superText}
                 </div>
             )}
@@ -26,7 +26,7 @@ const TileContent = ({
             <div
                 className={`flex ${
                     !textWrap && 'whitespace-no-wrap'
-                } items-center font-600 font-condensed uppercase justify-center`}
+                } items-center font-600 font-condensed uppercase justify-center text-base`}
                 data-testid="tile-link-value"
             >
                 {text}

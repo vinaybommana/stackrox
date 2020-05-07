@@ -1,11 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import pluralize from 'pluralize';
-import { Activity, Maximize2 } from 'react-feather';
+import { Maximize2 } from 'react-feather';
 
 import TileContent from 'Components/TileContent';
 
-const TimelineOverview = ({ dataTestId, type, total, counts, onClick }) => {
+const TimelineOverview = ({ dataTestId, counts, onClick }) => {
     return (
         <button
             type="button"
@@ -13,13 +12,6 @@ const TimelineOverview = ({ dataTestId, type, total, counts, onClick }) => {
             onClick={onClick}
             data-testid={dataTestId}
         >
-            <TileContent
-                className={
-                    counts.length === 0 ? 'p-2 border-dashed border-r border-primary-300' : 'p-2'
-                }
-                icon={<Activity className="border border-primary-300 h-6 p-1 rounded-full w-6" />}
-                text={`${total} ${pluralize(type, total)}`}
-            />
             {counts.map(({ count, text }, index) => (
                 <TileContent
                     key={text}
@@ -27,12 +19,12 @@ const TimelineOverview = ({ dataTestId, type, total, counts, onClick }) => {
                     text={text}
                     className={`p-2 border-dashed border-r ${
                         index === 0 && 'border-l'
-                    } border-primary-300`}
+                    } border-primary-300 w-full`}
                     textWrap
                 />
             ))}
             <TileContent
-                className="p-2"
+                className="p-2 w-full"
                 icon={<Maximize2 className="border border-primary-300 h-6 p-1 rounded-full w-6" />}
                 text="View Graph"
             />
@@ -42,8 +34,6 @@ const TimelineOverview = ({ dataTestId, type, total, counts, onClick }) => {
 
 TimelineOverview.propTypes = {
     dataTestId: PropTypes.string,
-    type: PropTypes.string.isRequired,
-    total: PropTypes.number.isRequired,
     counts: PropTypes.arrayOf(
         PropTypes.shape({
             count: PropTypes.number.isRequired,
