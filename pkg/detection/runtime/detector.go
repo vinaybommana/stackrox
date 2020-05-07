@@ -1,8 +1,6 @@
 package runtime
 
 import (
-	"context"
-
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/detection"
@@ -48,7 +46,7 @@ func (d *detectorImpl) Detect(deployment *storage.Deployment, images []*storage.
 			return nil
 		}
 
-		violation, err := compiled.Matcher().MatchOne(context.Background(), deployment, images, indicator)
+		violation, err := compiled.MatchAgainstDeploymentAndProcess(deployment, images, indicator)
 		if err != nil {
 			return errors.Wrapf(err, "evaluating violations for policy %s; deployment %s/%s", compiled.Policy().GetName(), deployment.GetNamespace(), deployment.GetName())
 		}

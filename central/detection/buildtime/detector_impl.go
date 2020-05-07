@@ -1,8 +1,6 @@
 package buildtime
 
 import (
-	"context"
-
 	ptypes "github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/generated/storage"
@@ -29,7 +27,7 @@ func (d *detectorImpl) Detect(image *storage.Image) ([]*storage.Alert, error) {
 		if !compiled.AppliesTo(image) {
 			return nil
 		}
-		violations, err := compiled.Matcher().MatchOne(context.Background(), nil, []*storage.Image{image}, nil)
+		violations, err := compiled.MatchAgainstImage(image)
 		if err != nil {
 			return errors.Wrapf(err, "matching against policy %s", compiled.Policy().GetName())
 		}

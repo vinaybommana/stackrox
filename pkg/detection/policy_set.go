@@ -12,8 +12,6 @@ var (
 // PolicySet is a set of policies.
 //go:generate mockgen-wrapper
 type PolicySet interface {
-	Compiler() PolicyCompiler
-
 	ForOne(policyID string, f func(CompiledPolicy) error) error
 	ForEach(func(CompiledPolicy) error) error
 	GetCompiledPolicies() map[string]CompiledPolicy

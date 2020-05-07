@@ -1,6 +1,8 @@
 package detection
 
 import (
+	"context"
+
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/policies"
 	"github.com/stackrox/rox/pkg/scopecomp"
@@ -10,7 +12,15 @@ import (
 // CompiledPolicy is a compiled policy, which means it has a generated matcher and predicate function.
 type CompiledPolicy interface {
 	Policy() *storage.Policy
-	Matcher() searchbasedpolicies.Matcher
+
+	// The Match* functions return violations for the policy against the passed in objects.
+	// Note that the Match* functions DO NOT care about whitelists/the policy being disabled.
+	// Callers are responsible for doing those checks separately.
+	// For MatchAgainstDeployment* functions, images _must_ correspond one-to-one with the container specs in the deployment.
+	MatchAgainstDeploymentAndProcess(deployment *storage.Deployment, images []*storage.Image, pi *storage.ProcessIndicator) (searchbasedpolicies.Violations, error)
+	MatchAgainstDeployment(deployment *storage.Deployment, images []*storage.Image) (searchbasedpolicies.Violations, error)
+	MatchAgainstImage(image *storage.Image) (searchbasedpolicies.Violations, error)
+
 	Predicate
 }
 
@@ -49,14 +59,21 @@ type compiledPolicy struct {
 	predicates []Predicate
 }
 
+func (cp *compiledPolicy) MatchAgainstDeploymentAndProcess(deployment *storage.Deployment, images []*storage.Image, pi *storage.ProcessIndicator) (searchbasedpolicies.Violations, error) {
+	return cp.matcher.MatchOne(context.Background(), deployment, images, pi)
+}
+
+func (cp *compiledPolicy) MatchAgainstDeployment(deployment *storage.Deployment, images []*storage.Image) (searchbasedpolicies.Violations, error) {
+	return cp.matcher.MatchOne(context.Background(), deployment, images, nil)
+}
+
+func (cp *compiledPolicy) MatchAgainstImage(image *storage.Image) (searchbasedpolicies.Violations, error) {
+	return cp.matcher.MatchOne(context.Background(), nil, []*storage.Image{image}, nil)
+}
+
 // Policy returns the policy that was compiled.
 func (cp *compiledPolicy) Policy() *storage.Policy {
 	return cp.policy
-}
-
-// Matcher returns the matcher constructed for the policy.
-func (cp *compiledPolicy) Matcher() searchbasedpolicies.Matcher {
-	return cp.matcher
 }
 
 // AppliesTo returns if the compiled policy applies to the input object.

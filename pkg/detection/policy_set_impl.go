@@ -12,10 +12,6 @@ type setImpl struct {
 	policyIDToCompiled StringCompiledPolicyFastRMap
 }
 
-func (p *setImpl) Compiler() PolicyCompiler {
-	return p.compiler
-}
-
 func (p *setImpl) ForEach(f func(policy CompiledPolicy) error) error {
 	m := p.policyIDToCompiled.GetMap()
 

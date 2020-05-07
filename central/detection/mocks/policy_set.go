@@ -34,20 +34,6 @@ func (m *MockPolicySet) EXPECT() *MockPolicySetMockRecorder {
 	return m.recorder
 }
 
-// Compiler mocks base method
-func (m *MockPolicySet) Compiler() detection.PolicyCompiler {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Compiler")
-	ret0, _ := ret[0].(detection.PolicyCompiler)
-	return ret0
-}
-
-// Compiler indicates an expected call of Compiler
-func (mr *MockPolicySetMockRecorder) Compiler() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Compiler", reflect.TypeOf((*MockPolicySet)(nil).Compiler))
-}
-
 // ForOne mocks base method
 func (m *MockPolicySet) ForOne(policyID string, f func(detection.CompiledPolicy) error) error {
 	m.ctrl.T.Helper()
