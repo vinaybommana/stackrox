@@ -24,8 +24,8 @@ type CompiledPolicy interface {
 	Predicate
 }
 
-// NewCompiledPolicy creates and returns a compiled policy from the policy and matcher.
-func NewCompiledPolicy(policy *storage.Policy, matcher searchbasedpolicies.Matcher) (CompiledPolicy, error) {
+// newCompiledPolicy creates and returns a compiled policy from the policy and matcher.
+func newCompiledPolicy(policy *storage.Policy, matcher searchbasedpolicies.Matcher) (CompiledPolicy, error) {
 	compiled := &compiledPolicy{
 		policy:  policy,
 		matcher: matcher,

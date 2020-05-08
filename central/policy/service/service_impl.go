@@ -37,7 +37,6 @@ import (
 	"github.com/stackrox/rox/pkg/protoconv"
 	"github.com/stackrox/rox/pkg/sac"
 	"github.com/stackrox/rox/pkg/search"
-	"github.com/stackrox/rox/pkg/searchbasedpolicies/matcher"
 	"github.com/stackrox/rox/pkg/set"
 	"github.com/stackrox/rox/pkg/sliceutils"
 	"github.com/stackrox/rox/pkg/sync"
@@ -97,7 +96,7 @@ type serviceImpl struct {
 	connectionManager connection.Manager
 
 	buildTimePolicies detection.PolicySet
-	testMatchBuilder  matcher.Builder
+	policyCompiler    detection.PolicyCompiler
 	lifecycleManager  lifecycle.Manager
 	processor         notifierProcessor.Processor
 	metadataCache     expiringcache.Cache
@@ -367,12 +366,7 @@ func (s *serviceImpl) predicateBasedDryRunPolicy(ctx context.Context, cancelCtx 
 		return &resp, nil
 	}
 
-	searchBasedMatcher, err := s.testMatchBuilder.ForPolicy(request)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("couldn't construct matcher: %s", err))
-	}
-
-	compiledPolicy, err := detection.NewCompiledPolicy(request, searchBasedMatcher)
+	compiledPolicy, err := s.policyCompiler.CompilePolicy(request)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid policy: %v", err)
 	}
@@ -414,8 +408,16 @@ func (s *serviceImpl) predicateBasedDryRunPolicy(ctx context.Context, cancelCtx 
 				<-pChan
 			}()
 
+			if compiledPolicy.Policy().GetDisabled() {
+				return
+			}
+
 			deployment, exists, err := s.deployments.GetDeployment(ctx, depId)
 			if !exists || err != nil {
+				return
+			}
+
+			if !compiledPolicy.AppliesTo(deployment) {
 				return
 			}
 
@@ -424,17 +426,14 @@ func (s *serviceImpl) predicateBasedDryRunPolicy(ctx context.Context, cancelCtx 
 				return
 			}
 
-			violations, err := searchBasedMatcher.MatchOne(ctx, deployment, images, nil)
+			violations, err := compiledPolicy.MatchAgainstDeployment(deployment, images)
+
 			if err != nil {
 				log.Errorf("failed policy matching: %s", err.Error())
 				return
 			}
 
 			if len(violations.AlertViolations) == 0 && violations.ProcessViolation == nil {
-				return
-			}
-
-			if !compiledPolicy.AppliesTo(deployment) {
 				return
 			}
 

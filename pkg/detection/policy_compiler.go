@@ -31,5 +31,5 @@ func (pc *policyCompilerImpl) CompilePolicy(policy *storage.Policy) (CompiledPol
 		return nil, err
 	}
 
-	return NewCompiledPolicy(cloned, compiledMatcher)
+	return newCompiledPolicy(cloned, compiledMatcher)
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/stackrox/rox/central/sensor/service/connection"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/pkg/backgroundtasks"
+	detectionPkg "github.com/stackrox/rox/pkg/detection"
 	"github.com/stackrox/rox/pkg/expiringcache"
 	"github.com/stackrox/rox/pkg/grpc"
 	"github.com/stackrox/rox/pkg/searchbasedpolicies/matcher"
@@ -51,7 +52,7 @@ func New(policies datastore.DataStore,
 		reprocessor:       reprocessor,
 		notifiers:         notifiers,
 		buildTimePolicies: buildTimePolicies,
-		testMatchBuilder:  deploymentMatcherBuilder,
+		policyCompiler:    detectionPkg.NewPolicyCompiler(deploymentMatcherBuilder),
 		lifecycleManager:  manager,
 		connectionManager: connectionManager,
 
