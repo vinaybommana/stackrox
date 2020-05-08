@@ -186,7 +186,7 @@ func (m *manager) doCollectAndSendData(ctx context.Context) (time.Duration, erro
 		return 0, errors.New("invoked telemetry collection in spite of offline mode")
 	}
 
-	telemetryData := m.gatherer.Gather(ctx)
+	telemetryData := m.gatherer.Gather(ctx, true)
 
 	if telemetryData.Central == nil || telemetryData.Central.License == nil {
 		return 0, errors.New("cannot send telemetry data as no license information is available")

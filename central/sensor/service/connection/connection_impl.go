@@ -66,7 +66,7 @@ func newConnection(ctx context.Context, clusterID string, eventPipeline pipeline
 	conn.sensorEventHandler = newSensorEventHandler(eventPipeline, conn, &conn.stopSig)
 	conn.scrapeCtrl = scrape.NewController(conn, &conn.stopSig)
 	conn.networkPoliciesCtrl = networkpolicies.NewController(conn, &conn.stopSig)
-	conn.telemetryCtrl = telemetry.NewController(conn, &conn.stopSig)
+	conn.telemetryCtrl = telemetry.NewController(conn.capabilities, conn, &conn.stopSig)
 
 	return conn
 }
