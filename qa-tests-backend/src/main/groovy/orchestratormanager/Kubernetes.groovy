@@ -662,43 +662,28 @@ class Kubernetes implements OrchestratorMain {
         println "Timed out waiting for secret ${secretName} to be created"
     }
 
-    String createImagePullSecret(String name, String username, String password, String namespace = this.namespace)  {
-        Map<String, String> data = new HashMap<String, String>()
-        String userNameWithPassword = username + ":" + password
-        def b64Password = Base64.getEncoder().encodeToString(userNameWithPassword.getBytes())
-        def dockerConfigJSON =  "{\"auths\":{\"https://docker.io\": {\"auth\": \"" + b64Password + "\"}}}"
-        data.put(".dockerconfigjson", Base64.getEncoder().encodeToString(dockerConfigJSON.getBytes()))
-
-        Secret secret = new Secret(
-                apiVersion: "v1",
-                kind: "Secret",
-                type: "kubernetes.io/dockerconfigjson",
-                data: data,
-                metadata: new ObjectMeta(
-                        name: name,
-                        namespace: namespace
-                )
-        )
-
-        Secret createdSecret = client.secrets().inNamespace(namespace).createOrReplace(secret)
-        if (createdSecret != null) {
-            createdSecret = waitForSecretCreation(name, namespace)
-            return createdSecret.metadata.uid
-        }
-        throw new RuntimeException("Couldn't create secret")
+    String createImagePullSecret(String name, String username, String password, String namespace = this.namespace) {
+        return createImagePullSecret(new objects.Secret(
+            name: name,
+            server: "https://docker.io",
+            username: username,
+            password: password,
+            namespace: namespace
+        ))
     }
 
-    String createImagePullSecret(objects.Secret secret)  {
+    String createImagePullSecret(objects.Secret secret) {
         if (!secret.username || !secret.password) {
             throw new RuntimeException("Secret requires a username and password: " +
                     "username provided: ${secret.username}, " +
                     "password provided: ${secret.password}")
         }
+        def namespace = secret.namespace ?: this.namespace
 
+        def auth = secret.username + ":" + secret.password
+        def b64Password = Base64.getEncoder().encodeToString(auth.getBytes())
+        def dockerConfigJSON =  "{\"auths\":{\"" + secret.server + "\": {\"auth\": \"" + b64Password + "\"}}}"
         Map<String, String> data = new HashMap<String, String>()
-        String userNameWithPassword = secret.username + ":" + secret.password
-        def b64Password = Base64.getEncoder().encodeToString(userNameWithPassword.getBytes())
-        def dockerConfigJSON =  "{\"auths\":{\"${secret.server}\": {\"auth\": \"" + b64Password + "\"}}}"
         data.put(".dockerconfigjson", Base64.getEncoder().encodeToString(dockerConfigJSON.getBytes()))
 
         Secret k8sSecret = new Secret(
@@ -708,13 +693,13 @@ class Kubernetes implements OrchestratorMain {
                 data: data,
                 metadata: new ObjectMeta(
                         name: secret.name,
-                        namespace: secret.namespace
+                        namespace: namespace
                 )
         )
 
-        Secret createdSecret = client.secrets().inNamespace(secret.namespace).createOrReplace(k8sSecret)
+        Secret createdSecret = client.secrets().inNamespace(namespace).createOrReplace(k8sSecret)
         if (createdSecret != null) {
-            createdSecret = waitForSecretCreation(secret.name, secret.namespace)
+            createdSecret = waitForSecretCreation(secret.name, namespace)
             return createdSecret.metadata.uid
         }
         throw new RuntimeException("Couldn't create secret")
@@ -926,6 +911,36 @@ class Kubernetes implements OrchestratorMain {
         withRetry(1, 2) {
             client.serviceAccounts().inNamespace(serviceAccount.namespace).withName(serviceAccount.name).delete()
         }
+    }
+
+    def addServiceAccountImagePullSecret(String accountName, String secretName, String namespace = this.namespace) {
+        ServiceAccount serviceAccount = client.serviceAccounts()
+                .inNamespace(namespace)
+                .withName(accountName)
+                .get()
+
+        Set<LocalObjectReference> imagePullSecretsSet = new HashSet<>(serviceAccount.getImagePullSecrets())
+        imagePullSecretsSet.add(new LocalObjectReference(secretName))
+        List<LocalObjectReference> imagePullSecretsList = []
+        imagePullSecretsList.addAll(imagePullSecretsSet)
+        serviceAccount.setImagePullSecrets(imagePullSecretsList)
+
+        client.serviceAccounts().inNamespace(namespace).withName(accountName).createOrReplace(serviceAccount)
+    }
+
+    def removeServiceAccountImagePullSecret(String accountName, String secretName, String namespace = this.namespace) {
+        ServiceAccount serviceAccount = client.serviceAccounts()
+                .inNamespace(namespace)
+                .withName(accountName)
+                .get()
+
+        Set<LocalObjectReference> imagePullSecretsSet = new HashSet<>(serviceAccount.getImagePullSecrets())
+        imagePullSecretsSet.remove(new LocalObjectReference(secretName))
+        List<LocalObjectReference> imagePullSecretsList = []
+        imagePullSecretsList.addAll(imagePullSecretsSet)
+        serviceAccount.setImagePullSecrets(imagePullSecretsList)
+
+        client.serviceAccounts().inNamespace(namespace).withName(accountName).createOrReplace(serviceAccount)
     }
 
     /*
