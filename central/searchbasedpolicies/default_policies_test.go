@@ -485,6 +485,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		Annotations: map[string]string{
 			"owner": "IOWNTHIS",
 			"blah":  "Blah",
+			"email": "notavalidemail",
 		},
 	}
 	suite.mustIndexDepAndImages(depWithOwnerAnnotation)
@@ -784,30 +785,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			},
 		},
 		{
-			policyName: "Images with no scans",
-			shouldNotMatch: map[string]struct{}{
-				// These deployments have scans on their images.
-				fixtureDep.GetId():    {},
-				oldScannedDep.GetId(): {},
-				// The rest of the deployments have no images!
-				"FAKEID":                                          {},
-				containerPort22Dep.GetId():                        {},
-				dockerSockDep.GetId():                             {},
-				secretEnvDep.GetId():                              {},
-				secretEnvSrcUnsetDep.GetId():                      {},
-				secretKeyRefDep.GetId():                           {},
-				depWithOwnerAnnotation.GetId():                    {},
-				depWithGoodEmailAnnotation.GetId():                {},
-				depWithBadEmailAnnotation.GetId():                 {},
-				depWitharbitraryAnnotations.GetId():               {},
-				sysAdminDep.GetId():                               {},
-				depWithAllResourceLimitsRequestsSpecified.GetId(): {},
-				depWithEnforcementBypassAnnotation.GetId():        {},
-				hostMountDep.GetId():                              {},
-			},
-			sampleViolationForMatched: "Image has not been scanned",
-		},
-		{
 			policyName:                "Required Label: Email",
 			shouldNotMatch:            map[string]struct{}{fixtureDep.GetId(): {}},
 			sampleViolationForMatched: "Required label not found (key = 'email', value = '[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+')",
@@ -1062,6 +1039,17 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 					assert.ElementsMatch(t, violations.AlertViolations, gotFromMatchOne.AlertViolations, "Expected violations from match one %+v don't match what we got %+v", violations, gotFromMatchOne)
 					assert.Equal(t, violations.ProcessViolation, gotFromMatchOne.ProcessViolation)
 				}
+			}
+
+			if len(c.shouldNotMatch) > 0 {
+				for id, deployment := range suite.deployments {
+					gotFromMatchOne, err := m.MatchOne(suite.matchCtx, deployment, suite.deploymentsToImages[id], nil)
+					require.NoError(t, err)
+					matched := len(gotFromMatchOne.AlertViolations) > 0
+					_, shouldNotMatch := c.shouldNotMatch[id]
+					assert.NotEqual(t, matched, shouldNotMatch, "Deployment %s violated expectation about not matching (matched: %v, should match: %v)", id, matched, !shouldNotMatch)
+				}
+
 			}
 		})
 	}
@@ -1361,4 +1349,30 @@ func (suite *DefaultPoliciesTestSuite) TestRuntimePolicyFieldsCompile() {
 			}
 		}
 	}
+}
+
+func (suite *DefaultPoliciesTestSuite) TestRequiredLabel() {
+	policy := suite.MustGetPolicy("Required Image Label")
+
+	policy.Fields.RequiredImageLabel = &storage.KeyValuePolicy{
+		Key:   "org.opencontainers.image.build_number",
+		Value: "27",
+	}
+
+	m, err := suite.matcherBuilder.ForPolicy(policy)
+	if err != nil {
+		panic(err)
+	}
+
+	image := fixtures.GetImage()
+	image.Metadata.V1.Labels = map[string]string{
+		"org.opencontainers.image.build_number": "28",
+		"i have":                                "multiple",
+	}
+
+	violations, err := m.MatchOne(context.Background(), nil, []*storage.Image{image}, nil)
+	if err != nil {
+		panic(err)
+	}
+	suite.NotEmpty(violations.AlertViolations)
 }

@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-	"strings"
 
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/pkg/protoreflect"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/predicate/basematchers"
+	"github.com/stackrox/rox/pkg/searchbasedpolicies/builders"
 	"github.com/stackrox/rox/pkg/stringutils"
 	"github.com/stackrox/rox/pkg/utils"
 )
@@ -105,6 +105,8 @@ func createSlicePredicate(fullPath string, fieldType reflect.Type, value string)
 }
 
 func createMapPredicate(fullPath string, fieldType reflect.Type, value string) (internalPredicate, error) {
+	value, isRequired := stringutils.MaybeTrimPrefix(value, builders.RequiredKeyValuePrefix)
+
 	key, value := stringutils.Split2(value, "=")
 
 	keyPred, err := createBasePredicate(fullPath, fieldType.Key(), key)
@@ -116,40 +118,25 @@ func createMapPredicate(fullPath string, fieldType reflect.Type, value string) (
 		return nil, err
 	}
 
-	// This is a hack! It relies on all "required label" policies using negated queries and all "disallowed label"
-	// policies using non-negated queries.  It should definitely change after we get rid of search based policies.
-	matchAll := strings.HasPrefix(key, search.NegationPrefix) || strings.HasPrefix(value, search.NegationPrefix)
-
-	if matchAll {
-		return createMatchAllMapPredicate(keyPred, valPred), nil
+	if isRequired {
+		return createMapRequiredPredicate(keyPred, valPred), nil
 	}
+
 	return createMatchAnyMapPredicate(keyPred, valPred), nil
 }
 
-func createMatchAllMapPredicate(keyPred, valPred internalPredicate) internalPredicate {
-	if keyPred == alwaysTrue && valPred == alwaysTrue {
-		return alwaysTrue
-	}
-
+func createMapRequiredPredicate(keyPred, valPred internalPredicate) internalPredicate {
+	// We will match _unless_ there is at least one element for which
+	// both key and value match.
 	return internalPredicateFunc(func(instance reflect.Value) (*search.Result, bool) {
-		if instance.IsZero() || instance.IsNil() {
-			// This is a hack!  This path is used by RequiredMapValue policies so it needs to return true if the
-			// required value isn't in the map even though there were no matches in the empty map.  This should
-			// definitely change after we get rid of search based policies.
-			return &search.Result{}, true
-		}
-
 		// The expectation is that we only support searching on map[string]string for now
 		iter := instance.MapRange()
 		for iter.Next() {
 			key := iter.Key()
 			val := iter.Value()
 			_, keyMatch := keyPred.Evaluate(key)
-			if !keyMatch {
-				return nil, false
-			}
 			_, valueMatch := valPred.Evaluate(val)
-			if !valueMatch {
+			if keyMatch && valueMatch {
 				return nil, false
 			}
 		}
