@@ -16,6 +16,9 @@ All notable changes to this project that require documentation updates will be d
   - Audit logs: the singular `user.role` field in the audit message payload is deprecated; please use the singular
     `user.permissions` field for the effective permissions of the user, and the array field `user.roles` for all the
     the individual roles associated with a user.
+- The Compliance container within the Collector daemonset now has a hostpath of '/', which is needed to be able to read 
+  configuration files anywhere on the host. This requires the allowedHostVolumes within the stackrox-collector PSP to allow '/' to be mounted.
+  For added security, the PSP has set '/' as readonly and the Collector container's docker socket mount has also been set to readonly.
   
 ## [42.0]
 - All `/v1/` API endpoints now support pretty-printing.  Make requests with the `?pretty` path parameter to receive pretty-printed json responses.

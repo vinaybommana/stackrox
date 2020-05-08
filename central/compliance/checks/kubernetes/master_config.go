@@ -1,6 +1,8 @@
 package kubernetes
 
 import (
+	"strings"
+
 	"github.com/stackrox/rox/central/compliance/checks/common"
 	"github.com/stackrox/rox/central/compliance/framework"
 	"github.com/stackrox/rox/generated/internalapi/compliance"
@@ -53,6 +55,7 @@ func getDirectoryFileFromCommandLine(ctx framework.ComplianceContext, ret *compl
 	} else {
 		dir = values[0]
 	}
+	dir = strings.TrimRight(dir, "/")
 	dirFile, exists := ret.Files[dir]
 	if !exists {
 		framework.Failf(ctx, "%q directory does not exist", dir)

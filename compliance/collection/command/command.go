@@ -35,6 +35,8 @@ var flagsWithFiles = set.NewStringSet(
 	"tlscacert",
 	"tlscert",
 	"tlskey",
+	"tls-cert-file",
+	"tls-private-key-file",
 )
 
 // RetrieveCommands returns the commandlines of the services to be evaluated
@@ -165,8 +167,8 @@ func parseArgs(args []string) []*compliance.CommandLine_Args {
 		arg := newArg(key, values...)
 
 		// Try to see if key or value is a file path and if so then try to read it and add it to the arg
-		if flagsWithFiles.Contains(key) {
-			f, exists, err := file.EvaluatePath(key, false, true)
+		if flagsWithFiles.Contains(arg.Key) && len(arg.Values) > 0 {
+			f, exists, err := file.EvaluatePath(arg.Values[0], false, true)
 			if exists && err == nil {
 				arg.File = f
 			}
