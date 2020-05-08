@@ -1,6 +1,7 @@
 import { selectors, text, url } from '../constants/PoliciesPage';
 import * as api from '../constants/apiEndpoints';
 import withAuth from '../helpers/basicAuth';
+import DndSimulatorDataTransfer from '../helpers/dndSimulatorDataTransfer';
 import checkFeatureFlag from '../helpers/features';
 
 describe('Policies page', () => {
@@ -375,5 +376,186 @@ describe('Policies page', () => {
 
             cy.get(selectors.policyImportModal.imports).eq(0).should('exist');
         });
+    });
+
+    describe('Boolean Policy Logic Section', () => {
+        before(function beforeHook() {
+            // skip the whole suite if BPL isn't enabled
+            if (checkFeatureFlag('ROX_BOOLEAN_POLICY_LOGIC', false)) {
+                this.skip();
+            }
+        });
+
+        const dataTransfer = new DndSimulatorDataTransfer();
+
+        const addPolicySection = () => {
+            cy.get(selectors.booleanPolicySection.addPolicySectionBtn).click();
+        };
+
+        const addPolicyFieldCard = (index) => {
+            cy.get(selectors.booleanPolicySection.policyKey)
+                .eq(index)
+                .trigger('mousedown', { which: 1 })
+                .trigger('dragstart', { dataTransfer })
+                .trigger('drag');
+            cy.get(selectors.booleanPolicySection.policySectionDropTarget)
+                .trigger('dragover', { dataTransfer })
+                .trigger('drop', { dataTransfer })
+                .trigger('dragend', { dataTransfer })
+                .trigger('mouseup', { which: 1 });
+        };
+
+        describe('Single Policy Field Card', () => {
+            it('should add multiple Field Values for the same Field with an AND/OR operator between them when (+) is clicked', () => {
+                // to mock BPL policy here, but for now
+                addPolicy();
+                addPolicySection();
+                addPolicyFieldCard(0);
+                cy.get(selectors.booleanPolicySection.addPolicyFieldValueBtn).click();
+                cy.get(selectors.booleanPolicySection.policyFieldValue).should((values) => {
+                    expect(values).to.have.length(2);
+                });
+            });
+            it('should not allow multiple Policy Field Values for boolean Policy Fields', () => {
+                // to mock BPL policy here, but for now
+                addPolicy();
+                addPolicySection();
+                cy.get(`${selectors.booleanPolicySection.policyKey}:contains("Root")`)
+                    .trigger('mousedown', { which: 1 })
+                    .trigger('dragstart', { dataTransfer })
+                    .trigger('drag');
+                cy.get(selectors.booleanPolicySection.policySectionDropTarget)
+                    .trigger('dragover', { dataTransfer })
+                    .trigger('drop', { dataTransfer })
+                    .trigger('dragend', { dataTransfer })
+                    .trigger('mouseup', { which: 1 });
+                cy.get(selectors.booleanPolicySection.addPolicyFieldValueBtn).should('not.exist');
+            });
+            it('should delete only the selected Policy Value from a Policy Field', () => {
+                // to mock BPL policy here, but for now
+                addPolicy();
+                addPolicySection();
+                addPolicyFieldCard(0);
+                cy.get(selectors.booleanPolicySection.addPolicyFieldValueBtn).click();
+                cy.get(selectors.booleanPolicySection.removePolicyFieldValueBtn).eq(0).click();
+                cy.get(selectors.booleanPolicySection.policyFieldValue).then((values) => {
+                    expect(values).to.have.length(1);
+                });
+                cy.get(selectors.booleanPolicySection.removePolicyFieldValueBtn).should(
+                    'not.exist'
+                );
+            });
+        });
+        describe('Single Policy Section', () => {
+            it('should populate a default Value input in a new Policy Section when dragging a Field Key', () => {
+                addPolicy();
+                addPolicySection();
+                cy.get(selectors.booleanPolicySection.policyFieldCard).should('not.exist');
+                addPolicyFieldCard(0);
+                cy.get(selectors.booleanPolicySection.policyFieldCard).should('exist');
+                cy.get(selectors.booleanPolicySection.policyFieldValue).should('exist');
+                cy.get(
+                    `${selectors.booleanPolicySection.policySection} ${selectors.booleanPolicySection.andOrOperator}`
+                ).should('contain', 'AND');
+            });
+            it('should AND the dragged Field when dragging a Field Key to a Policy Section that already has a Field ', () => {
+                // to mock BPL policy here, but for now
+                addPolicy();
+                addPolicySection();
+                addPolicyFieldCard(0);
+                addPolicyFieldCard(1);
+                cy.get(selectors.booleanPolicySection.policyFieldValue).should((values) => {
+                    expect(values).to.have.length(2);
+                });
+
+                cy.get(
+                    `${selectors.booleanPolicySection.policySection} ${selectors.booleanPolicySection.andOrOperator}`
+                ).should((andOrOperators) => {
+                    expect(andOrOperators).to.have.length(2);
+                });
+            });
+            it('should delete the Field from the Policy Section', () => {
+                // to mock BPL policy here, but for now
+                addPolicy();
+                addPolicySection();
+                addPolicyFieldCard(0);
+                cy.get(selectors.booleanPolicySection.policyFieldCard).should('exist');
+                cy.get(selectors.booleanPolicySection.removePolicyFieldBtn).click();
+                cy.get(selectors.booleanPolicySection.policyFieldCard).should('not.exist');
+            });
+            it('should not allow dragging a duplicate Field Key in the same Policy Section', () => {
+                // to mock BPL policy here, but for now
+                addPolicy();
+                addPolicySection();
+                addPolicyFieldCard(0);
+                addPolicyFieldCard(0);
+                cy.get(selectors.booleanPolicySection.policyFieldValue).should((values) => {
+                    expect(values).to.have.length(1);
+                });
+            });
+        });
+        // describe('AND operator', () => {
+        //     it('should toggle to OR when AND is clicked if the Policy Field is can be ANDed', () => {
+
+        //     })
+        //     it('should be disabled if the Policy Field cannot be ORed', () => {
+
+        //     });
+        // });
+        // describe('OR operator', () => {
+        //     it('should toggle to AND when OR is clicked if the Policy Field can be ORed', () => {
+
+        //     })
+        //     it('should be disabled if the Policy Field cannot be ANDed', () => {
+
+        //     });
+        // })
+        // describe('Policy Field Card NOT toggle', () => {
+        //     it('should negate the Policy Field Card when the toggle is clicked & should show negated text', () => {
+
+        //     })
+        //     it('should be disabled if the Policy Field cannot be negated', () => {
+
+        //     })
+        // })
+        describe('Multiple Policy Sections', () => {
+            it('should add a Policy Section with a pre-populated Policy Section header', () => {
+                addPolicy();
+                addPolicySection();
+                cy.get(selectors.booleanPolicySection.policySection).then(() => {
+                    cy.get(selectors.booleanPolicySection.sectionHeader.text)
+                        .invoke('text')
+                        .then((headerText) => {
+                            expect(headerText).to.equal('policy section 1');
+                        });
+                });
+            });
+            it('should delete a Policy Section', () => {
+                addPolicy();
+                addPolicySection();
+                cy.get(selectors.booleanPolicySection.removePolicySectionBtn).click();
+                cy.get(selectors.booleanPolicySection.policySection).should('not.exist');
+            });
+            it('should edit the Policy Section header name', () => {
+                addPolicy();
+                addPolicySection();
+                cy.get(selectors.booleanPolicySection.sectionHeader.editBtn).click();
+                const newHeaderText = 'new policy section';
+                cy.get(selectors.booleanPolicySection.sectionHeader.input).type(
+                    `{selectall}${newHeaderText}`
+                );
+                cy.get(selectors.booleanPolicySection.sectionHeader.confirmBtn).click();
+                cy.get(selectors.booleanPolicySection.sectionHeader.text)
+                    .invoke('text')
+                    .then((headerText) => {
+                        expect(headerText).to.equal(newHeaderText);
+                    });
+            });
+            it('should read in data properly when provided', () => {});
+        });
+        // describe('Policy Field Keys', () => {
+        //     it('should be grouped into catgories', () => {});
+        //     it('should collapse categories when clicking the carrot', () => {});
+        // });
     });
 });

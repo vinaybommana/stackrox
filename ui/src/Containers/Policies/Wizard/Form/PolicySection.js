@@ -21,7 +21,10 @@ function addPolicyFieldCardHandler(fields) {
 function PolicySection({ fields, sectionName, removeSectionHandler, readOnly, isLast }) {
     return (
         <>
-            <div className="bg-base-300 border-2 border-base-100 rounded">
+            <div
+                className="bg-base-300 border-2 border-base-100 rounded"
+                data-testid="policy-section"
+            >
                 <div className="flex justify-between items-center border-b-2 border-base-400">
                     <Field name={sectionName} component={SectionHeaderInput} readOnly={readOnly} />
                     {!readOnly && (
@@ -29,6 +32,7 @@ function PolicySection({ fields, sectionName, removeSectionHandler, readOnly, is
                             onClick={removeSectionHandler}
                             icon={<Trash2 className="w-5 h-5" />}
                             className="p-2 border-l-2 border-base-400 hover:bg-base-400"
+                            dataTestId="remove-policy-section-btn"
                         />
                     )}
                 </div>

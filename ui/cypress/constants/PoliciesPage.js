@@ -86,6 +86,25 @@ export const selectors = {
         onOffToggle: '[data-testid="policy-enforcement-on-off"]',
     },
     toast: '.toast-selector',
+    booleanPolicySection: {
+        addPolicySectionBtn: '[data-testid="add-policy-section-btn"]',
+        policySection: '[data-testid="policy-section"]',
+        sectionHeader: {
+            text: '[data-testid="section-header"]',
+            input: '[data-testid="section-header"] input',
+            editBtn: '[data-testid="section-header-edit-btn"]',
+            confirmBtn: '[data-testid="section-header-confirm-btn"]',
+        },
+        removePolicySectionBtn: '[data-testid="remove-policy-section-btn"]',
+        policyKey: '[data-testid="draggable-policy-key"]',
+        policySectionDropTarget: '[data-testid="policy-section-drop-target"]',
+        policyFieldCard: '[data-testid="policy-field-card"]',
+        policyFieldValue: '[data-testid="policy-field-value"]',
+        andOrOperator: '[data-testid="and-or-operator"]',
+        removePolicyFieldBtn: '[data-testid="remove-policy-field-card-btn"]',
+        addPolicyFieldValueBtn: '[data-testid="add-policy-field-value-btn"]',
+        removePolicyFieldValueBtn: '[data-testid="remove-policy-field-value-btn"]',
+    },
 };
 
 export const text = {

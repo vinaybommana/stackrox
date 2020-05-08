@@ -42,6 +42,7 @@ function PolicySectionDropTarget({ allFields, addPolicyFieldCardHandler }) {
     return (
         <div
             ref={drop}
+            data-testid="policy-section-drop-target"
             className={`${
                 disabledDrop ? 'bg-base-300 border-base-400' : 'bg-base-200 border-base-300'
             } rounded border-2 border-dashed flex font-700 justify-center p-3 text-base-500 text-sm uppercase`}

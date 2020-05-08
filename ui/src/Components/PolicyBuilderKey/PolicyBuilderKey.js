@@ -4,8 +4,7 @@ import { useDrag } from 'react-dnd';
 
 function PolicyBuilderKey({ fieldKey }) {
     const { name } = fieldKey;
-    // eslint-disable-next-line no-unused-vars
-    const [collectedProps, drag] = useDrag({
+    const [, drag] = useDrag({
         item: { id: name, type: name, fieldKey },
     });
     return (

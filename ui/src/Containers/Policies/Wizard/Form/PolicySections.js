@@ -51,6 +51,7 @@ function PolicySections({ fields, readOnly, className, hasHeader }) {
                     type="button"
                     onClick={addFieldArrayHandler(fields, newPolicySection)}
                     className="p-2 w-full border-2 border-base-100 bg-base-300 flex justify-center items-center"
+                    data-testid="add-policy-section-btn"
                 >
                     <PlusCircle className="w-4 h-4 text-base-600" />
                     <div className="pl-2 py-1 text-sm text-base-600 font-700">

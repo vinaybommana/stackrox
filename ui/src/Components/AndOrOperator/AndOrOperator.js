@@ -5,7 +5,10 @@ import BOOLEAN_LOGIC_VALUES from 'constants/booleanLogicValues';
 
 function AndOrOperator({ onToggle, value, disabled, isCircular }) {
     return (
-        <div className={`flex justify-center ${isCircular && !disabled ? 'py-3' : 'py-2'}`}>
+        <div
+            className={`flex justify-center ${isCircular && !disabled ? 'py-3' : 'py-2'}`}
+            data-testid="and-or-operator"
+        >
             <button
                 type="button"
                 onClick={onToggle}

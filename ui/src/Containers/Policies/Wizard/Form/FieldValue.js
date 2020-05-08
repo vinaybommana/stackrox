@@ -16,13 +16,14 @@ function FieldValue({
 }) {
     return (
         <>
-            <div className="flex">
+            <div className="flex" data-testid="policy-field-value">
                 <Field key={name} field={fieldKey} name={name} readOnly={readOnly} />
                 {/* only show remove button if there is more than one value */}
                 {!readOnly && length > 1 && (
                     <FormFieldRemoveButton
                         field={name}
                         onClick={removeValueHandler}
+                        dataTestId="remove-policy-field-value-btn"
                         className="border-base-300 hover:border-base-400 hover:text-base-600 rounded-r text-base-100 text-base-500"
                     />
                 )}

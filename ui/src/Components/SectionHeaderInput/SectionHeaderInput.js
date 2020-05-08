@@ -12,7 +12,7 @@ function SectionHeaderInput({ input, readOnly }) {
     const { value, onChange } = input;
 
     return (
-        <div className="flex flex-1 justify-between items-center">
+        <div className="flex flex-1 justify-between items-center" data-testid="section-header">
             {!isEditing && (
                 <>
                     <span className="p-2 text-base-600 font-700">{value}</span>
@@ -22,6 +22,7 @@ function SectionHeaderInput({ input, readOnly }) {
                                 icon={<Edit className="w-5 h-5" />}
                                 onClick={editHandler}
                                 className="p-2"
+                                dataTestId="section-header-edit-btn"
                             />
                         </div>
                     )}
@@ -40,6 +41,7 @@ function SectionHeaderInput({ input, readOnly }) {
                             icon={<Check className="w-5 h-5" />}
                             onClick={editHandler}
                             className="p-2"
+                            dataTestId="section-header-confirm-btn"
                         />
                     </div>
                 </>

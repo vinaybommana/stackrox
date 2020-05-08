@@ -32,7 +32,10 @@ function PolicyFieldCard({
     const lastFieldIndex = fields.length - 1;
     return (
         <>
-            <div className={`bg-base-200 border-2 ${borderColorClass} rounded`}>
+            <div
+                className={`bg-base-200 border-2 ${borderColorClass} rounded`}
+                data-testid="policy-field-card"
+            >
                 <div className={`border-b-2 ${borderColorClass} flex`}>
                     <div className="flex flex-1 font-700 p-2 pl-3 text-base-600 text-sm uppercase items-center">
                         {headerText}:
@@ -59,6 +62,7 @@ function PolicyFieldCard({
                                 onClick={removeFieldHandler}
                                 icon={<Trash2 className="w-5 h-5" />}
                                 className={`p-2 border-l-2 ${borderColorClass}`}
+                                dataTestId="remove-policy-field-card-btn"
                             />
                         </>
                     )}
@@ -83,6 +87,7 @@ function PolicyFieldCard({
                                 <Button
                                     onClick={addFieldArrayHandler(fields, emptyFieldValue)}
                                     icon={<PlusCircle className="w-5 h-5" />}
+                                    dataTestId="add-policy-field-value-btn"
                                 />
                             </div>
                         </div>
