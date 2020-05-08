@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import * as Icon from 'react-feather';
 import onClickOutside from 'react-onclickoutside';
 
-import downloadCsv from 'services/ComplianceDownloadService';
+import downloadCSV from 'services/CSVDownloadService';
 import WorkflowPDFExportButton from 'Components/WorkflowPDFExportButton';
 import Button from 'Components/Button';
 import useCaseTypes from 'constants/useCaseTypes';
@@ -65,7 +65,7 @@ class ExportButton extends Component {
 
     handleClickOutside = () => this.setState({ toggleWidget: false });
 
-    downloadCsv = () => {
+    downloadCSVFile = () => {
         const { id, fileName, page, type, customCsvExportHandler } = this.props;
         const csvName = addBrandedTimestampToString(fileName);
 
@@ -91,7 +91,7 @@ class ExportButton extends Component {
                 query = { [queryParamMap[type]]: value };
             }
 
-            downloadCsv(query, csvName, complianceDownloadUrl);
+            downloadCSV(csvName, complianceDownloadUrl, query);
         }
     };
 
@@ -136,7 +136,7 @@ class ExportButton extends Component {
                                     data-testid="download-csv-button"
                                     className={btnClassName}
                                     type="button"
-                                    onClick={this.downloadCsv}
+                                    onClick={this.downloadCSVFile}
                                     text={csvButtonText}
                                     isLoading={csvIsDownloading}
                                     loaderSize={14}

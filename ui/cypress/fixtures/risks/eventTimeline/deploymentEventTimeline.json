@@ -1,6 +1,7 @@
 {
     "data": {
         "deployment": {
+            "name": "nginx",
             "numPolicyViolations": 1,
             "numProcessActivities": 2,
             "numRestarts": 1,

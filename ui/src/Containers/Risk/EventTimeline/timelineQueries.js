@@ -2,6 +2,7 @@ import gql from 'graphql-tag';
 
 export const DEPLOYMENT_OVERVIEW_FRAGMENT = gql`
     fragment deploymentOverviewFields on Deployment {
+        name
         numPolicyViolations: failingRuntimePolicyCount
         numProcessActivities: processActivityCount
         numRestarts: containerRestartCount

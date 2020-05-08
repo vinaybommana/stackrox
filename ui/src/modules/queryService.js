@@ -22,7 +22,7 @@ import {
 } from 'Containers/VulnMgmt/VulnMgmt.fragments';
 import { DEFAULT_PAGE_SIZE } from 'Components/Table';
 
-function objectToWhereClause(query) {
+function objectToWhereClause(query, delimiter = '+') {
     if (!query) return '';
 
     return Object.entries(query)
@@ -34,7 +34,7 @@ function objectToWhereClause(query) {
             const needsExactMatch =
                 key.toLowerCase().indexOf(' id') !== -1 && value.indexOf(',') === -1;
             const queryValue = needsExactMatch ? `"${flatValue}"` : flatValue;
-            return `${acc}${key}:${queryValue}+`;
+            return `${acc}${key}:${queryValue}${delimiter}`;
         }, '')
         .slice(0, -1);
 }

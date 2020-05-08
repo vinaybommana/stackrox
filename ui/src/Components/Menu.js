@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
+import { ChevronDown } from 'react-feather';
 
 import Tooltip from 'Components/Tooltip';
 import TooltipOverlay from 'Components/TooltipOverlay';
@@ -10,7 +11,8 @@ const optionsClass =
 
 const Menu = ({
     buttonClass,
-    buttonContent,
+    buttonText,
+    buttonIcon,
     menuClassName,
     className,
     options,
@@ -18,6 +20,7 @@ const Menu = ({
     grouped,
     tooltip,
     dataTestId,
+    hideCaret,
 }) => {
     const [isMenuOpen, setMenuState] = useState(false);
 
@@ -93,11 +96,15 @@ const Menu = ({
                     disabled={disabled}
                     data-testid={dataTestId}
                 >
-                    {buttonContent}
+                    <div className="flex flex-1 justify-center items-center text-left">
+                        {buttonIcon}
+                        {buttonText}
+                        {!hideCaret && <ChevronDown className="h-4 ml-1 pointer-events-none w-4" />}
+                    </div>
                 </button>
                 {isMenuOpen && (
                     <div
-                        className={`absolute bg-white flex flex-col flex-no-wrap menu right-0 z-10 min-w-32 bg-base-100 shadow ${menuClassName}`}
+                        className={`absolute flex flex-col flex-no-wrap menu right-0 z-10 min-w-32 bg-base-100 shadow border border-base-400 ${menuClassName}`}
                         data-testid="menu-list"
                     >
                         {grouped ? renderGroupedOptions(options) : renderOptions(options)}
@@ -110,7 +117,8 @@ const Menu = ({
 
 Menu.propTypes = {
     buttonClass: PropTypes.string,
-    buttonContent: PropTypes.node.isRequired,
+    buttonText: PropTypes.string.isRequired,
+    buttonIcon: PropTypes.node,
     menuClassName: PropTypes.string,
     className: PropTypes.string,
     options: PropTypes.oneOfType([
@@ -129,16 +137,19 @@ Menu.propTypes = {
     grouped: PropTypes.bool,
     tooltip: PropTypes.string,
     dataTestId: PropTypes.string,
+    hideCaret: PropTypes.bool,
 };
 
 Menu.defaultProps = {
     buttonClass: '',
+    buttonIcon: null,
     disabled: false,
     menuClassName: '',
     className: '',
     grouped: false,
     tooltip: '',
     dataTestId: 'menu-button',
+    hideCaret: false,
 };
 
 export default Menu;

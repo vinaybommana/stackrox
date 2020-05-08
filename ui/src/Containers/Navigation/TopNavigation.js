@@ -25,7 +25,6 @@ const topNavMenuBtnClass =
 const TopNavigation = ({ logout, shouldHaveReadPermission }) => {
     const { isDarkMode } = useTheme();
     function renderNavBarMenu() {
-        const NavItem = () => <Icon.MoreHorizontal className="mx-4 h-4 w-4 pointer-events-none" />;
         const options = [{ label: 'Logout', onClick: () => logout() }];
 
         if (shouldHaveReadPermission('Licenses')) {
@@ -35,7 +34,8 @@ const TopNavigation = ({ logout, shouldHaveReadPermission }) => {
         return (
             <Menu
                 className={`${topNavMenuBtnClass} border-l border-base-400`}
-                buttonContent={<NavItem />}
+                buttonIcon={<Icon.MoreHorizontal className="mx-4 h-4 w-4 pointer-events-none" />}
+                hideCaret
                 options={options}
             />
         );

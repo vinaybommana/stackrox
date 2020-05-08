@@ -8,6 +8,9 @@ import queryService from 'modules/queryService';
 import Panel from 'Components/Panel';
 import TimelineGraph from 'Components/TimelineGraph';
 import Loader from 'Components/Loader';
+import TimelineLegend from 'Components/TimelineLegend';
+import ExportMenu from 'Containers/ExportMenu';
+import EventTypeSelect from '../EventTypeSelect';
 import getPodEvents from './getPodEvents';
 import getLargestDifferenceInMilliseconds from '../eventTimelineUtils/getLargestDifferenceInMilliseconds';
 import { GET_DEPLOYMENT_EVENT_TIMELINE } from '../timelineQueries';
@@ -21,7 +24,8 @@ const DeploymentEventTimeline = ({
     id,
     goToNextView,
     selectedEventType,
-    headerComponents,
+    selectEventType,
+    deploymentId,
     currentPage,
     pageSize,
     onPageChange,
@@ -45,6 +49,7 @@ const DeploymentEventTimeline = ({
         );
 
     const {
+        name,
         numPolicyViolations,
         numProcessActivities,
         numRestarts,
@@ -57,6 +62,28 @@ const DeploymentEventTimeline = ({
         'event',
         numEvents
     )} across ${numTotalPods} ${pluralize('pod', numTotalPods)}`;
+
+    const headerComponents = (
+        <>
+            <EventTypeSelect
+                selectedEventType={selectedEventType}
+                selectEventType={selectEventType}
+            />
+            <div className="ml-3">
+                <TimelineLegend />
+            </div>
+            <div className="ml-3">
+                <ExportMenu
+                    fileName={`Event-Timeline-Report-${name}`}
+                    pdfId="capture-timeline"
+                    csvEndpoint="/api/risk/timeline/export/csv"
+                    csvEndpointParams={{
+                        'Deployment ID': deploymentId,
+                    }}
+                />
+            </div>
+        </>
+    );
 
     const timelineData = getPodEvents(data.pods, selectedEventType);
     const absoluteMaxTimeRange = getLargestDifferenceInMilliseconds(timelineData);
@@ -81,7 +108,8 @@ DeploymentEventTimeline.propTypes = {
     id: PropTypes.string.isRequired,
     goToNextView: PropTypes.func.isRequired,
     selectedEventType: PropTypes.string.isRequired,
-    headerComponents: PropTypes.node.isRequired,
+    selectEventType: PropTypes.func.isRequired,
+    deploymentId: PropTypes.string.isRequired,
     currentPage: PropTypes.number.isRequired,
     pageSize: PropTypes.number.isRequired,
     onPageChange: PropTypes.func.isRequired,

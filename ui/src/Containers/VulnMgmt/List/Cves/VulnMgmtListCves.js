@@ -352,12 +352,6 @@ const VulnMgmtCves = ({
         setBulkActionCveIds([]);
         setSelectedCveIds(idsToStaySelected);
     }
-    const snoozeMenuButtonContent = (
-        <div className="flex items-center justify-around w-full text-left px-2">
-            <Icon.BellOff className="h-4 w-4" />
-            <span className="ml-2 items-center hidden xl:flex">Snooze</span>
-        </div>
-    );
 
     const snoozeOptions = (cveId) => {
         return Object.keys(snoozeDurations).map((d) => {
@@ -415,7 +409,8 @@ const VulnMgmtCves = ({
                     className="h-full min-w-30 ml-2"
                     menuClassName="bg-base-100 min-w-28"
                     buttonClass="btn-icon btn-tertiary"
-                    buttonContent={snoozeMenuButtonContent}
+                    buttonText="Snooze"
+                    buttonIcon={<Icon.BellOff className="h-4 w-4 mr-2" />}
                     options={snoozeOptions()}
                     disabled={selectedCveIds.length === 0}
                     tooltip="Snooze Selected CVEs"

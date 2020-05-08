@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 import ReactRouterPropTypes from 'react-router-prop-types';
 import { connect } from 'react-redux';
-import { Bell, BellOff, ChevronDown, Plus, RefreshCw, Trash2, Upload } from 'react-feather';
+import { Bell, BellOff, Plus, RefreshCw, Trash2, Upload } from 'react-feather';
 
 import { selectors } from 'reducers';
 import { actions as backendActions } from 'reducers/policies/backend';
@@ -84,12 +84,7 @@ class Buttons extends Component {
                     <Menu
                         className="mr-2"
                         buttonClass="btn btn-base"
-                        buttonContent={
-                            <div className="flex items-center">
-                                Actions
-                                <ChevronDown className="ml-2 h-4 w-4 pointer-events-none" />
-                            </div>
-                        }
+                        buttonText="Actions"
                         options={bulkOperationOptions}
                         disabled={
                             buttonsDisabled &&
