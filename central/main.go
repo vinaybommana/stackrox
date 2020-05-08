@@ -76,6 +76,7 @@ import (
 	"github.com/stackrox/rox/central/pruning"
 	rbacService "github.com/stackrox/rox/central/rbac/service"
 	"github.com/stackrox/rox/central/reprocessor"
+	"github.com/stackrox/rox/central/risk/handlers/timeline"
 	"github.com/stackrox/rox/central/role"
 	roleDataStore "github.com/stackrox/rox/central/role/datastore"
 	"github.com/stackrox/rox/central/role/mapper"
@@ -573,6 +574,12 @@ func (defaultFactory) CustomRoutes() (customRoutes []routes.CustomRoute) {
 			Route:         "/api/compliance/export/csv",
 			Authorizer:    user.With(permissions.View(resources.Compliance)),
 			ServerHandler: complianceHandlers.CSVHandler(),
+			Compression:   true,
+		},
+		{
+			Route:         "/api/risk/timeline/export/csv",
+			Authorizer:    user.With(permissions.View(resources.Deployment), permissions.View(resources.Indicator), permissions.View(resources.ProcessWhitelist)),
+			ServerHandler: timeline.CSVHandler(),
 			Compression:   true,
 		},
 		{
