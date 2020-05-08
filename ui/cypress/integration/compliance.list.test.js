@@ -57,9 +57,13 @@ describe('Compliance list page', () => {
                         const controlArr1 = arr1.split('.');
                         const arr2 = text2.split(' ')[0];
                         const controlArr2 = arr2.split('.');
-                        expect(controlArr1[0]).to.be.at.most(controlArr2[0]);
+                        expect(parseInt(controlArr1[0], 10)).to.be.at.most(
+                            parseInt(controlArr2[0], 10)
+                        );
                         if (controlArr1[1] && controlArr2[1]) {
-                            expect(controlArr1[1]).to.be.at.most(controlArr2[1]);
+                            expect(parseInt(controlArr1[1], 10)).to.be.at.most(
+                                parseInt(controlArr2[1], 10)
+                            );
                         }
                     });
             });
