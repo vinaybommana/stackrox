@@ -20,8 +20,13 @@ func NewTemp(name string) (*gorocksdb.DB, string, error) {
 
 // New creates a new RocksDB at the specified path
 func New(path string) (*gorocksdb.DB, error) {
+	return gorocksdb.OpenDb(GetRocksDBOptions(), path)
+}
+
+// GetRocksDBOptions returns the options used to open RocksDB.
+func GetRocksDBOptions() *gorocksdb.Options {
 	opts := gorocksdb.NewDefaultOptions()
 	opts.SetCreateIfMissing(true)
 	opts.SetCompression(gorocksdb.LZ4Compression)
-	return gorocksdb.OpenDb(opts, path)
+	return opts
 }

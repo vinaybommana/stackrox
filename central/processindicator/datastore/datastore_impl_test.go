@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgraph-io/badger"
 	bolt "github.com/etcd-io/bbolt"
 	"github.com/golang/mock/gomock"
 	"github.com/stackrox/rox/central/analystnotes"
@@ -22,22 +21,24 @@ import (
 	processSearch "github.com/stackrox/rox/central/processindicator/search"
 	searchMocks "github.com/stackrox/rox/central/processindicator/search/mocks"
 	"github.com/stackrox/rox/central/processindicator/store"
-	badgerStore "github.com/stackrox/rox/central/processindicator/store/badger"
 	storeMocks "github.com/stackrox/rox/central/processindicator/store/mocks"
+	rocksStore "github.com/stackrox/rox/central/processindicator/store/rocksdb"
 	"github.com/stackrox/rox/central/role"
 	"github.com/stackrox/rox/central/role/resources"
 	"github.com/stackrox/rox/generated/storage"
-	"github.com/stackrox/rox/pkg/badgerhelper"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/fixtures"
 	"github.com/stackrox/rox/pkg/grpc/authn"
 	"github.com/stackrox/rox/pkg/grpc/authn/mocks"
+	"github.com/stackrox/rox/pkg/rocksdb"
 	"github.com/stackrox/rox/pkg/sac"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/set"
 	"github.com/stackrox/rox/pkg/testutils"
+	"github.com/stackrox/rox/pkg/testutils/rocksdbtest"
 	"github.com/stackrox/rox/pkg/uuid"
 	"github.com/stretchr/testify/suite"
+	"github.com/tecbot/gorocksdb"
 )
 
 func TestIndicatorDatastore(t *testing.T) {
@@ -52,9 +53,9 @@ type IndicatorDataStoreTestSuite struct {
 	indexer         index.Indexer
 	searcher        processSearch.Searcher
 
-	badgerDB  *badger.DB
-	badgerDir string
-	boltDB    *bolt.DB
+	rocksDB *gorocksdb.DB
+	dir     string
+	boltDB  *bolt.DB
 
 	hasNoneCtx  context.Context
 	hasReadCtx  context.Context
@@ -75,9 +76,9 @@ func (suite *IndicatorDataStoreTestSuite) SetupTest() {
 			sac.ResourceScopeKeys(resources.Indicator)))
 
 	var err error
-	suite.badgerDB, suite.badgerDir, err = badgerhelper.NewTemp(testutils.DBFileName(suite))
+	suite.rocksDB, suite.dir, err = rocksdb.NewTemp(testutils.DBFileName(suite))
 	suite.NoError(err)
-	suite.storage = badgerStore.New(suite.badgerDB)
+	suite.storage = rocksStore.New(suite.rocksDB)
 
 	suite.boltDB = testutils.DBForSuite(suite)
 	suite.commentsStorage = commentsstore.New(suite.boltDB)
@@ -92,7 +93,7 @@ func (suite *IndicatorDataStoreTestSuite) SetupTest() {
 }
 
 func (suite *IndicatorDataStoreTestSuite) TearDownTest() {
-	testutils.TearDownBadger(suite.badgerDB, suite.badgerDir)
+	rocksdbtest.TearDownRocksDB(suite.rocksDB, suite.dir)
 	testutils.TearDownDB(suite.boltDB)
 	suite.mockCtrl.Finish()
 }

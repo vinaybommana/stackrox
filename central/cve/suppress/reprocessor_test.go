@@ -2,7 +2,6 @@ package suppress
 
 import (
 	"github.com/blevesearch/bleve"
-	"github.com/dgraph-io/badger"
 	"github.com/gogo/protobuf/types"
 	clusterIndexer "github.com/stackrox/rox/central/cluster/index"
 	clusterCVEEdgeIndexer "github.com/stackrox/rox/central/clustercveedge/index"
@@ -22,10 +21,11 @@ import (
 	pkgDackBox "github.com/stackrox/rox/pkg/dackbox"
 	"github.com/stackrox/rox/pkg/dackbox/indexer"
 	"github.com/stackrox/rox/pkg/dackbox/utils/queue"
-	"github.com/stackrox/rox/pkg/testutils"
+	"github.com/stackrox/rox/pkg/testutils/rocksdbtest"
 	"github.com/stackrox/rox/pkg/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tecbot/gorocksdb"
 
 	"testing"
 	"time"
@@ -74,8 +74,8 @@ func TestUnsuppressCVEs(t *testing.T) {
 		},
 	}
 
-	db := testutils.BadgerDBForT(t)
-	defer utils.IgnoreError(db.Close)
+	db := rocksdbtest.RocksDBForT(t)
+	defer db.Close()
 	bleveIndex, err := globalindex.MemOnlyIndex()
 	require.NoError(t, err)
 
@@ -106,6 +106,10 @@ func TestUnsuppressCVEs(t *testing.T) {
 		assert.NoError(t, err)
 		assert.True(t, actual.Suppressed)
 	}
+
+	newSig := concurrency.NewSignal()
+	indexQ.PushSignal(&newSig)
+	newSig.Wait()
 }
 
 func createDataStore(t *testing.T, dacky *pkgDackBox.DackBox, bleveIndex bleve.Index) cveDataStore.DataStore {
@@ -127,9 +131,9 @@ func createDataStore(t *testing.T, dacky *pkgDackBox.DackBox, bleveIndex bleve.I
 	return ds
 }
 
-func testDackBoxInstance(t *testing.T, db *badger.DB, index bleve.Index) (*pkgDackBox.DackBox, indexer.WrapperRegistry, queue.WaitableQueue) {
+func testDackBoxInstance(t *testing.T, db *gorocksdb.DB, index bleve.Index) (*pkgDackBox.DackBox, indexer.WrapperRegistry, queue.WaitableQueue) {
 	indexingQ := queue.NewWaitableQueue()
-	dacky, err := pkgDackBox.NewDackBox(db, indexingQ, []byte("graph"), []byte("dirty"), []byte("valid"))
+	dacky, err := pkgDackBox.NewRocksDBDackBox(db, indexingQ, []byte("graph"), []byte("dirty"), []byte("valid"))
 	require.NoError(t, err)
 
 	reg := indexer.NewWrapperRegistry()

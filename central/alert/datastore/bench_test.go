@@ -9,10 +9,11 @@ import (
 	"github.com/stackrox/rox/central/alert/datastore/internal/search"
 	"github.com/stackrox/rox/central/alert/datastore/internal/store"
 	badgerStore "github.com/stackrox/rox/central/alert/datastore/internal/store/badger"
-	"github.com/stackrox/rox/central/globaldb"
+	rocksDBStore "github.com/stackrox/rox/central/alert/datastore/internal/store/rocksdb"
 	"github.com/stackrox/rox/central/globalindex"
 	"github.com/stackrox/rox/pkg/badgerhelper"
 	"github.com/stackrox/rox/pkg/fixtures"
+	"github.com/stackrox/rox/pkg/rocksdb"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,7 +21,13 @@ func BenchmarkDBs(b *testing.B) {
 	b.Run("badger", func(b *testing.B) {
 		db, _, err := badgerhelper.NewTemp("alert_bench_test")
 		require.NoError(b, err)
-		benchmarkLoad(b, badgerStore.New(db), commentsStore.New(globaldb.GetGlobalDB()))
+		benchmarkLoad(b, badgerStore.New(db), nil)
+	})
+
+	b.Run("rocksdb", func(b *testing.B) {
+		db, _, err := rocksdb.NewTemp("alert_bench_test")
+		require.NoError(b, err)
+		benchmarkLoad(b, rocksDBStore.NewFullStore(db), nil)
 	})
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/stackrox/rox/central/globaldb/metrics"
 	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/fileutils"
+	"github.com/stackrox/rox/pkg/rocksdb"
 	generic "github.com/stackrox/rox/pkg/rocksdb/crud"
 	"github.com/stackrox/rox/pkg/sync"
 	"github.com/tecbot/gorocksdb"
@@ -24,26 +25,13 @@ var (
 	rocksDB   *gorocksdb.DB
 )
 
-// NewRocksDB creates a RockDB at the specified path
-func NewRocksDB(path string) (*gorocksdb.DB, error) {
-	return gorocksdb.OpenDb(GetRocksDBOptions(), path)
-}
-
-// GetRocksDBOptions returns the options used to open RocksDB.
-func GetRocksDBOptions() *gorocksdb.Options {
-	opts := gorocksdb.NewDefaultOptions()
-	opts.SetCreateIfMissing(true)
-	opts.SetCompression(gorocksdb.LZ4Compression)
-	return opts
-}
-
 // GetRocksDB returns the global rocksdb instance
 func GetRocksDB() *gorocksdb.DB {
 	if !features.RocksDB.Enabled() {
 		return nil
 	}
 	rocksInit.Do(func() {
-		db, err := NewRocksDB(RocksDBPath)
+		db, err := rocksdb.New(RocksDBPath)
 		if err != nil {
 			panic(err)
 		}

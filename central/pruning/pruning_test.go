@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/blevesearch/bleve"
-	"github.com/dgraph-io/badger"
 	protoTypes "github.com/gogo/protobuf/types"
 	"github.com/golang/mock/gomock"
 	alertDatastore "github.com/stackrox/rox/central/alert/datastore"
@@ -45,8 +44,10 @@ import (
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/set"
 	"github.com/stackrox/rox/pkg/testutils"
+	"github.com/stackrox/rox/pkg/testutils/rocksdbtest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tecbot/gorocksdb"
 )
 
 const (
@@ -163,7 +164,7 @@ func newPod(live bool, imageIDs ...string) *storage.Pod {
 }
 
 func generateImageDataStructures(ctx context.Context, t *testing.T) (alertDatastore.DataStore, configDatastore.DataStore, imageDatastore.DataStore, deploymentDatastore.DataStore, podDatastore.DataStore, queue.WaitableQueue) {
-	db := testutils.BadgerDBForT(t)
+	db := rocksdbtest.RocksDBForT(t)
 
 	bleveIndex, err := globalindex.MemOnlyIndex()
 	require.NoError(t, err)
@@ -179,7 +180,7 @@ func generateImageDataStructures(ctx context.Context, t *testing.T) (alertDatast
 	registry.RegisterWrapper(imageDackBox.Bucket, imageIndex.Wrapper{})
 
 	// Initialize real datastore
-	images, err := imageDatastore.NewBadger(dacky, concurrency.NewKeyFence(), db, bleveIndex, true, mockComponentDatastore, mockRiskDatastore, ranking.NewRanker(), ranking.NewRanker())
+	images, err := imageDatastore.NewBadger(dacky, concurrency.NewKeyFence(), nil, bleveIndex, true, mockComponentDatastore, mockRiskDatastore, ranking.NewRanker(), ranking.NewRanker())
 	require.NoError(t, err)
 
 	mockProcessDataStore := processIndicatorDatastoreMocks.NewMockDataStore(ctrl)
@@ -197,23 +198,23 @@ func generateImageDataStructures(ctx context.Context, t *testing.T) (alertDatast
 	mockFilter.EXPECT().Update(gomock.Any()).AnyTimes()
 	mockFilter.EXPECT().UpdateByPod(gomock.Any()).AnyTimes()
 
-	deployments, err := deploymentDatastore.NewBadger(dacky, concurrency.NewKeyFence(), db, nil, bleveIndex, bleveIndex, nil, mockProcessDataStore, mockWhitelistDataStore, nil, mockRiskDatastore, nil, mockFilter, ranking.NewRanker(), ranking.NewRanker(), ranking.NewRanker())
+	deployments, err := deploymentDatastore.NewBadger(dacky, concurrency.NewKeyFence(), nil, nil, bleveIndex, bleveIndex, nil, mockProcessDataStore, mockWhitelistDataStore, nil, mockRiskDatastore, nil, mockFilter, ranking.NewRanker(), ranking.NewRanker(), ranking.NewRanker())
 	require.NoError(t, err)
 
-	pods, err := podDatastore.New(db, bleveIndex, mockProcessDataStore, mockFilter)
+	pods, err := podDatastore.NewRocksDB(db, bleveIndex, mockProcessDataStore, mockFilter)
 	require.NoError(t, err)
 
 	return mockAlertDatastore, mockConfigDatastore, images, deployments, pods, indexingQ
 }
 
 func generateAlertDataStructures(ctx context.Context, t *testing.T) (alertDatastore.DataStore, configDatastore.DataStore, imageDatastore.DataStore, deploymentDatastore.DataStore) {
-	db := testutils.BadgerDBForT(t)
+	db := rocksdbtest.RocksDBForT(t)
 	commentsDB := testutils.DBForT(t)
 
 	bleveIndex, err := globalindex.MemOnlyIndex()
 	require.NoError(t, err)
 
-	dacky, err := dackbox.NewDackBox(db, nil, []byte("graph"), []byte("dirty"), []byte("valid"))
+	dacky, err := dackbox.NewRocksDBDackBox(db, nil, []byte("graph"), []byte("dirty"), []byte("valid"))
 	require.NoError(t, err)
 
 	// Initialize real datastore
@@ -234,7 +235,7 @@ func generateAlertDataStructures(ctx context.Context, t *testing.T) (alertDatast
 	mockFilter := filterMocks.NewMockFilter(ctrl)
 	mockFilter.EXPECT().Update(gomock.Any()).AnyTimes()
 
-	deployments, err := deploymentDatastore.NewBadger(dacky, concurrency.NewKeyFence(), db, nil, bleveIndex, bleveIndex, nil, mockProcessDataStore, mockWhitelistDataStore, nil, mockRiskDatastore, nil, mockFilter, ranking.NewRanker(), ranking.NewRanker(), ranking.NewRanker())
+	deployments, err := deploymentDatastore.NewBadger(dacky, concurrency.NewKeyFence(), nil, nil, bleveIndex, bleveIndex,nil, mockProcessDataStore, mockWhitelistDataStore, nil, mockRiskDatastore, nil, mockFilter, ranking.NewRanker(), ranking.NewRanker(), ranking.NewRanker())
 	require.NoError(t, err)
 
 	return alerts, mockConfigDatastore, mockImageDatastore, deployments
@@ -1143,9 +1144,9 @@ func TestRemoveOrphanedRisks(t *testing.T) {
 	}
 }
 
-func testDackBoxInstance(t *testing.T, db *badger.DB, index bleve.Index) (*dackbox.DackBox, indexer.WrapperRegistry, queue.WaitableQueue) {
+func testDackBoxInstance(t *testing.T, db *gorocksdb.DB, index bleve.Index) (*dackbox.DackBox, indexer.WrapperRegistry, queue.WaitableQueue) {
 	indexingQ := queue.NewWaitableQueue()
-	dacky, err := dackbox.NewDackBox(db, indexingQ, []byte("graph"), []byte("dirty"), []byte("valid"))
+	dacky, err := dackbox.NewRocksDBDackBox(db, indexingQ, []byte("graph"), []byte("dirty"), []byte("valid"))
 	require.NoError(t, err)
 
 	reg := indexer.NewWrapperRegistry()

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/blevesearch/bleve"
-	"github.com/dgraph-io/badger"
 	"github.com/gogo/protobuf/proto"
 	gogoTypes "github.com/gogo/protobuf/types"
 	deploymentIndex "github.com/stackrox/rox/central/deployment/index"
@@ -18,11 +17,10 @@ import (
 	processIndicatorDataStore "github.com/stackrox/rox/central/processindicator/datastore"
 	processIndicatorIndex "github.com/stackrox/rox/central/processindicator/index"
 	processIndicatorSearch "github.com/stackrox/rox/central/processindicator/search"
-	processIndicatorBadgerStore "github.com/stackrox/rox/central/processindicator/store/badger"
+	processIndicatorStore "github.com/stackrox/rox/central/processindicator/store/rocksdb"
 	"github.com/stackrox/rox/central/role/resources"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/image/policies"
-	"github.com/stackrox/rox/pkg/badgerhelper"
 	"github.com/stackrox/rox/pkg/defaults"
 	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/fixtures"
@@ -30,6 +28,7 @@ import (
 	policyUtils "github.com/stackrox/rox/pkg/policies"
 	"github.com/stackrox/rox/pkg/protoconv"
 	"github.com/stackrox/rox/pkg/readable"
+	"github.com/stackrox/rox/pkg/rocksdb"
 	"github.com/stackrox/rox/pkg/sac"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/blevesearch"
@@ -38,10 +37,12 @@ import (
 	"github.com/stackrox/rox/pkg/searchbasedpolicies/matcher"
 	"github.com/stackrox/rox/pkg/set"
 	"github.com/stackrox/rox/pkg/testutils"
+	"github.com/stackrox/rox/pkg/testutils/rocksdbtest"
 	"github.com/stackrox/rox/pkg/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"github.com/tecbot/gorocksdb"
 )
 
 func TestDefaultPolicies(t *testing.T) {
@@ -52,7 +53,7 @@ type DefaultPoliciesTestSuite struct {
 	suite.Suite
 
 	bleveIndex bleve.Index
-	db         *badger.DB
+	db         *gorocksdb.DB
 	dir        string
 
 	testCtx  context.Context
@@ -100,7 +101,7 @@ func (suite *DefaultPoliciesTestSuite) SetupTest() {
 	suite.bleveIndex, err = globalindex.TempInitializeIndices("")
 	suite.Require().NoError(err)
 
-	suite.db, suite.dir, err = badgerhelper.NewTemp("default_policies_test.db")
+	suite.db, suite.dir, err = rocksdb.NewTemp("default_policies_test.db")
 	suite.Require().NoError(err)
 
 	suite.deploymentIndexer = deploymentIndex.New(suite.bleveIndex, suite.bleveIndex)
@@ -109,7 +110,7 @@ func (suite *DefaultPoliciesTestSuite) SetupTest() {
 	suite.imageIndexer = imageIndex.New(suite.bleveIndex)
 	suite.imageSearcher = blevesearch.WrapUnsafeSearcherAsSearcher(suite.imageIndexer)
 
-	processStore := processIndicatorBadgerStore.New(suite.db)
+	processStore := processIndicatorStore.New(suite.db)
 	processIndexer := processIndicatorIndex.New(suite.bleveIndex)
 	processSearcher := processIndicatorSearch.New(processStore, processIndexer)
 	suite.processDataStore, err = processIndicatorDataStore.New(processStore, nil, processIndexer, processSearcher, nil)
@@ -135,7 +136,7 @@ func (suite *DefaultPoliciesTestSuite) SetupTest() {
 
 func (suite *DefaultPoliciesTestSuite) TearDownTest() {
 	suite.NoError(suite.bleveIndex.Close())
-	testutils.TearDownBadger(suite.db, suite.dir)
+	rocksdbtest.TearDownRocksDB(suite.db, suite.dir)
 }
 
 func (suite *DefaultPoliciesTestSuite) TestNoDuplicatePolicyIDs() {

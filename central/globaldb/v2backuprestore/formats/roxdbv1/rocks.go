@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/pkg/errors"
-	"github.com/stackrox/rox/central/globaldb"
 	"github.com/stackrox/rox/central/globaldb/v2backuprestore/common"
+	"github.com/stackrox/rox/pkg/rocksdb"
 	pkgTar "github.com/stackrox/rox/pkg/tar"
 	"github.com/stackrox/rox/pkg/utils"
 	"github.com/tecbot/gorocksdb"
@@ -36,7 +36,7 @@ func restoreRocksDB(ctx common.RestoreFileContext, fileReader io.Reader, size in
 	}
 
 	// Generate the backup files in the directory.
-	backupEngine, err := gorocksdb.OpenBackupEngine(globaldb.GetRocksDBOptions(), tmpDir)
+	backupEngine, err := gorocksdb.OpenBackupEngine(rocksdb.GetRocksDBOptions(), tmpDir)
 	if err != nil {
 		return errors.Wrap(err, "error initializing backup process")
 	}
@@ -52,7 +52,7 @@ func restoreRocksDB(ctx common.RestoreFileContext, fileReader io.Reader, size in
 }
 
 func validateRocksDB(dbPath string) error {
-	rocksDB, err := globaldb.NewRocksDB(dbPath)
+	rocksDB, err := rocksdb.New(dbPath)
 	if err != nil {
 		return errors.Wrap(err, "unable to open rocksdb path after restore")
 	}

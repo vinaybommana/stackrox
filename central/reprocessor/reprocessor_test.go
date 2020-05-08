@@ -6,22 +6,27 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	deploymentDackbox "github.com/stackrox/rox/central/deployment/dackbox"
 	deploymentDatastore "github.com/stackrox/rox/central/deployment/datastore"
 	deploymentMocks "github.com/stackrox/rox/central/deployment/datastore/mocks"
+	deploymentIndex "github.com/stackrox/rox/central/deployment/index"
 	"github.com/stackrox/rox/central/globalindex"
+	indexDackbox "github.com/stackrox/rox/central/image/dackbox"
 	imageDatastore "github.com/stackrox/rox/central/image/datastore"
 	imageMocks "github.com/stackrox/rox/central/image/datastore/mocks"
+	imageIndex "github.com/stackrox/rox/central/image/index"
 	"github.com/stackrox/rox/central/ranking"
 	connectionMocks "github.com/stackrox/rox/central/sensor/service/connection/mocks"
 	"github.com/stackrox/rox/generated/internalapi/central"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/dackbox"
-	"github.com/stackrox/rox/pkg/features"
+	"github.com/stackrox/rox/pkg/dackbox/indexer"
+	"github.com/stackrox/rox/pkg/dackbox/utils/queue"
 	"github.com/stackrox/rox/pkg/fixtures"
 	enricherMocks "github.com/stackrox/rox/pkg/images/enricher/mocks"
 	"github.com/stackrox/rox/pkg/process/filter"
 	"github.com/stackrox/rox/pkg/sac"
-	"github.com/stackrox/rox/pkg/testutils"
+	"github.com/stackrox/rox/pkg/testutils/rocksdbtest"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
@@ -138,22 +143,26 @@ func (suite *loopTestSuite) TestStopWorks() {
 }
 
 func TestGetActiveImageIDs(t *testing.T) {
-	envIso := testutils.NewEnvIsolator(t)
-	envIso.Setenv(features.Dackbox.EnvVar(), "false")
-	defer envIso.RestoreAll()
+	rocksDB := rocksdbtest.RocksDBForT(t)
 
-	badgerDB := testutils.BadgerDBForT(t)
-
-	dacky, err := dackbox.NewDackBox(badgerDB, nil, []byte("graph"), []byte("dirty"), []byte("valid"))
+	indexingQ := queue.NewWaitableQueue()
+	dacky, err := dackbox.NewRocksDBDackBox(rocksDB, indexingQ, []byte("graph"), []byte("dirty"), []byte("valid"))
 	require.NoError(t, err)
 
 	bleveIndex, err := globalindex.MemOnlyIndex()
 	require.NoError(t, err)
 
-	imageDS, err := imageDatastore.NewBadger(dacky, concurrency.NewKeyFence(), badgerDB, bleveIndex, false, nil, nil, ranking.NewRanker(), ranking.NewRanker())
+	reg := indexer.NewWrapperRegistry()
+	lazy := indexer.NewLazy(indexingQ, reg, bleveIndex, dacky.AckIndexed)
+	lazy.Start()
+
+	reg.RegisterWrapper(deploymentDackbox.Bucket, deploymentIndex.Wrapper{})
+	reg.RegisterWrapper(indexDackbox.Bucket, imageIndex.Wrapper{})
+
+	imageDS, err := imageDatastore.NewBadger(dacky, concurrency.NewKeyFence(), nil, bleveIndex, false, nil, nil, ranking.NewRanker(), ranking.NewRanker())
 	require.NoError(t, err)
 
-	deploymentsDS, err := deploymentDatastore.NewBadger(dacky, concurrency.NewKeyFence(), badgerDB, nil, bleveIndex, bleveIndex, nil, nil, nil, nil, nil,
+	deploymentsDS, err := deploymentDatastore.NewBadger(dacky, concurrency.NewKeyFence(), nil, nil, bleveIndex, bleveIndex, nil, nil, nil, nil, nil,
 		nil, filter.NewFilter(5, []int{5}), ranking.NewRanker(), ranking.NewRanker(), ranking.NewRanker())
 	require.NoError(t, err)
 
@@ -174,6 +183,10 @@ func TestGetActiveImageIDs(t *testing.T) {
 		require.NoError(t, imageDS.UpsertImage(testCtx, image))
 		imageIDs = append(imageIDs, image.GetId())
 	}
+
+	newSig := concurrency.NewSignal()
+	indexingQ.PushSignal(&newSig)
+	newSig.Wait()
 
 	ids, err = loop.getActiveImageIDs()
 	require.NoError(t, err)
