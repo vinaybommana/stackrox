@@ -3,13 +3,16 @@ package detection
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/booleanpolicy"
+	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/policies"
 	"github.com/stackrox/rox/pkg/scopecomp"
 	"github.com/stackrox/rox/pkg/searchbasedpolicies"
 )
 
-// CompiledPolicy is a compiled policy, which means it has a generated matcher and predicate function.
+// CompiledPolicy is a compiled policy, which means it can match a policy, as well as check whether a policy is applicable.
 type CompiledPolicy interface {
 	Policy() *storage.Policy
 
@@ -24,11 +27,29 @@ type CompiledPolicy interface {
 	Predicate
 }
 
-// newCompiledPolicy creates and returns a compiled policy from the policy and matcher.
+// newCompiledPolicy creates and returns a compiled policy from the policy and legacySearchBasedMatcher.
 func newCompiledPolicy(policy *storage.Policy, matcher searchbasedpolicies.Matcher) (CompiledPolicy, error) {
 	compiled := &compiledPolicy{
-		policy:  policy,
-		matcher: matcher,
+		policy:                   policy,
+		legacySearchBasedMatcher: matcher,
+	}
+
+	if features.BooleanPolicyLogic.Enabled() {
+		if policies.AppliesAtDeployTime(policy) || policies.AppliesAtRunTime(policy) {
+			deploymentMatcher, err := booleanpolicy.BuildDeploymentMatcher(policy)
+			if err != nil {
+				return nil, errors.Wrap(err, "building deployment matcher")
+			}
+			compiled.deploymentMatcher = deploymentMatcher
+		}
+
+		if policies.AppliesAtBuildTime(policy) {
+			imageMatcher, err := booleanpolicy.BuildImageMatcher(policy)
+			if err != nil {
+				return nil, errors.Wrap(err, "building image matcher")
+			}
+			compiled.imageMatcher = imageMatcher
+		}
 	}
 
 	whitelists := make([]*compiledWhitelist, 0, len(policy.GetWhitelists()))
@@ -55,20 +76,43 @@ func newCompiledPolicy(policy *storage.Policy, matcher searchbasedpolicies.Match
 // Top level compiled Policy.
 type compiledPolicy struct {
 	policy     *storage.Policy
-	matcher    searchbasedpolicies.Matcher
 	predicates []Predicate
+
+	legacySearchBasedMatcher searchbasedpolicies.Matcher
+
+	deploymentMatcher booleanpolicy.DeploymentMatcher
+	imageMatcher      booleanpolicy.ImageMatcher
 }
 
 func (cp *compiledPolicy) MatchAgainstDeploymentAndProcess(deployment *storage.Deployment, images []*storage.Image, pi *storage.ProcessIndicator) (searchbasedpolicies.Violations, error) {
-	return cp.matcher.MatchOne(context.Background(), deployment, images, pi)
+	if features.BooleanPolicyLogic.Enabled() {
+		if cp.deploymentMatcher == nil {
+			return searchbasedpolicies.Violations{}, errors.Errorf("couldn't match policy %s against deployments and processes", cp.Policy().GetName())
+		}
+		return cp.deploymentMatcher.MatchDeployment(context.Background(), deployment, images, pi)
+	}
+	return cp.legacySearchBasedMatcher.MatchOne(context.Background(), deployment, images, pi)
 }
 
 func (cp *compiledPolicy) MatchAgainstDeployment(deployment *storage.Deployment, images []*storage.Image) (searchbasedpolicies.Violations, error) {
-	return cp.matcher.MatchOne(context.Background(), deployment, images, nil)
+	if features.BooleanPolicyLogic.Enabled() {
+		if cp.deploymentMatcher == nil {
+			return searchbasedpolicies.Violations{}, errors.Errorf("couldn't match policy %s against deployments", cp.Policy().GetName())
+		}
+		return cp.deploymentMatcher.MatchDeployment(context.Background(), deployment, images, nil)
+	}
+	return cp.legacySearchBasedMatcher.MatchOne(context.Background(), deployment, images, nil)
 }
 
 func (cp *compiledPolicy) MatchAgainstImage(image *storage.Image) (searchbasedpolicies.Violations, error) {
-	return cp.matcher.MatchOne(context.Background(), nil, []*storage.Image{image}, nil)
+	if features.BooleanPolicyLogic.Enabled() {
+		if cp.imageMatcher == nil {
+			return searchbasedpolicies.Violations{}, errors.Errorf("couldn't match policy %s against images", cp.Policy().GetName())
+		}
+		return cp.imageMatcher.MatchImage(context.Background(), image)
+	}
+
+	return cp.legacySearchBasedMatcher.MatchOne(context.Background(), nil, []*storage.Image{image}, nil)
 }
 
 // Policy returns the policy that was compiled.

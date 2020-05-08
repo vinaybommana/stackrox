@@ -38,7 +38,6 @@ import (
 	"github.com/stackrox/rox/pkg/sac"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/set"
-	"github.com/stackrox/rox/pkg/sliceutils"
 	"github.com/stackrox/rox/pkg/sync"
 	"github.com/stackrox/rox/pkg/utils"
 	"google.golang.org/grpc"
@@ -181,22 +180,26 @@ func (s *serviceImpl) ListPolicies(ctx context.Context, request *v1.RawQuery) (*
 	return resp, nil
 }
 
-// PostPolicy inserts a new policy into the system.
-func (s *serviceImpl) PostPolicy(ctx context.Context, request *storage.Policy) (*storage.Policy, error) {
-	request.LastUpdated = protoconv.ConvertTimeToTimestamp(time.Now())
+func (s *serviceImpl) addOrUpdatePolicy(ctx context.Context, request *storage.Policy, extraValidateFunc func(*storage.Policy) error, updateFunc func(context.Context, *storage.Policy) error) (*storage.Policy, error) {
+	if extraValidateFunc != nil {
+		if err := extraValidateFunc(request); err != nil {
+			return nil, err
+		}
+	}
 
-	if request.GetId() != "" {
-		return nil, status.Error(codes.InvalidArgument, "Id field should be empty when posting a new policy")
+	if features.BooleanPolicyLogic.Enabled() {
+		if err := booleanpolicy.EnsureConverted(request); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "Could not ensure policy format: %v", err.Error())
+		}
 	}
 	if err := s.validator.validate(ctx, request); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	id, err := s.policies.AddPolicy(ctx, request)
-	if err != nil {
+	request.LastUpdated = protoconv.ConvertTimeToTimestamp(time.Now())
+	if err := updateFunc(ctx, request); err != nil {
 		return nil, err
 	}
-	request.Id = id
 
 	if err := s.addActivePolicy(request); err != nil {
 		return nil, errors.Wrap(err, "Policy could not be edited due to")
@@ -209,26 +212,33 @@ func (s *serviceImpl) PostPolicy(ctx context.Context, request *storage.Policy) (
 	return request, nil
 }
 
+func ensureIDEmpty(p *storage.Policy) error {
+	if p.GetId() != "" {
+		return status.Error(codes.InvalidArgument, "Id field should be empty when posting a new policy")
+	}
+	return nil
+}
+
+func (s *serviceImpl) addPolicyToStoreAndSetID(ctx context.Context, p *storage.Policy) error {
+	id, err := s.policies.AddPolicy(ctx, p)
+	if err != nil {
+		return err
+	}
+	p.Id = id
+	return nil
+}
+
+// PostPolicy inserts a new policy into the system.
+func (s *serviceImpl) PostPolicy(ctx context.Context, request *storage.Policy) (*storage.Policy, error) {
+	return s.addOrUpdatePolicy(ctx, request, ensureIDEmpty, s.addPolicyToStoreAndSetID)
+}
+
 // PutPolicy updates a current policy in the system.
 func (s *serviceImpl) PutPolicy(ctx context.Context, request *storage.Policy) (*v1.Empty, error) {
-	request.LastUpdated = protoconv.ConvertTimeToTimestamp(time.Now())
-
-	if err := s.validator.validate(ctx, request); err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
-	}
-
-	if err := s.policies.UpdatePolicy(ctx, request); err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	if err := s.addActivePolicy(request); err != nil {
-		return nil, errors.Wrap(err, "Policy could not be edited due to")
-	}
-
-	if err := s.syncPoliciesWithSensors(); err != nil {
+	_, err := s.addOrUpdatePolicy(ctx, request, nil, s.policies.UpdatePolicy)
+	if err != nil {
 		return nil, err
 	}
-
 	return &v1.Empty{}, nil
 }
 
@@ -362,7 +372,7 @@ func (s *serviceImpl) predicateBasedDryRunPolicy(ctx context.Context, cancelCtx 
 
 	// Dry runs do not apply to policies with whitelists or runtime lifecycle stage because they are evaluated
 	// through the process indicator pipeline
-	if (features.BooleanPolicyLogic.Enabled() && booleanpolicy.IsWhitelistEnabled(request)) || request.GetFields().GetWhitelistEnabled() || sliceutils.Find(request.GetLifecycleStages(), storage.LifecycleStage_RUNTIME) != -1 {
+	if policies.AppliesAtRunTime(request) {
 		return &resp, nil
 	}
 

@@ -19,8 +19,8 @@ import (
 )
 
 var (
-	defaultNameValidator        = regexp.MustCompile(`^[^\n\r\$]{5,64}$`)
-	defaultDescriptionValidator = regexp.MustCompile(`^[^\$]{1,256}$`)
+	nameValidator        = regexp.MustCompile(`^[^\n\r\$]{5,64}$`)
+	descriptionValidator = regexp.MustCompile(`^[^\$]{1,256}$`)
 )
 
 func newPolicyValidator(notifierStorage notifierDataStore.DataStore, deploymentMatcherBuilder, imageMatcherBuilder matcher.Builder) *policyValidator {
@@ -28,8 +28,6 @@ func newPolicyValidator(notifierStorage notifierDataStore.DataStore, deploymentM
 		notifierStorage:          notifierStorage,
 		deploymentMatcherBuilder: deploymentMatcherBuilder,
 		imageMatcherBuilder:      imageMatcherBuilder,
-		nameValidator:            defaultNameValidator,
-		descriptionValidator:     defaultDescriptionValidator,
 	}
 }
 
@@ -40,9 +38,6 @@ type policyValidator struct {
 	notifierStorage          notifierDataStore.DataStore
 	deploymentMatcherBuilder matcher.Builder
 	imageMatcherBuilder      matcher.Builder
-
-	nameValidator        *regexp.Regexp
-	descriptionValidator *regexp.Regexp
 }
 
 func (s *policyValidator) validate(ctx context.Context, policy *storage.Policy) error {
@@ -81,7 +76,7 @@ func (s *policyValidator) internalValidate(policy *storage.Policy, additionalVal
 }
 
 func (s *policyValidator) validateName(policy *storage.Policy) error {
-	if policy.GetName() == "" || !s.nameValidator.MatchString(policy.GetName()) {
+	if policy.GetName() == "" || !nameValidator.MatchString(policy.GetName()) {
 		return errors.New("policy must have a name, at least 5 chars long, and contain no punctuation or special characters")
 	}
 	return nil
@@ -91,11 +86,14 @@ func (s *policyValidator) validateVersion(policy *storage.Policy) error {
 	if !features.BooleanPolicyLogic.Enabled() && booleanpolicy.IsBooleanPolicy(policy) {
 		return errors.New("boolean policies are not enabled")
 	}
+	if features.BooleanPolicyLogic.Enabled() && !booleanpolicy.IsBooleanPolicy(policy) {
+		return errors.New("policy not converted to boolean policy")
+	}
 	return nil
 }
 
 func (s *policyValidator) validateDescription(policy *storage.Policy) error {
-	if policy.GetDescription() != "" && !s.descriptionValidator.MatchString(policy.GetDescription()) {
+	if policy.GetDescription() != "" && !descriptionValidator.MatchString(policy.GetDescription()) {
 		return errors.New("description, when present, should be of sentence form, and not contain more than 200 characters")
 	}
 	return nil
@@ -248,6 +246,13 @@ func (s *policyValidator) validateScope(scope *storage.Scope) error {
 }
 
 func (s *policyValidator) compilesForBuildTime(policy *storage.Policy) error {
+	if features.BooleanPolicyLogic.Enabled() {
+		_, err := booleanpolicy.BuildImageMatcher(policy)
+		if err != nil {
+			return errors.Wrap(err, "policy configuration is invalid for build time")
+		}
+		return nil
+	}
 	m, err := s.imageMatcherBuilder.ForPolicy(policy)
 	if err != nil {
 		return errors.Wrap(err, "policy configuration is invalid for build time")
@@ -259,6 +264,17 @@ func (s *policyValidator) compilesForBuildTime(policy *storage.Policy) error {
 }
 
 func (s *policyValidator) compilesForDeployTime(policy *storage.Policy) error {
+	if features.BooleanPolicyLogic.Enabled() {
+		_, err := booleanpolicy.BuildDeploymentMatcher(policy)
+		if err != nil {
+			return errors.Wrap(err, "policy configuration is invalid for deploy time")
+		}
+		if booleanpolicy.ContainsRuntimeFields(policy) {
+			return errors.New("deploy time policy cannot contain runtime fields")
+		}
+		return nil
+	}
+
 	m, err := s.deploymentMatcherBuilder.ForPolicy(policy)
 	if err != nil {
 		return errors.Wrap(err, "policy configuration is invalid for deploy time")
@@ -273,6 +289,17 @@ func (s *policyValidator) compilesForDeployTime(policy *storage.Policy) error {
 }
 
 func (s *policyValidator) compilesForRunTime(policy *storage.Policy) error {
+	if features.BooleanPolicyLogic.Enabled() {
+		_, err := booleanpolicy.BuildDeploymentMatcher(policy)
+		if err != nil {
+			return errors.Wrap(err, "policy configuration is invalid for runtime")
+		}
+		if !booleanpolicy.ContainsRuntimeFields(policy) {
+			return errors.New("run time policy must contain runtime specific constraints")
+		}
+		return nil
+	}
+
 	m, err := s.deploymentMatcherBuilder.ForPolicy(policy)
 	if err != nil {
 		return errors.Wrap(err, "policy configuration is invalid for run time")
@@ -280,7 +307,7 @@ func (s *policyValidator) compilesForRunTime(policy *storage.Policy) error {
 	if m == nil {
 		return errors.New("run time policy contains no constraints")
 	}
-	if policy.GetFields().GetProcessPolicy() == nil && !(policy.GetFields().GetWhitelistEnabled() || (features.BooleanPolicyLogic.Enabled() && booleanpolicy.IsWhitelistEnabled(policy))) {
+	if policy.GetFields().GetProcessPolicy() == nil && !policy.GetFields().GetWhitelistEnabled() {
 		return errors.New("run time policy must contain runtime specific constraints")
 	}
 	return nil

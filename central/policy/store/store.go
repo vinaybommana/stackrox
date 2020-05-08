@@ -14,6 +14,7 @@ import (
 	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/set"
+	"github.com/stackrox/rox/pkg/utils"
 )
 
 var (
@@ -103,6 +104,11 @@ func addDefaults(store Store) {
 	for _, p := range policies {
 		if !features.BooleanPolicyLogic.Enabled() && booleanpolicy.IsBooleanPolicy(p) {
 			continue
+		}
+		if features.BooleanPolicyLogic.Enabled() {
+			// Hard panic here is okay, since this is a default policy, and we can guarantee that
+			// all default policies can be converted.
+			utils.Must(booleanpolicy.EnsureConverted(p))
 		}
 		// If the ID or Name already exists then ignore
 		if policyIDSet.Contains(p.GetId()) || policyNameSet.Contains(p.GetName()) {

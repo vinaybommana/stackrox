@@ -77,7 +77,7 @@ func (suite *PolicyTestSuite) TestForOneFails() {
 func (suite *PolicyTestSuite) TestThrowsErrorForNotCompilable() {
 	policySet := NewPolicySet(NewPolicyCompiler(suite.mockMatcherBuilder))
 
-	suite.mockMatcherBuilder.EXPECT().ForPolicy(badPolicy).Return(nil, errors.New("cant create matcher"))
+	suite.mockMatcherBuilder.EXPECT().ForPolicy(badPolicy).Return(nil, errors.New("cant create legacySearchBasedMatcher"))
 
 	err := policySet.UpsertPolicy(badPolicy)
 	suite.Error(err, "insertion should not succeed since the compile is set to fail")
