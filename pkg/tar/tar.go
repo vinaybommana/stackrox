@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/stackrox/rox/pkg/utils"
 )
 
 // FromPath writes the contents of a file path to a tar using relative file paths.
@@ -37,13 +38,16 @@ func FromPath(tarTo string, to *tar.Writer) error {
 
 		// open files for taring
 		f, err := os.Open(filePath)
+		defer utils.IgnoreError(f.Close)
 		if err != nil {
 			return errors.Wrap(err, "unable to open file to output to tar")
 		}
-
 		// copy file data into tar writer
 		if _, err := io.Copy(to, f); err != nil {
 			return errors.Wrap(err, "unable to copy file contents to tar")
+		}
+		if err := f.Close(); err != nil {
+			return errors.Wrapf(err, "unable to close file: %s", filePath)
 		}
 		return nil
 	})
@@ -74,6 +78,7 @@ func ToPath(untarTo string, fileReader io.Reader) error {
 			return errors.Wrapf(err, "unable to open file for write: %s", path)
 		}
 		if _, err := io.Copy(f, tarReader); err != nil {
+			utils.IgnoreError(f.Close)
 			return errors.Wrapf(err, "unable to copy to opened file: %s", path)
 		}
 		if err := f.Close(); err != nil {
