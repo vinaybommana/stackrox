@@ -7,6 +7,7 @@ import apiTokens, { selectors as apiTokenSelectors } from './apitokens';
 import auth, { selectors as authSelectors } from './auth';
 import clusters, { selectors as clusterSelectors } from './clusters';
 import deployments, { selectors as deploymentSelectors } from './deployments';
+import formMessages, { selectors as formMessageSelectors } from './formMessages';
 import images, { selectors as imageSelectors } from './images';
 import integrations, { selectors as integrationSelectors } from './integrations';
 import notifications, { selectors as notificationSelectors } from './notifications';
@@ -39,6 +40,7 @@ const appReducer = combineReducers({
     auth,
     clusters,
     deployments,
+    formMessages,
     images,
     integrations,
     notifications,
@@ -80,6 +82,7 @@ const getAPITokens = (state) => getApp(state).apiTokens;
 const getAuth = (state) => getApp(state).auth;
 const getClusters = (state) => getApp(state).clusters;
 const getDeployments = (state) => getApp(state).deployments;
+const getFormMessages = (state) => getApp(state).formMessages;
 const getImages = (state) => getApp(state).images;
 const getIntegrations = (state) => getApp(state).integrations;
 const getNotifications = (state) => getApp(state).notifications;
@@ -109,6 +112,7 @@ const boundSelectors = {
     ...bindSelectors(getAuth, authSelectors),
     ...bindSelectors(getClusters, clusterSelectors),
     ...bindSelectors(getDeployments, deploymentSelectors),
+    ...bindSelectors(getFormMessages, formMessageSelectors),
     ...bindSelectors(getImages, imageSelectors),
     ...bindSelectors(getIntegrations, integrationSelectors),
     ...bindSelectors(getNotifications, notificationSelectors),

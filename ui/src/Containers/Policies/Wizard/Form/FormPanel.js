@@ -7,6 +7,7 @@ import FormButtons from 'Containers/Policies/Wizard/Form/FormButtons';
 import FieldGroupCards from 'Containers/Policies/Wizard/Form/FieldGroupCards';
 import FeatureEnabled from 'Containers/FeatureEnabled';
 import BooleanPolicySection from 'Containers/Policies/Wizard/Form/BooleanPolicySection';
+import FormMessages from './FormMessages';
 
 function FormPanel({ header, fieldGroups, onClose, initialValues }) {
     return (
@@ -18,6 +19,7 @@ function FormPanel({ header, fieldGroups, onClose, initialValues }) {
             className="w-1/2"
         >
             <div className="w-full h-full">
+                <FormMessages />
                 <form className="flex flex-col w-full overflow-auto pb-5">
                     <FieldGroupCards initialValues={initialValues} fieldGroups={fieldGroups} />
                     <FeatureEnabled featureFlag={knownBackendFlags.ROX_BOOLEAN_POLICY_LOGIC}>

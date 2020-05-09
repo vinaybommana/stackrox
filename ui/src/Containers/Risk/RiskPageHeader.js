@@ -21,7 +21,7 @@ function RiskPageHeader({ autoFocusSearchInput, isViewFiltered, searchOptions })
                 placeholder="Add one or more resource filters"
                 autoFocus={autoFocusSearchInput}
             />
-            <FeatureEnabled featureFlag={knownBackendFlags.ROX_POLICY_IMPORT_EXPORT}>
+            <FeatureEnabled featureFlag={knownBackendFlags.ROX_BOOLEAN_POLICY_LOGIC}>
                 <CreatePolicyFromSearch />
             </FeatureEnabled>
         </PageHeader>

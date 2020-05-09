@@ -6,6 +6,7 @@ import { connect } from 'react-redux';
 import { createSelector, createStructuredSelector } from 'reselect';
 
 import { selectors } from 'reducers';
+import { actions as formMessageActions } from 'reducers/formMessages';
 import { actions as pageActions } from 'reducers/policies/page';
 import { actions as tableActions } from 'reducers/policies/table';
 import { actions as wizardActions } from 'reducers/policies/wizard';
@@ -23,6 +24,7 @@ import { preFormatPolicyFields } from 'Containers/Policies/Wizard/Form/utils';
 function Wizard({
     wizardPolicy,
     wizardOpen,
+    clearFormMessages,
     closeWizard,
     history,
     setWizardPolicy,
@@ -31,6 +33,7 @@ function Wizard({
     setWizardStage,
 }) {
     const onClose = useCallback(() => {
+        clearFormMessages();
         closeWizard();
         setWizardPolicy({ name: '' });
         selectPolicyId('');
@@ -38,7 +41,7 @@ function Wizard({
         history.push({
             pathname: `/main/policies`,
         });
-    }, [closeWizard, history, setWizardPolicy, selectPolicyId, setWizardStage]);
+    }, [clearFormMessages, closeWizard, history, setWizardPolicy, selectPolicyId, setWizardStage]);
 
     if (!wizardOpen) return null;
 
@@ -60,6 +63,7 @@ Wizard.propTypes = {
         name: PropTypes.string,
     }),
     wizardOpen: PropTypes.bool.isRequired,
+    clearFormMessages: PropTypes.func.isRequired,
     closeWizard: PropTypes.func.isRequired,
     history: ReactRouterPropTypes.history.isRequired,
     setWizardPolicy: PropTypes.func.isRequired,
@@ -116,6 +120,7 @@ const mapStateToProps = createStructuredSelector({
 });
 
 const mapDispatchToProps = {
+    clearFormMessages: formMessageActions.clearFormMessages,
     closeWizard: pageActions.closeWizard,
     selectPolicyId: tableActions.selectPolicyId,
     setWizardPolicy: wizardActions.setWizardPolicy,
