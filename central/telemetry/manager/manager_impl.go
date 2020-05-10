@@ -110,7 +110,7 @@ func (m *manager) getActiveConfig() *storage.TelemetryConfiguration {
 		utils.Should(errors.New("active telemetry configuration contained invalid data"))
 		cfg = &storage.TelemetryConfiguration{}
 	}
-	return proto.Clone(cfg).(*storage.TelemetryConfiguration)
+	return cfg.Clone()
 }
 
 func (m *manager) UpdateTelemetryConfig(ctx context.Context, config *v1.ConfigureTelemetryRequest) (*storage.TelemetryConfiguration, error) {

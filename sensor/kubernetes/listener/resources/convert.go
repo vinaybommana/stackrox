@@ -15,7 +15,6 @@ import (
 	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/protoconv/k8s"
 	"github.com/stackrox/rox/pkg/protoconv/resources"
-	"github.com/stackrox/rox/pkg/protoutils"
 	"github.com/stackrox/rox/pkg/set"
 	"github.com/stackrox/rox/pkg/sync"
 	"github.com/stackrox/rox/pkg/utils"
@@ -408,7 +407,7 @@ func (w *deploymentWrap) toEvent(action central.ResourceAction) *central.SensorE
 		Id:     w.GetId(),
 		Action: action,
 		Resource: &central.SensorEvent_Deployment{
-			Deployment: protoutils.CloneStorageDeployment(w.Deployment),
+			Deployment: w.Deployment.Clone(),
 		},
 	}
 }

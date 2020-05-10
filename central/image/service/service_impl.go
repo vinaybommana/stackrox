@@ -4,7 +4,6 @@ import (
 	"context"
 	"math"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/pkg/errors"
 	cveDataStore "github.com/stackrox/rox/central/cve/datastore"
@@ -143,7 +142,7 @@ func (s *serviceImpl) InvalidateScanAndRegistryCaches(context.Context, *v1.Empty
 
 func (s *serviceImpl) saveImage(ctx context.Context, img *storage.Image) {
 	// CalculateRiskAndUpsertImage modifies the image, so clone it first
-	img = proto.Clone(img).(*storage.Image)
+	img = img.Clone()
 	// Save the image if we received an ID from sensor
 	// Otherwise, our inferred ID may not match
 	if err := s.riskManager.CalculateRiskAndUpsertImage(img); err != nil {

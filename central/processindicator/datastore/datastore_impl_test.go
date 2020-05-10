@@ -9,7 +9,6 @@ import (
 
 	"github.com/dgraph-io/badger"
 	bolt "github.com/etcd-io/bbolt"
-	"github.com/gogo/protobuf/proto"
 	"github.com/golang/mock/gomock"
 	"github.com/stackrox/rox/central/analystnotes"
 	"github.com/stackrox/rox/central/globalindex"
@@ -569,7 +568,7 @@ func (suite *IndicatorDataStoreTestSuite) TestPruning() {
 	suite.verifyIndicatorsAre(indicators...)
 
 	// Now add an extra indicator; this should cause a cache miss and we should hit the pruning.
-	extraIndicator := proto.Clone(indicators[0]).(*storage.ProcessIndicator)
+	extraIndicator := indicators[0].Clone()
 	extraIndicator.Id = uuid.NewV4().String()
 	extraIndicator.Signal.Args = uuid.NewV4().String()
 	suite.NoError(suite.datastore.AddProcessIndicators(suite.hasWriteCtx, extraIndicator))

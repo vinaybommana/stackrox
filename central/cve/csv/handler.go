@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gogo/protobuf/proto"
 	clusterMappings "github.com/stackrox/rox/central/cluster/index/mappings"
 	clusterCVEEdgeMappings "github.com/stackrox/rox/central/clustercveedge/mappings"
 	componentCVEEdgeMappings "github.com/stackrox/rox/central/componentcveedge/mappings"
@@ -239,13 +238,13 @@ func getScopeContexts(ctx context.Context, resolver *resolvers.Resolver, query *
 }
 
 func scopeByCategory(query *v1.Query, scopeLevel scopeLevel) bool {
-	local := proto.Clone(query).(*v1.Query)
+	local := query.Clone()
 	notCVEQuery, _ := search.FilterQueryWithMap(local, scopeLevel.optionsMap)
 	return notCVEQuery != nil
 }
 
 func isScopable(query *v1.Query) bool {
-	local := proto.Clone(query).(*v1.Query)
+	local := query.Clone()
 	filtered, _ := search.InverseFilterQueryWithMap(local, search.CombineOptionsMaps(
 		cveMappings.OptionsMap, componentCVEEdgeMappings.OptionsMap, clusterCVEEdgeMappings.OptionsMap))
 	if filtered == nil {

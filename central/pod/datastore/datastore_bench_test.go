@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/stackrox/rox/central/globalindex"
 	"github.com/stackrox/rox/central/pod/datastore/internal/search"
 	"github.com/stackrox/rox/central/pod/index"
@@ -53,7 +52,7 @@ func BenchmarkSearchAllPods(b *testing.B) {
 	podsDatastore, err := newDatastoreImpl(podsStore, podsIndexer, podsSearcher, nil, simpleFilter)
 	require.NoError(b, err)
 
-	podPrototype := proto.Clone(fixtures.GetPod()).(*storage.Pod)
+	podPrototype := fixtures.GetPod().Clone()
 
 	const numPods = 1000
 	for i := 0; i < numPods; i++ {

@@ -71,7 +71,7 @@ func (s *splunk) Test() error {
 }
 
 func (s *splunk) postAlert(alert *storage.Alert) error {
-	clonedAlert := protoutils.CloneStorageAlert(alert)
+	clonedAlert := alert.Clone()
 	// Splunk's HEC by default has a limitation of data size == 10KB
 	// Removing some of the fields here to make it smaller
 	// More details on HEC limitation: https://developers.perfectomobile.com/display/TT/Splunk+-+Configure+HTTP+Event+Collector

@@ -6,7 +6,6 @@ import (
 	ptypes "github.com/gogo/protobuf/types"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/alert/convert"
-	"github.com/stackrox/rox/pkg/protoutils"
 	"github.com/stackrox/rox/pkg/uuid"
 )
 
@@ -22,7 +21,7 @@ func PolicyDeploymentAndViolationsToAlert(policy *storage.Policy, deployment *st
 		Id:             uuid.NewV4().String(),
 		LifecycleStage: storage.LifecycleStage_DEPLOY,
 		Deployment:     alertDeployment,
-		Policy:         protoutils.CloneStoragePolicy(policy),
+		Policy:         policy.Clone(),
 		Violations:     violations,
 		Time:           ptypes.TimestampNow(),
 	}

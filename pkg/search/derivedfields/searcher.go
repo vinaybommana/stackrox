@@ -4,7 +4,6 @@ import (
 	"context"
 	"sort"
 
-	"github.com/gogo/protobuf/proto"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/pkg/derivedfields/counter"
 	"github.com/stackrox/rox/pkg/logging"
@@ -30,7 +29,7 @@ func CountSortedSearcher(searcher search.Searcher, counters map[string]counter.D
 		}
 
 		// Local copy to avoid changing input.
-		local := proto.Clone(q).(*v1.Query)
+		local := q.Clone()
 
 		// If derived field sort option is present, clear it
 		sortOption := q.GetPagination().GetSortOptions()[0]

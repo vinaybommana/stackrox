@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/features"
@@ -375,10 +374,10 @@ func verifyImportMultipleSucceeds(t *testing.T) {
 
 	validPolicy := exportPolicy(t, service, knownPolicyID)
 
-	policy1 := proto.Clone(validPolicy).(*storage.Policy)
+	policy1 := validPolicy.Clone()
 	policy1.Id = "new policy ID"
 	policy1.Name = "This is a valid policy"
-	policy2 := proto.Clone(validPolicy).(*storage.Policy)
+	policy2 := validPolicy.Clone()
 	policy2.Id = "another new policy ID"
 	policy2.Name = "This is another valid policy"
 
@@ -398,11 +397,11 @@ func verifyImportMixedSuccess(t *testing.T) {
 	validPolicy := exportPolicy(t, service, knownPolicyID)
 
 	// Policy 1 should be valid
-	policy1 := proto.Clone(validPolicy).(*storage.Policy)
+	policy1 := validPolicy.Clone()
 	policy1.Id = "Probably I should make these UUIDs"
 	policy1.Name = "This is a valid and totally unique policy"
 	// Policy 2 should have a duplicate name error
-	policy2 := proto.Clone(validPolicy).(*storage.Policy)
+	policy2 := validPolicy.Clone()
 	policy2.Id = "another new entirely different policy ID"
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -421,7 +420,7 @@ func verifyNotifiersRemoved(t *testing.T) {
 	validPolicy := exportPolicy(t, service, knownPolicyID)
 
 	// Policy 1 should be valid
-	policy := proto.Clone(validPolicy).(*storage.Policy)
+	policy := validPolicy.Clone()
 	policy.Id = "verifyNotifiersRemoved policy ID"
 	policy.Name = "verifyNotifiersRemoved is a valid policy"
 	policy.Notifiers = []string{"This is not a notifier"}
@@ -445,7 +444,7 @@ func verifyWhitelistsRemoved(t *testing.T) {
 	validPolicy := exportPolicy(t, service, knownPolicyID)
 
 	// Policy 1 should be valid
-	policy := proto.Clone(validPolicy).(*storage.Policy)
+	policy := validPolicy.Clone()
 	policy.Id = "verifyWhitelistsRemoved policy ID"
 	policy.Name = "verifyWhitelistsRemoved is a valid policy"
 	policy.Whitelists = []*storage.Whitelist{
@@ -477,7 +476,7 @@ func verifyScopesRemoved(t *testing.T) {
 	validPolicy := exportPolicy(t, service, knownPolicyID)
 
 	// Policy 1 should be valid
-	policy := proto.Clone(validPolicy).(*storage.Policy)
+	policy := validPolicy.Clone()
 	policy.Id = "verifyScopesRemoved policy ID"
 	policy.Name = "verifyScopesRemoved is a valid policy"
 	policy.Scope = []*storage.Scope{
@@ -505,7 +504,7 @@ func verifyOverwriteNameSucceeds(t *testing.T) {
 	// Create an existing policy so we don't change default policies
 	existingPolicy := createUniquePolicy(t, service)
 
-	newPolicy := proto.Clone(existingPolicy).(*storage.Policy)
+	newPolicy := existingPolicy.Clone()
 	newPolicy.Id = uuid.NewV4().String()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	importResp, err := service.ImportPolicies(ctx, &v1.ImportPoliciesRequest{
@@ -534,7 +533,7 @@ func verifyOverwriteIDSucceeds(t *testing.T) {
 	// Create an existing policy so we don't change default policies
 	existingPolicy := createUniquePolicy(t, service)
 
-	newPolicy := proto.Clone(existingPolicy).(*storage.Policy)
+	newPolicy := existingPolicy.Clone()
 	newPolicy.Name = uuid.NewV4().String()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	importResp, err := service.ImportPolicies(ctx, &v1.ImportPoliciesRequest{
@@ -559,7 +558,7 @@ func verifyOverwriteNameAndIDSucceeds(t *testing.T) {
 	existingPolicyDuplicateName := createUniquePolicy(t, service)
 	existingPolicyDuplicateID := createUniquePolicy(t, service)
 
-	newPolicy := proto.Clone(existingPolicyDuplicateID).(*storage.Policy)
+	newPolicy := existingPolicyDuplicateID.Clone()
 	newPolicy.Name = existingPolicyDuplicateName.GetName()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	importResp, err := service.ImportPolicies(ctx, &v1.ImportPoliciesRequest{

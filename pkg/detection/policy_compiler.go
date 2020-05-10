@@ -2,7 +2,6 @@ package detection
 
 import (
 	"github.com/stackrox/rox/generated/storage"
-	"github.com/stackrox/rox/pkg/protoutils"
 	"github.com/stackrox/rox/pkg/searchbasedpolicies/matcher"
 )
 
@@ -25,7 +24,7 @@ type policyCompilerImpl struct {
 
 // CompilePolicy returns a new instance of CompiledPolicy a build from the input policy.
 func (pc *policyCompilerImpl) CompilePolicy(policy *storage.Policy) (CompiledPolicy, error) {
-	cloned := protoutils.CloneStoragePolicy(policy)
+	cloned := policy.Clone()
 	compiledMatcher, err := pc.matcherBuilder.ForPolicy(cloned)
 	if err != nil {
 		return nil, err

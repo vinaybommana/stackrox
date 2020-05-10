@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/stackrox/rox/central/deployment/datastore/internal/search"
 	"github.com/stackrox/rox/central/deployment/index"
 	badgerStore "github.com/stackrox/rox/central/deployment/store/badger"
@@ -64,7 +63,7 @@ func BenchmarkSearchAllDeployments(b *testing.B) {
 		nil, ranking.NewRanker(), ranking.NewRanker(), ranking.NewRanker())
 	require.NoError(b, err)
 
-	deploymentPrototype := proto.Clone(fixtures.GetDeployment()).(*storage.Deployment)
+	deploymentPrototype := fixtures.GetDeployment().Clone()
 
 	const numDeployments = 1000
 	for i := 0; i < numDeployments; i++ {

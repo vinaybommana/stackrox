@@ -5,7 +5,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/detection"
-	"github.com/stackrox/rox/pkg/protoutils"
 	"github.com/stackrox/rox/pkg/uuid"
 )
 
@@ -50,7 +49,7 @@ func policyAndViolationsToAlert(policy *storage.Policy, violations []*storage.Al
 	alert := &storage.Alert{
 		Id:             uuid.NewV4().String(),
 		LifecycleStage: storage.LifecycleStage_BUILD,
-		Policy:         protoutils.CloneStoragePolicy(policy),
+		Policy:         policy.Clone(),
 		Violations:     violations,
 		Time:           ptypes.TimestampNow(),
 	}
