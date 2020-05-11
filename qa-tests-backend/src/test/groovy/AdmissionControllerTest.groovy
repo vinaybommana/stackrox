@@ -241,8 +241,6 @@ class AdmissionControllerTest extends BaseSpecification {
                 .build()
 
         assert ClusterService.updateAdmissionController(ac)
-        // Maximum time to wait for propagation to sensor
-        sleep 5000
 
         and:
         "Update latest tag policy to respect scope"
@@ -256,6 +254,9 @@ class AdmissionControllerTest extends BaseSpecification {
             )
             .build()
         Services.updatePolicy(scopedLatestTagPolicy)
+
+        // Maximum time to wait for propagation to sensor
+        sleep 5000
 
         then:
         "Create a deployment with a latest tag"
