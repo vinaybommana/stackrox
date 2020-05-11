@@ -45,6 +45,7 @@ class DefaultPoliciesTest extends BaseSpecification {
             "Red Hat Package Manager in Image",
             "Curl in Image",
             "Wget in Image",
+            "Mount Docker Socket",
     ]
 
     static final private Deployment STRUTS_DEPLOYMENT = new Deployment()
