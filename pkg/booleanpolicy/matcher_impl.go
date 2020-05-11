@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pkg/errors"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/booleanpolicy/augmentedobjs"
 	"github.com/stackrox/rox/pkg/booleanpolicy/evaluator/pathutil"
 	"github.com/stackrox/rox/pkg/searchbasedpolicies"
 	"github.com/stackrox/rox/pkg/searchbasedpolicies/builders"
@@ -15,46 +15,7 @@ type matcherImpl struct {
 	evaluators []sectionAndEvaluator
 }
 
-func findMatchingContainerIdxForIndicator(deployment *storage.Deployment, indicator *storage.ProcessIndicator) (int, error) {
-	for i, container := range deployment.GetContainers() {
-		if container.GetName() == indicator.GetContainerName() {
-			return i, nil
-		}
-	}
-	return 0, errors.Errorf("indicator %s could not be matched (container name %s not found in deployment %s/%s/%s",
-		indicator.GetSignal().GetExecFilePath(), indicator.GetContainerName(), deployment.GetClusterId(), deployment.GetNamespace(), deployment.GetName())
-
-}
-
-func matchWithEvaluator(sectionAndEval sectionAndEvaluator, deployment *storage.Deployment, images []*storage.Image, indicator *storage.ProcessIndicator) ([]*storage.Alert_Violation, error) {
-	obj := pathutil.NewAugmentedObj(deployment)
-	if len(images) != len(deployment.GetContainers()) {
-		return nil, errors.Errorf("deployment %s/%s had %d containers, but got %d images",
-			deployment.GetNamespace(), deployment.GetName(), len(deployment.GetContainers()), len(images))
-	}
-	for i, image := range images {
-		err := obj.AddPlainObjAt(
-			(&pathutil.Path{}).TraverseField("Containers").IndexSlice(i).TraverseField(imageAugmentKey),
-			image)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if indicator != nil {
-		matchingContainerIdx, err := findMatchingContainerIdxForIndicator(deployment, indicator)
-		if err != nil {
-			return nil, err
-		}
-		err = obj.AddPlainObjAt(
-			(&pathutil.Path{}).TraverseField("Containers").IndexSlice(matchingContainerIdx).TraverseField(processAugmentKey),
-			indicator,
-		)
-		if err != nil {
-			return nil, err
-		}
-	}
-
+func matchWithEvaluator(sectionAndEval sectionAndEvaluator, obj *pathutil.AugmentedObj) ([]*storage.Alert_Violation, error) {
 	finalResult, matched := sectionAndEval.evaluator.Evaluate(obj.Value())
 	if !matched {
 		return nil, nil
@@ -68,8 +29,12 @@ func matchWithEvaluator(sectionAndEval sectionAndEvaluator, deployment *storage.
 
 func (m *matcherImpl) MatchImage(ctx context.Context, image *storage.Image) (searchbasedpolicies.Violations, error) {
 	var allViolations []*storage.Alert_Violation
+	obj, err := augmentedobjs.ConstructImage(image)
+	if err != nil {
+		return searchbasedpolicies.Violations{}, err
+	}
 	for _, eval := range m.evaluators {
-		result, matched := eval.evaluator.Evaluate(pathutil.NewAugmentedObj(image).Value())
+		result, matched := eval.evaluator.Evaluate(obj.Value())
 		if matched {
 			violations := []*storage.Alert_Violation{{Message: fmt.Sprintf("TODO (%+v)", result)}}
 			allViolations = append(allViolations, violations...)
@@ -84,8 +49,13 @@ func (m *matcherImpl) MatchImage(ctx context.Context, image *storage.Image) (sea
 func (m *matcherImpl) MatchDeployment(ctx context.Context, deployment *storage.Deployment, images []*storage.Image, indicator *storage.ProcessIndicator) (searchbasedpolicies.Violations, error) {
 	var allViolations []*storage.Alert_Violation
 	var atLeastOneMatched bool
+	obj, err := augmentedobjs.ConstructDeployment(deployment, images, indicator)
+	if err != nil {
+		return searchbasedpolicies.Violations{}, err
+	}
+
 	for _, eval := range m.evaluators {
-		violations, err := matchWithEvaluator(eval, deployment, images, indicator)
+		violations, err := matchWithEvaluator(eval, obj)
 		if err != nil {
 			return searchbasedpolicies.Violations{}, err
 		}

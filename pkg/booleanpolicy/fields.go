@@ -3,6 +3,7 @@ package booleanpolicy
 import (
 	"regexp"
 
+	"github.com/stackrox/rox/pkg/booleanpolicy/augmentedobjs"
 	"github.com/stackrox/rox/pkg/booleanpolicy/querybuilders"
 	"github.com/stackrox/rox/pkg/search"
 )
@@ -36,12 +37,12 @@ var (
 	ContainerMemRequest    = newField("Container Memory Request", querybuilders.ForFieldLabel(search.MemoryRequest), comparatorDecimalValueRegex, operatorsForbidden)
 	DisallowedAnnotation   = newField("Disallowed Annotation", nil, keyValueValueRegex, negationForbidden)
 	DisallowedImageLabel   = newField("Disallowed Image Label", nil, keyValueValueRegex, negationForbidden)
-	DockerfileLine         = newField("Dockerfile Line", nil, dockerfileLineValueRegex, negationForbidden)
+	DockerfileLine         = newField("Dockerfile Line", querybuilders.ForCompound(augmentedobjs.DockerfileLineCustomTag), dockerfileLineValueRegex, negationForbidden)
 	DropCaps               = newField("Drop Capabilities", nil, capabilitiesValueRegex, negationForbidden)
 	EnvironmentVariable    = newField("Environment Variable", nil, environmentVariableWithSourceRegex, negationForbidden)
 	FixedBy                = newField("Fixed By", querybuilders.ForFieldLabelRegex(search.FixedBy), stringValueRegex)
 	ImageAge               = newField("Image Age", nil, integerValueRegex, negationForbidden, operatorsForbidden)
-	ImageComponent         = newField("Image Component", nil, keyValueValueRegex)
+	ImageComponent         = newField("Image Component", querybuilders.ForCompound(augmentedobjs.ComponentAndVersionCustomTag), keyValueValueRegex, negationForbidden)
 	ImageRegistry          = newField("Image Registry", querybuilders.ForFieldLabelRegex(search.ImageRegistry), stringValueRegex)
 	ImageRemote            = newField("Image Remote", querybuilders.ForFieldLabelRegex(search.ImageRemote), stringValueRegex, negationForbidden)
 	ImageScanAge           = newField("Image Scan Age", nil, integerValueRegex, negationForbidden, operatorsForbidden)

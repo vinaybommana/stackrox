@@ -45,6 +45,12 @@ type QueryBuilder interface {
 	FieldQueriesForGroup(group *storage.PolicyGroup) []*query.FieldQuery
 }
 
+type queryBuilderFunc func(group *storage.PolicyGroup) []*query.FieldQuery
+
+func (f queryBuilderFunc) FieldQueriesForGroup(group *storage.PolicyGroup) []*query.FieldQuery {
+	return f(group)
+}
+
 type fieldLabelQueryBuilder struct {
 	fieldLabel   search.FieldLabel
 	valueMapFunc func(string) string

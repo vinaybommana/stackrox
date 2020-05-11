@@ -532,7 +532,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "Alpine Linux Package Manager (apk) in Image",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				apkDep.GetId(): {
 					{
@@ -543,7 +542,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "Ubuntu Package Manager in Image",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				componentDeps["apt"].GetId(): {
 					{
@@ -554,7 +552,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "Curl in Image",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				curlDep.GetId(): {
 					{
@@ -565,7 +562,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "Red Hat Package Manager in Image",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				componentDeps["dnf"].GetId(): {
 					{
@@ -576,7 +572,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "Wget in Image",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				componentDeps["wget"].GetId(): {
 					{
@@ -619,7 +614,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "Secure Shell (ssh) Port Exposed in Image",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				imagePort22Dep.GetId(): {
 					{
@@ -678,7 +672,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "Insecure specified in CMD",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				insecureCMDDep.GetId(): {
 					{
@@ -689,7 +682,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "Improper Usage of Orchestrator Secrets Volume",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				runSecretsDep.GetId(): {
 					{
@@ -850,7 +842,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "ADD Command used instead of COPY",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				addDockerFileDep.GetId(): {
 					{
@@ -978,9 +969,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 				}
 				return
 			}
-			for id := range c.expectedViolations {
-				assert.Contains(t, actualViolations, id)
-			}
 			for id := range suite.deployments {
 				_, expected := c.expectedViolations[id]
 				if expected {
@@ -1031,7 +1019,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "Alpine Linux Package Manager (apk) in Image",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(apkDep): {
 					{
@@ -1042,7 +1029,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "Ubuntu Package Manager in Image",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(componentDeps["apt"]): {
 					{
@@ -1053,7 +1039,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "Curl in Image",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(curlDep): {
 					{
@@ -1064,7 +1049,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "Red Hat Package Manager in Image",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(componentDeps["dnf"]): {
 					{
@@ -1075,7 +1059,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "Wget in Image",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(componentDeps["wget"]): {
 					{
@@ -1108,7 +1091,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "Secure Shell (ssh) Port Exposed in Image",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(imagePort22Dep): {
 					{
@@ -1119,7 +1101,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "Insecure specified in CMD",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(insecureCMDDep): {
 					{
@@ -1130,7 +1111,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "Improper Usage of Orchestrator Secrets Volume",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(runSecretsDep): {
 					{
@@ -1196,7 +1176,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "ADD Command used instead of COPY",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(addDockerFileDep): {
 					{
