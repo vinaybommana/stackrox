@@ -28,5 +28,6 @@ func GetRocksDBOptions() *gorocksdb.Options {
 	opts := gorocksdb.NewDefaultOptions()
 	opts.SetCreateIfMissing(true)
 	opts.SetCompression(gorocksdb.LZ4Compression)
+	opts.SetUseFsync(true)
 	return opts
 }
