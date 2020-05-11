@@ -85,3 +85,40 @@ func TestParseArgs(t *testing.T) {
 	parsedArgs := parseArgs(args)
 	assert.Equal(t, expectedArgs, parsedArgs)
 }
+
+func TestGetProcessFromCmdLineBytes(t *testing.T) {
+	cases := []struct {
+		cmdline         string
+		expectedProcess string
+	}{
+		{
+			cmdline:         "",
+			expectedProcess: "",
+		},
+		{
+			cmdline:         "dockerd",
+			expectedProcess: "dockerd",
+		},
+		{
+			cmdline:         "/usr/local/bin/dockerd",
+			expectedProcess: "dockerd",
+		},
+		{
+			cmdline:         "/usr/local/bin/dockerd\x00",
+			expectedProcess: "dockerd",
+		},
+		{
+			cmdline:         "/usr/local/bin/dockerd\x00abc\x00def",
+			expectedProcess: "dockerd",
+		},
+		{
+			cmdline:         "/usr/local/bin/kube-controller-manager\x00abc\x00def",
+			expectedProcess: "kube-controller-manager",
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.cmdline, func(t *testing.T) {
+			assert.Equal(t, c.expectedProcess, getProcessFromCmdLineBytes([]byte(c.cmdline)))
+		})
+	}
+}

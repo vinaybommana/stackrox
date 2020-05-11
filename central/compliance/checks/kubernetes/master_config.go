@@ -38,8 +38,8 @@ func init() {
 		common.OptionalOwnershipCheck("CIS_Kubernetes_v1_5:1_1_18", "/etc/kubernetes/controller-manager.conf", "root", "root"),
 
 		common.RecursiveOwnershipCheckIfDirExists("CIS_Kubernetes_v1_5:1_1_19", "/etc/kubernetes/pki", "root", "root"),
-		common.RecursivePermissionCheckWithFileExtIfDirExists("CIS_Kubernetes_v1_5:1_1_20", "/etc/kubernetes/pki", "crt", 0644),
-		common.RecursivePermissionCheckWithFileExtIfDirExists("CIS_Kubernetes_v1_5:1_1_21", "/etc/kubernetes/pki", "key", 0600),
+		common.RecursivePermissionCheckWithFileExtIfDirExists("CIS_Kubernetes_v1_5:1_1_20", "/etc/kubernetes/pki", ".crt", 0644),
+		common.RecursivePermissionCheckWithFileExtIfDirExists("CIS_Kubernetes_v1_5:1_1_21", "/etc/kubernetes/pki", ".key", 0600),
 	)
 }
 
