@@ -144,7 +144,7 @@ var (
 	RocksDBSize = prometheus.NewGauge(prometheus.GaugeOpts{
 		Namespace: metrics.PrometheusNamespace,
 		Subsystem: metrics.CentralSubsystem.String(),
-		Name:      "rockdb_db_size",
+		Name:      "rocksdb_db_size",
 		Help:      "bytes being used by RocksDB",
 	})
 

@@ -3,7 +3,6 @@ package rocksdb
 import (
 	"github.com/stackrox/rox/pkg/dackbox/transactions"
 	generic "github.com/stackrox/rox/pkg/rocksdb/crud"
-	"github.com/stackrox/rox/pkg/sliceutils"
 	"github.com/tecbot/gorocksdb"
 )
 
@@ -64,16 +63,8 @@ func (t *txnWrapper) Delete(keys ...[]byte) error {
 }
 
 func (t *txnWrapper) Get(key []byte) ([]byte, bool, error) {
-	slice, err := t.db.Get(t.readOpts, key)
-	if err != nil {
-		return nil, false, err
-	}
-	defer slice.Free()
-	if !slice.Exists() {
-		return nil, false, nil
-	}
-	// Copy before returning as the slice is freed in defer
-	return sliceutils.ByteClone(slice.Data()), true, nil
+	data, err := t.db.GetBytes(t.readOpts, key)
+	return data, data != nil, err
 }
 
 func (t *txnWrapper) Set(key, value []byte) error {

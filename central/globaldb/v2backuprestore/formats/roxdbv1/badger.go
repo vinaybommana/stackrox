@@ -5,7 +5,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/central/globaldb/badgerutils"
-	"github.com/stackrox/rox/central/globaldb/dackbox"
 	"github.com/stackrox/rox/central/globaldb/v2backuprestore/common"
 	"github.com/stackrox/rox/pkg/badgerhelper"
 )
@@ -23,9 +22,6 @@ func restoreBadger(ctx common.RestoreFileContext, fileReader io.Reader, size int
 
 	if err := badgerutils.Load(fileReader, db); err != nil {
 		return errors.Wrap(err, "could not load badger DB backup")
-	}
-	if err := dackbox.RemoveReindexBucket(db); err != nil {
-		return errors.Wrap(err, "error dropping backup key")
 	}
 
 	ctx.CheckAsync(func(_ common.RestoreProcessContext) error {

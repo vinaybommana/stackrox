@@ -53,5 +53,5 @@ func ForEachItemWithPrefix(db *gorocksdb.DB, readOpts *gorocksdb.ReadOptions, ke
 			return err
 		}
 	}
-	return nil
+	return it.Err()
 }
