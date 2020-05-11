@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
@@ -329,6 +330,10 @@ func generateFloatMatcher(value string, _ reflect.Type) (baseMatcherAndExtractor
 	}, nil
 }
 
+func isUnsetEnum(value string) bool {
+	return strings.HasPrefix(strings.ToLower(value), "unset")
+}
+
 func generateEnumMatcher(value string, enumRef protoreflect.ProtoEnum) (baseMatcherAndExtractor, error) {
 	baseMatcher, numberToName, err := basematchers.ForEnum(value, enumRef)
 	if err != nil {
@@ -345,6 +350,10 @@ func generateEnumMatcher(value string, enumRef protoreflect.ProtoEnum) (baseMatc
 			utils.Should(errors.Errorf("enum query matched (%s), but no value in numberToName (%v) (got number: %d)",
 				value, numberToName, asInt))
 			matchedValue = strconv.Itoa(int(asInt))
+		}
+		// Treat an unset enum as an undefined value -- it matches no numeric query.
+		if asInt == 0 && isUnsetEnum(matchedValue) {
+			return nil
 		}
 		return []valueMatchedPair{{value: matchedValue, matched: baseMatcher(asInt)}}
 	}, nil

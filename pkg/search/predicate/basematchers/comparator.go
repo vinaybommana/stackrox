@@ -5,23 +5,23 @@ import (
 	"strings"
 )
 
-// Produce a predicate for the given numerical or date time query.
+// The following block enumerates numeric comparator prefixes.
 const (
-	lessThanOrEqualTo    = "<="
-	greaterThanOrEqualTo = ">="
-	lessThan             = "<"
-	greaterThan          = ">"
+	LessThanOrEqualTo    = "<="
+	GreaterThanOrEqualTo = ">="
+	LessThan             = "<"
+	GreaterThan          = ">"
 )
 
 func intComparator(cmp string) (func(a, b int64) bool, error) {
 	switch cmp {
-	case lessThanOrEqualTo:
+	case LessThanOrEqualTo:
 		return func(a, b int64) bool { return a <= b }, nil
-	case greaterThanOrEqualTo:
+	case GreaterThanOrEqualTo:
 		return func(a, b int64) bool { return a >= b }, nil
-	case lessThan:
+	case LessThan:
 		return func(a, b int64) bool { return a < b }, nil
-	case greaterThan:
+	case GreaterThan:
 		return func(a, b int64) bool { return a > b }, nil
 	case "":
 		return func(a, b int64) bool { return a == b }, nil
@@ -32,13 +32,13 @@ func intComparator(cmp string) (func(a, b int64) bool, error) {
 
 func uintComparator(cmp string) (func(a, b uint64) bool, error) {
 	switch cmp {
-	case lessThanOrEqualTo:
+	case LessThanOrEqualTo:
 		return func(a, b uint64) bool { return a <= b }, nil
-	case greaterThanOrEqualTo:
+	case GreaterThanOrEqualTo:
 		return func(a, b uint64) bool { return a >= b }, nil
-	case lessThan:
+	case LessThan:
 		return func(a, b uint64) bool { return a < b }, nil
-	case greaterThan:
+	case GreaterThan:
 		return func(a, b uint64) bool { return a > b }, nil
 	case "":
 		return func(a, b uint64) bool { return a == b }, nil
@@ -49,13 +49,13 @@ func uintComparator(cmp string) (func(a, b uint64) bool, error) {
 
 func floatComparator(cmp string) (func(a, b float64) bool, error) {
 	switch cmp {
-	case lessThanOrEqualTo:
+	case LessThanOrEqualTo:
 		return func(a, b float64) bool { return a <= b }, nil
-	case greaterThanOrEqualTo:
+	case GreaterThanOrEqualTo:
 		return func(a, b float64) bool { return a >= b }, nil
-	case lessThan:
+	case LessThan:
 		return func(a, b float64) bool { return a < b }, nil
-	case greaterThan:
+	case GreaterThan:
 		return func(a, b float64) bool { return a > b }, nil
 	case "":
 		return func(a, b float64) bool { return a == b }, nil
@@ -67,7 +67,7 @@ func floatComparator(cmp string) (func(a, b float64) bool, error) {
 func parseNumericPrefix(value string) (prefix string, trimmedValue string) {
 	// The order which these checks are executed must be maintained.
 	// If we for instance look for "<" before "<=", we will never find "<=" because "<" will be found as its prefix.
-	for _, prefix := range []string{lessThanOrEqualTo, greaterThanOrEqualTo, lessThan, greaterThan} {
+	for _, prefix := range []string{LessThanOrEqualTo, GreaterThanOrEqualTo, LessThan, GreaterThan} {
 		if strings.HasPrefix(value, prefix) {
 			return prefix, strings.TrimSpace(value[len(prefix):])
 		}

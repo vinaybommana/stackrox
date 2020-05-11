@@ -31,19 +31,19 @@ func parseTimestamp(value string) (*types.Timestamp, *time.Duration, error) {
 
 func timestampComparator(cmp string) (func(instance, value *types.Timestamp) bool, error) {
 	switch cmp {
-	case lessThanOrEqualTo:
+	case LessThanOrEqualTo:
 		return func(instance, value *types.Timestamp) bool {
 			return value.Compare(instance) >= 0
 		}, nil
-	case greaterThanOrEqualTo:
+	case GreaterThanOrEqualTo:
 		return func(instance, value *types.Timestamp) bool {
 			return value.Compare(instance) <= 0
 		}, nil
-	case lessThan:
+	case LessThan:
 		return func(instance, value *types.Timestamp) bool {
 			return value.Compare(instance) > 0
 		}, nil
-	case greaterThan:
+	case GreaterThan:
 		return func(instance, value *types.Timestamp) bool {
 			return value.Compare(instance) < 0
 		}, nil

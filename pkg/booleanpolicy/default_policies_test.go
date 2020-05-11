@@ -921,8 +921,13 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			continue
 		}
 		suite.T().Run(fmt.Sprintf("%s (on deployments)", c.policyName), func(t *testing.T) {
-			assert.True(t, (c.expectedViolations != nil) != (c.expectedProcessViolations != nil), "Every test case must"+
-				"contain exactly one of expectedViolations and expectedProcessViolations")
+			if len(c.shouldNotMatch) == 0 {
+				assert.True(t, (c.expectedViolations != nil) != (c.expectedProcessViolations != nil), "Every test case must "+
+					"contain exactly one of expectedViolations and expectedProcessViolations")
+			} else {
+				assert.Nil(t, c.expectedViolations, "Cannot specify shouldNotMatch AND expectedViolations")
+				assert.Nil(t, c.expectedProcessViolations, "Cannot specify shouldNotMatch AND expectedProcessViolations")
+			}
 
 			convertedP, err := CloneAndEnsureConverted(p)
 			require.NoError(t, err)
@@ -1288,5 +1293,65 @@ func (suite *DefaultPoliciesTestSuite) TestRuntimePolicyFieldsCompile() {
 				regexp.MustCompile(processPolicy.GetAncestor())
 			}
 		}
+	}
+}
+
+func policyWithSingleKeyValue(fieldName, value string, negate bool) *storage.Policy {
+	group := &storage.PolicyGroup{FieldName: fieldName, Values: []*storage.PolicyValue{{Value: value}}, Negate: negate}
+	return &storage.Policy{
+		PolicyVersion:  Version,
+		Name:           uuid.NewV4().String(),
+		PolicySections: []*storage.PolicySection{{PolicyGroups: []*storage.PolicyGroup{group}}},
+	}
+}
+
+func (suite *DefaultPoliciesTestSuite) TestK8sRBAC() {
+	deployments := make(map[string]*storage.Deployment)
+	for permissionLevelStr, permissionLevel := range storage.PermissionLevel_value {
+		dep := fixtures.GetDeployment().Clone()
+		dep.ServiceAccountPermissionLevel = storage.PermissionLevel(permissionLevel)
+		deployments[permissionLevelStr] = dep
+	}
+
+	for _, testCase := range []struct {
+		value           string
+		negate          bool
+		expectedMatches []string
+	}{
+		{
+			"DEFAULT",
+			false,
+			[]string{"DEFAULT", "ELEVATED_IN_NAMESPACE", "ELEVATED_CLUSTER_WIDE", "CLUSTER_ADMIN"},
+		},
+		{
+			"ELEVATED_CLUSTER_WIDE",
+			false,
+			[]string{"ELEVATED_CLUSTER_WIDE", "CLUSTER_ADMIN"},
+		},
+		{
+			"CLUSTER_ADMIN",
+			false,
+			[]string{"CLUSTER_ADMIN"},
+		},
+		{
+			"ELEVATED_CLUSTER_WIDE",
+			true,
+			[]string{"NONE", "DEFAULT", "ELEVATED_IN_NAMESPACE"},
+		},
+	} {
+		c := testCase
+		suite.T().Run(fmt.Sprintf("%+v", c), func(t *testing.T) {
+			matcher, err := BuildDeploymentMatcher(policyWithSingleKeyValue(MinimumRBACPermissions, c.value, c.negate))
+			require.NoError(t, err)
+			matched := set.NewStringSet()
+			for depRef, dep := range deployments {
+				violations, err := matcher.MatchDeployment(context.Background(), dep, suite.getImagesForDeployment(dep), nil)
+				require.NoError(t, err)
+				if len(violations.AlertViolations) > 0 {
+					matched.Add(depRef)
+				}
+			}
+			assert.ElementsMatch(t, matched.AsSlice(), c.expectedMatches, "Got %v, expected: %v", matched.AsSlice(), c.expectedMatches)
+		})
 	}
 }

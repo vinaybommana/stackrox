@@ -47,7 +47,7 @@ var (
 	ImageRemote            = newField("Image Remote", querybuilders.ForFieldLabelRegex(search.ImageRemote), stringValueRegex, negationForbidden)
 	ImageScanAge           = newField("Image Scan Age", nil, integerValueRegex, negationForbidden, operatorsForbidden)
 	ImageTag               = newField("Image Tag", querybuilders.ForFieldLabelRegex(search.ImageTag), stringValueRegex)
-	MinimumRBACPermissions = newField("Minimum RBAC Permissions", nil, rbacPermissionValueRegex, operatorsForbidden)
+	MinimumRBACPermissions = newField("Minimum RBAC Permissions", querybuilders.ForK8sRBAC(), rbacPermissionValueRegex, operatorsForbidden)
 	Port                   = newField("Port", querybuilders.ForFieldLabel(search.Port), integerValueRegex)
 	PortExposure           = newField("Port Exposure Method", nil, portExposureValueRegex)
 	Privileged             = newField("Privileged", querybuilders.ForFieldLabel(search.Privileged), booleanValueRegex, negationForbidden, operatorsForbidden)
