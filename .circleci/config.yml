@@ -1897,8 +1897,8 @@ jobs:
             docker login -u "$DOCKER_IO_PULL_USERNAME" -p "$DOCKER_IO_PULL_PASSWORD" docker.io
 
       - run:
-          name: Build main image for RHEL
-          command: make docker-build-main-image-rhel
+          name: Build main image for RHEL which includes building the binaries because they need to be built specifically for RHEL
+          command: make main-image-rhel
 
       - run:
           name: Push new image

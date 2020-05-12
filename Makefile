@@ -13,6 +13,7 @@ DEFAULT_GOOS := linux
 GO111MODULE := on
 GOPRIVATE := github.com/stackrox
 BUILD_IMAGE := stackrox/main:rocksdb-builder-6.7.3-1
+RHEL_BUILD_IMAGE := stackrox/main:rocksdb-builder-rhel-6.7.3-1
 
 GOBUILD := $(CURDIR)/scripts/go-build.sh
 
@@ -358,6 +359,11 @@ main-builder-image:
 
 .PHONY: main-build
 main-build: build-prep main-build-dockerized
+	@echo "+ $@"
+
+.PHONY: main-rhel-build
+main-rhel-build: build-prep main-rhel-build-dockerized
+	@echo "+ $@"
 
 .PHONY: main-build-dockerized
 main-build-dockerized:
@@ -369,6 +375,18 @@ ifdef CI
 	docker cp builder:/go/src/github.com/stackrox/rox/bin/linux bin/
 else
 	docker run $(LOCAL_CACHE_ARGS) -v $(GOPATH):/go $(BUILD_IMAGE) make main-build-nodeps
+endif
+
+.PHONY: main-rhel-dockerized
+main-rhel-build-dockerized:
+	@echo "+ $@"
+ifdef CI
+	docker container create --name builder $(RHEL_BUILD_IMAGE) make main-build-nodeps
+	docker cp $(GOPATH) builder:/
+	docker start -i builder
+	docker cp builder:/go/src/github.com/stackrox/rox/bin/linux bin/
+else
+	docker run $(LOCAL_CACHE_ARGS) -v $(GOPATH):/go $(RHEL_BUILD_IMAGE) make main-build-nodeps
 endif
 
 .PHONY: main-build-nodeps
@@ -471,12 +489,15 @@ monitoring-image: monitoring-build-context
 .PHONY: all-builds
 all-builds: cli main-build clean-image $(MERGED_API_SWAGGER_SPEC) ui-build
 
+.PHONY: all-rhel-builds
+all-rhel-builds: cli main-rhel-build clean-image $(MERGED_API_SWAGGER_SPEC) ui-build
+
 .PHONY: main-image
 main-image: all-builds
 	make docker-build-main-image
 
 .PHONY: main-image-rhel
-main-image-rhel: all-builds
+main-image-rhel: all-rhel-builds
 	make docker-build-main-image-rhel
 
 .PHONY: deployer-image
@@ -497,7 +518,7 @@ docker-build-main-image: copy-binaries-to-image-dir docker-build-data-image
 	@echo "You may wish to:       export MAIN_IMAGE_TAG=$(TAG)"
 
 $(CURDIR)/image/rhel/bundle.tar.gz:
-	$(CURDIR)/image/rhel/create-bundle.sh $(CURDIR)/image stackrox-data:$(TAG) $@
+	$(CURDIR)/image/rhel/create-bundle.sh $(CURDIR)/image stackrox-data:$(TAG) $(RHEL_BUILD_IMAGE) $@
 
 .PHONY: docker-build-main-image-rhel
 docker-build-main-image-rhel: copy-binaries-to-image-dir docker-build-data-image $(CURDIR)/image/rhel/bundle.tar.gz

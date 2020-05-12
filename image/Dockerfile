@@ -13,10 +13,7 @@ RUN echo http://${ALPINE_MIRROR}/alpine/v3.11/main > /etc/apk/repositories; \
     echo http://${ALPINE_MIRROR}/alpine/v3.11/community >> /etc/apk/repositories
 
 RUN apk add --update --no-cache zlib-dev bzip2-dev snappy-dev lz4-dev zstd-dev
-RUN mkdir -p /tmp/rocksdb
-
-COPY --from=builder /tmp/rocksdb/librocksdb.a /tmp/rocksdb/librocksdb.a
-COPY --from=builder /tmp/rocksdb/include /tmp/rocksdb/include
+RUN mkdir -p /lib/rocksdb
 
 RUN apk update && \
     apk add --no-cache \
