@@ -7,6 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 	v1 "github.com/stackrox/rox/generated/api/v1"
+	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/fieldmap"
 	"github.com/stackrox/rox/pkg/utils"
@@ -499,6 +500,10 @@ func nilCheck(f reflect.Value) bool {
 	return false
 }
 
+var (
+	imageScanPtrType = reflect.TypeOf((*storage.ImageScan)(nil))
+)
+
 func createStructFieldNestedPredicate(field reflect.StructField, structTy reflect.Type, pred internalPredicate) internalPredicate {
 	if pred == alwaysFalse {
 		return alwaysFalse
@@ -509,10 +514,17 @@ func createStructFieldNestedPredicate(field reflect.StructField, structTy reflec
 			return nil, false
 		}
 		nextValue := instance.FieldByIndex(field.Index)
-		if nilCheck(nextValue) {
-			return nil, false
+		if !nilCheck(nextValue) || nextValue.Type() == timestampPtrType {
+			return pred.Evaluate(nextValue)
 		}
-		return pred.Evaluate(nextValue)
+		// Special-case image scans, replacing a nil scan with an empty scan.
+		// Note: the special-casing is done in this hacky way to minimize the changes for cherry-picking,
+		// and because predicates are going away.
+		if nextValue.Type() == imageScanPtrType {
+			return pred.Evaluate(reflect.New(imageScanPtrType.Elem()))
+		}
+		// The value is nil, and not one of the special-cases where a nil value should be evaluated.
+		return nil, false
 	})
 }
 

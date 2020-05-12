@@ -233,6 +233,18 @@ type testCase struct {
 	sampleViolationForMatched string
 }
 
+func (suite *DefaultPoliciesTestSuite) getImagesForDeployment(deployment *storage.Deployment) []*storage.Image {
+	images := suite.deploymentsToImages[deployment.GetId()]
+	if len(images) == 0 {
+		images = make([]*storage.Image, len(deployment.GetContainers()))
+		for i := range images {
+			images[i] = &storage.Image{}
+		}
+	}
+	suite.Equal(len(deployment.GetContainers()), len(images))
+	return images
+}
+
 func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 	envIsolator := testutils.NewEnvIsolator(suite.T())
 	defer envIsolator.RestoreAll()
@@ -569,6 +581,14 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 	fixtureDepJavaIndicator := suite.mustAddIndicator(fixtureDep.GetId(), "/bin/bash", "-attack", "/bin/bash", javaLineage, 0)
 
 	deploymentTestCases := []testCase{
+		{
+			policyName: "Images with no scans",
+			shouldNotMatch: map[string]struct{}{
+				fixtureDep.GetId():    {},
+				oldScannedDep.GetId(): {},
+			},
+			sampleViolationForMatched: "Image has not been scanned",
+		},
 		{
 			policyName: "Latest tag",
 			expectedViolations: map[string]searchbasedpolicies.Violations{
@@ -1027,7 +1047,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			for id, violations := range c.expectedViolations {
 				// Test match one only if we aren't testing processes
 				if violations.ProcessViolation == nil {
-					gotFromMatchOne, err := m.MatchOne(suite.matchCtx, suite.deployments[id], suite.deploymentsToImages[id], nil)
+					gotFromMatchOne, err := m.MatchOne(suite.matchCtx, suite.deployments[id], suite.getImagesForDeployment(suite.deployments[id]), nil)
 					require.NoError(t, err)
 					// Make checks case insensitive due to differences in regex
 					for _, a := range violations.AlertViolations {
@@ -1043,11 +1063,15 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 
 			if len(c.shouldNotMatch) > 0 {
 				for id, deployment := range suite.deployments {
-					gotFromMatchOne, err := m.MatchOne(suite.matchCtx, deployment, suite.deploymentsToImages[id], nil)
+					gotFromMatchOne, err := m.MatchOne(suite.matchCtx, deployment, suite.getImagesForDeployment(deployment), nil)
 					require.NoError(t, err)
 					matched := len(gotFromMatchOne.AlertViolations) > 0
 					_, shouldNotMatch := c.shouldNotMatch[id]
-					assert.NotEqual(t, matched, shouldNotMatch, "Deployment %s violated expectation about not matching (matched: %v, should match: %v)", id, matched, !shouldNotMatch)
+					if assert.NotEqual(t, matched, shouldNotMatch, "Deployment %s violated expectation about not matching (matched: %v, should match: %v)", id, matched, !shouldNotMatch) {
+						if !shouldNotMatch && c.sampleViolationForMatched != "" {
+							assert.Equal(t, c.sampleViolationForMatched, gotFromMatchOne.AlertViolations[0].GetMessage())
+						}
+					}
 				}
 
 			}

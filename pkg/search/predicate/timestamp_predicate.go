@@ -9,20 +9,16 @@ import (
 )
 
 func createTimestampPredicate(fullPath, value string) (internalPredicate, error) {
-	if value == "-" {
-		return alwaysFalse, nil
-	}
-
 	baseMatcher, err := basematchers.ForTimestamp(value)
 	if err != nil {
 		return nil, err
 	}
 	return internalPredicateFunc(func(instance reflect.Value) (*search.Result, bool) {
-		instanceTS, _ := instance.Interface().(*types.Timestamp)
+		instanceTS, ok := instance.Interface().(*types.Timestamp)
 
-		if instanceTS != nil && baseMatcher(instanceTS) {
+		if ok && baseMatcher(instanceTS) {
 			return &search.Result{
-				Matches: formatSingleMatchf(fullPath, "%d", instanceTS.Seconds),
+				Matches: formatSingleMatchf(fullPath, "%d", instanceTS.GetSeconds()),
 			}, true
 		}
 		return nil, false

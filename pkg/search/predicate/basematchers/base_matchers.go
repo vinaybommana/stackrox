@@ -126,6 +126,11 @@ func ForBool(value string) (func(bool) bool, error) {
 
 // ForTimestamp returns a matcher for a proto timestamp type.
 func ForTimestamp(value string) (func(*types.Timestamp) bool, error) {
+	if value == "-" {
+		return func(instance *types.Timestamp) bool {
+			return instance == nil
+		}, nil
+	}
 	cmpStr, value := parseNumericPrefix(value)
 
 	timestampValue, durationValue, err := parseTimestamp(value)
@@ -147,6 +152,8 @@ func ForTimestamp(value string) (func(*types.Timestamp) bool, error) {
 	}
 
 	return func(instance *types.Timestamp) bool {
+		// This has to be done inside the closure, since we want to take time.Now() at evaluation time,
+		// not at build time.
 		var ts *types.Timestamp
 		if timestampValue != nil {
 			ts = timestampValue
@@ -155,6 +162,11 @@ func ForTimestamp(value string) (func(*types.Timestamp) bool, error) {
 			if err != nil {
 				return false
 			}
+		}
+
+		// Value is NOT "-" here, that case is handled above.
+		if instance == nil {
+			return false
 		}
 		return actualComparator(instance, ts)
 	}, nil
