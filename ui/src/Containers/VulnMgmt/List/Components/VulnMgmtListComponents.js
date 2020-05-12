@@ -8,7 +8,7 @@ import entityTypes from 'constants/entityTypes';
 import { LIST_PAGE_SIZE } from 'constants/workflowPages.constants';
 import CVEStackedPill from 'Components/CVEStackedPill';
 import TableCountLink from 'Components/workflow/TableCountLink';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 
 import { VULN_COMPONENT_LIST_FRAGMENT } from 'Containers/VulnMgmt/VulnMgmt.fragments';
 import { workflowListPropTypes, workflowListDefaultProps } from 'constants/entityPageProps';

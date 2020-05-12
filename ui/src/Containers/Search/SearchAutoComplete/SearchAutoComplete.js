@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { useQuery } from 'react-apollo';
 
 import SEARCH_AUTOCOMPLETE_QUERY from 'queries/searchAutocomplete';
-import captureGraphQLErrors from 'modules/captureGraphQLErrors';
+import captureGraphQLErrors from 'utils/captureGraphQLErrors';
 import Message from 'Components/Message';
 
 const SearchAutoComplete = ({ categories, query, children }) => {

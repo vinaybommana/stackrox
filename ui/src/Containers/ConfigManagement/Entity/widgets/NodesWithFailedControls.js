@@ -5,7 +5,7 @@ import entityTypes from 'constants/entityTypes';
 import NoResultsMessage from 'Components/NoResultsMessage';
 import { useQuery } from 'react-apollo';
 import Raven from 'raven-js';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import { entityAcrossControlsColumns } from 'constants/listColumns';
 import uniqBy from 'lodash/uniqBy';
 

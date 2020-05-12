@@ -3,8 +3,8 @@ import PropTypes from 'prop-types';
 import pluralize from 'pluralize';
 import { useQuery } from 'react-apollo';
 
-import captureGraphQLErrors from 'modules/captureGraphQLErrors';
-import queryService from 'modules/queryService';
+import captureGraphQLErrors from 'utils/captureGraphQLErrors';
+import queryService from 'utils/queryService';
 import Panel from 'Components/Panel';
 import TimelineGraph from 'Components/TimelineGraph';
 import Loader from 'Components/Loader';

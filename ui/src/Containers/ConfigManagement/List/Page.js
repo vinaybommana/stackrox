@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import ReactRouterPropTypes from 'react-router-prop-types';
 import entityLabels from 'messages/entity';
 import pluralize from 'pluralize';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import startCase from 'lodash/startCase';
 
 import SidePanelAnimation from 'Components/animations/SidePanelAnimation';

@@ -3,7 +3,7 @@ import Loader from 'Components/Loader';
 import { Link, withRouter } from 'react-router-dom';
 import Tooltip from 'Components/Tooltip';
 import TooltipOverlay from 'Components/TooltipOverlay';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import gql from 'graphql-tag';
 import entityTypes from 'constants/entityTypes';
 import Query from 'Components/ThrowingQuery';

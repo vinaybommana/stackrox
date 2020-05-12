@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 import ReactRouterPropTypes from 'react-router-prop-types';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import CollapsibleBanner from 'Components/CollapsibleBanner/CollapsibleBanner';
 import ComplianceAcrossEntities from 'Containers/Compliance/widgets/ComplianceAcrossEntities';
 import ControlsMostFailed from 'Containers/Compliance/widgets/ControlsMostFailed';

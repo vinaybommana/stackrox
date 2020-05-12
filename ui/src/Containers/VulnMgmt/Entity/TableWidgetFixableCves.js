@@ -11,7 +11,7 @@ import { VULN_CVE_LIST_FRAGMENT } from 'Containers/VulnMgmt/VulnMgmt.fragments';
 import { LIST_PAGE_SIZE } from 'constants/workflowPages.constants';
 import entityTypes from 'constants/entityTypes';
 import { resourceLabels } from 'messages/common';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 
 import FixableCveExportButton from '../VulnMgmtComponents/FixableCveExportButton';
 import TableWidget from './TableWidget';

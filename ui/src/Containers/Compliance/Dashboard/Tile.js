@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import entityTypes from 'constants/entityTypes';
 import { withRouter } from 'react-router-dom';
 import Query from 'Components/CacheFirstQuery';

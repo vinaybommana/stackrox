@@ -15,7 +15,7 @@ import Metadata from 'Components/Metadata';
 import Button from 'Components/Button';
 import isGQLLoading from 'utils/gqlLoading';
 import gql from 'graphql-tag';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import { entityComponentPropTypes, entityComponentDefaultProps } from 'constants/entityPageProps';
 import searchContext from 'Containers/searchContext';
 import RelatedEntityListCount from 'Components/RelatedEntityListCount';

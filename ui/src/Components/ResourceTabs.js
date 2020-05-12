@@ -3,12 +3,12 @@ import PropTypes from 'prop-types';
 import { Link, withRouter } from 'react-router-dom';
 import ReactRouterPropTypes from 'react-router-prop-types';
 import { resourceLabels } from 'messages/common';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import pluralize from 'pluralize';
 import Query from 'Components/ThrowingQuery';
 import { SEARCH_WITH_CONTROLS as QUERY } from 'queries/search';
-import queryService from 'modules/queryService';
-import { getResourceCountFromAggregatedResults } from 'modules/complianceUtils';
+import queryService from 'utils/queryService';
+import { getResourceCountFromAggregatedResults } from 'utils/complianceUtils';
 
 const ResourceTabs = ({ entityType, entityId, resourceTabs, selectedType, match, location }) => {
     function getLinkToListType(listEntityType) {

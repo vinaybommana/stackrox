@@ -4,7 +4,7 @@ import { waitForElement } from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect';
 
 import workflowStateContext from 'Containers/workflowStateContext';
-import parseURL from 'modules/URLParser';
+import parseURL from 'utils/URLParser';
 import renderWithRouter from 'test-utils/renderWithRouter';
 import RecentlyDetectedVulnerabilities, {
     RECENTLY_DETECTED_VULNERABILITIES,

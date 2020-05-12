@@ -4,9 +4,9 @@ import Panel from 'Components/Panel';
 import ReactRouterPropTypes from 'react-router-prop-types';
 import { resourceTypes, standardEntityTypes } from 'constants/entityTypes';
 import { Link, withRouter } from 'react-router-dom';
-import URLService from 'modules/URLService';
-import getEntityName from 'modules/getEntityName';
-import { entityNameQueryMap } from 'modules/queryMap';
+import URLService from 'utils/URLService';
+import getEntityName from 'utils/getEntityName';
+import { entityNameQueryMap } from 'utils/queryMap';
 import Query from 'Components/CacheFirstQuery';
 import * as Icon from 'react-feather';
 // TODO: this exception will be unnecessary once Compliance pages are re-structured like Config Management

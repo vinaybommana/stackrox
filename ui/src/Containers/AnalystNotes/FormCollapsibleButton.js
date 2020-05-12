@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { useQuery } from 'react-apollo';
 import { MessageSquare, Tag } from 'react-feather';
 
-import captureGraphQLErrors from 'modules/captureGraphQLErrors';
+import captureGraphQLErrors from 'utils/captureGraphQLErrors';
 import CollapsibleCountsButton from 'Components/CollapsibleCountsButton';
 import IconWithCount from 'Components/IconWithCount';
 import ProcessKeyProps from './processKeyProps';

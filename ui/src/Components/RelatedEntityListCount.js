@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import Widget from 'Components/Widget';
 import { withRouter } from 'react-router-dom';
 import ReactRouterPropTypes from 'react-router-prop-types';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import workflowStateContext from 'Containers/workflowStateContext';
 
 // @TODO We should try to use this component for Compliance as well

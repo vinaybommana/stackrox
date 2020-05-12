@@ -4,7 +4,7 @@ import ReactRouterPropTypes from 'react-router-prop-types';
 
 import VIOLATIONS from 'queries/violation';
 import resolvePath from 'object-resolve-path';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import entityTypes from 'constants/entityTypes';
 import { withRouter } from 'react-router-dom';
 import uniq from 'lodash/uniq';

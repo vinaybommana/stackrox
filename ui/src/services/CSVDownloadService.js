@@ -1,6 +1,6 @@
 import { saveFile } from 'services/DownloadService';
 import { addBrandedTimestampToString } from 'utils/dateUtils';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 
 /**
  * Downloads CSV files

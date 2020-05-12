@@ -9,7 +9,7 @@ import { defaultCountKeyMap } from 'constants/workflowPages.constants';
 import workflowStateContext from 'Containers/workflowStateContext';
 import { DEPLOYMENT_LIST_FRAGMENT } from 'Containers/VulnMgmt/VulnMgmt.fragments';
 import WorkflowEntityPage from 'Containers/Workflow/WorkflowEntityPage';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import VulnMgmtPolicyOverview from './VulnMgmtPolicyOverview';
 import VulnMgmtList from '../../List/VulnMgmtList';
 import { getScopeQuery, vulMgmtPolicyQuery } from '../VulnMgmtPolicyQueryUtil';

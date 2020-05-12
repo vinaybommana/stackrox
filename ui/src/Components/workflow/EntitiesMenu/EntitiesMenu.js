@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 
 import workflowStateContext from 'Containers/workflowStateContext';
-import { entityGroupMap } from 'modules/entityRelationships';
+import { entityGroupMap } from 'utils/entityRelationships';
 import { useCaseShortLabels } from 'messages/useCase';
 import { getOption, createOptions } from 'utils/workflowUtils';
 

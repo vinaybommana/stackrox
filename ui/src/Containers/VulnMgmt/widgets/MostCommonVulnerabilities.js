@@ -10,7 +10,7 @@ import Loader from 'Components/Loader';
 import Widget from 'Components/Widget';
 import LabeledBarGraph from 'Components/visuals/LabeledBarGraph';
 import NoResultsMessage from 'Components/NoResultsMessage';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import entityTypes from 'constants/entityTypes';
 import { cveSortFields } from 'constants/sortFields';
 import { WIDGET_PAGINATION_START_OFFSET } from 'constants/workflowPages.constants';

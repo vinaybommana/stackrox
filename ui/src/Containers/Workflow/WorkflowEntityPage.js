@@ -7,7 +7,7 @@ import PageNotFound from 'Components/PageNotFound';
 import Loader from 'Components/Loader';
 import Message from 'Components/Message';
 import { useTheme } from 'Containers/ThemeProvider';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 
 import { LIST_PAGE_SIZE, defaultCountKeyMap } from 'constants/workflowPages.constants';
 import useCases from 'constants/useCaseTypes';

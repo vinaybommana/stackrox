@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import getEntityName from 'modules/getEntityName';
-import { entityNameQueryMap } from 'modules/queryMap';
+import getEntityName from 'utils/getEntityName';
+import { entityNameQueryMap } from 'utils/queryMap';
 import entityLabels from 'messages/entity';
 import entityTypes from 'constants/entityTypes';
 

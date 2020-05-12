@@ -9,7 +9,7 @@ import Query from 'Components/CacheFirstQuery';
 import Loader from 'Components/Loader';
 import { entityPagePropTypes, entityPageDefaultProps } from 'constants/entityPageProps';
 import { withRouter } from 'react-router-dom';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import ResourceTabs from 'Components/ResourceTabs';
 // TODO: this exception will be unnecessary once Compliance pages are re-structured like Config Management
 /* eslint-disable-next-line import/no-cycle */

@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 import { standardLabels } from 'messages/standards';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import entityTypes, { standardBaseTypes } from 'constants/entityTypes';
 import capitalize from 'lodash/capitalize';
 import ReactRouterPropTypes from 'react-router-prop-types';
@@ -10,7 +10,7 @@ import Sunburst from 'Components/visuals/Sunburst';
 import Query from 'Components/CacheFirstQuery';
 import Loader from 'Components/Loader';
 import { COMPLIANCE_STANDARDS as QUERY } from 'queries/standard';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import { Link, withRouter } from 'react-router-dom';
 import searchContext from 'Containers/searchContext';
 import ReactSelect from 'Components/ReactSelect';

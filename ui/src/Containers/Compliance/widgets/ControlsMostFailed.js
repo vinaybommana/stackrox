@@ -1,14 +1,14 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import LinkListWidget from 'Components/LinkListWidget';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import pluralize from 'pluralize';
 import entityTypes from 'constants/entityTypes';
 import { resourceLabels } from 'messages/common';
 import ReactRouterPropTypes from 'react-router-prop-types';
 import { withRouter } from 'react-router-dom';
 import { AGGREGATED_RESULTS_WITH_CONTROLS as QUERY } from 'queries/controls';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 
 const ControlsMostFailed = ({ match, location, entityType, query, limit, showEmpty }) => {
     const whereClauseValues = { ...query };

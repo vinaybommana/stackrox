@@ -1,10 +1,10 @@
 import React from 'react';
 import gql from 'graphql-tag';
 import entityTypes from 'constants/entityTypes';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import { entityListPropTypes, entityListDefaultprops } from 'constants/entityPageProps';
 import { defaultHeaderClassName, defaultColumnClassName } from 'Components/Table';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import { format } from 'date-fns';
 import dateTimeFormat from 'constants/dateTimeFormat';
 import { sortDate } from 'sorters/sorters';

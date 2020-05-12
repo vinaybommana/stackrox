@@ -15,7 +15,7 @@ import isGQLLoading from 'utils/gqlLoading';
 import gql from 'graphql-tag';
 import searchContext from 'Containers/searchContext';
 import useCases from 'constants/useCaseTypes';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import { entityComponentPropTypes, entityComponentDefaultProps } from 'constants/entityPageProps';
 import getSubListFromEntity from 'utils/getSubListFromEntity';
 import EntityList from '../List/EntityList';

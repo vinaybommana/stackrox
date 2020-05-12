@@ -13,7 +13,7 @@ import Widget from 'Components/Widget';
 import CVEStackedPill from 'Components/CVEStackedPill';
 import NumberedList from 'Components/NumberedList';
 import NoComponentVulnMessage from 'Components/NoComponentVulnMessage';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import dateTimeFormat from 'constants/dateTimeFormat';
 import entityTypes from 'constants/entityTypes';
 import { WIDGET_PAGINATION_START_OFFSET } from 'constants/workflowPages.constants';

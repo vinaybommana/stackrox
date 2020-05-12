@@ -1,7 +1,7 @@
 import React from 'react';
 import gql from 'graphql-tag';
 
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import DateTimeField from 'Components/DateTimeField';
 import StatusChip from 'Components/StatusChip';
 import CVEStackedPill from 'Components/CVEStackedPill';

@@ -3,10 +3,10 @@ import ReactRouterPropTypes from 'react-router-prop-types';
 import PropTypes from 'prop-types';
 import entityLabels from 'messages/entity';
 import pluralize from 'pluralize';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import { Link, withRouter } from 'react-router-dom';
-import getEntityName from 'modules/getEntityName';
-import { entityNameQueryMap } from 'modules/queryMap';
+import getEntityName from 'utils/getEntityName';
+import { entityNameQueryMap } from 'utils/queryMap';
 
 import { ChevronRight } from 'react-feather';
 import Query from 'Components/ThrowingQuery';

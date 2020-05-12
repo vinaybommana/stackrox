@@ -1,7 +1,7 @@
 import React from 'react';
 import gql from 'graphql-tag';
 
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import {
     defaultHeaderClassName,
     nonSortableHeaderClassName,

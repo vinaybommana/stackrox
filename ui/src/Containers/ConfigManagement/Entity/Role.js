@@ -13,7 +13,7 @@ import Rules from 'Containers/ConfigManagement/Entity/widgets/Rules';
 import RulePermissions from 'Containers/ConfigManagement/Entity/widgets/RulePermissions';
 import isGQLLoading from 'utils/gqlLoading';
 import gql from 'graphql-tag';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import searchContext from 'Containers/searchContext';
 import { entityComponentPropTypes, entityComponentDefaultProps } from 'constants/entityPageProps';
 import useCases from 'constants/useCaseTypes';

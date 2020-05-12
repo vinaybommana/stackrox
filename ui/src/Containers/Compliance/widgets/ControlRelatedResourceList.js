@@ -1,13 +1,13 @@
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 import LinkListWidget from 'Components/LinkListWidget';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import pluralize from 'pluralize';
 import entityTypes from 'constants/entityTypes';
 import useCases from 'constants/useCaseTypes';
 import { resourceLabels } from 'messages/common';
 import { AGGREGATED_RESULTS as QUERY } from 'queries/controls';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import ReactRouterPropTypes from 'react-router-prop-types';
 import { withRouter, Link } from 'react-router-dom';
 import searchContext from 'Containers/searchContext';

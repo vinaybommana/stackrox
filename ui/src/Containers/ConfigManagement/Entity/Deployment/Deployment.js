@@ -14,7 +14,7 @@ import gql from 'graphql-tag';
 import getSubListFromEntity from 'utils/getSubListFromEntity';
 import searchContext from 'Containers/searchContext';
 import { entityComponentPropTypes, entityComponentDefaultProps } from 'constants/entityPageProps';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import useCases from 'constants/useCaseTypes';
 import EntityList from '../../List/EntityList';
 import DeploymentFindings from './DeploymentFindings';
@@ -70,7 +70,7 @@ const Deployment = ({ id, entityContext, entityListType, query }) => {
                         : 'serviceAccount serviceAccountID'
                 }
                 failingPolicyCount(query: $query)
-            
+
                 tolerations {
                     key
                     operator

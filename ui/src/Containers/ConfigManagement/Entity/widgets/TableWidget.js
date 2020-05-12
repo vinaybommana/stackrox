@@ -7,7 +7,7 @@ import resolvePath from 'object-resolve-path';
 import Widget from 'Components/Widget';
 import TablePagination from 'Components/TablePagination';
 import Table from 'Components/Table';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 
 const TableWidget = ({ match, location, history, header, entityType, ...rest }) => {
     const [page, setPage] = useState(0);

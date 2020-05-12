@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import gql from 'graphql-tag';
 import entityTypes from 'constants/entityTypes';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import Query from 'Components/ThrowingQuery';
 import Loader from 'Components/Loader';
 import PageNotFound from 'Components/PageNotFound';

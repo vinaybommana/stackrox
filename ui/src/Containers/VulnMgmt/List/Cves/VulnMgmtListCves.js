@@ -23,7 +23,7 @@ import WorkflowListPage from 'Containers/Workflow/WorkflowListPage';
 import workflowStateContext from 'Containers/workflowStateContext';
 import entityTypes from 'constants/entityTypes';
 import { LIST_PAGE_SIZE } from 'constants/workflowPages.constants';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import { workflowListPropTypes, workflowListDefaultProps } from 'constants/entityPageProps';
 import { actions as notificationActions } from 'reducers/notifications';
 import { suppressVulns, unsuppressVulns } from 'services/VulnerabilitiesService';

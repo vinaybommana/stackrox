@@ -2,7 +2,7 @@ import React from 'react';
 import gql from 'graphql-tag';
 import Loader from 'Components/Loader';
 import { Link, withRouter } from 'react-router-dom';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import entityTypes from 'constants/entityTypes';
 import networkStatuses from 'constants/networkStatuses';
 import Query from 'Components/ThrowingQuery';

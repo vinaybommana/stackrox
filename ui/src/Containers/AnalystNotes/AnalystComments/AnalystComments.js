@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { useQuery, useMutation } from 'react-apollo';
 
 import ANALYST_NOTES_TYPES from 'constants/analystnotes';
-import captureGraphQLErrors from 'modules/captureGraphQLErrors';
+import captureGraphQLErrors from 'utils/captureGraphQLErrors';
 import analystNotesLabels from 'messages/analystnotes';
 import Message from 'Components/Message';
 import CommentThread from 'Components/CommentThread';

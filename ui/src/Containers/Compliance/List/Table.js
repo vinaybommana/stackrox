@@ -19,7 +19,7 @@ import NoResultsMessage from 'Components/NoResultsMessage';
 import createPDFTable from 'utils/pdfUtils';
 import { CLUSTERS_QUERY, NAMESPACES_QUERY, NODES_QUERY, DEPLOYMENTS_QUERY } from 'queries/table';
 import { LIST_STANDARD } from 'queries/standard';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import orderBy from 'lodash/orderBy';
 
 function getQuery(entityType) {

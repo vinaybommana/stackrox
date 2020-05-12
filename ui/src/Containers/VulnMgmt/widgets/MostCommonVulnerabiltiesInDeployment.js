@@ -5,7 +5,7 @@ import gql from 'graphql-tag';
 import sortBy from 'lodash/sortBy';
 
 import entityTypes from 'constants/entityTypes';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import workflowStateContext from 'Containers/workflowStateContext';
 import { getVulnerabilityChips } from 'utils/vulnerabilityUtils';
 import { cveSortFields } from 'constants/sortFields';

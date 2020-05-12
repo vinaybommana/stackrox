@@ -4,7 +4,7 @@ import { useQuery } from 'react-apollo';
 import gql from 'graphql-tag';
 
 import workflowStateContext from 'Containers/workflowStateContext';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 
 import EntityTileLink from 'Components/EntityTileLink';
 

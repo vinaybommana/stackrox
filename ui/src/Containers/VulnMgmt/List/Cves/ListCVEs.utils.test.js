@@ -1,7 +1,7 @@
 import entityTypes from 'constants/entityTypes';
 import useCases from 'constants/useCaseTypes';
-import WorkflowEntity from 'modules/WorkflowEntity';
-import { WorkflowState } from 'modules/WorkflowState';
+import WorkflowEntity from 'utils/WorkflowEntity';
+import { WorkflowState } from 'utils/WorkflowState';
 
 import { getCveTableColumns } from './VulnMgmtListCves';
 import { getFilteredCVEColumns } from './ListCVEs.utils';

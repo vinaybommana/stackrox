@@ -1,7 +1,7 @@
 import React from 'react';
 import gql from 'graphql-tag';
 
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import TableCellLink from 'Components/TableCellLink';
 import TableCountLink from 'Components/workflow/TableCountLink';
 import CVEStackedPill from 'Components/CVEStackedPill';

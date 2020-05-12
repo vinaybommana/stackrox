@@ -1,7 +1,7 @@
 import React from 'react';
 import gql from 'graphql-tag';
 import entityTypes from 'constants/entityTypes';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 
 import { entityListPropTypes, entityListDefaultprops } from 'constants/entityPageProps';
 import { CLIENT_SIDE_SEARCH_OPTIONS as SEARCH_OPTIONS } from 'constants/searchOptions';
@@ -9,7 +9,7 @@ import { CLIENT_SIDE_SEARCH_OPTIONS as SEARCH_OPTIONS } from 'constants/searchOp
 import { defaultHeaderClassName, defaultColumnClassName } from 'Components/Table';
 import LabelChip from 'Components/LabelChip';
 import StatusChip from 'Components/StatusChip';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import pluralize from 'pluralize';
 import List from './List';
 import TableCellLink from './Link';

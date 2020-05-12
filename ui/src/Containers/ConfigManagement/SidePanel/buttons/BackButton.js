@@ -2,7 +2,7 @@ import React from 'react';
 import ReactRouterPropTypes from 'react-router-prop-types';
 import PropTypes from 'prop-types';
 import { withRouter, Link } from 'react-router-dom';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 
 import { ArrowLeft } from 'react-feather';
 import EntityIcon from 'Components/EntityIcon';

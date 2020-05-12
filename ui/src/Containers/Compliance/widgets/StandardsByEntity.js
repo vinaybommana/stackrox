@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 import entityTypes from 'constants/entityTypes';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import labels from 'messages/common';
 import capitalize from 'lodash/capitalize';
 import sortBy from 'lodash/sortBy';

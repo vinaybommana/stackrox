@@ -4,8 +4,8 @@ import { useQuery } from 'react-apollo';
 import { ArrowLeft } from 'react-feather';
 
 import getPaginatedList from 'utils/getPaginatedList';
-import captureGraphQLErrors from 'modules/captureGraphQLErrors';
-import queryService from 'modules/queryService';
+import captureGraphQLErrors from 'utils/captureGraphQLErrors';
+import queryService from 'utils/queryService';
 import Button from 'Components/Button';
 import Panel from 'Components/Panel';
 import HeaderWithSubText from 'Components/HeaderWithSubText';

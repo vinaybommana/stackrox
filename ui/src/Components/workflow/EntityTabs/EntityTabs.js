@@ -8,7 +8,7 @@ import {
     getEntityTypesByRelationship,
     entityGroups,
     entityGroupMap,
-} from 'modules/entityRelationships';
+} from 'utils/entityRelationships';
 import relationshipTypes from 'constants/relationshipTypes';
 import workflowStateContext from 'Containers/workflowStateContext';
 

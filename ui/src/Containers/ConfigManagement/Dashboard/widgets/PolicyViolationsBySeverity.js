@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import ReactRouterPropTypes from 'react-router-prop-types';
 import Widget from 'Components/Widget';
 import Sunburst from 'Components/visuals/Sunburst';

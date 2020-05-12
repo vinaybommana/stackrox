@@ -3,7 +3,7 @@ import { capitalize } from 'lodash';
 import entityTypes from 'constants/entityTypes';
 import { standardLabels } from 'messages/standards';
 import { LIST_STANDARD_NO_NODES as QUERY } from 'queries/standard';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import { sortVersion, sortStatus } from 'sorters/sorters';
 import searchContext from 'Containers/searchContext';
 import { entityListPropTypes, entityListDefaultprops } from 'constants/entityPageProps';

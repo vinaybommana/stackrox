@@ -6,9 +6,9 @@ import dateTimeFormat from 'constants/dateTimeFormat';
 import { sortDate } from 'sorters/sorters';
 import { entityListPropTypes, entityListDefaultprops } from 'constants/entityPageProps';
 import { defaultHeaderClassName, defaultColumnClassName } from 'Components/Table';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import pluralize from 'pluralize';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import TableCellLink from './Link';
 import List from './List';
 

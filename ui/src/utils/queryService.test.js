@@ -1,4 +1,4 @@
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 
 describe('queryService.objectToWhereClause', () => {
     it('returns an empty string when passed an empty object', () => {

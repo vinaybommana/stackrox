@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, withRouter } from 'react-router-dom';
 import sortBy from 'lodash/sortBy';
 import { AGGREGATED_RESULTS_ACROSS_ENTITY } from 'queries/controls';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import useCases from 'constants/useCaseTypes';
 import entityTypes from 'constants/entityTypes';
 import ReactRouterPropTypes from 'react-router-prop-types';

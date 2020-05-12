@@ -1,6 +1,6 @@
 import React from 'react';
 import { withRouter, Link } from 'react-router-dom';
-import parseURL from 'modules/URLParser';
+import parseURL from 'utils/URLParser';
 import onClickOutside from 'react-onclickoutside';
 import { useTheme } from 'Containers/ThemeProvider';
 import workflowStateContext from 'Containers/workflowStateContext';

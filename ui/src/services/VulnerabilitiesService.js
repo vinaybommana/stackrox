@@ -1,7 +1,7 @@
 import queryString from 'qs';
 import { saveFile } from 'services/DownloadService';
 import { cveSortFields } from 'constants/sortFields';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import axios from './instance';
 
 const baseUrl = '/v1/cves';

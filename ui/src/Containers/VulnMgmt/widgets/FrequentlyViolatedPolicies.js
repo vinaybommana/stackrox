@@ -15,7 +15,7 @@ import NoResultsMessage from 'Components/NoResultsMessage';
 import dateTimeFormat from 'constants/dateTimeFormat';
 import entityTypes from 'constants/entityTypes';
 import { severityLabels } from 'messages/common';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import { policySortFields } from 'constants/sortFields';
 
 const FREQUENTLY_VIOLATED_POLICIES = gql`

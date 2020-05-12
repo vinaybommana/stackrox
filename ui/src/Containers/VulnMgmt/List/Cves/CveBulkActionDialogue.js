@@ -10,7 +10,7 @@ import InfoList from 'Components/InfoList';
 import Loader from 'Components/Loader';
 import Message from 'Components/Message';
 import { POLICY_ENTITY_ALL_FIELDS_FRAGMENT } from 'Containers/VulnMgmt/VulnMgmt.fragments';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import { createPolicy, savePolicy } from 'services/PoliciesService';
 import { truncate } from 'utils/textUtils';
 import { splitCvesByType } from 'utils/vulnerabilityUtils';

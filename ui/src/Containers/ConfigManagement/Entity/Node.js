@@ -14,7 +14,7 @@ import Metadata from 'Components/Metadata';
 import TableWidget from 'Containers/ConfigManagement/Entity/widgets/TableWidget';
 import searchContext from 'Containers/searchContext';
 import gql from 'graphql-tag';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import { entityComponentPropTypes, entityComponentDefaultProps } from 'constants/entityPageProps';
 import { standardLabels } from 'messages/standards';
 import { CONTROL_FRAGMENT } from 'queries/controls';

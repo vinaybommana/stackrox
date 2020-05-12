@@ -5,7 +5,7 @@ import gql from 'graphql-tag';
 
 import workflowStateContext from 'Containers/workflowStateContext';
 import EntityTileLink from 'Components/EntityTileLink';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 
 const POLICIES_COUNT_QUERY = gql`
     query policiesCount($query: String) {

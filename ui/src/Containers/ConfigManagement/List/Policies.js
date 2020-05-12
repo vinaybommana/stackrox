@@ -2,7 +2,7 @@ import React from 'react';
 import entityTypes from 'constants/entityTypes';
 import { POLICIES as QUERY } from 'queries/policy';
 import { entityListPropTypes, entityListDefaultprops } from 'constants/entityPageProps';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import { sortSeverity } from 'sorters/sorters';
 import { defaultHeaderClassName, defaultColumnClassName } from 'Components/Table';
 import { CLIENT_SIDE_SEARCH_OPTIONS as SEARCH_OPTIONS } from 'constants/searchOptions';

@@ -3,11 +3,11 @@ import pluralize from 'pluralize';
 
 import entityTypes from 'constants/entityTypes';
 import { DEPLOYMENTS_QUERY as QUERY } from 'queries/deployment';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import { entityListPropTypes, entityListDefaultprops } from 'constants/entityPageProps';
 import { CLIENT_SIDE_SEARCH_OPTIONS as SEARCH_OPTIONS } from 'constants/searchOptions';
 import searchContext from 'Containers/searchContext';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import { defaultHeaderClassName, defaultColumnClassName } from 'Components/Table';
 import StatusChip from 'Components/StatusChip';
 import List from './List';

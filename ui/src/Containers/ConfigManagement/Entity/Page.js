@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactRouterPropTypes from 'react-router-prop-types';
 import { withRouter } from 'react-router-dom';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import SidePanelAnimation from 'Components/animations/SidePanelAnimation';
 
 import searchContext from 'Containers/searchContext';

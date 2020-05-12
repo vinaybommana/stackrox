@@ -4,7 +4,7 @@ import gql from 'graphql-tag';
 import pluralize from 'pluralize';
 import { useQuery } from 'react-apollo';
 
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import workflowStateContext from 'Containers/workflowStateContext';
 import Loader from 'Components/Loader';
 import NoResultsMessage from 'Components/NoResultsMessage';

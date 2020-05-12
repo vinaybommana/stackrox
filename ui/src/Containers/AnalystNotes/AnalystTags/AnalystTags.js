@@ -5,7 +5,7 @@ import difference from 'lodash/difference';
 import pluralize from 'pluralize';
 
 import ANALYST_NOTES_TYPES from 'constants/analystnotes';
-import captureGraphQLErrors from 'modules/captureGraphQLErrors';
+import captureGraphQLErrors from 'utils/captureGraphQLErrors';
 import analystNotesLabels from 'messages/analystnotes';
 import Tags from 'Components/Tags';
 import Message from 'Components/Message';

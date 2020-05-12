@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 import { withRouter, Link } from 'react-router-dom';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import onClickOutside from 'react-onclickoutside';
 import { useTheme } from 'Containers/ThemeProvider';
 

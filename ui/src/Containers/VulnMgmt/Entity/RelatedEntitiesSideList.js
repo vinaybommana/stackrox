@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import { useTheme } from 'Containers/ThemeProvider';
 import workflowStateContext from 'Containers/workflowStateContext';
-import { getEntityTypesByRelationship } from 'modules/entityRelationships';
+import { getEntityTypesByRelationship } from 'utils/entityRelationships';
 import relationshipTypes from 'constants/relationshipTypes';
 import { defaultCountKeyMap } from 'constants/workflowPages.constants';
 import TileList from 'Components/TileList';

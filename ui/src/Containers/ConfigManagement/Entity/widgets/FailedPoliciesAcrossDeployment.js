@@ -4,7 +4,7 @@ import entityTypes from 'constants/entityTypes';
 import { withRouter } from 'react-router-dom';
 import { defaultHeaderClassName, defaultColumnClassName } from 'Components/Table';
 import gql from 'graphql-tag';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import { sortSeverity } from 'sorters/sorters';
 import { format } from 'date-fns';
 import dateTimeFormat from 'constants/dateTimeFormat';

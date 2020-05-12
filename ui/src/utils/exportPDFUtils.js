@@ -1,6 +1,6 @@
 import computedStyleToInlineStyle from 'computed-style-to-inline-style';
 import JSPDF from 'jspdf';
-import logError from 'modules/logError';
+import logError from 'utils/logError';
 import { toast } from 'react-toastify';
 import html2canvas from 'html2canvas';
 

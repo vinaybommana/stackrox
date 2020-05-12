@@ -2,13 +2,13 @@ import React, { useContext } from 'react';
 import pluralize from 'pluralize';
 
 import entityTypes from 'constants/entityTypes';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import searchContext from 'Containers/searchContext';
 import { sortValueByLength } from 'sorters/sorters';
 import { NAMESPACES_NO_POLICIES_QUERY } from 'queries/namespace';
 import { defaultHeaderClassName, defaultColumnClassName } from 'Components/Table';
 import { entityListPropTypes, entityListDefaultprops } from 'constants/entityPageProps';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import { CLIENT_SIDE_SEARCH_OPTIONS as SEARCH_OPTIONS } from 'constants/searchOptions';
 import StatusChip from 'Components/StatusChip';
 import List from './List';

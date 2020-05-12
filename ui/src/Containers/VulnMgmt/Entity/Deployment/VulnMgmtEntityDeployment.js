@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import gql from 'graphql-tag';
 
 import useCases from 'constants/useCaseTypes';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import { workflowEntityPropTypes, workflowEntityDefaultProps } from 'constants/entityPageProps';
 import entityTypes from 'constants/entityTypes';
 import { defaultCountKeyMap } from 'constants/workflowPages.constants';

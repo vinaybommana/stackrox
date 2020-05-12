@@ -5,7 +5,7 @@ import { useQuery } from 'react-apollo';
 import entityTypes, { searchCategories } from 'constants/entityTypes';
 import { SEARCH_OPTIONS_QUERY } from 'queries/search';
 import workflowStateContext from 'Containers/workflowStateContext';
-import parseURL from 'modules/URLParser';
+import parseURL from 'utils/URLParser';
 import RiskPageHeader from './RiskPageHeader';
 import RiskSidePanel from './RiskSidePanel';
 import RiskTablePanel from './RiskTablePanel';

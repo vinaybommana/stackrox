@@ -11,7 +11,7 @@ import NamespaceScopedPermissions from 'Containers/ConfigManagement/Entity/widge
 import isGQLLoading from 'utils/gqlLoading';
 import gql from 'graphql-tag';
 import useCases from 'constants/useCaseTypes';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import { entityComponentPropTypes, entityComponentDefaultProps } from 'constants/entityPageProps';
 import searchContext from 'Containers/searchContext';
 import EntityList from '../List/EntityList';

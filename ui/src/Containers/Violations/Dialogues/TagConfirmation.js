@@ -5,7 +5,7 @@ import { useMutation } from 'react-apollo';
 import pluralize from 'pluralize';
 import { toast } from 'react-toastify';
 
-import captureGraphQLErrors from 'modules/captureGraphQLErrors';
+import captureGraphQLErrors from 'utils/captureGraphQLErrors';
 import CustomDialogue from 'Components/CustomDialogue';
 import MessageBanner from 'Components/MessageBanner';
 import Tags from 'Components/Tags';

@@ -1,5 +1,5 @@
 import entityTypes from 'constants/entityTypes';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 
 export const vulMgmtPolicyQuery = {
     policyQuery: queryService.objectToWhereClause({

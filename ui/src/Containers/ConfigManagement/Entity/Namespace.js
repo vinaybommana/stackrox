@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import entityTypes from 'constants/entityTypes';
 import dateTimeFormat from 'constants/dateTimeFormat';
 import { format } from 'date-fns';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import useCases from 'constants/useCaseTypes';
 import Query from 'Components/ThrowingQuery';
 import Loader from 'Components/Loader';

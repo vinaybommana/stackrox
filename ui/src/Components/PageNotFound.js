@@ -3,7 +3,7 @@ import { withRouter } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import ReactRouterPropTypes from 'react-router-prop-types';
 
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import NotFoundMessage from 'Components/NotFoundMessage';
 
 const PageNotFound = ({ match, location, resourceType }) => {

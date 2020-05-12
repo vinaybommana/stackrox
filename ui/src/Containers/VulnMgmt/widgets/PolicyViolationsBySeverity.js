@@ -4,7 +4,7 @@ import gql from 'graphql-tag';
 import { useQuery } from 'react-apollo';
 import max from 'lodash/max';
 
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import Widget from 'Components/Widget';
 import Sunburst from 'Components/visuals/Sunburst';
 import Loader from 'Components/Loader';

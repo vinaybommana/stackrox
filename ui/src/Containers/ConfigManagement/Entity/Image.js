@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import entityTypes from 'constants/entityTypes';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import dateTimeFormat from 'constants/dateTimeFormat';
 import { entityToColumns } from 'constants/listColumns';
 import cloneDeep from 'lodash/cloneDeep';

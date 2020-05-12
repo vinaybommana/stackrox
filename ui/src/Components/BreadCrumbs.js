@@ -1,7 +1,7 @@
 import React from 'react';
 import entityLabels from 'messages/entity';
 import pluralize from 'pluralize';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import { Link } from 'react-router-dom';
 import { ChevronRight } from 'react-feather';
 import BackButton from 'Containers/ConfigManagement/SidePanel/buttons/BackButton';

@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import entityTypes, { standardBaseTypes } from 'constants/entityTypes';
 import { resourceLabels } from 'messages/common';
 import { standardLabels } from 'messages/standards';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import pluralize from 'pluralize';
 import toLower from 'lodash/toLower';
 import ReactRouterPropTypes from 'react-router-prop-types';

@@ -5,7 +5,7 @@ import gql from 'graphql-tag';
 import { HelpCircle, AlertCircle } from 'react-feather';
 import sortBy from 'lodash/sortBy';
 
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import entityTypes from 'constants/entityTypes';
 import workflowStateContext from 'Containers/workflowStateContext';
 import ViewAllButton from 'Components/ViewAllButton';

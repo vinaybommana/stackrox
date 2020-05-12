@@ -4,7 +4,7 @@ import Widget from 'Components/Widget';
 import EntityIcon from 'Components/EntityIcon';
 import hexagonal from 'images/side-panel-icons/hexagonal.svg';
 import { withRouter } from 'react-router-dom';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import ReactRouterPropTypes from 'react-router-prop-types';
 import workflowStateContext from 'Containers/workflowStateContext';
 

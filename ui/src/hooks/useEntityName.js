@@ -1,5 +1,5 @@
-import { entityNameQueryMap } from 'modules/queryMap';
-import getEntityName from 'modules/getEntityName';
+import { entityNameQueryMap } from 'utils/queryMap';
+import getEntityName from 'utils/getEntityName';
 import isGQLLoading from 'utils/gqlLoading';
 import { useQuery } from 'react-apollo';
 

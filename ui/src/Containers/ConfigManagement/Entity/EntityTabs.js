@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import entityTypes from 'constants/entityTypes';
 import entityLabels from 'messages/entity';
 import pluralize from 'pluralize';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import ReactRouterPropTypes from 'react-router-prop-types';
 import { withRouter } from 'react-router-dom';
 import GroupedTabs from 'Components/GroupedTabs';

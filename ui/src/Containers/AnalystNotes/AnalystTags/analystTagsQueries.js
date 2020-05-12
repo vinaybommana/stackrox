@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import logError from 'modules/logError';
+import logError from 'utils/logError';
 
 import ANALYST_NOTES_TYPES from 'constants/analystnotes';
 

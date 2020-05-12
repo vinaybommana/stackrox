@@ -1,11 +1,11 @@
 import React from 'react';
-import URLService from 'modules/URLService';
+import URLService from 'utils/URLService';
 import entityTypes from 'constants/entityTypes';
 import { SERVICE_ACCOUNTS as QUERY } from 'queries/serviceAccount';
 import { sortValueByLength } from 'sorters/sorters';
 import { entityListPropTypes, entityListDefaultprops } from 'constants/entityPageProps';
 import { defaultHeaderClassName, defaultColumnClassName } from 'Components/Table';
-import queryService from 'modules/queryService';
+import queryService from 'utils/queryService';
 import pluralize from 'pluralize';
 
 import List from './List';
