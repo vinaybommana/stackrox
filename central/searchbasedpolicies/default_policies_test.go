@@ -103,7 +103,7 @@ func (suite *DefaultPoliciesTestSuite) SetupTest() {
 	suite.db, suite.dir, err = badgerhelper.NewTemp("default_policies_test.db")
 	suite.Require().NoError(err)
 
-	suite.deploymentIndexer = deploymentIndex.New(suite.bleveIndex)
+	suite.deploymentIndexer = deploymentIndex.New(suite.bleveIndex, suite.bleveIndex)
 	suite.deploymentSearcher = blevesearch.WrapUnsafeSearcherAsSearcher(suite.deploymentIndexer)
 
 	suite.imageIndexer = imageIndex.New(suite.bleveIndex)

@@ -66,12 +66,12 @@ type DataStore interface {
 	GetDeploymentIDs() ([]string, error)
 }
 
-func newDataStore(storage store.Store, graphProvider graph.Provider, processTagsStore processtagsstore.Store, bleveIndex bleve.Index,
+func newDataStore(storage store.Store, graphProvider graph.Provider, processTagsStore processtagsstore.Store, bleveIndex bleve.Index, processIndex bleve.Index,
 	images imageDS.DataStore, indicators piDS.DataStore, whitelists pwDS.DataStore, networkFlows nfDS.ClusterDataStore,
 	risks riskDS.DataStore, deletedDeploymentCache expiringcache.Cache, processFilter filter.Filter,
 	clusterRanker *ranking.Ranker, nsRanker *ranking.Ranker, deploymentRanker *ranking.Ranker) (DataStore, error) {
 	var searcher search.Searcher
-	indexer := index.New(bleveIndex)
+	indexer := index.New(bleveIndex, processIndex)
 
 	storage = cache.NewCachedStore(storage)
 	if features.Dackbox.Enabled() {
@@ -99,7 +99,7 @@ func newDataStore(storage store.Store, graphProvider graph.Provider, processTags
 }
 
 // NewBadger creates a deployment datastore based on BadgerDB
-func NewBadger(dacky *dackbox.DackBox, keyFence concurrency.KeyFence, db *badger.DB, processTagsStore processtagsstore.Store, bleveIndex bleve.Index,
+func NewBadger(dacky *dackbox.DackBox, keyFence concurrency.KeyFence, db *badger.DB, processTagsStore processtagsstore.Store, bleveIndex bleve.Index, processIndex bleve.Index,
 	images imageDS.DataStore, indicators piDS.DataStore, whitelists pwDS.DataStore, networkFlows nfDS.ClusterDataStore,
 	risks riskDS.DataStore, deletedDeploymentCache expiringcache.Cache, processFilter filter.Filter,
 	clusterRanker *ranking.Ranker, nsRanker *ranking.Ranker, deploymentRanker *ranking.Ranker) (DataStore, error) {
@@ -117,5 +117,5 @@ func NewBadger(dacky *dackbox.DackBox, keyFence concurrency.KeyFence, db *badger
 		}
 	}
 
-	return newDataStore(storage, dacky, processTagsStore, bleveIndex, images, indicators, whitelists, networkFlows, risks, deletedDeploymentCache, processFilter, clusterRanker, nsRanker, deploymentRanker)
+	return newDataStore(storage, dacky, processTagsStore, bleveIndex, processIndex, images, indicators, whitelists, networkFlows, risks, deletedDeploymentCache, processFilter, clusterRanker, nsRanker, deploymentRanker)
 }

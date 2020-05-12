@@ -32,7 +32,7 @@ var (
 func initialize() {
 	storage := badgerStore.New(globaldb.GetGlobalBadgerDB())
 	commentsStorage := commentsstore.New(globaldb.GetGlobalDB())
-	indexer := index.New(globalindex.GetGlobalIndex())
+	indexer := index.New(globalindex.GetProcessIndex())
 	searcher := search.New(storage, indexer)
 
 	p := pruner.NewFactory(minArgsPerProcess, pruneInterval)

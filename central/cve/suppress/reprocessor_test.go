@@ -119,7 +119,7 @@ func createDataStore(t *testing.T, dacky *pkgDackBox.DackBox, bleveIndex bleve.I
 		componentIndexer.New(bleveIndex),
 		imageComponentEdgeIndexer.New(bleveIndex),
 		imageIndexer.New(bleveIndex),
-		deploymentIndexer.New(bleveIndex),
+		deploymentIndexer.New(bleveIndex, bleveIndex),
 		clusterIndexer.New(bleveIndex))
 
 	ds, err := cveDataStore.New(dacky, store, cveIndexer, searcher)

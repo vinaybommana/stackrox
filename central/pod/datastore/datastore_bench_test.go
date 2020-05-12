@@ -41,7 +41,7 @@ func BenchmarkSearchAllPods(b *testing.B) {
 	defer utils.IgnoreError(db.Close)
 	defer func() { _ = os.RemoveAll(dir) }()
 
-	bleveIndex, err := globalindex.InitializeIndices(blevePath, globalindex.EphemeralIndex)
+	bleveIndex, err := globalindex.InitializeIndices("main", blevePath, globalindex.EphemeralIndex)
 	require.NoError(b, err)
 
 	podsStore := badgerStore.New(db)

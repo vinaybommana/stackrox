@@ -25,10 +25,11 @@ func Singleton() DataStore {
 		var err error
 		ps, err = New(
 			globaldb.GetGlobalBadgerDB(),
-			globalindex.GetGlobalIndex(),
+			globalindex.GetPodIndex(),
 			piDS.Singleton(),
 			filter.Singleton(),
 		)
+
 		utils.Must(errors.Wrap(err, "unable to load datastore for pods"))
 	})
 	return ps

@@ -20,7 +20,7 @@ var (
 func initialize() {
 	storage := badger.New(globaldb.GetGlobalBadgerDB())
 	commentsStorage := commentsstore.New(globaldb.GetGlobalDB())
-	indexer := index.New(globalindex.GetGlobalIndex())
+	indexer := index.New(globalindex.GetAlertIndex())
 	searcher := search.New(storage, indexer)
 	var err error
 	soleInstance, err = New(storage, commentsStorage, indexer, searcher)

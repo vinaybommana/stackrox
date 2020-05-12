@@ -36,10 +36,13 @@ func (d *databaseGatherer) Gather() *data.StorageInfo {
 		Databases: []*data.DatabaseStats{
 			d.badger.Gather(),
 			d.bolt.Gather(),
-			d.bleve.Gather(),
 		},
 		Errors: errList.ErrorStrings(),
 	}
+
+	databaseStats := d.bleve.Gather()
+	storageInfo.Databases = append(storageInfo.Databases, databaseStats...)
+
 	return storageInfo
 }
 

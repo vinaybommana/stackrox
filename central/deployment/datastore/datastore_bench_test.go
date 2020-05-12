@@ -47,13 +47,13 @@ func BenchmarkSearchAllDeployments(b *testing.B) {
 	dacky, err := dackbox.NewDackBox(db, nil, []byte("graph"), []byte("dirty"), []byte("valid"))
 	require.NoError(b, err)
 
-	bleveIndex, err := globalindex.InitializeIndices(blevePath, globalindex.EphemeralIndex)
+	bleveIndex, err := globalindex.InitializeIndices("main", blevePath, globalindex.EphemeralIndex)
 	require.NoError(b, err)
 
 	deploymentsStore, err := badgerStore.New(db)
 	require.NoError(b, err)
 
-	deploymentsIndexer := index.New(bleveIndex)
+	deploymentsIndexer := index.New(bleveIndex, bleveIndex)
 	deploymentsSearcher := search.New(deploymentsStore, dacky, nil, nil, nil, nil, nil, deploymentsIndexer)
 
 	imageDS, err := imageDatastore.NewBadger(dacky, concurrency.NewKeyFence(), db, bleveIndex, false, nil, nil, ranking.NewRanker(), ranking.NewRanker())

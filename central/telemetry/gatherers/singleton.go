@@ -27,7 +27,17 @@ func Singleton() *RoxGatherer {
 			newCentralGatherer(
 				manager.ManagerSingleton(),
 				installation.Singleton(),
-				newDatabaseGatherer(newBadgerGatherer(globaldb.GetGlobalBadgerDB()), newBoltGatherer(globaldb.GetGlobalDB()), newBleveGatherer(globalindex.GetGlobalIndex())),
+				newDatabaseGatherer(
+					newBadgerGatherer(globaldb.GetGlobalBadgerDB()),
+					newBoltGatherer(globaldb.GetGlobalDB()),
+					newBleveGatherer(
+						globalindex.GetGlobalIndex(),
+						globalindex.GetGlobalTmpIndex(),
+						globalindex.GetAlertIndex(),
+						globalindex.GetPodIndex(),
+						globalindex.GetProcessIndex(),
+					),
+				),
 				newAPIGatherer(metrics.GRPCSingleton(), metrics.HTTPSingleton()),
 				gatherers.NewComponentInfoGatherer(),
 			),

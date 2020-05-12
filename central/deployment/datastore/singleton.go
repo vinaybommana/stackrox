@@ -34,6 +34,7 @@ func initialize() {
 		globaldb.GetGlobalBadgerDB(),
 		processtagsstore.New(globaldb.GetGlobalDB()),
 		globalindex.GetGlobalIndex(),
+		globalindex.GetProcessIndex(),
 		imageDatastore.Singleton(),
 		piDS.Singleton(),
 		pwDS.Singleton(),
