@@ -12,7 +12,7 @@ import (
 
 type individualFieldConverter func(fields *storage.PolicyFields) []*storage.PolicyGroup
 
-var fieldsConverters = []individualFieldConverter{
+var andFieldsConverters = []individualFieldConverter{
 	convertImageNamePolicy,
 	convertImageAgeDays,
 	convertDockerFileLineRule,
@@ -37,7 +37,6 @@ var fieldsConverters = []individualFieldConverter{
 	convertCvss,
 	convertDropCapabilities,
 	convertAddCapabilities,
-	convertContainerResourcePolicy,
 	convertPermissionPolicy,
 	convertExposureLevelPolicy,
 }
@@ -58,7 +57,7 @@ func EnsureConverted(p *storage.Policy) error {
 	}
 	if p.GetPolicyVersion() == legacyVersion {
 		p.PolicyVersion = Version
-		p.PolicySections = append(p.PolicySections, ConvertPolicyFieldsToSections(p.GetFields()))
+		p.PolicySections = append(p.PolicySections, ConvertPolicyFieldsToSections(p.GetFields())...)
 		p.Fields = nil
 	}
 	return nil
@@ -74,19 +73,43 @@ func CloneAndEnsureConverted(p *storage.Policy) (*storage.Policy, error) {
 }
 
 // ConvertPolicyFieldsToSections converts policy fields (version = "") to policy sections (version = "2.0").
-func ConvertPolicyFieldsToSections(fields *storage.PolicyFields) *storage.PolicySection {
-	var pgs []*storage.PolicyGroup
-	for _, fieldConverter := range fieldsConverters {
-		pgs = append(pgs, fieldConverter(fields)...)
+func ConvertPolicyFieldsToSections(fields *storage.PolicyFields) []*storage.PolicySection {
+	var andGroups []*storage.PolicyGroup
+	for _, fieldConverter := range andFieldsConverters {
+		andGroups = append(andGroups, fieldConverter(fields)...)
 	}
 
-	if len(pgs) == 0 {
+	orGroups := convertContainerResourcePolicy(fields)
+
+	if len(andGroups) == 0 && len(orGroups) == 0 {
 		return nil
 	}
 
-	return &storage.PolicySection{
-		PolicyGroups: pgs,
+	if len(orGroups) == 0 {
+		return []*storage.PolicySection{
+			{
+				PolicyGroups: andGroups,
+			},
+		}
 	}
+
+	// Legacy container resource policies are implicitly ORd together.  For some policy term A and some resource policy
+	// terms B and C a legacy policy implements the logic "A AND (B OR C)".  To implement this in boolean policies we
+	// have to create multiple policy sections, each containing all of the AND search terms and one of the OR search
+	// terms for "(A AND B) OR (A AND C)"
+	var sections []*storage.PolicySection
+	for _, orGroup := range orGroups {
+		section := &storage.PolicySection{
+			PolicyGroups: make([]*storage.PolicyGroup, 0, len(andGroups)+1),
+		}
+		for _, andGroup := range andGroups {
+			section.PolicyGroups = append(section.PolicyGroups, andGroup.Clone())
+		}
+		section.PolicyGroups = append(section.PolicyGroups, orGroup)
+		sections = append(sections, section)
+	}
+
+	return sections
 }
 
 func convertImageScanAge(fields *storage.PolicyFields) []*storage.PolicyGroup {

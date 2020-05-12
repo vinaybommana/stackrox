@@ -8,9 +8,9 @@ import (
 )
 
 type testcase struct {
-	desc                  string
-	policyFields          *storage.PolicyFields
-	expectedPolicySection *storage.PolicySection
+	desc                   string
+	policyFields           *storage.PolicyFields
+	expectedPolicySections []*storage.PolicySection
 }
 
 type convertTestCase struct {
@@ -124,13 +124,15 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 					Value: 7.0,
 				},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: CVSS,
-						Values: []*storage.PolicyValue{
-							{
-								Value: ">= 7.000000",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: CVSS,
+							Values: []*storage.PolicyValue{
+								{
+									Value: ">= 7.000000",
+								},
 							},
 						},
 					},
@@ -143,13 +145,15 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 			policyFields: &storage.PolicyFields{
 				FixedBy: "pkg=4",
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: FixedBy,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "pkg=4",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: FixedBy,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "pkg=4",
+								},
 							},
 						},
 					},
@@ -167,26 +171,28 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 					Uid:      "123",
 				},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: ProcessName,
-						Values:    []*storage.PolicyValue{{Value: "process"}},
-					},
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: ProcessName,
+							Values:    []*storage.PolicyValue{{Value: "process"}},
+						},
 
-					{
-						FieldName: ProcessAncestor,
-						Values:    []*storage.PolicyValue{{Value: "parent"}},
-					},
+						{
+							FieldName: ProcessAncestor,
+							Values:    []*storage.PolicyValue{{Value: "parent"}},
+						},
 
-					{
-						FieldName: ProcessArguments,
-						Values:    []*storage.PolicyValue{{Value: "--arg 1"}},
-					},
+						{
+							FieldName: ProcessArguments,
+							Values:    []*storage.PolicyValue{{Value: "--arg 1"}},
+						},
 
-					{
-						FieldName: ProcessUID,
-						Values:    []*storage.PolicyValue{{Value: "123"}},
+						{
+							FieldName: ProcessUID,
+							Values:    []*storage.PolicyValue{{Value: "123"}},
+						},
 					},
 				},
 			},
@@ -200,13 +206,15 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 					Value: "v",
 				},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: DisallowedImageLabel,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "k=v",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: DisallowedImageLabel,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "k=v",
+								},
 							},
 						},
 					},
@@ -222,13 +230,15 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 					Value: "v",
 				},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: RequiredImageLabel,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "k=v",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: RequiredImageLabel,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "k=v",
+								},
 							},
 						},
 					},
@@ -244,13 +254,15 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 					Value: "v",
 				},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: DisallowedAnnotation,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "k=v",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: DisallowedAnnotation,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "k=v",
+								},
 							},
 						},
 					},
@@ -266,13 +278,15 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 					Value: "v",
 				},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: RequiredAnnotation,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "k=v",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: RequiredAnnotation,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "k=v",
+								},
 							},
 						},
 					},
@@ -288,13 +302,15 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 					Value: "v",
 				},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: RequiredLabel,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "k=v",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: RequiredLabel,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "k=v",
+								},
 							},
 						},
 					},
@@ -311,13 +327,15 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 					EnvVarSource: storage.ContainerConfig_EnvironmentConfig_RESOURCE_FIELD,
 				},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: EnvironmentVariable,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "RESOURCE_FIELD=k=v",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: EnvironmentVariable,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "RESOURCE_FIELD=k=v",
+								},
 							},
 						},
 					},
@@ -333,22 +351,24 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 					Protocol: "protocol",
 				},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: Port,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "1234",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: Port,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "1234",
+								},
 							},
 						},
-					},
 
-					{
-						FieldName: Protocol,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "protocol",
+						{
+							FieldName: Protocol,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "protocol",
+								},
 							},
 						},
 					},
@@ -366,40 +386,42 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 					Type:        "fs",
 				},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: VolumeName,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "v",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: VolumeName,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "v",
+								},
 							},
 						},
-					},
 
-					{
-						FieldName: VolumeType,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "fs",
+						{
+							FieldName: VolumeType,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "fs",
+								},
 							},
 						},
-					},
 
-					{
-						FieldName: VolumeDestination,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "d",
+						{
+							FieldName: VolumeDestination,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "d",
+								},
 							},
 						},
-					},
 
-					{
-						FieldName: VolumeSource,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "s",
+						{
+							FieldName: VolumeSource,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "s",
+								},
 							},
 						},
 					},
@@ -416,31 +438,33 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 					Tag:      "tag",
 				},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: ImageRegistry,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "reg",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: ImageRegistry,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "reg",
+								},
 							},
 						},
-					},
 
-					{
-						FieldName: ImageRemote,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "r/.*rem.*",
+						{
+							FieldName: ImageRemote,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "r/.*rem.*",
+								},
 							},
 						},
-					},
 
-					{
-						FieldName: ImageTag,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "tag",
+						{
+							FieldName: ImageTag,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "tag",
+								},
 							},
 						},
 					},
@@ -453,13 +477,15 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 			policyFields: &storage.PolicyFields{
 				Cve: "cve",
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: CVE,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "cve",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: CVE,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "cve",
+								},
 							},
 						},
 					},
@@ -475,13 +501,15 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 					Version: "v",
 				},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: ImageComponent,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "n=v",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: ImageComponent,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "n=v",
+								},
 							},
 						},
 					},
@@ -494,13 +522,15 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 			policyFields: &storage.PolicyFields{
 				SetImageAgeDays: &storage.PolicyFields_ImageAgeDays{ImageAgeDays: 30},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: ImageAge,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "30",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: ImageAge,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "30",
+								},
 							},
 						},
 					},
@@ -513,13 +543,15 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 			policyFields: &storage.PolicyFields{
 				SetScanAgeDays: &storage.PolicyFields_ScanAgeDays{ScanAgeDays: 30},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: ImageScanAge,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "30",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: ImageScanAge,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "30",
+								},
 							},
 						},
 					},
@@ -532,13 +564,15 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 			policyFields: &storage.PolicyFields{
 				SetNoScanExists: &storage.PolicyFields_NoScanExists{NoScanExists: true},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: UnscannedImage,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "true",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: UnscannedImage,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "true",
+								},
 							},
 						},
 					},
@@ -551,13 +585,15 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 			policyFields: &storage.PolicyFields{
 				SetPrivileged: &storage.PolicyFields_Privileged{Privileged: true},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: Privileged,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "true",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: Privileged,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "true",
+								},
 							},
 						},
 					},
@@ -570,13 +606,15 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 			policyFields: &storage.PolicyFields{
 				SetReadOnlyRootFs: &storage.PolicyFields_ReadOnlyRootFs{ReadOnlyRootFs: true},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: ReadOnlyRootFS,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "true",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: ReadOnlyRootFS,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "true",
+								},
 							},
 						},
 					},
@@ -589,13 +627,15 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 			policyFields: &storage.PolicyFields{
 				SetWhitelist: &storage.PolicyFields_WhitelistEnabled{WhitelistEnabled: true},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: WhitelistsEnabled,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "true",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: WhitelistsEnabled,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "true",
+								},
 							},
 						},
 					},
@@ -608,13 +648,15 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 			policyFields: &storage.PolicyFields{
 				HostMountPolicy: &storage.HostMountPolicy{SetReadOnly: &storage.HostMountPolicy_ReadOnly{ReadOnly: true}},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: WritableHostMount,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "false",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: WritableHostMount,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "false",
+								},
 							},
 						},
 					},
@@ -630,13 +672,15 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 					Value:       "Rules",
 				},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: DockerfileLine,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "Joseph=Rules",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: DockerfileLine,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "Joseph=Rules",
+								},
 							},
 						},
 					},
@@ -649,17 +693,19 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 			policyFields: &storage.PolicyFields{
 				DropCapabilities: []string{"Joseph", "Rules"},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName:       DropCaps,
-						BooleanOperator: storage.BooleanOperator_OR,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "Joseph",
-							},
-							{
-								Value: "Rules",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName:       DropCaps,
+							BooleanOperator: storage.BooleanOperator_OR,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "Joseph",
+								},
+								{
+									Value: "Rules",
+								},
 							},
 						},
 					},
@@ -672,17 +718,19 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 			policyFields: &storage.PolicyFields{
 				AddCapabilities: []string{"Joseph", "Rules"},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName:       AddCaps,
-						BooleanOperator: storage.BooleanOperator_OR,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "Joseph",
-							},
-							{
-								Value: "Rules",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName:       AddCaps,
+							BooleanOperator: storage.BooleanOperator_OR,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "Joseph",
+								},
+								{
+									Value: "Rules",
+								},
 							},
 						},
 					},
@@ -712,37 +760,136 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 					},
 				},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: ContainerCPULimit,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "2.000000",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: ContainerCPULimit,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "2.000000",
+								},
 							},
 						},
 					},
-					{
-						FieldName: ContainerCPURequest,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "< 1.000000",
+				},
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: ContainerCPURequest,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "< 1.000000",
+								},
 							},
 						},
 					},
-					{
-						FieldName: ContainerMemLimit,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "<= 4.000000",
+				},
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: ContainerMemLimit,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "<= 4.000000",
+								},
 							},
 						},
 					},
-					{
-						FieldName: ContainerMemRequest,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "> 3.000000",
+				},
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: ContainerMemRequest,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "> 3.000000",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+
+		{
+			desc: "single container resource policy",
+			policyFields: &storage.PolicyFields{
+				ContainerResourcePolicy: &storage.ResourcePolicy{
+					CpuResourceRequest: &storage.NumericalPolicy{
+						Op:    storage.Comparator_LESS_THAN,
+						Value: 1,
+					},
+				},
+			},
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: ContainerCPURequest,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "< 1.000000",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+
+		{
+			desc: "container resource policy OR-ing",
+			policyFields: &storage.PolicyFields{
+				ContainerResourcePolicy: &storage.ResourcePolicy{
+					CpuResourceRequest: &storage.NumericalPolicy{
+						Op:    storage.Comparator_LESS_THAN,
+						Value: 1,
+					},
+					CpuResourceLimit: &storage.NumericalPolicy{
+						Op:    storage.Comparator_EQUALS,
+						Value: 2,
+					},
+				},
+				SetImageAgeDays: &storage.PolicyFields_ImageAgeDays{ImageAgeDays: 30},
+			},
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: ImageAge,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "30",
+								},
+							},
+						},
+						{
+							FieldName: ContainerCPULimit,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "2.000000",
+								},
+							},
+						},
+					},
+				},
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: ImageAge,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "30",
+								},
+							},
+						},
+						{
+							FieldName: ContainerCPURequest,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "< 1.000000",
+								},
 							},
 						},
 					},
@@ -757,13 +904,15 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 					PermissionLevel: storage.PermissionLevel_ELEVATED_CLUSTER_WIDE,
 				},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: MinimumRBACPermissions,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "ELEVATED_CLUSTER_WIDE",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: MinimumRBACPermissions,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "ELEVATED_CLUSTER_WIDE",
+								},
 							},
 						},
 					},
@@ -784,25 +933,27 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 					},
 				},
 			},
-			expectedPolicySection: &storage.PolicySection{
-				PolicyGroups: []*storage.PolicyGroup{
-					{
-						FieldName: PortExposure,
-						Values: []*storage.PolicyValue{
-							{
-								Value: "UNSET",
-							},
-							{
-								Value: "EXTERNAL",
-							},
-							{
-								Value: "NODE",
-							},
-							{
-								Value: "INTERNAL",
-							},
-							{
-								Value: "HOST",
+			expectedPolicySections: []*storage.PolicySection{
+				{
+					PolicyGroups: []*storage.PolicyGroup{
+						{
+							FieldName: PortExposure,
+							Values: []*storage.PolicyValue{
+								{
+									Value: "UNSET",
+								},
+								{
+									Value: "EXTERNAL",
+								},
+								{
+									Value: "NODE",
+								},
+								{
+									Value: "INTERNAL",
+								},
+								{
+									Value: "HOST",
+								},
 							},
 						},
 					},
@@ -814,7 +965,7 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			got := ConvertPolicyFieldsToSections(tc.policyFields)
-			assert.DeepEqual(t, tc.expectedPolicySection, got)
+			assert.DeepEqual(t, tc.expectedPolicySections, got)
 		})
 	}
 }

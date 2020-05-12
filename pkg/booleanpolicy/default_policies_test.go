@@ -786,7 +786,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "No resource requests or limits specified",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				fixtureDep.GetId(): {
 					{Message: "The CPU resource limit of 0 is equal to the threshold of 0.00"},
