@@ -308,73 +308,295 @@ describe('Policies page', () => {
             }
         });
 
-        it('should start an API call to get the policy in the detail panel', () => {
-            cy.route({
-                method: 'POST',
-                url: 'v1/policies/export',
-            }).as('policyExport');
+        describe('policy export', () => {
+            it('should start an API call to get the policy in the detail panel', () => {
+                cy.route({
+                    method: 'POST',
+                    url: 'v1/policies/export',
+                }).as('policyExport');
 
-            cy.get(selectors.tableFirstRow).click();
+                cy.get(selectors.tableFirstRow).click();
 
-            cy.url().then((href) => {
-                const segments = href.split('/');
-                const policyId = segments[segments.length - 1];
+                cy.url().then((href) => {
+                    const segments = href.split('/');
+                    const policyId = segments[segments.length - 1];
+                    cy.get(selectors.singlePolicyExportButton).click();
+
+                    cy.wait('@policyExport')
+                        .its('request.body')
+                        .should('deep.equal', {
+                            policyIds: [policyId],
+                        });
+                });
+            });
+
+            it('should display an error when the export fails', () => {
+                cy.route({
+                    method: 'POST',
+                    url: 'v1/policies/export',
+                    status: 400,
+                    response: {
+                        message: 'Some policies could not be retrieved.',
+                    },
+                }).as('policyExport');
+
+                cy.get(selectors.tableFirstRow).click();
                 cy.get(selectors.singlePolicyExportButton).click();
 
-                cy.wait('@policyExport')
-                    .its('request.body')
-                    .should('deep.equal', {
-                        policyIds: [policyId],
-                    });
+                cy.wait('@policyExport');
+
+                cy.get(selectors.toast).contains('Could not export the policy');
             });
         });
 
-        it('should display an error when the export fails', () => {
-            cy.route({
-                method: 'POST',
-                url: 'v1/policies/export',
-                status: 400,
-                response: {
-                    message: 'Some policies could not be retrieved.',
-                },
-            }).as('policyExport');
+        describe('policy import', () => {
+            it('should open the import dialog when button is clicked', () => {
+                cy.get(selectors.importPolicyButton).click();
 
-            cy.get(selectors.tableFirstRow).click();
-            cy.get(selectors.singlePolicyExportButton).click();
+                cy.get(`${selectors.policyImportModal.content}:contains("JSON")`);
+                cy.get(selectors.policyImportModal.uploadIcon);
+                cy.get(selectors.policyImportModal.fileInput);
+                cy.get(selectors.policyImportModal.confirm)
+                    .should('be.disabled')
+                    .invoke('text')
+                    .then((btnText) => {
+                        expect(btnText).to.contain('Import');
+                    });
 
-            cy.wait('@policyExport');
+                cy.get(selectors.policyImportModal.cancel).click();
+                cy.get(selectors.policyImportModal.content).should('not.exist');
+            });
 
-            cy.get(selectors.toast).contains('Could not export the policy');
-        });
+            it('should successfully import a policy', () => {
+                cy.get(selectors.importPolicyButton).click();
 
-        it('should open the import dialog when button is clicked', () => {
-            cy.get(selectors.importPolicyButton).click();
+                const fileName = 'policies/good_policy_to_import.json';
+                cy.fixture(fileName).then((json) => {
+                    const expectedPolicyName = json?.policies[0]?.name;
+                    const expectedPolicyId = json?.policies[0]?.id;
 
-            cy.get(`${selectors.policyImportModal.content}:contains("JSON")`);
-            cy.get(selectors.policyImportModal.uploadIcon);
-            cy.get(selectors.policyImportModal.fileInput);
-            cy.get(selectors.policyImportModal.confirm)
-                .should('be.disabled')
-                .invoke('text')
-                .then((btnText) => {
-                    expect(btnText).to.contain('Import');
+                    // due to way Cypress handles JSON fixtures, we have to use this workaround to handle JSON file upload
+                    //   https://github.com/abramenal/cypress-file-upload/issues/175#issue-586835434
+                    const fileContent = JSON.stringify(json);
+                    cy.get(selectors.policyImportModal.fileInput).upload({
+                        fileContent,
+                        fileName,
+                        mimeType: 'application/json',
+                        encoding: 'utf8',
+                    });
+                    cy.get(`${selectors.policyImportModal.policyNames}:first`)
+                        .invoke('text')
+                        .then((policyText) => {
+                            expect(policyText).to.equal(expectedPolicyName);
+                        });
+
+                    cy.get(selectors.policyImportModal.confirm).click();
+
+                    cy.get(selectors.policyImportModal.successMessage);
+
+                    cy.location('pathname').should('eq', `${url}/${expectedPolicyId}`);
                 });
+            });
 
-            cy.get(selectors.policyImportModal.cancel).click();
-            cy.get(selectors.policyImportModal.content).should('not.exist');
-        });
+            it('should show error and handle resolution form when new policy has a duplicate name', () => {
+                const mockDupeNameResponse = {
+                    responses: [
+                        {
+                            succeeded: false,
+                            policy: {
+                                id: 'f09f8da1-6111-4ca0-8f49-294a76c65118',
+                                name: 'Dupe Name Policy',
+                                // other policy properties omitted from mock
+                            },
+                            errors: [
+                                {
+                                    message: 'Could not add policy due to name validation',
+                                    type: 'duplicate_name',
+                                    duplicateName: 'Dupe Name Policy',
+                                },
+                            ],
+                        },
+                    ],
+                    allSucceeded: false,
+                };
+                cy.route({
+                    method: 'POST',
+                    url: 'v1/policies/import',
+                    response: mockDupeNameResponse,
+                }).as('dupeImportName');
 
-        // @TODO: the .attachFile command is added by cypress-file-upload
-        //   and that package is unstable currently,
-        //   see: https://github.com/abramenal/cypress-file-upload
-        //   workarounds required until the plugin fixes
-        //   https://github.com/abramenal/cypress-file-upload/issues/175
-        it.skip('should list the policy ID of a selected file', () => {
-            cy.get(selectors.importPolicyButton).click();
+                cy.get(selectors.importPolicyButton).click();
 
-            cy.get('input[type="file"]').attachFile('test.json');
+                const dummyJson = {
+                    policies: [
+                        {
+                            name: 'Dupe Name Policy',
+                        },
+                    ],
+                };
+                const fileContent = JSON.stringify(dummyJson);
+                cy.get(selectors.policyImportModal.fileInput).upload({
+                    fileContent,
+                    fileName: 'dummy.json',
+                    mimeType: 'application/json',
+                    encoding: 'utf8',
+                });
+                cy.get(selectors.policyImportModal.confirm).click();
 
-            cy.get(selectors.policyImportModal.imports).eq(0).should('exist');
+                cy.wait('@dupeImportName');
+
+                // check error state
+                cy.get(selectors.policyImportModal.dupeNameMessage);
+                cy.get(selectors.policyImportModal.confirm).should('be.disabled');
+
+                // first, ensure there is an overwrite option
+                cy.get(selectors.policyImportModal.overwriteRadioLabel).click();
+                cy.get(selectors.policyImportModal.confirm).should('not.be.disabled');
+
+                // next, ensure there is a rename option, and that it requires more info than just clicking
+                cy.get(selectors.policyImportModal.renameRadioLabel).click();
+                cy.get(selectors.policyImportModal.confirm).should('be.disabled');
+
+                // finally, give a new name, and ensure we can again submit the policy
+                cy.get(selectors.policyImportModal.newNameInputLabel)
+                    .click()
+                    .type('A whole new world');
+                cy.get(selectors.policyImportModal.confirm).should('not.be.disabled');
+            });
+
+            it('should show error and handle resolution form when new policy has a duplicate ID', () => {
+                const mockDupeNameResponse = {
+                    responses: [
+                        {
+                            succeeded: false,
+                            policy: {
+                                id: 'f09f8da1-6111-4ca0-8f49-294a76c65117',
+                                name: 'Fixable CVSS >= 9',
+                                // other policy properties omitted from mock
+                            },
+                            errors: [
+                                {
+                                    message:
+                                        'Policy Different than Fixable CVSS is >= 9 (f09f8da1-6111-4ca0-8f49-294a76c65117) cannot be added because it already exists',
+                                    type: 'duplicate_id',
+                                    duplicateName: 'Fixable CVSS >= 9',
+                                },
+                            ],
+                        },
+                    ],
+                    allSucceeded: false,
+                };
+                cy.route({
+                    method: 'POST',
+                    url: 'v1/policies/import',
+                    response: mockDupeNameResponse,
+                }).as('dupeImportId');
+
+                cy.get(selectors.importPolicyButton).click();
+
+                const dummyJson = {
+                    policies: [
+                        {
+                            name: 'Dupe ID Policy',
+                        },
+                    ],
+                };
+                const fileContent = JSON.stringify(dummyJson);
+                cy.get(selectors.policyImportModal.fileInput).upload({
+                    fileContent,
+                    fileName: 'dummy.json',
+                    mimeType: 'application/json',
+                    encoding: 'utf8',
+                });
+                cy.get(selectors.policyImportModal.confirm).click();
+
+                cy.wait('@dupeImportId');
+
+                // check error state
+                cy.get(selectors.policyImportModal.dupeIdMessage);
+                cy.get(selectors.policyImportModal.confirm).should('be.disabled');
+
+                // first, ensure there is an overwrite option
+                cy.get(selectors.policyImportModal.overwriteRadioLabel).click();
+                cy.get(selectors.policyImportModal.confirm).should('not.be.disabled');
+
+                // finally, ensure there is a "keep both" option, and ensure we can again submit the policy
+                cy.get(selectors.policyImportModal.keepBothRadioLabel).click();
+                cy.get(selectors.policyImportModal.confirm).should('not.be.disabled');
+            });
+
+            it('should show error and handle resolution form when new policy has both duplicate name and duplicate ID', () => {
+                const mockDupeNameResponse = {
+                    responses: [
+                        {
+                            succeeded: false,
+                            policy: {
+                                id: '8ac93556-4ad4-4220-a275-3f518db0ceb9',
+                                name: 'Fixable CVSS >= 9',
+                                // other policy properties omitted from mock
+                            },
+                            errors: [
+                                {
+                                    message:
+                                        'Policy Fixable CVSS >= 9 (8ac93556-4ad4-4220-a275-3f518db0ceb9) cannot be added because it already exists',
+                                    type: 'duplicate_id',
+                                    duplicateName: 'Container using read-write root filesystem',
+                                },
+                                {
+                                    message: 'Could not add policy due to name validation',
+                                    type: 'duplicate_name',
+                                    duplicateName: 'Fixable CVSS >= 9',
+                                },
+                            ],
+                        },
+                    ],
+                    allSucceeded: false,
+                };
+                cy.route({
+                    method: 'POST',
+                    url: 'v1/policies/import',
+                    response: mockDupeNameResponse,
+                }).as('dupeImportNameAndId');
+
+                cy.get(selectors.importPolicyButton).click();
+
+                const dummyJson = {
+                    policies: [
+                        {
+                            name: 'Dupe Name and Dupe ID Policy',
+                        },
+                    ],
+                };
+                const fileContent = JSON.stringify(dummyJson);
+                cy.get(selectors.policyImportModal.fileInput).upload({
+                    fileContent,
+                    fileName: 'dummy.json',
+                    mimeType: 'application/json',
+                    encoding: 'utf8',
+                });
+                cy.get(selectors.policyImportModal.confirm).click();
+
+                cy.wait('@dupeImportNameAndId');
+
+                // check error state
+                cy.get(selectors.policyImportModal.dupeNameMessage);
+                cy.get(selectors.policyImportModal.dupeIdMessage);
+                cy.get(selectors.policyImportModal.confirm).should('be.disabled');
+
+                // first, ensure there is an overwrite option
+                cy.get(selectors.policyImportModal.overwriteRadioLabel).click();
+                cy.get(selectors.policyImportModal.confirm).should('not.be.disabled');
+
+                // next, ensure there is a rename option, and that it requires more info than just clicking
+                cy.get(selectors.policyImportModal.renameRadioLabel).click();
+                cy.get(selectors.policyImportModal.confirm).should('be.disabled');
+
+                // finally, give a new name, and ensure we can again submit the policy
+                cy.get(selectors.policyImportModal.newNameInputLabel)
+                    .click()
+                    .type('A policy by any other name would smell just as sweet');
+                cy.get(selectors.policyImportModal.confirm).should('not.be.disabled');
+            });
         });
     });
 

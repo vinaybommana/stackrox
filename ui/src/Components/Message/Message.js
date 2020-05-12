@@ -35,7 +35,7 @@ function Message(props) {
     };
 
     return (
-        <div className={`flex ${messageClasses[props.type]}`}>
+        <div className={`flex ${messageClasses[props.type]}`} data-testid="message">
             <div
                 className={`flex items-center justify-start flex-shrink-0 pr-4 border-r ${
                     borderColor[props.type]

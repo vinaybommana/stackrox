@@ -4,7 +4,7 @@ export const selectors = {
     configure: 'nav.left-navigation li:contains("Platform Configuration") a',
     navLink: '.navigation-panel li:contains("System Policies") a',
     newPolicyButton: 'button:contains("New")',
-    importPolicyButton: 'button[data-testid="import-policy-btn"]',
+    importPolicyButton: 'button[data-testid="import-policy-btn"]:contains("Import Policy")',
     singlePolicyExportButton: 'button[data-testid="single-policy-export"]',
     editPolicyButton: 'button:contains("Edit")',
     savePolicyButton: 'button:contains("Save")',
@@ -66,9 +66,23 @@ export const selectors = {
         content: '[data-testid="policy-import-modal-content"]',
         uploadIcon: '[data-testid="policy-import-modal-content"] [data-testid="upload-icon"]',
         fileInput: '[data-testid="policy-import-modal-content"] input[type="file"]',
+        policyNames: '[data-testid="policies-to-import"] li',
         cancel: '[data-testid="custom-modal-cancel"]',
         confirm: '[data-testid="custom-modal-confirm"]',
         imports: '[data-testid="policies-to-import"]',
+        successMessage:
+            '[data-testid="policy-import-modal-content"] [data-testid="message"].info-message:contains("Policy successfully imported")',
+        dupeNameMessage:
+            '[data-testid="policy-import-modal-content"] [data-testid="message"].error-message:contains("An existing policy has the same name")',
+        dupeIdMessage:
+            '[data-testid="policy-import-modal-content"] [data-testid="message"].error-message:contains("has the same ID")',
+        renameRadioLabel:
+            '[data-testid="dupe-policy-form"] label:contains("Rename incoming policy")',
+        overwriteRadioLabel:
+            '[data-testid="dupe-policy-form"] label:contains("Overwrite existing policy")',
+        keepBothRadioLabel:
+            '[data-testid="dupe-policy-form"] label:contains("Keep both policies (imported policy will be assigned a new ID)")',
+        newNameInputLabel: '[data-testid="dupe-policy-form"] label:contains("New name")',
     },
     searchInput: '.react-select__input > input',
     sidePanel: '[data-testid="side-panel"]',
