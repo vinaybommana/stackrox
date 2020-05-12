@@ -13,13 +13,15 @@ type databaseGatherer struct {
 	badger *badgerGatherer
 	bolt   *boltGatherer
 	bleve  *bleveGatherer
+	rocks  *rocksdbGatherer
 }
 
-func newDatabaseGatherer(badger *badgerGatherer, bolt *boltGatherer, bleve *bleveGatherer) *databaseGatherer {
+func newDatabaseGatherer(badger *badgerGatherer, rocks *rocksdbGatherer, bolt *boltGatherer, bleve *bleveGatherer) *databaseGatherer {
 	return &databaseGatherer{
 		badger: badger,
 		bolt:   bolt,
 		bleve:  bleve,
+		rocks:  rocks,
 	}
 }
 
@@ -36,6 +38,7 @@ func (d *databaseGatherer) Gather() *data.StorageInfo {
 		Databases: []*data.DatabaseStats{
 			d.badger.Gather(),
 			d.bolt.Gather(),
+			d.rocks.Gather(),
 		},
 		Errors: errList.ErrorStrings(),
 	}

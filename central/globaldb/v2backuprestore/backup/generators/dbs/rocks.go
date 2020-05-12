@@ -8,6 +8,8 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/central/globaldb"
+	"github.com/stackrox/rox/pkg/fileutils"
+	"github.com/stackrox/rox/pkg/rocksdb/metrics"
 	"github.com/tecbot/gorocksdb"
 )
 
@@ -34,7 +36,7 @@ type RocksBackup struct {
 
 // WriteDirectory writes a backup of RocksDB to the input path.
 func (rgen *RocksBackup) WriteDirectory(ctx context.Context) (string, error) {
-	path, err := findScratchPath(rgen.db)
+	path, err := findScratchPath()
 	if err != nil {
 		return "", errors.Wrap(err, "could not find space sufficient for backup generation")
 	}
@@ -54,8 +56,12 @@ func (rgen *RocksBackup) WriteDirectory(ctx context.Context) (string, error) {
 	return path, nil
 }
 
-func findScratchPath(db *gorocksdb.DB) (string, error) {
-	requiredBytes := float64(getDBSizeBytes(db)) * (1.0 + marginOfSafety)
+func findScratchPath() (string, error) {
+	dbSize, err := getRocksDBSize()
+	if err != nil {
+		return "", err
+	}
+	requiredBytes := float64(dbSize) * (1.0 + marginOfSafety)
 
 	// Check tmp for space to produce a backup.
 	tmpDir, err := ioutil.TempDir("", tmpPath)
@@ -97,10 +103,10 @@ func getBytesAvailableIn(toPath string) (uint64, error) {
 }
 
 // Get the number of bytes used by files stored for the db.
-func getDBSizeBytes(db *gorocksdb.DB) uint64 {
-	var fSizeTotal uint64
-	for _, metadata := range db.GetLiveFilesMetaData() {
-		fSizeTotal += uint64(metadata.Size)
+func getRocksDBSize() (int64, error) {
+	size, err := fileutils.DirectorySize(metrics.RocksDBPath)
+	if err != nil {
+		return 0, err
 	}
-	return fSizeTotal
+	return size, nil
 }

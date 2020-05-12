@@ -235,7 +235,7 @@ func generateAlertDataStructures(ctx context.Context, t *testing.T) (alertDatast
 	mockFilter := filterMocks.NewMockFilter(ctrl)
 	mockFilter.EXPECT().Update(gomock.Any()).AnyTimes()
 
-	deployments, err := deploymentDatastore.NewBadger(dacky, concurrency.NewKeyFence(), nil, nil, bleveIndex, bleveIndex,nil, mockProcessDataStore, mockWhitelistDataStore, nil, mockRiskDatastore, nil, mockFilter, ranking.NewRanker(), ranking.NewRanker(), ranking.NewRanker())
+	deployments, err := deploymentDatastore.NewBadger(dacky, concurrency.NewKeyFence(), nil, nil, bleveIndex, bleveIndex, nil, mockProcessDataStore, mockWhitelistDataStore, nil, mockRiskDatastore, nil, mockFilter, ranking.NewRanker(), ranking.NewRanker(), ranking.NewRanker())
 	require.NoError(t, err)
 
 	return alerts, mockConfigDatastore, mockImageDatastore, deployments
