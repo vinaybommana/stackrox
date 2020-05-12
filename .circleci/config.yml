@@ -3149,24 +3149,11 @@ jobs:
 
       - *updateTestRail
 
-      - *restoreUI
-      - *determineWhetherToRunUIDevServer
-      - *runUIDevServer
-      - *waitForUIDevServer
-      - *runUIE2E
-      - *collectImbuedUILogs
-      - *storeImbuedUILogs
-
       - *collectK8sLogs
       - *backupDB
       - *storeDBBackupArtifact
       - check-stackrox-logs
       - *storeK8sLogs
-
-      - *storeCypressResults
-      - *storeCypressScreenshots
-      - *storeCypressVideos
-      - *storeUITestCoverage
 
       - run:
           name: Destroy EKS cluster
@@ -3257,24 +3244,11 @@ jobs:
 
       - *updateTestRail
 
-      - *restoreUI
-      - *determineWhetherToRunUIDevServer
-      - *runUIDevServer
-      - *waitForUIDevServer
-      - *runUIE2E
-      - *collectImbuedUILogs
-      - *storeImbuedUILogs
-
       - *collectK8sLogs
       - *backupDB
       - *storeDBBackupArtifact
       - check-stackrox-logs
       - *storeK8sLogs
-
-      - *storeCypressResults
-      - *storeCypressScreenshots
-      - *storeCypressVideos
-      - *storeUITestCoverage
 
       - run:
           name: Pack kops volume
