@@ -1,14 +1,13 @@
 package pathutil
 
 import (
-	"fmt"
-
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/pkg/utils"
 )
 
 type tree struct {
 	children map[stepMapKey]*tree
+	values   map[string][]string
 }
 
 func newTree() *tree {
@@ -17,8 +16,12 @@ func newTree() *tree {
 	}
 }
 
-func (t *tree) addPath(steps []step) {
+func (t *tree) addPath(steps []step, fieldName string, values []string) {
 	if len(steps) == 0 {
+		if t.values == nil {
+			t.values = make(map[string][]string)
+		}
+		t.values[fieldName] = values
 		return
 	}
 	firstStep, remainingSteps := steps[0], steps[1:]
@@ -28,14 +31,14 @@ func (t *tree) addPath(steps []step) {
 		subTree = newTree()
 		t.children[key] = subTree
 	}
-	subTree.addPath(remainingSteps)
+	subTree.addPath(remainingSteps, fieldName, values)
 }
 
-// treeFromPaths generates a tree from the given paths.
+// treeFromPathsAndValues generates a tree from the given paths and values holder.
 // Callers must ensure that:
 // a) there is at least one path
 // b) all the paths are of the same length
-func treeFromPaths(pathHolders []PathHolder) *tree {
+func treeFromPathsAndValues(fieldName string, pathHolders []PathAndValueHolder) *tree {
 	t := newTree()
 	for _, pathHolder := range pathHolders {
 		path := pathHolder.GetPath()
@@ -43,12 +46,17 @@ func treeFromPaths(pathHolders []PathHolder) *tree {
 			utils.Should(errors.Errorf("empty path from search (paths: %v)", pathHolders))
 			continue
 		}
-		t.addPath(path.steps[:len(path.steps)-1])
+		t.addPath(path.steps[:len(path.steps)-1], fieldName, pathHolder.GetValues())
 	}
 	return t
 }
-
 func (t *tree) merge(other *tree) {
+	for fieldName, values := range other.values {
+		if t.values == nil {
+			t.values = make(map[string][]string)
+		}
+		t.values[fieldName] = values
+	}
 	for key, child := range t.children {
 		otherChild, inOther := other.children[key]
 		if inOther {
@@ -74,20 +82,64 @@ func (t *tree) merge(other *tree) {
 	}
 }
 
-func (t *tree) filterToMatchingPaths(field string, pathHolders []PathHolder) []PathHolder {
-	filtered := pathHolders[:0]
+func (t *tree) gatherValuesIgnoringArrays(currentPath *map[string][]string) {
+	for fieldName, values := range t.values {
+		(*currentPath)[fieldName] = values
+	}
+	for key, child := range t.children {
+		if _, isInt := key.(int); isInt {
+			continue
+		}
+		child.gatherValuesIgnoringArrays(currentPath)
+	}
+}
+
+func (t *tree) getAllPaths() []map[string][]string {
+	allPaths := make([]map[string][]string, 0, 1)
+	currentPath := make(map[string][]string)
+	t.populateAllPaths(&allPaths, &currentPath)
+	return allPaths
+}
+
+func (t *tree) populateAllPaths(allPaths *[]map[string][]string, currentPath *map[string][]string) {
+	t.gatherValuesIgnoringArrays(currentPath)
+	if len(t.children) == 0 {
+		*allPaths = append(*allPaths, *currentPath)
+		return
+	}
+	idx := -1
+	for _, child := range t.children {
+		idx++
+		var pathToPass *map[string][]string
+		// Minor optimization: reuse the map from the parent for the last child.
+		// NOTE: this must be the last child, since otherwise, currentPath will be mutated
+		// and we won't be able to copy it
+		if idx == len(t.children)-1 {
+			pathToPass = currentPath
+		} else {
+			newMap := make(map[string][]string, len(*currentPath))
+			for k, v := range *currentPath {
+				newMap[k] = v
+			}
+			pathToPass = &newMap
+		}
+		child.populateAllPaths(allPaths, pathToPass)
+	}
+}
+
+func (t *tree) containsAtLeastOnePath(pathHolders []PathAndValueHolder) bool {
 	for _, pathHolder := range pathHolders {
 		path := pathHolder.GetPath()
 		// This is an invalid path, should never happen. The panic will be caught and softened to a utils.Should
 		// by the caller.
 		if len(path.steps) == 0 {
-			panic(fmt.Sprintf("invalid: got empty path for field %s", field))
+			panic("invalid: got empty path")
 		}
 		if t.containsSteps(path.steps[:len(path.steps)-1]) {
-			filtered = append(filtered, pathHolder)
+			return true
 		}
 	}
-	return filtered
+	return false
 }
 
 func (t *tree) containsSteps(steps []step) bool {
@@ -103,14 +155,15 @@ func (t *tree) containsSteps(steps []step) bool {
 	return child.containsSteps(steps[1:])
 }
 
-// A PathHolder is any object containing a path.
-type PathHolder interface {
+// A PathAndValueHolder is any object containing a path and values (aka evaluator.Match)
+type PathAndValueHolder interface {
 	GetPath() *Path
+	GetValues() []string
 }
 
-// FilterPathsToLinkedMatches filters the given fieldsToPaths to just the linked matches.
+// FilterMatchesToResults filters the given fieldsToPathAndValues to just the linked matches, grouped by sub-object
 // The best way to understand the purpose of this function is to look at the unit tests.
-func FilterPathsToLinkedMatches(fieldsToPaths map[string][]PathHolder) (fieldsToFilteredPaths map[string][]PathHolder, matched bool, err error) {
+func FilterMatchesToResults(fieldsToPathsAndValues map[string][]PathAndValueHolder) (result []map[string][]string, matched bool, err error) {
 	// For convenience, the internal functions here signal errors by panic-ing, but we catch the panic here
 	// so that clients outside the package just receive an error.
 	// Panics will only happen with invalid inputs, which is always a programming error.
@@ -120,18 +173,14 @@ func FilterPathsToLinkedMatches(fieldsToPaths map[string][]PathHolder) (fieldsTo
 		}
 	}()
 	t := newTree()
-	for _, paths := range fieldsToPaths {
-		t.merge(treeFromPaths(paths))
+	// create a tree (which will be a path) for each input and merge it into base tree
+	for fieldName, pathsAndValues := range fieldsToPathsAndValues {
+		t.merge(treeFromPathsAndValues(fieldName, pathsAndValues))
 	}
-
-	fieldsToFilteredPaths = make(map[string][]PathHolder)
-	for field, paths := range fieldsToPaths {
-		filtered := t.filterToMatchingPaths(field, paths)
-		if len(filtered) == 0 {
+	for _, paths := range fieldsToPathsAndValues {
+		if !t.containsAtLeastOnePath(paths) {
 			return nil, false, nil
 		}
-		fieldsToFilteredPaths[field] = filtered
 	}
-
-	return fieldsToFilteredPaths, true, nil
+	return t.getAllPaths(), true, nil
 }

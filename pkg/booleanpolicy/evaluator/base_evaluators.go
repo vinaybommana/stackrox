@@ -25,12 +25,12 @@ var (
 
 // A baseEvaluator is an evaluator that operates on an individual field at the leaf of an object.
 type baseEvaluator interface {
-	Evaluate(*pathutil.Path, reflect.Value) (*Result, bool)
+	Evaluate(*pathutil.Path, reflect.Value) (*fieldResult, bool)
 }
 
-type baseEvaluatorFunc func(*pathutil.Path, reflect.Value) (*Result, bool)
+type baseEvaluatorFunc func(*pathutil.Path, reflect.Value) (*fieldResult, bool)
 
-func (f baseEvaluatorFunc) Evaluate(path *pathutil.Path, value reflect.Value) (*Result, bool) {
+func (f baseEvaluatorFunc) Evaluate(path *pathutil.Path, value reflect.Value) (*fieldResult, bool) {
 	return f(path, value)
 }
 
@@ -65,7 +65,7 @@ func createBaseEvaluator(fieldName string, fieldType reflect.Type, values []stri
 }
 
 func combineMatchersIntoEvaluator(fieldName string, matchers []baseMatcherAndExtractor, operator query.Operator) baseEvaluator {
-	return baseEvaluatorFunc(func(path *pathutil.Path, instance reflect.Value) (*Result, bool) {
+	return baseEvaluatorFunc(func(path *pathutil.Path, instance reflect.Value) (*fieldResult, bool) {
 		matchingValues := set.NewStringSet()
 		var matches []string
 		for _, m := range matchers {
@@ -91,12 +91,12 @@ func combineMatchersIntoEvaluator(fieldName string, matchers []baseMatcherAndExt
 		if matchingValues.Cardinality() == 0 {
 			return nil, false
 		}
-		return resultWithSingleMatch(fieldName, path, matches...), true
+		return fieldResultWithSingleMatch(fieldName, path, matches...), true
 	})
 }
 
 func combineMatchersIntoEvaluatorNegated(fieldName string, matchers []baseMatcherAndExtractor, operator query.Operator) baseEvaluator {
-	return baseEvaluatorFunc(func(path *pathutil.Path, instance reflect.Value) (*Result, bool) {
+	return baseEvaluatorFunc(func(path *pathutil.Path, instance reflect.Value) (*fieldResult, bool) {
 		matchingValues := set.NewStringSet()
 		for _, m := range matchers {
 			valuesAndMatches := m(instance)
@@ -123,7 +123,7 @@ func combineMatchersIntoEvaluatorNegated(fieldName string, matchers []baseMatche
 		if matchingValues.Cardinality() == 0 {
 			return nil, false
 		}
-		return resultWithSingleMatch(fieldName, path, matchingValues.AsSlice()...), true
+		return fieldResultWithSingleMatch(fieldName, path, matchingValues.AsSlice()...), true
 	})
 }
 
@@ -163,8 +163,8 @@ type valueMatchedPair struct {
 	matched bool
 }
 
-func resultWithSingleMatch(fieldName string, path *pathutil.Path, values ...string) *Result {
-	return &Result{Matches: map[string][]Match{fieldName: {{Path: path, Values: values}}}}
+func fieldResultWithSingleMatch(fieldName string, path *pathutil.Path, values ...string) *fieldResult {
+	return &fieldResult{map[string][]Match{fieldName: {{Path: path, Values: values}}}}
 }
 
 func generateStringMatcher(value string, _ reflect.Type) (baseMatcherAndExtractor, error) {

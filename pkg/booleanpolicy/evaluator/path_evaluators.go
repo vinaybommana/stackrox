@@ -7,17 +7,28 @@ import (
 	"github.com/stackrox/rox/pkg/booleanpolicy/evaluator/pathutil"
 )
 
-func wrapBaseEvaluator(baseEvaluator baseEvaluator) Evaluator {
-	return evaluatorFunc(func(value pathutil.AugmentedValue) (*Result, bool) {
+// An fieldEvaluator evaluates an object for a specific field, and produces a result.
+type fieldEvaluator interface {
+	Evaluate(obj pathutil.AugmentedValue) (*fieldResult, bool)
+}
+
+func (f fieldEvaluatorFunc) Evaluate(value pathutil.AugmentedValue) (*fieldResult, bool) {
+	return f(value)
+}
+
+type fieldEvaluatorFunc func(pathutil.AugmentedValue) (*fieldResult, bool)
+
+func wrapBaseEvaluator(baseEvaluator baseEvaluator) fieldEvaluator {
+	return fieldEvaluatorFunc(func(value pathutil.AugmentedValue) (*fieldResult, bool) {
 		return baseEvaluator.Evaluate(value.PathFromRoot(), value.Underlying())
 	})
 }
 
-func (f *Factory) wrapBaseEvaluatorWithPathTraversal(pathToBase pathutil.MetaPath, baseEvaluator baseEvaluator) (Evaluator, error) {
+func (f *Factory) wrapBaseEvaluatorWithPathTraversal(pathToBase pathutil.MetaPath, baseEvaluator baseEvaluator) (fieldEvaluator, error) {
 	return wrapEvaluatorWithTraversal(f.rootType, pathToBase, wrapBaseEvaluator(baseEvaluator))
 }
 
-func wrapEvaluatorWithTraversal(currentType reflect.Type, pathToEvaluator pathutil.MetaPath, evaluator Evaluator) (Evaluator, error) {
+func wrapEvaluatorWithTraversal(currentType reflect.Type, pathToEvaluator pathutil.MetaPath, evaluator fieldEvaluator) (fieldEvaluator, error) {
 	// Base case
 	if len(pathToEvaluator) == 0 {
 		return evaluator, nil
@@ -31,7 +42,7 @@ func wrapEvaluatorWithTraversal(currentType reflect.Type, pathToEvaluator pathut
 	return takeMetaStep(currentType, firstStep, childEvaluator)
 }
 
-func takeMetaStep(currentType reflect.Type, metaStep pathutil.MetaStep, evaluator Evaluator) (Evaluator, error) {
+func takeMetaStep(currentType reflect.Type, metaStep pathutil.MetaStep, evaluator fieldEvaluator) (fieldEvaluator, error) {
 	switch currentType.Kind() {
 	case reflect.Array, reflect.Slice:
 		return takeSliceMetaStep(currentType, metaStep, evaluator)
@@ -46,8 +57,8 @@ func takeMetaStep(currentType reflect.Type, metaStep pathutil.MetaStep, evaluato
 	}
 }
 
-func takeInterfaceMetaStep(metaStep pathutil.MetaStep, evaluator Evaluator) Evaluator {
-	return evaluatorFunc(func(value pathutil.AugmentedValue) (*Result, bool) {
+func takeInterfaceMetaStep(metaStep pathutil.MetaStep, evaluator fieldEvaluator) fieldEvaluator {
+	return fieldEvaluatorFunc(func(value pathutil.AugmentedValue) (*fieldResult, bool) {
 		underlying := value.Underlying()
 		if underlying.IsNil() {
 			return nil, false
@@ -67,8 +78,8 @@ func takeInterfaceMetaStep(metaStep pathutil.MetaStep, evaluator Evaluator) Eval
 	})
 }
 
-func takeStructMetaStep(metaStep pathutil.MetaStep, evaluator Evaluator) Evaluator {
-	return evaluatorFunc(func(value pathutil.AugmentedValue) (*Result, bool) {
+func takeStructMetaStep(metaStep pathutil.MetaStep, evaluator fieldEvaluator) fieldEvaluator {
+	return fieldEvaluatorFunc(func(value pathutil.AugmentedValue) (*fieldResult, bool) {
 		nextValue, found := value.TakeStep(metaStep)
 		if !found {
 			return nil, false
@@ -77,19 +88,19 @@ func takeStructMetaStep(metaStep pathutil.MetaStep, evaluator Evaluator) Evaluat
 	})
 }
 
-func takeSliceMetaStep(currentType reflect.Type, metaStep pathutil.MetaStep, evaluator Evaluator) (Evaluator, error) {
+func takeSliceMetaStep(currentType reflect.Type, metaStep pathutil.MetaStep, evaluator fieldEvaluator) (fieldEvaluator, error) {
 	nestedEvaluator, err := takeMetaStep(currentType.Elem(), metaStep, evaluator)
 	if err != nil {
 		return nil, err
 	}
 
-	return evaluatorFunc(func(value pathutil.AugmentedValue) (*Result, bool) {
+	return fieldEvaluatorFunc(func(value pathutil.AugmentedValue) (*fieldResult, bool) {
 		length := value.Underlying().Len()
 		if length == 0 {
 			return nil, false
 		}
 
-		var results []*Result
+		var results []*fieldResult
 		for i := 0; i < length; i++ {
 			if res, matches := nestedEvaluator.Evaluate(value.Index(i)); matches {
 				results = append(results, res)
@@ -103,13 +114,13 @@ func takeSliceMetaStep(currentType reflect.Type, metaStep pathutil.MetaStep, eva
 
 }
 
-func takePtrMetaStep(currentType reflect.Type, metaStep pathutil.MetaStep, evaluator Evaluator) (Evaluator, error) {
+func takePtrMetaStep(currentType reflect.Type, metaStep pathutil.MetaStep, evaluator fieldEvaluator) (fieldEvaluator, error) {
 	nextStepEvaluator, err := takeMetaStep(currentType.Elem(), metaStep, evaluator)
 	if err != nil {
 		return nil, err
 	}
 
-	return evaluatorFunc(func(value pathutil.AugmentedValue) (*Result, bool) {
+	return fieldEvaluatorFunc(func(value pathutil.AugmentedValue) (*fieldResult, bool) {
 		if value.Underlying().IsNil() {
 			return nil, false
 		}

@@ -1,6 +1,9 @@
 package pathutil
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/stackrox/rox/pkg/pointers"
 )
 
@@ -43,4 +46,12 @@ func (p *Path) TraverseField(fieldName string) *Path {
 func (p *Path) IndexSlice(index int) *Path {
 	p.steps = append(p.steps, step{index: pointers.Int(index)})
 	return p
+}
+
+func (p *Path) String() string {
+	keys := make([]string, len(p.steps))
+	for idx, step := range p.steps {
+		keys[idx] = fmt.Sprint(step.mapKey())
+	}
+	return strings.Join(keys, ".")
 }

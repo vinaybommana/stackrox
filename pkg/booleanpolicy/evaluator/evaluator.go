@@ -9,7 +9,7 @@ import (
 	"github.com/stackrox/rox/pkg/utils"
 )
 
-// An Evaluator evaluates an object, and produces a result.
+// An Evaluator evaluates an augmented object, and produces a result that has been filtered to linked matches.
 type Evaluator interface {
 	Evaluate(obj pathutil.AugmentedValue) (*Result, bool)
 }
@@ -68,7 +68,7 @@ func (e *panicCatchingEvaluator) Evaluate(obj pathutil.AugmentedValue) (res *Res
 		// Panics can occur in evaluators, mainly due to incorrect uses of reflect.
 		// This is always a programming error, but let's not panic in prod over it.
 		if r := recover(); r != nil || panicked {
-			utils.Should(errors.Errorf("panic running Evaluator: %v", r))
+			utils.Should(errors.Errorf("panic running fieldEvaluator: %v", r))
 			res = nil
 			matched = false
 		}
@@ -83,7 +83,7 @@ func (f *Factory) generateInternalEvaluator(q *query.Query) (Evaluator, error) {
 	// AND that their matches must be in the same object.
 	// The notion of linking is a bit complicated -- the easiest way to get a sense of what it entails is to look
 	// at the test cases in TestLinked.
-	fieldEvaluators := make([]Evaluator, 0, len(q.FieldQueries))
+	fieldEvaluators := make([]fieldEvaluator, 0, len(q.FieldQueries))
 	for _, fq := range q.FieldQueries {
 		eval, err := f.generateInternalEvaluatorForFieldQuery(fq)
 		if err != nil {
@@ -96,12 +96,9 @@ func (f *Factory) generateInternalEvaluator(q *query.Query) (Evaluator, error) {
 	switch len(fieldEvaluators) {
 	case 0:
 		return alwaysTrue, nil
-	case 1:
-		// Simplify the case where there's just one.
-		return fieldEvaluators[0], nil
 	default:
 		return evaluatorFunc(func(value pathutil.AugmentedValue) (*Result, bool) {
-			fieldsToPaths := make(map[string][]pathutil.PathHolder)
+			fieldsToPathsAndValues := make(map[string][]pathutil.PathAndValueHolder)
 			for _, fieldEval := range fieldEvaluators {
 				result, matches := fieldEval.Evaluate(value)
 				if !matches {
@@ -109,11 +106,12 @@ func (f *Factory) generateInternalEvaluator(q *query.Query) (Evaluator, error) {
 				}
 				for field, matches := range result.Matches {
 					for _, match := range matches {
-						fieldsToPaths[field] = append(fieldsToPaths[field], match)
+						fieldsToPathsAndValues[field] = append(fieldsToPathsAndValues[field], match)
 					}
 				}
 			}
-			filteredFieldsToPaths, matched, err := pathutil.FilterPathsToLinkedMatches(fieldsToPaths)
+
+			filteredResult, matched, err := pathutil.FilterMatchesToResults(fieldsToPathsAndValues)
 			if err != nil {
 				utils.Should(errors.Wrap(err, "filtering paths to linked matches"))
 				return nil, false
@@ -121,19 +119,13 @@ func (f *Factory) generateInternalEvaluator(q *query.Query) (Evaluator, error) {
 			if !matched {
 				return nil, false
 			}
-			r := newResult()
-			for field, matches := range filteredFieldsToPaths {
-				for _, match := range matches {
-					r.Matches[field] = append(r.Matches[field], match.(Match))
-				}
-			}
-			return r, true
+			return &Result{filteredResult}, true
 		}), nil
 	}
 }
 
-// generateInternalEvaluatorForFieldQuery generates an internal Evaluator for a specific field query.
-func (f *Factory) generateInternalEvaluatorForFieldQuery(q *query.FieldQuery) (Evaluator, error) {
+// generateInternalEvaluatorForFieldQuery generates an internal fieldEvaluator for a specific field query.
+func (f *Factory) generateInternalEvaluatorForFieldQuery(q *query.FieldQuery) (fieldEvaluator, error) {
 	fieldPath, found := f.fieldToMetaPaths.Get(q.Field)
 	if !found {
 		return nil, errors.Errorf("invalid query: field %v unknown", q.Field)

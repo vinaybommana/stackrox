@@ -91,8 +91,12 @@ func assertResultsAsExpected(t *testing.T, c testCase, actualRes *Result, actual
 	assert.Equal(t, c.expectedResult != nil, actualMatched)
 	if c.expectedResult != nil {
 		require.NotNil(t, actualRes)
-		assert.Equal(t, c.expectedResult.Matches, actualRes.Matches)
+		assert.ElementsMatch(t, c.expectedResult.Matches, actualRes.Matches)
 	}
+}
+
+func resultWithSingleMatch(fieldName string, values ...string) *Result {
+	return &Result{[]map[string][]string{{fieldName: values}}}
 }
 
 func runTestCases(t *testing.T, testCases []testCase) {
@@ -163,7 +167,7 @@ func TestMap(t *testing.T) {
 						"x": "y",
 					}},
 			},
-			expectedResult: resultWithSingleMatch("BaseMap", pathutil.PathFromSteps(t, "Base", "ValBaseMap"), ""),
+			expectedResult: resultWithSingleMatch("BaseMap", ""),
 		},
 
 		{
@@ -190,7 +194,7 @@ func TestMap(t *testing.T) {
 						"x": "3",
 					}},
 			},
-			expectedResult: resultWithSingleMatch("BaseMap", pathutil.PathFromSteps(t, "Base", "ValBaseMap"), ""),
+			expectedResult: resultWithSingleMatch("BaseMap", ""),
 		},
 
 		{
@@ -205,7 +209,7 @@ func TestMap(t *testing.T) {
 						"x": "3",
 					}},
 			},
-			expectedResult: resultWithSingleMatch("BaseMap", pathutil.PathFromSteps(t, "Base", "ValBaseMap"), ""),
+			expectedResult: resultWithSingleMatch("BaseMap", ""),
 		},
 
 		{
@@ -216,7 +220,7 @@ func TestMap(t *testing.T) {
 				Base: Base{
 					ValBaseMap: map[string]string{}},
 			},
-			expectedResult: resultWithSingleMatch("BaseMap", pathutil.PathFromSteps(t, "Base", "ValBaseMap"), ""),
+			expectedResult: resultWithSingleMatch("BaseMap", ""),
 		},
 
 		{
@@ -241,7 +245,7 @@ func TestMap(t *testing.T) {
 						"happy": "a",
 					}},
 			},
-			expectedResult: resultWithSingleMatch("BaseMap", pathutil.PathFromSteps(t, "Base", "ValBaseMap"), ""),
+			expectedResult: resultWithSingleMatch("BaseMap", ""),
 		},
 
 		{
@@ -256,7 +260,7 @@ func TestMap(t *testing.T) {
 						"x": "3",
 					}},
 			},
-			expectedResult: resultWithSingleMatch("BaseMap", pathutil.PathFromSteps(t, "Base", "ValBaseMap"), ""),
+			expectedResult: resultWithSingleMatch("BaseMap", ""),
 		},
 
 		{
@@ -267,7 +271,7 @@ func TestMap(t *testing.T) {
 				Base: Base{
 					ValBaseMap: map[string]string{}},
 			},
-			expectedResult: resultWithSingleMatch("BaseMap", pathutil.PathFromSteps(t, "Base", "ValBaseMap"), ""),
+			expectedResult: resultWithSingleMatch("BaseMap", ""),
 		},
 
 		{
@@ -292,7 +296,7 @@ func TestMap(t *testing.T) {
 						"a": "happy",
 					}},
 			},
-			expectedResult: resultWithSingleMatch("BaseMap", pathutil.PathFromSteps(t, "Base", "ValBaseMap"), ""),
+			expectedResult: resultWithSingleMatch("BaseMap", ""),
 		},
 
 		{
@@ -305,7 +309,7 @@ func TestMap(t *testing.T) {
 						"a": "happy",
 					}},
 			},
-			expectedResult: resultWithSingleMatch("BaseMap", pathutil.PathFromSteps(t, "Base", "ValBaseMap"), ""),
+			expectedResult: resultWithSingleMatch("BaseMap", ""),
 		},
 
 		{
@@ -318,7 +322,7 @@ func TestMap(t *testing.T) {
 						"a": "lucky",
 					}},
 			},
-			expectedResult: resultWithSingleMatch("BaseMap", pathutil.PathFromSteps(t, "Base", "ValBaseMap"), ""),
+			expectedResult: resultWithSingleMatch("BaseMap", ""),
 		},
 
 		{
@@ -367,7 +371,7 @@ func TestMap(t *testing.T) {
 						"lucky": "happy",
 					}},
 			},
-			expectedResult: resultWithSingleMatch("BaseMap", pathutil.PathFromSteps(t, "Base", "ValBaseMap"), ""),
+			expectedResult: resultWithSingleMatch("BaseMap", ""),
 		},
 
 		{
@@ -392,7 +396,7 @@ func TestMap(t *testing.T) {
 						"a": "lucky",
 					}},
 			},
-			expectedResult: resultWithSingleMatch("BaseMap", pathutil.PathFromSteps(t, "Base", "ValBaseMap"), ""),
+			expectedResult: resultWithSingleMatch("BaseMap", ""),
 		},
 
 		{
@@ -443,7 +447,7 @@ func TestMap(t *testing.T) {
 						"happy": "true",
 					}},
 			},
-			expectedResult: resultWithSingleMatch("BaseMap", pathutil.PathFromSteps(t, "Base", "ValBaseMap"), ""),
+			expectedResult: resultWithSingleMatch("BaseMap", ""),
 		},
 
 		{
@@ -457,7 +461,7 @@ func TestMap(t *testing.T) {
 						"happy": "true",
 					}},
 			},
-			expectedResult: resultWithSingleMatch("BaseMap", pathutil.PathFromSteps(t, "Base", "ValBaseMap"), ""),
+			expectedResult: resultWithSingleMatch("BaseMap", ""),
 		},
 	})
 }
@@ -493,7 +497,7 @@ func TestSimpleBase(t *testing.T) {
 					}},
 				},
 			},
-			expectedResult: resultWithSingleMatch("TopLevelA", pathutil.PathFromSteps(t, "ValA"), "happy"),
+			expectedResult: resultWithSingleMatch("TopLevelA", "happy"),
 		},
 		{
 			desc: "simple one for first level nested, doesn't pass",
@@ -520,7 +524,7 @@ func TestSimpleBase(t *testing.T) {
 					}},
 				},
 			},
-			expectedResult: resultWithSingleMatch("A", pathutil.PathFromSteps(t, "NestedSlice", 0, "NestedValA"), "happy"),
+			expectedResult: resultWithSingleMatch("A", "happy"),
 		},
 		{
 			desc: "simple one for second level nested, doesn't pass",
@@ -550,12 +554,11 @@ func TestSimpleBase(t *testing.T) {
 					}},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"SecondA": {
-					{Path: pathutil.PathFromSteps(t, "NestedSlice", 0, "SecondNestedSlice", 1, "SecondNestedValA"), Values: []string{"blaappy"}},
-					{Path: pathutil.PathFromSteps(t, "NestedSlice", 1, "SecondNestedSlice", 0, "SecondNestedValA"), Values: []string{"happy"}},
+			expectedResult: &Result{
+				Matches: []map[string][]string{
+					{"SecondA": {"happy"}},
+					{"SecondA": {"blaappy"}},
 				},
-			},
 			},
 		},
 	})
@@ -577,10 +580,11 @@ func TestLinked(t *testing.T) {
 					{Field: "B", Values: []string{"B1"}},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"A": {{Path: pathutil.PathFromSteps(t, "NestedSlice", 1, "NestedValA"), Values: []string{"A1"}}},
-				"B": {{Path: pathutil.PathFromSteps(t, "NestedSlice", 1, "NestedValB"), Values: []string{"B1"}}},
-			}},
+			expectedResult: &Result{
+				Matches: []map[string][]string{
+					{"A": {"A1"}, "B": {"B1"}},
+				},
+			},
 		},
 		{
 			desc: "linked, first level of nesting, should not match",
@@ -613,11 +617,35 @@ func TestLinked(t *testing.T) {
 					{Field: "B", Values: []string{"B1"}},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"TopLevelA": {{Path: pathutil.PathFromSteps(t, "ValA"), Values: []string{"TopLevelValA"}}},
-				"A":         {{Path: pathutil.PathFromSteps(t, "NestedSlice", 1, "NestedValA"), Values: []string{"A1"}}},
-				"B":         {{Path: pathutil.PathFromSteps(t, "NestedSlice", 1, "NestedValB"), Values: []string{"B1"}}},
-			}},
+			expectedResult: &Result{
+				Matches: []map[string][]string{
+					{"TopLevelA": {"TopLevelValA"}, "A": {"A1"}, "B": {"B1"}},
+				},
+			},
+		},
+		{
+			desc: "linked, multilevel, should match (group test)",
+			obj: &TopLevel{
+				ValA: "TopLevelValA",
+				NestedSlice: []Nested{
+					{NestedValA: "A0", NestedValB: "B0"},
+					{NestedValA: "A1", NestedValB: "B1"},
+					{NestedValA: "A2", NestedValB: "B2"},
+				},
+			},
+			q: &query.Query{
+				FieldQueries: []*query.FieldQuery{
+					{Field: "TopLevelA", Values: []string{"TopLevelValA"}},
+					{Field: "A", Values: []string{"A1", "A2"}, Operator: query.Or},
+					{Field: "B", Values: []string{"B1", "B2"}, Operator: query.Or},
+				},
+			},
+			expectedResult: &Result{
+				Matches: []map[string][]string{
+					{"TopLevelA": {"TopLevelValA"}, "A": {"A1"}, "B": {"B1"}},
+					{"TopLevelA": {"TopLevelValA"}, "A": {"A2"}, "B": {"B2"}},
+				},
+			},
 		},
 		{
 			desc: "linked, multilevel, top doesn't match",
@@ -669,11 +697,11 @@ func TestSliceBase(t *testing.T) {
 					{Field: "BaseSlice", Values: []string{"one"}},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"BaseSlice": {
-					{Path: pathutil.PathFromSteps(t, "Base", "ValBaseSlice"), Values: []string{"one"}},
+			expectedResult: &Result{
+				Matches: []map[string][]string{
+					{"BaseSlice": {"one"}},
 				},
-			}},
+			},
 		},
 		{
 			desc: "slice base, does not match",
@@ -698,11 +726,11 @@ func TestSliceBase(t *testing.T) {
 					{Field: "BaseSlice", Values: []string{"one", "four"}, Operator: query.Or},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"BaseSlice": {
-					{Path: pathutil.PathFromSteps(t, "Base", "ValBaseSlice"), Values: []string{"one"}},
+			expectedResult: &Result{
+				Matches: []map[string][]string{
+					{"BaseSlice": {"one"}},
 				},
-			}},
+			},
 		},
 		{
 			desc: "slice base, with OR, does not match",
@@ -739,11 +767,11 @@ func TestSliceBase(t *testing.T) {
 					{Field: "BaseSlice", Values: []string{"one", "two"}, Operator: query.And},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"BaseSlice": {
-					{Path: pathutil.PathFromSteps(t, "Base", "ValBaseSlice"), Values: []string{"one", "two"}},
+			expectedResult: &Result{
+				Matches: []map[string][]string{
+					{"BaseSlice": {"one", "two"}},
 				},
-			}},
+			},
 		},
 		{
 			desc: "empty slice, simple query",
@@ -775,11 +803,11 @@ func TestSliceBase(t *testing.T) {
 					{Field: "BaseSlice", Values: []string{"one", "two"}, Operator: query.Or, Negate: true},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"BaseSlice": {
-					{Path: pathutil.PathFromSteps(t, "Base", "ValBaseSlice"), Values: []string{"<empty>"}},
+			expectedResult: &Result{
+				Matches: []map[string][]string{
+					{"BaseSlice": {"<empty>"}},
 				},
-			}},
+			},
 		},
 		{
 			desc: "empty slice, negated AND query",
@@ -789,11 +817,11 @@ func TestSliceBase(t *testing.T) {
 					{Field: "BaseSlice", Values: []string{"one", "two"}, Operator: query.And, Negate: true},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"BaseSlice": {
-					{Path: pathutil.PathFromSteps(t, "Base", "ValBaseSlice"), Values: []string{"<empty>"}},
+			expectedResult: &Result{
+				Matches: []map[string][]string{
+					{"BaseSlice": {"<empty>"}},
 				},
-			}},
+			},
 		},
 	})
 }
@@ -813,12 +841,12 @@ func TestCompound(t *testing.T) {
 					{Field: "A", Values: []string{"A0", "A1"}, Operator: query.Or},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"A": {
-					{Path: pathutil.PathFromSteps(t, "NestedSlice", 0, "NestedValA"), Values: []string{"A0"}},
-					{Path: pathutil.PathFromSteps(t, "NestedSlice", 1, "NestedValA"), Values: []string{"A1"}},
+			expectedResult: &Result{
+				Matches: []map[string][]string{
+					{"A": {"A0"}},
+					{"A": {"A1"}},
 				},
-			}},
+			},
 		},
 		{
 			desc: "simple compound query, OR, does not match",
@@ -861,9 +889,7 @@ func TestCompound(t *testing.T) {
 					{Field: "A", Values: []string{"r/A.*", "r/.*1"}, Operator: query.And},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"A": {{Path: pathutil.PathFromSteps(t, "NestedSlice", 1, "NestedValA"), Values: []string{"A1"}}},
-			}},
+			expectedResult: resultWithSingleMatch("A", "A1"),
 		},
 		{
 			desc: "compound query, OR, negated, matches",
@@ -878,11 +904,7 @@ func TestCompound(t *testing.T) {
 					{Field: "A", Values: []string{"A2", "A1"}, Operator: query.Or, Negate: true},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"A": {
-					{Path: pathutil.PathFromSteps(t, "NestedSlice", 0, "NestedValA"), Values: []string{"A0"}},
-				},
-			}},
+			expectedResult: resultWithSingleMatch("A", "A0"),
 		},
 		{
 			desc: "compound query, OR, negated, does not match",
@@ -925,9 +947,7 @@ func TestCompound(t *testing.T) {
 					{Field: "A", Values: []string{"r/A.*", "r/.*1"}, Operator: query.And, Negate: true},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"A": {{Path: pathutil.PathFromSteps(t, "NestedSlice", 0, "NestedValA"), Values: []string{"A0"}}},
-			}},
+			expectedResult: resultWithSingleMatch("A", "A0"),
 		},
 	})
 }
@@ -945,11 +965,7 @@ func TestDifferentBaseTypes(t *testing.T) {
 					{Field: "BasePtr", Values: []string{"-"}},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"BasePtr": {
-					{Path: pathutil.PathFromSteps(t, "Base", "ValBasePtr"), Values: []string{"<nil>"}},
-				},
-			}},
+			expectedResult: resultWithSingleMatch("BasePtr", "<nil>"),
 		},
 		{
 			desc: "base ptr, not null query, nil pointer",
@@ -986,11 +1002,7 @@ func TestDifferentBaseTypes(t *testing.T) {
 					{Field: "BasePtr", Values: []string{"-"}, Negate: true},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"BasePtr": {
-					{Path: pathutil.PathFromSteps(t, "Base", "ValBasePtr"), Values: []string{"anything"}},
-				},
-			}},
+			expectedResult: resultWithSingleMatch("BasePtr", "anything"),
 		},
 		{
 			desc: "base ptr, regular string query, matches",
@@ -1003,11 +1015,7 @@ func TestDifferentBaseTypes(t *testing.T) {
 					{Field: "BasePtr", Values: []string{"happy"}},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"BasePtr": {
-					{Path: pathutil.PathFromSteps(t, "Base", "ValBasePtr"), Values: []string{"happy"}},
-				},
-			}},
+			expectedResult: resultWithSingleMatch("BasePtr", "happy"),
 		},
 		{
 			desc: "base ptr, regular string query, does not match",
@@ -1029,11 +1037,7 @@ func TestDifferentBaseTypes(t *testing.T) {
 					{Field: "BaseBool", Values: []string{"false"}},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"BaseBool": {
-					{Path: pathutil.PathFromSteps(t, "Base", "ValBaseBool"), Values: []string{"false"}},
-				},
-			}},
+			expectedResult: resultWithSingleMatch("BaseBool", "false"),
 		},
 		{
 			desc: "base bool, should not match",
@@ -1060,11 +1064,7 @@ func TestDifferentBaseTypes(t *testing.T) {
 					{Field: "BaseBool", Values: []string{"false"}, Negate: true},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"BaseBool": {
-					{Path: pathutil.PathFromSteps(t, "Base", "ValBaseBool"), Values: []string{"true"}},
-				},
-			}},
+			expectedResult: resultWithSingleMatch("BaseBool", "true"),
 		},
 		{
 			desc: "base ts, null, matches",
@@ -1074,11 +1074,7 @@ func TestDifferentBaseTypes(t *testing.T) {
 					{Field: "BaseTS", Values: []string{"-"}},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"BaseTS": {
-					{Path: pathutil.PathFromSteps(t, "Base", "ValBaseTS"), Values: []string{"<empty timestamp>"}},
-				},
-			}},
+			expectedResult: resultWithSingleMatch("BaseTS", "<empty timestamp>"),
 		},
 		{
 			desc: "base ts, null query, does not match",
@@ -1130,11 +1126,7 @@ func TestDifferentBaseTypes(t *testing.T) {
 					{Field: "BaseTS", Values: []string{"-"}, Negate: true},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"BaseTS": {
-					{Path: pathutil.PathFromSteps(t, "Base", "ValBaseTS"), Values: []string{"2020-04-01 00:00:00"}},
-				},
-			}},
+			expectedResult: resultWithSingleMatch("BaseTS", "2020-04-01 00:00:00"),
 		},
 		{
 			desc: "base ts, query by absolute, matches",
@@ -1147,11 +1139,7 @@ func TestDifferentBaseTypes(t *testing.T) {
 					{Field: "BaseTS", Values: []string{"<05/01/2020"}},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"BaseTS": {
-					{Path: pathutil.PathFromSteps(t, "Base", "ValBaseTS"), Values: []string{"2020-04-01 00:00:00"}},
-				},
-			}},
+			expectedResult: resultWithSingleMatch("BaseTS", "2020-04-01 00:00:00"),
 		},
 		{
 			desc: "base ts, query by absolute, does not match",
@@ -1176,11 +1164,7 @@ func TestDifferentBaseTypes(t *testing.T) {
 					{Field: "BaseTS", Values: []string{">05/01/2020"}, Negate: true},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"BaseTS": {
-					{Path: pathutil.PathFromSteps(t, "Base", "ValBaseTS"), Values: []string{"2020-04-01 00:00:00"}},
-				},
-			}},
+			expectedResult: resultWithSingleMatch("BaseTS", "2020-04-01 00:00:00"),
 		},
 		{
 			desc: "base ts, query by relative, matches",
@@ -1193,11 +1177,7 @@ func TestDifferentBaseTypes(t *testing.T) {
 					{Field: "BaseTS", Values: []string{">20d"}},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"BaseTS": {
-					{Path: pathutil.PathFromSteps(t, "Base", "ValBaseTS"), Values: []string{"2020-04-01 00:00:00"}},
-				},
-			}},
+			expectedResult: resultWithSingleMatch("BaseTS", "2020-04-01 00:00:00"),
 		},
 		{
 			desc: "base ts, query by relative, does not match",
@@ -1224,11 +1204,7 @@ func TestDifferentBaseTypes(t *testing.T) {
 					{Field: "BaseInt", Values: []string{"<2"}},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"BaseInt": {
-					{Path: pathutil.PathFromSteps(t, "Base", "ValBaseInt"), Values: []string{"1"}},
-				},
-			}},
+			expectedResult: resultWithSingleMatch("BaseInt", "1"),
 		},
 		{
 			desc: "base int, does not match",
@@ -1253,11 +1229,7 @@ func TestDifferentBaseTypes(t *testing.T) {
 					{Field: "BaseUint", Values: []string{"<2"}},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"BaseUint": {
-					{Path: pathutil.PathFromSteps(t, "Base", "ValBaseUint"), Values: []string{"1"}},
-				},
-			}},
+			expectedResult: resultWithSingleMatch("BaseUint", "1"),
 		},
 		{
 			desc: "base uint, does not match",
@@ -1282,11 +1254,7 @@ func TestDifferentBaseTypes(t *testing.T) {
 					{Field: "BaseFloat", Values: []string{">0.99"}},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"BaseFloat": {
-					{Path: pathutil.PathFromSteps(t, "Base", "ValBaseFloat"), Values: []string{"1"}},
-				},
-			}},
+			expectedResult: resultWithSingleMatch("BaseFloat", "1"),
 		},
 		{
 			desc: "base float, matches",
@@ -1299,11 +1267,7 @@ func TestDifferentBaseTypes(t *testing.T) {
 					{Field: "BaseFloat", Values: []string{"<1.11"}},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"BaseFloat": {
-					{Path: pathutil.PathFromSteps(t, "Base", "ValBaseFloat"), Values: []string{"1.1"}},
-				},
-			}},
+			expectedResult: resultWithSingleMatch("BaseFloat", "1.1"),
 		},
 		{
 			desc: "base float, does not match",
@@ -1328,11 +1292,7 @@ func TestDifferentBaseTypes(t *testing.T) {
 					{Field: "BaseEnum", Values: []string{"READ_ACCESS"}},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"BaseEnum": {
-					{Path: pathutil.PathFromSteps(t, "Base", "ValBaseEnum"), Values: []string{"read_access"}},
-				},
-			}},
+			expectedResult: resultWithSingleMatch("BaseEnum", "read_access"),
 		},
 		{
 			desc: "base enum, exact, does not match",
@@ -1357,11 +1317,7 @@ func TestDifferentBaseTypes(t *testing.T) {
 					{Field: "BaseEnum", Values: []string{">=READ_ACCESS"}},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"BaseEnum": {
-					{Path: pathutil.PathFromSteps(t, "Base", "ValBaseEnum"), Values: []string{"read_write_access"}},
-				},
-			}},
+			expectedResult: resultWithSingleMatch("BaseEnum", "read_write_access"),
 		},
 		{
 			desc: "base enum, range, does not match",
@@ -1386,11 +1342,7 @@ func TestDifferentBaseTypes(t *testing.T) {
 					{Field: "BaseEnum", Values: []string{">NO_ACCESS", "<READ_WRITE_ACCESS"}, Operator: query.And},
 				},
 			},
-			expectedResult: &Result{Matches: map[string][]Match{
-				"BaseEnum": {
-					{Path: pathutil.PathFromSteps(t, "Base", "ValBaseEnum"), Values: []string{"read_access"}},
-				},
-			}},
+			expectedResult: resultWithSingleMatch("BaseEnum", "read_access"),
 		},
 		{
 			desc: "base enum, complex range, does not match",

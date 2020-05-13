@@ -18,21 +18,27 @@ func (m Match) GetPath() *pathutil.Path {
 	return m.Path
 }
 
-// A Result is the result of evaluating a query on an object.
-type Result struct {
+// GetValues implements the pathutil.PathHolder interface.
+func (m Match) GetValues() []string {
+	return m.Values
+}
+
+// A fieldResult is the result of evaluating a query on an object.
+type fieldResult struct {
 	Matches map[string][]Match
 }
 
-func newResult() *Result {
-	return &Result{Matches: make(map[string][]Match)}
+// A Result is the result of evaluating a query on an object, with only linked matches.
+type Result struct {
+	Matches []map[string][]string
 }
 
-func mergeResults(results []*Result) *Result {
+func mergeResults(results []*fieldResult) *fieldResult {
 	if len(results) == 0 {
 		return nil
 	}
 
-	merged := &Result{Matches: make(map[string][]Match)}
+	merged := &fieldResult{Matches: make(map[string][]Match)}
 	for _, r := range results {
 		for field, matches := range r.Matches {
 			merged.Matches[field] = append(merged.Matches[field], matches...)
