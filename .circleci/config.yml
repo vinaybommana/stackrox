@@ -1483,7 +1483,7 @@ jobs:
           command: |
             if [[ "$CIRCLE_TAG" =~ .*-nightly-.* ]]; then
               webhook_url="$NIGHTLY_WORKFLOW_NOTIFY_WEBHOOK"
-            elif [[ "$CIRCLE_TAG" =~ ^\d+(\.\d+)*(-rc.\d+)?$ ]]; then
+            elif [[ "$CIRCLE_TAG" =~ ^[[:digit:]]+(\.[[:digit:]]+)*(-rc.[[:digit:]]+)?$ ]]; then
               webhook_url="$RELEASE_WORKFLOW_NOTIFY_WEBHOOK"
             else
               exit 0
