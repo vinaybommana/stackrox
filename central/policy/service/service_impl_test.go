@@ -6,9 +6,13 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	lifecycleMocks "github.com/stackrox/rox/central/detection/lifecycle/mocks"
 	"github.com/stackrox/rox/central/policy/datastore/mocks"
+	connectionMocks "github.com/stackrox/rox/central/sensor/service/connection/mocks"
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/booleanpolicy"
+	detectionMocks "github.com/stackrox/rox/pkg/detection/mocks"
 	"github.com/stackrox/rox/pkg/features"
 	matcherMocks "github.com/stackrox/rox/pkg/searchbasedpolicies/matcher/mocks"
 	sbpMocks "github.com/stackrox/rox/pkg/searchbasedpolicies/mocks"
@@ -30,10 +34,21 @@ func TestPolicyService(t *testing.T) {
 	suite.Run(t, new(PolicyServiceTestSuite))
 }
 
+type testDeploymentMatcher struct {
+	*detectionMocks.MockPolicySet
+}
+
+func (t *testDeploymentMatcher) RemoveNotifier(_ string) error {
+	return nil
+}
+
 type PolicyServiceTestSuite struct {
 	suite.Suite
 	policies                     *mocks.MockDataStore
 	mockDeploymentMatcherBuilder *matcherMocks.MockBuilder
+	mockBuildTimePolicies        *detectionMocks.MockPolicySet
+	mockLifecycleManager         *lifecycleMocks.MockManager
+	mockConnectionManager        *connectionMocks.MockManager
 	tested                       Service
 
 	envIsolator *testutils.EnvIsolator
@@ -50,6 +65,9 @@ func (s *PolicyServiceTestSuite) SetupTest() {
 	s.policies = mocks.NewMockDataStore(s.mockCtrl)
 
 	s.mockDeploymentMatcherBuilder = matcherMocks.NewMockBuilder(s.mockCtrl)
+	s.mockBuildTimePolicies = detectionMocks.NewMockPolicySet(s.mockCtrl)
+	s.mockLifecycleManager = lifecycleMocks.NewMockManager(s.mockCtrl)
+	s.mockConnectionManager = connectionMocks.NewMockManager(s.mockCtrl)
 
 	s.tested = New(
 		s.policies,
@@ -57,14 +75,14 @@ func (s *PolicyServiceTestSuite) SetupTest() {
 		nil,
 		nil,
 		nil,
-		nil,
+		&testDeploymentMatcher{s.mockBuildTimePolicies},
 		s.mockDeploymentMatcherBuilder,
 		nil,
+		s.mockLifecycleManager,
 		nil,
 		nil,
 		nil,
-		nil,
-		nil,
+		s.mockConnectionManager,
 	)
 }
 
@@ -136,7 +154,7 @@ func (s *PolicyServiceTestSuite) TestExportMixedSuccessAndMissing() {
 	s.compareErrorsToExpected(mockErrors, err)
 }
 
-func (s *PolicyServiceTestSuite) TestMultipleFailures() {
+func (s *PolicyServiceTestSuite) TestExportMultipleFailures() {
 	ctx := context.Background()
 	errString := "test"
 	storeErrors := []error{errors.New(errString), errors.New("not found")}
@@ -173,4 +191,139 @@ func (s *PolicyServiceTestSuite) TestDryRunRuntime() {
 	resp, err := s.tested.DryRunPolicy(ctx, runtimePolicy)
 	s.Nil(err)
 	s.Nil(resp.GetAlerts())
+}
+
+func (s *PolicyServiceTestSuite) TestImportPolicy() {
+	envIsolator := testutils.NewEnvIsolator(s.T())
+	envIsolator.Setenv(features.BooleanPolicyLogic.EnvVar(), "false")
+	defer envIsolator.RestoreAll()
+
+	mockID := "1"
+	mockName := "legacy policy"
+	mockSeverity := storage.Severity_LOW_SEVERITY
+	mockLCStages := []storage.LifecycleStage{storage.LifecycleStage_RUNTIME}
+	mockCategories := []string{"test"}
+	importedPolicy := &storage.Policy{
+		Id:              mockID,
+		Name:            mockName,
+		Severity:        mockSeverity,
+		LifecycleStages: mockLCStages,
+		Categories:      mockCategories,
+		Fields: &storage.PolicyFields{
+			ProcessPolicy: &storage.ProcessPolicy{
+				Name: "apt-get",
+			},
+			SetPrivileged: &storage.PolicyFields_Privileged{
+				Privileged: true,
+			},
+		},
+	}
+
+	ctx := context.Background()
+	mockImportResp := []*v1.ImportPolicyResponse{
+		{
+			Succeeded: true,
+			Policy:    importedPolicy,
+			Errors:    nil,
+		},
+	}
+
+	s.mockDeploymentMatcherBuilder.EXPECT().ForPolicy(importedPolicy).Return(sbpMocks.NewMockMatcher(s.mockCtrl), nil).Times(1)
+	s.policies.EXPECT().ImportPolicies(ctx, []*storage.Policy{importedPolicy}, false).Return(mockImportResp, true, nil)
+	s.mockBuildTimePolicies.EXPECT().RemovePolicy(importedPolicy.GetId()).Return(nil)
+	s.mockLifecycleManager.EXPECT().UpsertPolicy(importedPolicy).Return(nil)
+	s.policies.EXPECT().GetAllPolicies(gomock.Any()).Return(nil, nil)
+	s.mockConnectionManager.EXPECT().BroadcastMessage(gomock.Any())
+	resp, err := s.tested.ImportPolicies(ctx, &v1.ImportPoliciesRequest{
+		Policies: []*storage.Policy{importedPolicy},
+	})
+	s.NoError(err)
+	s.True(resp.AllSucceeded)
+	s.Require().Len(resp.GetResponses(), 1)
+	policyResp := resp.GetResponses()[0]
+	resultPolicy := policyResp.GetPolicy()
+	s.Equal(importedPolicy.GetFields(), resultPolicy.GetFields())
+	s.Equal(importedPolicy.GetPolicySections(), resultPolicy.GetPolicySections())
+}
+
+func (s *PolicyServiceTestSuite) TestImportAndUpgradePolicy() {
+	envIsolator := testutils.NewEnvIsolator(s.T())
+	envIsolator.Setenv(features.BooleanPolicyLogic.EnvVar(), "true")
+	defer envIsolator.RestoreAll()
+
+	mockID := "1"
+	mockName := "legacy policy"
+	mockSeverity := storage.Severity_LOW_SEVERITY
+	mockLCStages := []storage.LifecycleStage{storage.LifecycleStage_RUNTIME}
+	mockCategories := []string{"test"}
+
+	importedPolicy := &storage.Policy{
+		Id:              mockID,
+		Name:            mockName,
+		Severity:        mockSeverity,
+		LifecycleStages: mockLCStages,
+		Categories:      mockCategories,
+		Fields: &storage.PolicyFields{
+			ProcessPolicy: &storage.ProcessPolicy{
+				Name: "apt-get",
+			},
+			SetPrivileged: &storage.PolicyFields_Privileged{
+				Privileged: true,
+			},
+		},
+	}
+	importRespPolicy := &storage.Policy{
+		Id:              mockID,
+		Name:            mockName,
+		Severity:        mockSeverity,
+		LifecycleStages: mockLCStages,
+		Categories:      mockCategories,
+		PolicyVersion:   booleanpolicy.Version,
+		PolicySections: []*storage.PolicySection{
+			{
+				PolicyGroups: []*storage.PolicyGroup{
+					{
+						FieldName: "Privileged",
+						Values: []*storage.PolicyValue{
+							{
+								Value: "true",
+							},
+						},
+					},
+					{
+						FieldName: "Process Name",
+						Values: []*storage.PolicyValue{
+							{
+								Value: "apt-get",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	ctx := context.Background()
+	mockImportResp := []*v1.ImportPolicyResponse{
+		{
+			Succeeded: true,
+			Policy:    importRespPolicy,
+			Errors:    nil,
+		},
+	}
+
+	s.policies.EXPECT().ImportPolicies(ctx, []*storage.Policy{importRespPolicy}, false).Return(mockImportResp, true, nil)
+	s.mockBuildTimePolicies.EXPECT().RemovePolicy(importRespPolicy.GetId()).Return(nil)
+	s.mockLifecycleManager.EXPECT().UpsertPolicy(importRespPolicy).Return(nil)
+	s.policies.EXPECT().GetAllPolicies(gomock.Any()).Return(nil, nil)
+	s.mockConnectionManager.EXPECT().BroadcastMessage(gomock.Any())
+	resp, err := s.tested.ImportPolicies(ctx, &v1.ImportPoliciesRequest{
+		Policies: []*storage.Policy{importedPolicy},
+	})
+	s.NoError(err)
+	s.True(resp.AllSucceeded)
+	s.Require().Len(resp.GetResponses(), 1)
+	policyResp := resp.GetResponses()[0]
+	resultPolicy := policyResp.GetPolicy()
+	s.Equal(importRespPolicy.GetFields(), resultPolicy.GetFields())
+	s.Equal(importRespPolicy.GetPolicySections(), resultPolicy.GetPolicySections())
 }

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stretchr/testify/require"
 	"gotest.tools/assert"
 )
 
@@ -968,4 +969,76 @@ func TestConvertPolicyFieldsToSections(t *testing.T) {
 			assert.DeepEqual(t, tc.expectedPolicySections, got)
 		})
 	}
+}
+
+func TestMigrateLegacyPolicy(t *testing.T) {
+	mockWhitelist := &storage.Whitelist{
+		Name: "abcd",
+		Image: &storage.Whitelist_Image{
+			Name: "some name",
+		},
+	}
+	mockScope := &storage.Scope{
+		Label: &storage.Scope_Label{
+			Key:   "Joseph",
+			Value: "Rules",
+		},
+	}
+
+	legacyPolicy := &storage.Policy{
+		Id:              "Some ID",
+		Name:            "Some Name",
+		Description:     "Some Description",
+		LifecycleStages: nil,
+		Whitelists: []*storage.Whitelist{
+			mockWhitelist,
+		},
+		Scope: []*storage.Scope{
+			mockScope,
+		},
+		Fields: &storage.PolicyFields{
+			ImageName: &storage.ImageNamePolicy{
+				Registry: "123",
+				Remote:   "456",
+				Tag:      "789",
+			},
+		},
+	}
+	expectedSections := []*storage.PolicySection{
+		{
+			PolicyGroups: []*storage.PolicyGroup{
+				{
+					FieldName: ImageRegistry,
+					Values: []*storage.PolicyValue{
+						{
+							Value: "123",
+						},
+					},
+				},
+				{
+					FieldName: ImageRemote,
+					Values: []*storage.PolicyValue{
+						{
+							Value: "r/.*456.*",
+						},
+					},
+				},
+				{
+					FieldName: ImageTag,
+					Values: []*storage.PolicyValue{
+						{
+							Value: "789",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	t.Run("test migrator", func(t *testing.T) {
+		booleanPolicy, err := CloneAndEnsureConverted(legacyPolicy)
+		require.NoError(t, err)
+		require.Equal(t, Version, booleanPolicy.GetPolicyVersion())
+		require.Equal(t, expectedSections, booleanPolicy.GetPolicySections())
+	})
 }

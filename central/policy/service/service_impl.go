@@ -719,25 +719,21 @@ func (s *serviceImpl) ImportPolicies(ctx context.Context, request *v1.ImportPoli
 
 	responses := make([]*v1.ImportPolicyResponse, 0, len(request.Policies))
 	allValidationSucceeded := true
-
 	// Validate input policies
 	validPolicyList := make([]*storage.Policy, 0, len(request.GetPolicies()))
-	for _, policy := range request.Policies {
+	for _, policy := range request.GetPolicies() {
+		if features.BooleanPolicyLogic.Enabled() {
+			var err error
+			policy, err = booleanpolicy.CloneAndEnsureConverted(policy)
+			if err != nil {
+				allValidationSucceeded = false
+				responses = append(responses, makeValidationError(policy, err))
+				continue
+			}
+		}
 		if err := s.validator.validateImport(policy); err != nil {
 			allValidationSucceeded = false
-			responses = append(responses, &v1.ImportPolicyResponse{
-				Succeeded: false,
-				Policy:    policy,
-				Errors: []*v1.ImportPolicyError{
-					{
-						Message: "Invalid policy",
-						Type:    policies.ErrImportValidation,
-						Metadata: &v1.ImportPolicyError_ValidationError{
-							ValidationError: err.Error(),
-						},
-					},
-				},
-			})
+			responses = append(responses, makeValidationError(policy, err))
 			continue
 		}
 		validPolicyList = append(validPolicyList, policy)
@@ -770,4 +766,20 @@ func (s *serviceImpl) ImportPolicies(ctx context.Context, request *v1.ImportPoli
 		Responses:    responses,
 		AllSucceeded: allValidationSucceeded && allImportsSucceeded,
 	}, nil
+}
+
+func makeValidationError(policy *storage.Policy, err error) *v1.ImportPolicyResponse {
+	return &v1.ImportPolicyResponse{
+		Succeeded: false,
+		Policy:    policy,
+		Errors: []*v1.ImportPolicyError{
+			{
+				Message: "Invalid policy",
+				Type:    policies.ErrImportValidation,
+				Metadata: &v1.ImportPolicyError_ValidationError{
+					ValidationError: err.Error(),
+				},
+			},
+		},
+	}
 }
