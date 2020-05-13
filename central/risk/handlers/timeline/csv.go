@@ -184,15 +184,19 @@ func CSVHandler() http.HandlerFunc {
 			containerID := string(containerResolver.ID())
 			containerName := containerResolver.Name()
 			containerStartTime := csv.FromGraphQLTime(containerResolver.StartTime())
-			podID, err := podUtils.ParsePodID(containerResolver.PodID())
-			utils.Should(err)
 
-			podName := podID.Name
-			podUID := string(podID.UID)
-			info := pods[podUID]
-			deploymentID := info.deploymentID
-			podStartTime := info.startTime
-			podContainerCount := info.containerCount
+			var podName, podUID, deploymentID, podStartTime, podContainerCount string
+
+			if podID, err := podUtils.ParsePodID(containerResolver.PodID()); err != nil {
+				log.Errorf("Unable to generate full CSV row for container %s: %v", containerName, utils.Should(err))
+			} else {
+				podName = podID.Name
+				podUID = string(podID.UID)
+				info := pods[podUID]
+				deploymentID = info.deploymentID
+				podStartTime = info.startTime
+				podContainerCount = info.containerCount
+			}
 
 			for _, event := range containerResolver.Events() {
 				var dataRow eventRow
