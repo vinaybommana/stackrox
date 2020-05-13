@@ -6,8 +6,11 @@ import { url as dashboardURL } from '../constants/DashboardPage';
 
 import * as api from '../constants/apiEndpoints';
 
+const AUTHENTICATED = true;
+const UNAUTHENTICATED = false;
+
 describe('Authentication', () => {
-    const setupAuth = (landingUrl, authStatusValid = true, authStatusResponse = {}) => {
+    const setupAuth = (landingUrl, authStatusValid, authStatusResponse = {}) => {
         cy.server();
         cy.route('GET', api.auth.loginAuthProviders, 'fixture:auth/authProviders.json').as(
             'authProviders'
@@ -43,7 +46,7 @@ describe('Authentication', () => {
 
     it('should redirect user to login page, authenticate and redirect to the requested page', () => {
         stubAPIs();
-        setupAuth(dashboardURL);
+        setupAuth(dashboardURL, AUTHENTICATED);
         cy.server();
         cy.route('GET', api.clusters.list, 'fixture:clusters/couple.json').as('clusters');
         cy.route('GET', api.search.options, 'fixture:search/metadataOptions.json').as(
@@ -61,14 +64,20 @@ describe('Authentication', () => {
     it('should allow authenticated user to enter', () => {
         localStorage.setItem('access_token', 'my-token'); // simulate authenticated user
         stubAPIs();
-        setupAuth(dashboardURL);
+        setupAuth(dashboardURL, AUTHENTICATED);
+
+        cy.wait('@authStatus');
+
         cy.url().should('contain', dashboardURL);
     });
 
     it('should logout previously authenticated user with invalid token', () => {
         localStorage.setItem('access_token', 'my-token'); // invalid token
         stubAPIs();
-        setupAuth(dashboardURL, false);
+        setupAuth(dashboardURL, UNAUTHENTICATED);
+
+        cy.wait('@authStatus');
+
         cy.url().should('contain', loginUrl);
     });
 
@@ -76,7 +85,9 @@ describe('Authentication', () => {
         localStorage.setItem('access_token', 'my-token'); // authenticated user
         stubAPIs();
         cy.route('POST', api.auth.logout, {}).as('logout');
-        setupAuth(dashboardURL);
+        setupAuth(dashboardURL, AUTHENTICATED);
+
+        cy.wait('@authStatus');
 
         cy.get(navSelectors.menuButton).click();
         cy.get(navSelectors.logoutButton).click();
@@ -90,7 +101,10 @@ describe('Authentication', () => {
         cy.route('POST', api.auth.tokenRefresh, {}).as('tokenRefresh');
 
         const expiryDate = addSeconds(Date.now(), 33); // +3 sec should be enough
-        setupAuth(dashboardURL, true, { expires: expiryDate.toISOString() });
+        setupAuth(dashboardURL, AUTHENTICATED, {
+            expires: expiryDate.toISOString(),
+        });
+
         cy.wait('@tokenRefresh');
     });
 });

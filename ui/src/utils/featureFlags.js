@@ -23,7 +23,8 @@ export const isBackendFeatureFlagEnabled = (backendFeatureFlags, envVar, default
     const featureFlag = backendFeatureFlags.find((flag) => flag.envVar === envVar);
     if (!featureFlag) {
         if (process.env.NODE_ENV === 'development') {
-            throw new Error(`EnvVar ${envVar} not found in the backend list, possibly stale?`);
+            // eslint-disable-next-line no-console
+            console.warn(`EnvVar ${envVar} not found in the backend list, possibly stale?`);
         }
         return defaultVal;
     }
