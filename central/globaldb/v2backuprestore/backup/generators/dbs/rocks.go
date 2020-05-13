@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/central/globaldb"
 	"github.com/stackrox/rox/pkg/fileutils"
+	"github.com/stackrox/rox/pkg/rocksdb"
 	"github.com/stackrox/rox/pkg/rocksdb/metrics"
 	"github.com/tecbot/gorocksdb"
 )
@@ -42,8 +43,7 @@ func (rgen *RocksBackup) WriteDirectory(ctx context.Context) (string, error) {
 	}
 
 	// Generate the backup files in the directory.
-	opts := gorocksdb.NewDefaultOptions()
-	backupEngine, err := gorocksdb.OpenBackupEngine(opts, path)
+	backupEngine, err := gorocksdb.OpenBackupEngine(rocksdb.GetRocksDBOptions(), path)
 	if err != nil {
 		return "", errors.Wrap(err, "error initializing backup process")
 	}

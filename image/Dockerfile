@@ -13,7 +13,6 @@ RUN echo http://${ALPINE_MIRROR}/alpine/v3.11/main > /etc/apk/repositories; \
     echo http://${ALPINE_MIRROR}/alpine/v3.11/community >> /etc/apk/repositories
 
 RUN apk add --update --no-cache zlib-dev bzip2-dev snappy-dev lz4-dev zstd-dev
-RUN mkdir -p /lib/rocksdb
 
 RUN apk update && \
     apk add --no-cache \
@@ -77,5 +76,3 @@ RUN mkdir -p /stackrox/data && chown -R 4000:4000 /stackrox/data
 VOLUME /stackrox/data
 
 USER 4000:4000
-
-WORKDIR /
