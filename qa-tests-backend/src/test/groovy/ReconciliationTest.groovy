@@ -124,8 +124,8 @@ class ReconciliationTest extends BaseSpecification {
         def sensorDeployment = new Deployment().setNamespace("stackrox").setName("sensor")
         orchestrator.deleteAndWaitForDeploymentDeletion(sensorDeployment)
 
-        // Delete objects from k8s
         orchestrator.identity {
+            // Delete objects from k8s
             deleteDeployment(dep)
             deleteSecret("testing123", ns)
             deleteNetworkPolicy(policy)
@@ -133,10 +133,15 @@ class ReconciliationTest extends BaseSpecification {
             // Just wait for the namespace to be deleted which is indicative that all of them have been deleted
             waitForNamespaceDeletion(ns)
 
-            createOrchestratorDeployment(sensor)
+            // Recreate sensor
+            try {
+                createOrchestratorDeployment(sensor)
+            } catch (Exception e) {
+                println "Error re-creating the sensor: " + e.toString()
+                throw e
+            }
         }
 
-        // Recreate sensor
         Services.waitForDeployment(sensorDeployment)
 
         def maxWaitForSync = 100

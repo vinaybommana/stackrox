@@ -264,7 +264,7 @@ class Kubernetes implements OrchestratorMain {
     def createOrchestratorDeployment(K8sDeployment dep) {
         dep.setApiVersion("")
         dep.metadata.setResourceVersion("")
-        return this.deployments.create(dep)
+        return this.deployments.inNamespace(dep.metadata.namespace).create(dep)
     }
 
     K8sDeployment getOrchestratorDeployment(String ns, String name) {
