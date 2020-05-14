@@ -592,7 +592,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "90-Day Image Age",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				oldImageDep.GetId(): {
 					{
@@ -603,7 +602,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "30-Day Scan Age",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				oldScannedDep.GetId(): {
 					{
@@ -717,25 +715,21 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName:                "Required Label: Email",
-			skip:                      true,
 			shouldNotMatch:            map[string]struct{}{fixtureDep.GetId(): {}},
 			sampleViolationForMatched: "Required label not found (key = 'email', value = '[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+')",
 		},
 		{
 			policyName:                "Required Annotation: Email",
-			skip:                      true,
 			shouldNotMatch:            map[string]struct{}{depWithGoodEmailAnnotation.GetId(): {}},
 			sampleViolationForMatched: "Required annotation not found (key = 'email', value = '[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+')",
 		},
 		{
 			policyName:                "Required Label: Owner",
-			skip:                      true,
 			shouldNotMatch:            map[string]struct{}{fixtureDep.GetId(): {}},
 			sampleViolationForMatched: "Required label not found (key = 'owner', value = '.+')",
 		},
 		{
 			policyName:                "Required Annotation: Owner",
-			skip:                      true,
 			shouldNotMatch:            map[string]struct{}{depWithOwnerAnnotation.GetId(): {}},
 			sampleViolationForMatched: "Required annotation not found (key = 'owner', value = '.+')",
 		},
@@ -891,7 +885,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "Emergency Deployment Annotation",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				depWithEnforcementBypassAnnotation.GetId(): {
 					{Message: "Disallowed annotation found (key = 'admission.stackrox.io/break-glass')"},
@@ -1073,7 +1066,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "90-Day Image Age",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(oldImageDep): {
 					{
@@ -1084,7 +1076,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "30-Day Scan Age",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(oldScannedDep): {
 					{
@@ -1200,7 +1191,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "Required Image Label",
-			skip:       true,
 			shouldNotMatch: map[string]struct{}{
 				"requiredImageLabelImage": {},
 			},
@@ -1235,9 +1225,18 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 				assert.Contains(t, actualViolations, id)
 			}
 			if len(c.shouldNotMatch) > 0 {
+				if c.policyName == "Required Image Label" {
+					for id, image := range suite.images {
+						if image.GetMetadata() == nil {
+							c.shouldNotMatch[id] = struct{}{}
+						}
+					}
+				}
+
 				for shouldNotMatchID := range c.shouldNotMatch {
 					assert.NotContains(t, actualViolations, shouldNotMatchID)
 				}
+
 				for id := range suite.images {
 					if _, shouldNotMatch := c.shouldNotMatch[id]; !shouldNotMatch {
 						assert.Contains(t, actualViolations, id)

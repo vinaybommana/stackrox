@@ -2,9 +2,11 @@ package mapeval
 
 import (
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/stackrox/rox/pkg/regexutils"
 	"github.com/stackrox/rox/pkg/stringutils"
 )
 
@@ -17,32 +19,49 @@ const (
 	ShouldNotMatchMarker = "!\t"
 )
 
-type kvElement struct {
-	key       string
-	value     string
-	satisfied bool
+type kvConstraint struct {
+	key   *regexp.Regexp
+	value *regexp.Regexp
 }
 
-type groupElement struct {
-	shouldNotMatch []*kvElement
-	shouldMatch    []*kvElement
+type groupConstraint struct {
+	shouldNotMatch []*kvConstraint
+	shouldMatch    []*kvConstraint
 }
 
-func convertConjunctionPairsToGroupElement(conjunctionPairsStr string) (*groupElement, error) {
+func assignRegExpFromString(val string) (*regexp.Regexp, error) {
+	if val == "" {
+		return nil, nil
+	}
+
+	return regexp.Compile(val)
+}
+
+func convertConjunctionPairsToGroupConstraint(conjunctionPairsStr string) (*groupConstraint, error) {
 	ps := strings.Split(conjunctionPairsStr, ConjunctionMarker)
 	if len(ps) == 0 {
 		return nil, nil
 	}
 
-	conjunctionGroup := &groupElement{}
+	conjunctionGroup := &groupConstraint{}
 	for _, p := range ps {
 		if !strings.Contains(p, "=") {
 			return nil, errors.Errorf("Invalid key-value expression: %s", p)
 		}
 
 		p, shouldNotMatchQuery := stringutils.MaybeTrimPrefix(p, ShouldNotMatchMarker)
-		key, value := stringutils.Split2(p, "=")
-		ele := &kvElement{value: value, key: key}
+		k, v := stringutils.Split2(p, "=")
+		key, err := assignRegExpFromString(k)
+		if err != nil {
+			return nil, errors.Wrap(err, "invalid key")
+		}
+
+		value, err := assignRegExpFromString(v)
+		if err != nil {
+			return nil, errors.Wrap(err, "invalid value")
+		}
+
+		ele := &kvConstraint{value: value, key: key}
 		if shouldNotMatchQuery {
 			conjunctionGroup.shouldNotMatch = append(conjunctionGroup.shouldNotMatch, ele)
 		} else {
@@ -53,30 +72,30 @@ func convertConjunctionPairsToGroupElement(conjunctionPairsStr string) (*groupEl
 	return conjunctionGroup, nil
 }
 
-func valueMatchesRequest(req, val string) bool {
-	return req == "" || req == val
+func valueMatchesRequest(req *regexp.Regexp, val string) bool {
+	return req == nil || regexutils.MatchWholeString(req, val)
 }
 
-func verifyAgainstCG(gE *groupElement, key, value string) {
+func verifyAgainstCG(gE *groupConstraint, kvMatchStates map[*kvConstraint]bool, key, value string) {
 	for _, r := range gE.shouldNotMatch {
-		r.satisfied = r.satisfied || (valueMatchesRequest(r.key, key) && valueMatchesRequest(r.value, value))
+		kvMatchStates[r] = kvMatchStates[r] || (valueMatchesRequest(r.key, key) && valueMatchesRequest(r.value, value))
 	}
 
 	for _, d := range gE.shouldMatch {
-		d.satisfied = d.satisfied || (valueMatchesRequest(d.key, key) && valueMatchesRequest(d.value, value))
+		kvMatchStates[d] = kvMatchStates[d] || (valueMatchesRequest(d.key, key) && valueMatchesRequest(d.value, value))
 	}
 }
 
-func matchesCG(gE *groupElement) bool {
+func matchesCG(gE *groupConstraint, kvMatchStates map[*kvConstraint]bool) bool {
 	for _, r := range gE.shouldNotMatch {
-		if r.satisfied {
+		if kvMatchStates[r] {
 			return false
 		}
 	}
 	// All shouldNotMatch requirements failed at this point.
 
 	for _, d := range gE.shouldMatch {
-		if !d.satisfied {
+		if !kvMatchStates[d] {
 			return false
 		}
 	}
@@ -97,9 +116,9 @@ func Matcher(value string) (func(*reflect.MapIter) bool, error) {
 	// The above expression is composed of two groups:
 	// The first group implies that the map matches if key 'a' is absent, and b=1 is present.
 	// The second group implies that the map matches if c=2 is present.
-	var disjunctionGroups []*groupElement
+	var disjunctionGroups []*groupConstraint
 	for _, conjunctionPairsStr := range strings.Split(value, DisjunctionMarker) {
-		cg, err := convertConjunctionPairsToGroupElement(conjunctionPairsStr)
+		cg, err := convertConjunctionPairsToGroupConstraint(conjunctionPairsStr)
 		if err != nil {
 			return nil, err
 		}
@@ -112,6 +131,7 @@ func Matcher(value string) (func(*reflect.MapIter) bool, error) {
 	}
 
 	return func(iter *reflect.MapIter) bool {
+		kvMatchStates := make(map[*kvConstraint]bool)
 		for iter.Next() {
 			k, v := iter.Key(), iter.Value()
 			// Only string type key, value are allowed.
@@ -126,13 +146,13 @@ func Matcher(value string) (func(*reflect.MapIter) bool, error) {
 			}
 
 			for _, cg := range disjunctionGroups {
-				verifyAgainstCG(cg, key, value)
+				verifyAgainstCG(cg, kvMatchStates, key, value)
 			}
 		}
 
 		for _, cg := range disjunctionGroups {
 			// Apply disjunction and return true if any group is true.
-			if matchesCG(cg) {
+			if matchesCG(cg, kvMatchStates) {
 				return true
 			}
 		}

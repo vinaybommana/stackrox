@@ -35,5 +35,10 @@ func policyGroupToFieldQueries(group *storage.PolicyGroup) ([]*query.FieldQuery,
 		return nil, errors.Errorf("invalid group: operators not allowed for field %s", group.GetFieldName())
 	}
 
-	return metadata.qb.FieldQueriesForGroup(group), nil
+	fqs := metadata.qb.FieldQueriesForGroup(group)
+	if len(fqs) == 0 {
+		return nil, errors.New("invalid group: no queries formed")
+	}
+
+	return fqs, nil
 }
