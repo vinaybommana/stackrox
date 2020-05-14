@@ -44,10 +44,4 @@ class Helpers {
     static String getStackRoxEndpoint(Object ignored) {
         return "https://" + Env.mustGetHostname() + ":" + Env.mustGetPort()
     }
-
-    // withDo is like with, but returns a void so can safely be used in tests.
-    static void withDo(Object self, Closure closure) {
-        self.with(closure)
-    }
 }
-

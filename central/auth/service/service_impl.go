@@ -5,9 +5,7 @@ import (
 
 	"github.com/gogo/protobuf/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/stackrox/rox/central/role/utils"
 	v1 "github.com/stackrox/rox/generated/api/v1"
-	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/grpc/authn"
 	"github.com/stackrox/rox/pkg/grpc/authz/allow"
 	"google.golang.org/grpc"
@@ -43,32 +41,6 @@ func (s *serviceImpl) GetAuthStatus(ctx context.Context, request *v1.Empty) (*v1
 	return authStatusForID(id)
 }
 
-func convertAttributes(attrMap map[string][]string) []*v1.UserAttribute {
-	if attrMap == nil {
-		return nil
-	}
-	result := make([]*v1.UserAttribute, 0, len(attrMap))
-
-	for k, vs := range attrMap {
-		attr := &v1.UserAttribute{
-			Key:    k,
-			Values: vs,
-		}
-		result = append(result, attr)
-	}
-	return result
-}
-
-func fillAccessLists(userInfo *storage.UserInfo) {
-	if userInfo == nil {
-		return
-	}
-	utils.FillAccessList(userInfo.Permissions)
-	for _, role := range userInfo.Roles {
-		utils.FillAccessList(role)
-	}
-}
-
 func authStatusForID(id authn.Identity) (*v1.AuthStatus, error) {
 	exp, err := types.TimestampProto(id.Expiry())
 	if err != nil {
@@ -76,23 +48,14 @@ func authStatusForID(id authn.Identity) (*v1.AuthStatus, error) {
 	}
 
 	result := &v1.AuthStatus{
-		Expires:        exp,
-		UserInfo:       id.User().Clone(),
-		UserAttributes: convertAttributes(id.Attributes()),
+		Expires: exp,
 	}
-	fillAccessLists(result.UserInfo)
-
 	if provider := id.ExternalAuthProvider(); provider != nil {
 		// every Identity should now have an auth provider but API token Identities won't have a Backend
 		if backend := provider.Backend(); backend != nil {
 			result.RefreshUrl = backend.RefreshURL()
 		}
-		authProvider := provider.StorageView().Clone()
-		if authProvider != nil {
-			// config might contain semi-sensitive values, so strip it
-			authProvider.Config = nil
-		}
-		result.AuthProvider = authProvider
+		result.AuthProvider = provider.StorageView()
 	}
 	if svc := id.Service(); svc != nil {
 		result.Id = &v1.AuthStatus_ServiceId{ServiceId: svc}
