@@ -25,7 +25,7 @@ import java.security.SecureRandom
 import java.util.concurrent.TimeUnit
 
 @Slf4j
-@Retry(condition = { Helpers.determineRetry() })
+@Retry(condition = { Helpers.determineRetry(failure) })
 class BaseSpecification extends Specification {
 
     static final String RUN_ID

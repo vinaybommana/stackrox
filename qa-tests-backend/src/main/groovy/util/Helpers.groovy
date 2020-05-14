@@ -24,9 +24,10 @@ class Helpers {
         evaluateWithRetry(retries, pauseSecs, closure)
     }
 
-    static boolean determineRetry() {
+    static boolean determineRetry(Throwable failure) {
         retryAttempt++
         if (retryAttempt <= MAX_RETRY_ATTEMTPS) {
+            println "An exception occurred which will cause a retry: " + failure
             println "Test Failed... Attempting Retry #${retryAttempt}"
             return true
         }
