@@ -40,6 +40,8 @@ var (
 			"/v1.ImageIntegrationService/PutImageIntegration",
 			"/v1.ImageIntegrationService/TestImageIntegration",
 			"/v1.ImageIntegrationService/DeleteImageIntegration",
+			"/v1.ImageIntegrationService/UpdateImageIntegration",
+			"/v1.ImageIntegrationService/TestUpdatedImageIntegration",
 		},
 	})
 )
@@ -71,7 +73,7 @@ func (s *serviceImpl) AuthFuncOverride(ctx context.Context, fullMethodName strin
 }
 
 func scrubImageIntegration(i *storage.ImageIntegration) {
-	secrets.ScrubSecretsFromStruct(i)
+	secrets.ScrubSecretsFromStructWithReplacement(i, secrets.ReplacementStr)
 }
 
 // GetImageIntegration retrieves the integration based on the id passed
@@ -200,6 +202,14 @@ func (s *serviceImpl) TestImageIntegration(ctx context.Context, request *storage
 		return nil, err
 	}
 	return &v1.Empty{}, nil
+}
+
+func (s *serviceImpl) UpdateImageIntegration(context.Context, *v1.UpdateImageIntegrationRequest) (*v1.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "not implemented")
+}
+
+func (s *serviceImpl) TestUpdatedImageIntegration(context.Context, *v1.UpdateImageIntegrationRequest) (*v1.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "not implemented")
 }
 
 func (s *serviceImpl) testImageIntegration(request *storage.ImageIntegration) error {
