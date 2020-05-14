@@ -664,6 +664,9 @@ reinstall-dev-tools: clean-dev-tools
 install-dev-tools:
 	@echo "+ $@"
 	@$(GET_DEVTOOLS_CMD) | xargs $(MAKE)
+ifeq ($(UNAME_S),Darwin)
+	@brew install rocksdb
+endif
 
 .PHONY: roxvet
 roxvet: $(ROXVET_BIN)
