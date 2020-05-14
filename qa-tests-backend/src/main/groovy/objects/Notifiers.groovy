@@ -4,6 +4,7 @@ import common.Constants
 import groovy.json.JsonSlurper
 import io.stackrox.proto.storage.NotifierOuterClass
 import io.stackrox.proto.storage.PolicyOuterClass.Policy
+import org.junit.Assume
 import services.NotifierService
 import util.Env
 import util.MailService
@@ -70,7 +71,11 @@ class EmailNotifier extends Notifier {
 
     void validateViolationNotification(Policy policy, Deployment deployment) {
         String policySeverity = policy.severity.valueDescriptor.toString().split("_")[0].toLowerCase()
-        mail.login()
+        try {
+            mail.login()
+        } catch (Exception e) {
+            Assume.assumeNoException("Failed to login to GMAIL service... skipping test!: ", e)
+        }
 
         Timer t = new Timer(30, 3)
         Message[] notifications = []
@@ -100,7 +105,11 @@ class EmailNotifier extends Notifier {
 
     void validateNetpolNotification(String yaml) {
         Timer t = new Timer(30, 3)
-        mail.login()
+        try {
+            mail.login()
+        } catch (Exception e) {
+            Assume.assumeNoException("Failed to login to GMAIL service... skipping test!: ", e)
+        }
         Message[] notifications = []
         while (!notifications && t.IsValid()) {
             println "checking for messages..."
