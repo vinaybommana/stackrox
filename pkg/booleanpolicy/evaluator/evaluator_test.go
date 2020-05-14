@@ -823,6 +823,93 @@ func TestSliceBase(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "slice base, simple negated, does not match",
+			obj: &TopLevel{
+				Base: Base{
+					ValBaseSlice: []string{"one", "two", "three"}},
+			},
+			q: &query.Query{
+				FieldQueries: []*query.FieldQuery{
+					{Field: "BaseSlice", Values: []string{"one"}, Negate: true},
+				},
+			},
+		},
+		{
+			desc: "slice base, simple negated, matches",
+			obj: &TopLevel{
+				Base: Base{
+					ValBaseSlice: []string{"one", "two", "three"}},
+			},
+			q: &query.Query{
+				FieldQueries: []*query.FieldQuery{
+					{Field: "BaseSlice", Values: []string{"four"}, Negate: true},
+				},
+			},
+			expectedResult: &Result{
+				Matches: []map[string][]string{
+					{"BaseSlice": {"one", "two", "three"}},
+				},
+			},
+		},
+		{
+			desc: "slice base, with OR, negated, does not match",
+			obj: &TopLevel{
+				Base: Base{
+					ValBaseSlice: []string{"one", "two", "three"}},
+			},
+			q: &query.Query{
+				FieldQueries: []*query.FieldQuery{
+					{Field: "BaseSlice", Values: []string{"one", "four"}, Operator: query.Or, Negate: true},
+				},
+			},
+		},
+		{
+			desc: "slice base, with OR, negated, matches",
+			obj: &TopLevel{
+				Base: Base{
+					ValBaseSlice: []string{"one", "two", "three"}},
+			},
+			q: &query.Query{
+				FieldQueries: []*query.FieldQuery{
+					{Field: "BaseSlice", Values: []string{"five", "four"}, Operator: query.Or, Negate: true},
+				},
+			},
+			expectedResult: &Result{
+				Matches: []map[string][]string{
+					{"BaseSlice": {"one", "two", "three"}},
+				},
+			},
+		},
+		{
+			desc: "slice base, negated, with AND, matches",
+			obj: &TopLevel{
+				Base: Base{
+					ValBaseSlice: []string{"one", "two", "three"}},
+			},
+			q: &query.Query{
+				FieldQueries: []*query.FieldQuery{
+					{Field: "BaseSlice", Values: []string{"one", "four"}, Operator: query.And, Negate: true},
+				},
+			},
+			expectedResult: &Result{
+				Matches: []map[string][]string{
+					{"BaseSlice": {"two", "three", "one"}},
+				},
+			},
+		},
+		{
+			desc: "slice base, negated, with AND, does not match",
+			obj: &TopLevel{
+				Base: Base{
+					ValBaseSlice: []string{"one", "two", "three"}},
+			},
+			q: &query.Query{
+				FieldQueries: []*query.FieldQuery{
+					{Field: "BaseSlice", Values: []string{"one", "two"}, Operator: query.And, Negate: true},
+				},
+			},
+		},
 	})
 }
 

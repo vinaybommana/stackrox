@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -1294,8 +1295,7 @@ func (suite *DefaultPoliciesTestSuite) TestRuntimePolicyFieldsCompile() {
 	}
 }
 
-func policyWithSingleKeyValue(fieldName, value string, negate bool) *storage.Policy {
-	group := &storage.PolicyGroup{FieldName: fieldName, Values: []*storage.PolicyValue{{Value: value}}, Negate: negate}
+func policyWithSingleGroup(group *storage.PolicyGroup) *storage.Policy {
 	return &storage.Policy{
 		PolicyVersion:  Version,
 		Name:           uuid.NewV4().String(),
@@ -1303,7 +1303,17 @@ func policyWithSingleKeyValue(fieldName, value string, negate bool) *storage.Pol
 	}
 }
 
-func (suite *DefaultPoliciesTestSuite) TestK8sRBAC() {
+func policyWithSingleKeyValue(fieldName, value string, negate bool) *storage.Policy {
+	return policyWithSingleGroup(&storage.PolicyGroup{FieldName: fieldName, Values: []*storage.PolicyValue{{Value: value}}, Negate: negate})
+}
+
+func policyWithSingleFieldAndValues(fieldName string, values []string, negate bool, op storage.BooleanOperator) *storage.Policy {
+	return policyWithSingleGroup(&storage.PolicyGroup{FieldName: fieldName, Values: sliceutils.Map(values, func(val *string) *storage.PolicyValue {
+		return &storage.PolicyValue{Value: *val}
+	}).([]*storage.PolicyValue), Negate: negate, BooleanOperator: op})
+}
+
+func (suite *DefaultPoliciesTestSuite) TestK8sRBACField() {
 	deployments := make(map[string]*storage.Deployment)
 	for permissionLevelStr, permissionLevel := range storage.PermissionLevel_value {
 		dep := fixtures.GetDeployment().Clone()
@@ -1327,7 +1337,7 @@ func (suite *DefaultPoliciesTestSuite) TestK8sRBAC() {
 			[]string{"ELEVATED_CLUSTER_WIDE", "CLUSTER_ADMIN"},
 		},
 		{
-			"CLUSTER_ADMIN",
+			"cluster_admin",
 			false,
 			[]string{"CLUSTER_ADMIN"},
 		},
@@ -1340,6 +1350,109 @@ func (suite *DefaultPoliciesTestSuite) TestK8sRBAC() {
 		c := testCase
 		suite.T().Run(fmt.Sprintf("%+v", c), func(t *testing.T) {
 			matcher, err := BuildDeploymentMatcher(policyWithSingleKeyValue(MinimumRBACPermissions, c.value, c.negate))
+			require.NoError(t, err)
+			matched := set.NewStringSet()
+			for depRef, dep := range deployments {
+				violations, err := matcher.MatchDeployment(context.Background(), dep, suite.getImagesForDeployment(dep), nil)
+				require.NoError(t, err)
+				if len(violations.AlertViolations) > 0 {
+					matched.Add(depRef)
+				}
+			}
+			assert.ElementsMatch(t, matched.AsSlice(), c.expectedMatches, "Got %v, expected: %v", matched.AsSlice(), c.expectedMatches)
+		})
+	}
+}
+
+func (suite *DefaultPoliciesTestSuite) TestPortExposure() {
+	deployments := make(map[string]*storage.Deployment)
+	for exposureLevelStr, exposureLevel := range storage.PortConfig_ExposureLevel_value {
+		dep := fixtures.GetDeployment().Clone()
+		dep.Ports = []*storage.PortConfig{{ExposureInfos: []*storage.PortConfig_ExposureInfo{{Level: storage.PortConfig_ExposureLevel(exposureLevel)}}}}
+		deployments[exposureLevelStr] = dep
+	}
+
+	for _, testCase := range []struct {
+		values          []string
+		negate          bool
+		expectedMatches []string
+	}{
+		{
+			[]string{"external"},
+			false,
+			[]string{"EXTERNAL"},
+		},
+		{
+			[]string{"external", "NODE"},
+			false,
+			[]string{"EXTERNAL", "NODE"},
+		},
+		{
+			[]string{"external", "NODE"},
+			true,
+			[]string{"INTERNAL", "HOST"},
+		},
+	} {
+		c := testCase
+		suite.T().Run(fmt.Sprintf("%+v", c), func(t *testing.T) {
+			matcher, err := BuildDeploymentMatcher(policyWithSingleFieldAndValues(PortExposure, c.values, c.negate, storage.BooleanOperator_OR))
+			require.NoError(t, err)
+			matched := set.NewStringSet()
+			for depRef, dep := range deployments {
+				violations, err := matcher.MatchDeployment(context.Background(), dep, suite.getImagesForDeployment(dep), nil)
+				require.NoError(t, err)
+				if len(violations.AlertViolations) > 0 {
+					matched.Add(depRef)
+				}
+			}
+			assert.ElementsMatch(t, matched.AsSlice(), c.expectedMatches, "Got %v, expected: %v", matched.AsSlice(), c.expectedMatches)
+		})
+	}
+}
+
+func (suite *DefaultPoliciesTestSuite) TestDropCaps() {
+	testCaps := []string{"CAP_SYS_MODULE", "CAP_SYS_NICE", "CAP_SYS_PTRACE"}
+
+	deployments := make(map[string]*storage.Deployment)
+	for _, idxs := range [][]int{{0}, {1}, {2}, {0, 1}, {1, 2}, {0, 1, 2}} {
+		dep := fixtures.GetDeployment().Clone()
+		dep.Containers[0].SecurityContext.DropCapabilities = make([]string, 0, len(idxs))
+		for _, idx := range idxs {
+			dep.Containers[0].SecurityContext.DropCapabilities = append(dep.Containers[0].SecurityContext.DropCapabilities, testCaps[idx])
+		}
+		deployments[strings.ReplaceAll(strings.Join(dep.Containers[0].SecurityContext.DropCapabilities, ","), "CAP_SYS_", "")] = dep
+	}
+
+	for _, testCase := range []struct {
+		values          []string
+		op              storage.BooleanOperator
+		expectedMatches []string
+	}{
+		{
+			// Nothing drops this capability
+			[]string{"CAP_SYSLOG"},
+			storage.BooleanOperator_OR,
+			[]string{"MODULE", "NICE", "PTRACE", "MODULE,NICE", "NICE,PTRACE", "MODULE,NICE,PTRACE"},
+		},
+		{
+			[]string{"CAP_SYS_NICE"},
+			storage.BooleanOperator_OR,
+			[]string{"MODULE", "PTRACE"},
+		},
+		{
+			[]string{"CAP_SYS_NICE", "CAP_SYS_PTRACE"},
+			storage.BooleanOperator_OR,
+			[]string{"MODULE"},
+		},
+		{
+			[]string{"CAP_SYS_NICE", "CAP_SYS_PTRACE"},
+			storage.BooleanOperator_AND,
+			[]string{"MODULE", "PTRACE", "NICE", "MODULE,NICE"},
+		},
+	} {
+		c := testCase
+		suite.T().Run(fmt.Sprintf("%+v", c), func(t *testing.T) {
+			matcher, err := BuildDeploymentMatcher(policyWithSingleFieldAndValues(DropCaps, c.values, false, c.op))
 			require.NoError(t, err)
 			matched := set.NewStringSet()
 			for depRef, dep := range deployments {

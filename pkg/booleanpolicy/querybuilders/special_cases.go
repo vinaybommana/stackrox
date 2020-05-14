@@ -15,14 +15,26 @@ import (
 // is greater than or equal to that value.
 func ForK8sRBAC() QueryBuilder {
 	return queryBuilderFunc(func(group *storage.PolicyGroup) []*query.FieldQuery {
-		mappedValues := make([]string, 0, len(group.GetValues()))
-		for _, value := range group.GetValues() {
-			mappedValues = append(mappedValues, fmt.Sprintf("%s%s", basematchers.GreaterThanOrEqualTo, value.GetValue()))
-		}
 		return []*query.FieldQuery{{
-			Field:  search.ServiceAccountPermissionLevel.String(),
-			Values: mappedValues,
+			Field: search.ServiceAccountPermissionLevel.String(),
+			Values: mapValues(group, func(s string) string {
+				return fmt.Sprintf("%s%s", basematchers.GreaterThanOrEqualTo, s)
+			}),
 			Negate: group.GetNegate(),
+		}}
+	})
+}
+
+// ForDropCaps returns a specific query builder for drop capabilities.
+// Note that here, we always negate -- the user specifies a list of capabilities that _must_ be dropped,
+// so we want to find deployments that don't drop these capabilities.
+func ForDropCaps() QueryBuilder {
+	return queryBuilderFunc(func(group *storage.PolicyGroup) []*query.FieldQuery {
+		return []*query.FieldQuery{{
+			Field:    search.DropCapabilities.String(),
+			Negate:   true,
+			Values:   mapValues(group, valueToStringExact),
+			Operator: operatorProtoMap[group.GetBooleanOperator()],
 		}}
 	})
 }

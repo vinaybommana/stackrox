@@ -98,32 +98,40 @@ func combineMatchersIntoEvaluator(fieldName string, matchers []baseMatcherAndExt
 func combineMatchersIntoEvaluatorNegated(fieldName string, matchers []baseMatcherAndExtractor, operator query.Operator) baseEvaluator {
 	return baseEvaluatorFunc(func(path *pathutil.Path, instance reflect.Value) (*fieldResult, bool) {
 		matchingValues := set.NewStringSet()
+		var matches []string
+		var atLeastOneMatcherDidNotMatch bool
 		for _, m := range matchers {
 			valuesAndMatches := m(instance)
 			// This means there were no values.
 			if len(valuesAndMatches) == 0 {
 				return nil, false
 			}
-			var atLeastOneSuccess bool
+			var atLeastOneMatch bool
 			for _, valueAndMatch := range valuesAndMatches {
-				if !valueAndMatch.matched {
-					matchingValues.Add(valueAndMatch.value)
-					atLeastOneSuccess = true
+				if valueAndMatch.matched {
+					atLeastOneMatch = true
+				} else {
+					if val := valueAndMatch.value; matchingValues.Add(val) {
+						matches = append(matches, val)
+					}
 				}
 			}
 
-			// If not matched, and it's an Or, then we can early exit.
+			// If it matched, and it's an Or, then we can early exit.
 			// Since we're negating, this check is correct by de Morgan's law.
 			// !(A OR B) <=> !A AND !B, therefore if operator is OR and A _does_ match,
 			// we can conclude that !A is false => !A AND !B is false => !(A OR B) is false.
-			if !atLeastOneSuccess && operator == query.Or {
+			if atLeastOneMatch && operator == query.Or {
 				return nil, false
 			}
+			if !atLeastOneMatch {
+				atLeastOneMatcherDidNotMatch = true
+			}
 		}
-		if matchingValues.Cardinality() == 0 {
+		if !atLeastOneMatcherDidNotMatch {
 			return nil, false
 		}
-		return fieldResultWithSingleMatch(fieldName, path, matchingValues.AsSlice()...), true
+		return fieldResultWithSingleMatch(fieldName, path, matches...), true
 	})
 }
 
