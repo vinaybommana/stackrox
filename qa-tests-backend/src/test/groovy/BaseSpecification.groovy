@@ -43,7 +43,7 @@ class BaseSpecification extends Specification {
 
     private static boolean globalSetupDone = false
 
-    private static String allAccessToken = null
+    protected static String allAccessToken = null
 
     private static globalSetup() {
         if (globalSetupDone) {
