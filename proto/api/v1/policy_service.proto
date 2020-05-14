@@ -80,6 +80,10 @@ message ExportPoliciesErrorList {
     repeated ExportPolicyError errors = 1;
 }
 
+message PolicyFromSearchRequest {
+    string search_params = 1;
+}
+
 message ImportPoliciesMetadata {
     bool overwrite = 1;
 }
@@ -107,6 +111,12 @@ message ImportPolicyResponse {
 message ImportPoliciesResponse {
     repeated ImportPolicyResponse responses     = 1;
     bool                          all_succeeded = 2;
+}
+
+message PolicyFromSearchResponse {
+    storage.Policy  policy                 = 1;
+    repeated string altered_search_terms   = 2;
+    bool            has_nested_fields      = 3;
 }
 
 // PolicyService APIs can be used to manage policies.
@@ -225,6 +235,13 @@ service PolicyService {
     rpc ExportPolicies (ExportPoliciesRequest) returns (storage.ExportPoliciesResponse) {
         option (google.api.http) = {
             post: "/v1/policies/export"
+            body: "*"
+        };
+    }
+
+    rpc PolicyFromSearch (PolicyFromSearchRequest) returns (PolicyFromSearchResponse) {
+        option (google.api.http) = {
+            post: "/v1/policies/from-search"
             body: "*"
         };
     }

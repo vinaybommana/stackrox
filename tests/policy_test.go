@@ -8,6 +8,7 @@ import (
 
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/booleanpolicy"
 	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/testutils"
 	"github.com/stackrox/rox/pkg/uuid"
@@ -28,9 +29,9 @@ var (
 	addedPolicies []string
 )
 
-func TestPolicies(t *testing.T) {
+func TestImportExportPolicies(t *testing.T) {
 	assumeFeatureFlagHasValue(t, features.PolicyImportExport, true)
-	defer tearDownTest(t)
+	defer tearDownImportExportTest(t)
 	verifyExportNonExistentFails(t)
 	verifyExportExistentSucceeds(t)
 	verifyMixedExportFails(t)
@@ -51,7 +52,13 @@ func TestPolicies(t *testing.T) {
 	verifyOverwriteNameAndIDSucceeds(t)
 }
 
-func tearDownTest(t *testing.T) {
+func TestPolicyFromSearch(t *testing.T) {
+	assumeFeatureFlagHasValue(t, features.BooleanPolicyLogic, true)
+	verifyConvertSearchToPolicy(t)
+	verifyConvertInvalidSearchToPolicyFails(t)
+}
+
+func tearDownImportExportTest(t *testing.T) {
 	conn := testutils.GRPCConnectionToCentral(t)
 	service := v1.NewPolicyServiceClient(conn)
 
@@ -578,4 +585,59 @@ func verifyOverwriteNameAndIDSucceeds(t *testing.T) {
 
 	dbPolicy := exportPolicy(t, service, existingPolicyDuplicateID.GetId())
 	require.Equal(t, newPolicy, dbPolicy)
+}
+
+func verifyConvertSearchToPolicy(t *testing.T) {
+	conn := testutils.GRPCConnectionToCentral(t)
+	service := v1.NewPolicyServiceClient(conn)
+
+	mockPolicySection := &storage.PolicySection{
+		PolicyGroups: []*storage.PolicyGroup{
+			{
+				FieldName:       booleanpolicy.CVE,
+				BooleanOperator: storage.BooleanOperator_OR,
+				Values: []*storage.PolicyValue{
+					{
+						Value: "test",
+					},
+				},
+			},
+			{
+				FieldName:       booleanpolicy.FixedBy,
+				BooleanOperator: storage.BooleanOperator_OR,
+				Values: []*storage.PolicyValue{
+					{
+						Value: "test2",
+					},
+				},
+			},
+		},
+	}
+
+	queryString := "CVE:test+Fixed By:test2"
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	response, err := service.PolicyFromSearch(ctx, &v1.PolicyFromSearchRequest{
+		SearchParams: queryString,
+	})
+	cancel()
+	require.NoError(t, err)
+	require.Empty(t, response.GetAlteredSearchTerms())
+	require.Len(t, response.GetPolicy().GetPolicySections(), 1)
+	require.Equal(t, response.GetPolicy().GetPolicySections()[0], mockPolicySection)
+}
+
+func verifyConvertInvalidSearchToPolicyFails(t *testing.T) {
+	conn := testutils.GRPCConnectionToCentral(t)
+	service := v1.NewPolicyServiceClient(conn)
+
+	queryString := "abc:def,not a valid search"
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	newPolicy, err := service.PolicyFromSearch(ctx, &v1.PolicyFromSearchRequest{
+		SearchParams: queryString,
+	})
+	cancel()
+	require.Error(t, err)
+	require.Nil(t, newPolicy)
 }

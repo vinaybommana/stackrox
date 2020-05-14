@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -37,6 +38,7 @@ import (
 	"github.com/stackrox/rox/pkg/protoconv"
 	"github.com/stackrox/rox/pkg/sac"
 	"github.com/stackrox/rox/pkg/search"
+	"github.com/stackrox/rox/pkg/search/predicate/basematchers"
 	"github.com/stackrox/rox/pkg/set"
 	"github.com/stackrox/rox/pkg/sync"
 	"github.com/stackrox/rox/pkg/utils"
@@ -56,6 +58,7 @@ var (
 			"/v1.PolicyService/GetPolicyCategories",
 			"/v1.PolicyService/QueryDryRunJobStatus",
 			"/v1.PolicyService/ExportPolicies",
+			"/v1.PolicyService/PolicyFromSearch",
 		},
 		user.With(permissions.Modify(resources.Policy)): {
 			"/v1.PolicyService/PostPolicy",
@@ -83,6 +86,8 @@ var (
 	policySyncReadCtx = sac.WithGlobalAccessScopeChecker(context.Background(),
 		sac.AllowFixedScopes(sac.AccessModeScopeKeys(storage.Access_READ_ACCESS),
 			sac.ResourceScopeKeys(resources.Policy)))
+
+	partialListPolicyGroups = set.NewStringSet(booleanpolicy.ImageComponent, booleanpolicy.DockerfileLine, booleanpolicy.EnvironmentVariable)
 )
 
 // serviceImpl provides APIs for alerts.
@@ -782,4 +787,290 @@ func makeValidationError(policy *storage.Policy, err error) *v1.ImportPolicyResp
 			},
 		},
 	}
+}
+
+func (s *serviceImpl) PolicyFromSearch(ctx context.Context, request *v1.PolicyFromSearchRequest) (*v1.PolicyFromSearchResponse, error) {
+	if !features.BooleanPolicyLogic.Enabled() {
+		return nil, status.Error(codes.Unimplemented, "not implemented")
+	}
+	policy, unconvertableCriteria, hasNestedFields, err := s.parsePolicy(ctx, request.GetSearchParams())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "error creating policy from search string: %v", err)
+	}
+
+	response := &v1.PolicyFromSearchResponse{
+		Policy:             policy,
+		HasNestedFields:    hasNestedFields,
+		AlteredSearchTerms: make([]string, 0, len(unconvertableCriteria)),
+	}
+	for _, fieldName := range unconvertableCriteria {
+		response.AlteredSearchTerms = append(response.AlteredSearchTerms, fieldName.String())
+	}
+	return response, nil
+}
+
+func (s *serviceImpl) parsePolicy(ctx context.Context, searchString string) (*storage.Policy, []search.FieldLabel, bool, error) {
+	// Handle empty input query case.
+	if len(searchString) == 0 {
+		return nil, nil, false, errors.New("can not generate a policy from an empty query")
+	}
+	// Have a filled query, parse it.
+	fieldMap, err := getFieldMapFromQueryString(searchString)
+	if err != nil {
+		return nil, nil, false, err
+	}
+
+	policy, unconvertable, err := s.makePolicyFromFieldMap(ctx, fieldMap)
+	if err != nil {
+		return nil, nil, false, err
+	}
+
+	return policy, unconvertable, false, err
+}
+
+func getFieldMapFromQueryString(searchString string) (map[search.FieldLabel][]string, error) {
+	fieldMap, err := search.ParseFieldMap(searchString)
+	if err != nil {
+		return nil, err
+	}
+	for fieldLabel, fieldValues := range fieldMap {
+		filteredV := fieldValues[:0]
+		for _, value := range fieldValues {
+			if value == "" {
+				continue
+			}
+			filteredV = append(filteredV, value)
+		}
+		fieldMap[fieldLabel] = filteredV
+	}
+	return fieldMap, nil
+}
+
+func (s *serviceImpl) makePolicyFromFieldMap(ctx context.Context, fieldMap map[search.FieldLabel][]string) (*storage.Policy, []search.FieldLabel, error) {
+	// Sort the FieldLabels by field value, to ensure consistency of output.
+	fieldLabels := make([]search.FieldLabel, 0, len(fieldMap))
+	for field := range fieldMap {
+		fieldLabels = append(fieldLabels, field)
+	}
+	sortedFieldLabels := search.SortFieldLabels(fieldLabels)
+
+	var unconvertableFields []search.FieldLabel
+	policyGroupMap := make(map[string][]*storage.PolicyGroup)
+	for _, field := range sortedFieldLabels {
+		if field == search.Cluster || field == search.Namespace || field == search.Label {
+			continue
+		}
+		searchTermPolicyGroup, fieldsDropped, converterExists := booleanpolicy.GetPolicyGroupFromSearchTerms(field, fieldMap[field])
+		if !converterExists || searchTermPolicyGroup == nil {
+			// Either we can't convert this search term or the translator generated no policy values
+			unconvertableFields = append(unconvertableFields, field)
+			continue
+		}
+		if fieldsDropped {
+			// Some part of this search term was dropped during conversion but we still ended up with policy values.
+			unconvertableFields = append(unconvertableFields, field)
+		}
+		policyGroupMap[searchTermPolicyGroup.GetFieldName()] = append(policyGroupMap[searchTermPolicyGroup.GetFieldName()], searchTermPolicyGroup)
+	}
+
+	scopes, err := s.makeScopes(ctx, fieldMap)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if len(policyGroupMap) == 0 && len(scopes) == 0 {
+		return nil, nil, errors.New("after parsing there were no valid policy groups or scopes")
+	}
+
+	policyGroups := flattenPolicyGroupMap(policyGroupMap)
+
+	policy := &storage.Policy{
+		PolicyVersion: booleanpolicy.Version,
+	}
+	if len(scopes) > 0 {
+		policy.Scope = scopes
+	}
+	if len(policyGroups) > 0 {
+		policy.PolicySections = []*storage.PolicySection{
+			{
+				PolicyGroups: policyGroups,
+			},
+		}
+	}
+
+	// We have to add and remove a policy name because the BPL validator requires a policy name for these checks
+	policy.Name = "Policy from Search"
+	policy.LifecycleStages = s.validator.getAllowedLifecyclesForPolicy(policy)
+	policy.Name = ""
+
+	return policy, unconvertableFields, nil
+}
+
+func (s *serviceImpl) makeScopes(ctx context.Context, fieldMap map[search.FieldLabel][]string) ([]*storage.Scope, error) {
+	clusters, clustersOk := fieldMap[search.Cluster]
+	namespaces, namespacesOk := fieldMap[search.Namespace]
+	if !namespacesOk {
+		namespaces = []string{""}
+	}
+	labels, labelsOk := fieldMap[search.Label]
+	if !labelsOk {
+		labels = []string{""}
+	}
+	// If we have none of the above, we have no scopes
+	if !clustersOk && !namespacesOk && !labelsOk {
+		return nil, nil
+	}
+	// We need cluster IDs, not cluster names
+	clusterIDs, err := s.getClusterIDs(ctx, clusters)
+	if err != nil {
+		return nil, err
+	}
+	if len(clusterIDs) == 0 {
+		clusterIDs = []string{""}
+	}
+
+	// For each combination of label, cluster, and namespace create a Scope
+	var scopes []*storage.Scope
+	for _, label := range labels {
+		var labelObject *storage.Scope_Label
+		labelParts := strings.Split(label, "=")
+		if len(labelParts) == 2 {
+			labelObject = &storage.Scope_Label{
+				Key:   labelParts[0],
+				Value: labelParts[1],
+			}
+		}
+		for _, clusterID := range clusterIDs {
+			for _, namespace := range namespaces {
+				scopes = append(scopes, &storage.Scope{
+					Cluster:   clusterID,
+					Namespace: namespace,
+					Label:     labelObject,
+				})
+			}
+		}
+	}
+
+	return scopes, nil
+}
+
+func (s *serviceImpl) getClusterIDs(ctx context.Context, clusterNames []string) ([]string, error) {
+	if len(clusterNames) == 0 {
+		return nil, nil
+	}
+
+	allClusters, err := s.clusters.GetClusters(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	clusterIDs := set.NewStringSet()
+	for _, clusterName := range clusterNames {
+		matcher, err := basematchers.ForString(clusterName)
+		if err != nil {
+			log.Errorf("could not create matcher for %s: %v", clusterName, err)
+			continue
+		}
+
+		for _, cluster := range allClusters {
+			if matcher(cluster.GetName()) {
+				clusterIDs.Add(cluster.GetId())
+			}
+		}
+	}
+
+	return clusterIDs.AsSlice(), nil
+}
+
+func flattenPolicyGroupMap(policyGroupMap map[string][]*storage.PolicyGroup) []*storage.PolicyGroup {
+	policyGroupList := make([]*storage.PolicyGroup, 0, len(policyGroupMap))
+	for groupName, singleGroupList := range policyGroupMap {
+		if !partialListPolicyGroups.Contains(groupName) {
+			// This policy group can't be combined, use whichever one was generated first.  This will be consistent as
+			// we sort the field names.  If there is more than one the later groups will be dropped.
+			policyGroupList = append(policyGroupList, singleGroupList[0])
+			continue
+		}
+
+		var policyValueLists []*storage.PolicyValue
+		for _, policyGroup := range singleGroupList {
+			// For now we don't care which search term a policy value came from because no two search terms can
+			// generate a value for the same list index, and no search term can generate a value for more than one list
+			// index.  Therefore it is safe to flatten the values and naively generate all possible combinations.
+			policyValueLists = append(policyValueLists, policyGroup.GetValues()...)
+		}
+		combinedValues := combinePolicyValues(policyValueLists)
+
+		policyGroupList = append(policyGroupList, &storage.PolicyGroup{
+			FieldName: groupName,
+			Values:    combinedValues,
+		})
+	}
+	return policyGroupList
+}
+
+func combinePolicyValues(policyValues []*storage.PolicyValue) []*storage.PolicyValue {
+	splitValueStringLists := make([][]string, 0, len(policyValues))
+	for _, policyValue := range policyValues {
+		splitValueStringLists = append(splitValueStringLists, strings.Split(policyValue.GetValue(), "="))
+	}
+
+	requiredLength := len(splitValueStringLists[0])
+	partsToCombine := make([][]string, requiredLength)
+	for _, splitValueList := range splitValueStringLists {
+		for i, section := range splitValueList {
+			if section != "" {
+				partsToCombine[i] = append(partsToCombine[i], section)
+			}
+		}
+	}
+
+	for i, partsList := range partsToCombine {
+		if len(partsList) == 0 {
+			// If part of a list is empty we still want to generate the combinations of the other parts, leaving this part empty
+			partsToCombine[i] = []string{""}
+		}
+	}
+
+	combinations := combineStrings(partsToCombine)
+	values := make([]*storage.PolicyValue, len(combinations))
+	for i, combination := range combinations {
+		values[i] = &storage.PolicyValue{
+			Value: combination,
+		}
+	}
+
+	return values
+}
+
+func combineStrings(toCombine [][]string) []string {
+	indices := make([]int, len(toCombine))
+	var combinations []string
+
+	maxIterations := 1
+	for _, category := range toCombine {
+		maxIterations *= len(category)
+	}
+	for i := 0; i < maxIterations; i++ {
+		combination := ""
+		for i := 0; i < len(indices); i++ {
+			if combination != "" {
+				combination = combination + "="
+			}
+			combination = combination + toCombine[i][indices[i]]
+		}
+		combinations = append(combinations, combination)
+
+		for index := len(indices) - 1; index >= 0; index-- {
+			indices[index]++
+			if indices[index] < len(toCombine[index]) {
+				break
+			}
+			if index == 0 {
+				return combinations
+			}
+			indices[index] = 0
+		}
+	}
+	return nil
 }

@@ -295,13 +295,7 @@ func (qb *QueryBuilder) ProtoQuery() *v1.Query {
 	}
 
 	// Sort the queries by field value, to ensure consistency of output.
-	fields := make([]FieldLabel, 0, len(qb.fieldsToValues))
-	for field := range qb.fieldsToValues {
-		fields = append(fields, field)
-	}
-	sort.Slice(fields, func(i, j int) bool {
-		return fields[i] < fields[j]
-	})
+	fields := qb.getSortedFields()
 
 	for _, field := range fields {
 		_, highlighted := qb.highlightedFields[field]
@@ -313,6 +307,14 @@ func (qb *QueryBuilder) ProtoQuery() *v1.Query {
 	}
 
 	return ConjunctionQuery(queries...)
+}
+
+func (qb *QueryBuilder) getSortedFields() []FieldLabel {
+	fields := make([]FieldLabel, 0, len(qb.fieldsToValues))
+	for field := range qb.fieldsToValues {
+		fields = append(fields, field)
+	}
+	return SortFieldLabels(fields)
 }
 
 // RawQuery returns raw query in string form

@@ -313,6 +313,20 @@ func (s *policyValidator) compilesForRunTime(policy *storage.Policy) error {
 	return nil
 }
 
+func (s *policyValidator) getAllowedLifecyclesForPolicy(policy *storage.Policy) []storage.LifecycleStage {
+	var lifecycleStages []storage.LifecycleStage
+	if err := s.compilesForBuildTime(policy); err == nil {
+		lifecycleStages = append(lifecycleStages, storage.LifecycleStage_BUILD)
+	}
+	if err := s.compilesForDeployTime(policy); err == nil {
+		lifecycleStages = append(lifecycleStages, storage.LifecycleStage_DEPLOY)
+	}
+	if err := s.compilesForRunTime(policy); err == nil {
+		lifecycleStages = append(lifecycleStages, storage.LifecycleStage_RUNTIME)
+	}
+	return lifecycleStages
+}
+
 var enforcementToLifecycle = map[storage.EnforcementAction]storage.LifecycleStage{
 	storage.EnforcementAction_FAIL_BUILD_ENFORCEMENT:                    storage.LifecycleStage_BUILD,
 	storage.EnforcementAction_SCALE_TO_ZERO_ENFORCEMENT:                 storage.LifecycleStage_DEPLOY,

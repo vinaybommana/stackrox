@@ -6,14 +6,14 @@ import (
 )
 
 var (
-	runtimeFields = set.NewFrozenStringSet(ProcessName, ProcessArguments, ProcessAncestor, ProcessUID, WhitelistsEnabled)
+	runtimeFields  = set.NewFrozenStringSet(ProcessName, ProcessArguments, ProcessAncestor, ProcessUID, WhitelistsEnabled)
+	whitelistField = set.NewFrozenStringSet(WhitelistsEnabled)
 )
 
-// IsWhitelistEnabled returns whether a boolean policy has a policy group with the given name
-func IsWhitelistEnabled(policy *storage.Policy) bool {
+func policyHasFields(policy *storage.Policy, fieldSet set.FrozenStringSet) bool {
 	for _, section := range policy.GetPolicySections() {
 		for _, group := range section.GetPolicyGroups() {
-			if group.GetFieldName() == WhitelistsEnabled {
+			if fieldSet.Contains(group.GetFieldName()) {
 				return true
 			}
 		}
@@ -23,12 +23,10 @@ func IsWhitelistEnabled(policy *storage.Policy) bool {
 
 // ContainsRuntimeFields returns whether the policy contains runtime specific fields.
 func ContainsRuntimeFields(policy *storage.Policy) bool {
-	for _, section := range policy.GetPolicySections() {
-		for _, group := range section.GetPolicyGroups() {
-			if runtimeFields.Contains(group.GetFieldName()) {
-				return true
-			}
-		}
-	}
-	return false
+	return policyHasFields(policy, runtimeFields)
+}
+
+// IsWhitelistEnabled returns whether a boolean policy has a policy group with the given name
+func IsWhitelistEnabled(policy *storage.Policy) bool {
+	return policyHasFields(policy, whitelistField)
 }
