@@ -21,26 +21,37 @@ type MetaStep struct {
 // a MetaPath operates on the type.
 type MetaPath []MetaStep
 
+type metaPathAndMetadata struct {
+	metaPath     MetaPath
+	preferParent bool
+}
+
 // FieldToMetaPathMap helps store and retrieve meta paths given a field tag.
 type FieldToMetaPathMap struct {
-	underlying map[string]MetaPath
+	underlying map[string]metaPathAndMetadata
 }
 
-func (m *FieldToMetaPathMap) maybeAdd(tag string, metaPath MetaPath) {
-	_ = m.add(tag, metaPath)
-}
-
-func (m *FieldToMetaPathMap) add(tag string, metaPath MetaPath) error {
+func (m *FieldToMetaPathMap) add(tag string, metaPath MetaPath, shouldPreferParent bool) error {
 	lowerTag := strings.ToLower(tag)
 	if existingPath, exists := m.underlying[lowerTag]; exists {
-		return errors.Errorf("duplicate search tag detected: %s (clashing paths: %v/%v)", tag, existingPath, metaPath)
+		// Neither of these tells you to prefer a parent!
+		if !shouldPreferParent && !existingPath.preferParent {
+			return errors.Errorf("duplicate search tag detected: %s (clashing paths: %v/%v)", tag, existingPath, metaPath)
+		}
+		// Defer to the other one, don't overwrite.
+		if shouldPreferParent {
+			return nil
+		}
 	}
-	m.underlying[lowerTag] = metaPath
+	m.underlying[lowerTag] = metaPathAndMetadata{preferParent: shouldPreferParent, metaPath: metaPath}
 	return nil
 }
 
 // Get returns the MetaPath for the given tag, and a bool indicates whether it exists.
 func (m *FieldToMetaPathMap) Get(tag string) (MetaPath, bool) {
 	metaPath, found := m.underlying[strings.ToLower(tag)]
-	return metaPath, found
+	if found {
+		return metaPath.metaPath, true
+	}
+	return nil, false
 }

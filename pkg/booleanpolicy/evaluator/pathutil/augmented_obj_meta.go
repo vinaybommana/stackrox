@@ -107,7 +107,7 @@ func (o *AugmentedObjMeta) MapSearchTagsToPaths() (pathMap *FieldToMetaPathMap, 
 			err = errors.Errorf("couldn't match search tags to path: %v", r)
 		}
 	}()
-	pathMap = &FieldToMetaPathMap{underlying: make(map[string]MetaPath)}
+	pathMap = &FieldToMetaPathMap{underlying: make(map[string]metaPathAndMetadata)}
 	o.doMapSearchTagsToPaths(MetaPath{}, pathMap)
 	return pathMap, nil
 }
@@ -191,28 +191,47 @@ func (o *AugmentedObjMeta) addPathsForSearchTagsFromStruct(currentType reflect.T
 
 		// Get the search tags for the field.
 		searchTag, _ := stringutils.Split2(field.Tag.Get("search"), ",")
-		policyTag, _ := stringutils.Split2(field.Tag.Get("policy"), ",")
+		policyTag, shouldIgnore, shouldPreferParent, err := parsePolicyTag(field.Tag.Get("policy"))
+		if err != nil {
+			panic(err)
+		}
 		// End recursion here if it's ignored.
-		if searchTag == "-" || policyTag == "ignore" {
+		if searchTag == "-" || shouldIgnore {
 			continue
 		}
 
 		// Create a new path through this field.
 		newPath := pathWithNewStep(pathWithinThisObj, MetaStep{FieldName: field.Name, Type: field.Type, StructFieldIndex: field.Index})
-		if searchTag != "" {
+		actualTag := stringutils.OrDefault(policyTag, searchTag)
+		if actualTag != "" {
 			fullPath := concatPaths(pathUntilThisObj, newPath)
-			if policyTag == "prefer-parent" {
-				outputMap.maybeAdd(searchTag, fullPath)
-			} else {
-				if err := outputMap.add(searchTag, fullPath); err != nil {
-					// Panic here is okay, it will be caught.
-					panic(err)
-				}
+			if err := outputMap.add(actualTag, fullPath, shouldPreferParent); err != nil {
+				// Panic here is okay, it will be caught.
+				panic(err)
 			}
 		}
 
 		o.addPathsForSearchTags(currentType, field.Type, pathUntilThisObj, newPath, outputMap, seenAugmentKeys)
 	}
+}
+
+func parsePolicyTag(policyTag string) (tag string, shouldIgnore, shouldPreferParent bool, err error) {
+	if policyTag == "" {
+		return "", false, false, nil
+	}
+	parts := strings.Split(policyTag, ",")
+	tag = parts[0]
+	for _, extraPart := range parts[1:] {
+		switch extraPart {
+		case "ignore":
+			shouldIgnore = true
+		case "prefer-parent":
+			shouldPreferParent = true
+		default:
+			return "", false, false, errors.Errorf("invalid policy tag %q: unknown field %q", policyTag, extraPart)
+		}
+	}
+	return tag, shouldIgnore, shouldPreferParent, nil
 }
 
 // pathWithNewStep returns a new path that is comprised of the original path

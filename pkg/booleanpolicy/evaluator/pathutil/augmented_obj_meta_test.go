@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/sliceutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -157,7 +159,22 @@ func TestAugmentedObjMeta(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
-			assert.Equal(t, c.expectedFieldMap, out.underlying)
+			convertedOut := make(map[string]MetaPath, len(out.underlying))
+			for k, v := range out.underlying {
+				convertedOut[k] = v.metaPath
+			}
+			assert.Equal(t, c.expectedFieldMap, convertedOut)
 		})
 	}
+}
+
+func TestOnDeployment(t *testing.T) {
+	meta := NewAugmentedObjMeta((*storage.Deployment)(nil)).AddPlainObjectAt([]string{"Containers", "Process"}, (*storage.ProcessIndicator)(nil))
+	pathMap, err := meta.MapSearchTagsToPaths()
+	require.NoError(t, err)
+	path, found := pathMap.Get("Container Name")
+	assert.True(t, found)
+	assert.Equal(t, []string{"Containers", "Name"}, sliceutils.Map(path, func(s *MetaStep) string {
+		return s.FieldName
+	}).([]string))
 }
