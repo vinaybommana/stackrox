@@ -145,7 +145,7 @@ class DefaultPoliciesTest extends BaseSpecification {
         "DockerHub NGINX 1.10"                          | NGINX_1_10     | "C823"
     }
 
-    @Category(BAT)
+    @Category([BAT, SMOKE])
     def "Verify that Kubernetes Dashboard violation is generated"() {
         given:
         "Orchestrator is K8S"

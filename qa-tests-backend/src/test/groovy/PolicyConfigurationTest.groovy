@@ -26,6 +26,7 @@ import io.stackrox.proto.storage.PolicyOuterClass.Comparator
 import io.stackrox.proto.storage.PolicyOuterClass.VolumePolicy
 import io.stackrox.proto.storage.ScopeOuterClass.Scope
 import groups.BAT
+import groups.SMOKE
 import objects.Deployment
 import org.junit.experimental.categories.Category
 import services.ClusterService
@@ -204,7 +205,7 @@ class PolicyConfigurationTest extends BaseSpecification {
     }
 
     @Unroll
-    @Category(BAT)
+    @Category([BAT, SMOKE])
     def "Verify policy configuration #policyName can be triggered"() {
         when:
         "Create a Policy"
