@@ -139,7 +139,7 @@ func (m *manager) processNewSettings(newSettings *sensor.AdmissionControlSetting
 		return // no update
 	}
 
-	policySet := detection.NewPolicySet(detection.NewPolicyCompiler(builder))
+	policySet := detection.NewPolicySet(detection.NewLegacyPolicyCompiler(builder))
 	for _, policy := range newSettings.GetEnforcedDeployTimePolicies().GetPolicies() {
 		if err := policySet.UpsertPolicy(policy); err != nil {
 			log.Errorf("Unable to upsert policy %s (%s), will not be able to enforce", policy.GetName(), policy.GetId())

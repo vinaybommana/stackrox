@@ -31,7 +31,7 @@ func (suite *PolicyTestSuite) TearDownTest() {
 }
 
 func (suite *PolicyTestSuite) TestAddsCompilable() {
-	policySet := NewPolicySet(NewPolicyCompiler(suite.mockMatcherBuilder))
+	policySet := NewPolicySet(NewLegacyPolicyCompiler(suite.mockMatcherBuilder))
 
 	suite.mockMatcherBuilder.EXPECT().ForPolicy(goodPolicy).Return(nil, nil)
 
@@ -49,7 +49,7 @@ func (suite *PolicyTestSuite) TestAddsCompilable() {
 }
 
 func (suite *PolicyTestSuite) TestForOneSucceeds() {
-	policySet := NewPolicySet(NewPolicyCompiler(suite.mockMatcherBuilder))
+	policySet := NewPolicySet(NewLegacyPolicyCompiler(suite.mockMatcherBuilder))
 
 	suite.mockMatcherBuilder.EXPECT().ForPolicy(goodPolicy).Return(nil, nil)
 
@@ -66,7 +66,7 @@ func (suite *PolicyTestSuite) TestForOneSucceeds() {
 }
 
 func (suite *PolicyTestSuite) TestForOneFails() {
-	policySet := NewPolicySet(NewPolicyCompiler(suite.mockMatcherBuilder))
+	policySet := NewPolicySet(NewLegacyPolicyCompiler(suite.mockMatcherBuilder))
 
 	err := policySet.ForOne("1", func(compiled CompiledPolicy) error {
 		return nil
@@ -75,7 +75,7 @@ func (suite *PolicyTestSuite) TestForOneFails() {
 }
 
 func (suite *PolicyTestSuite) TestThrowsErrorForNotCompilable() {
-	policySet := NewPolicySet(NewPolicyCompiler(suite.mockMatcherBuilder))
+	policySet := NewPolicySet(NewLegacyPolicyCompiler(suite.mockMatcherBuilder))
 
 	suite.mockMatcherBuilder.EXPECT().ForPolicy(badPolicy).Return(nil, errors.New("cant create legacySearchBasedMatcher"))
 

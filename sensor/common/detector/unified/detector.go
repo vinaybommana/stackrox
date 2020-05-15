@@ -5,6 +5,7 @@ import (
 	"github.com/stackrox/rox/pkg/detection"
 	"github.com/stackrox/rox/pkg/detection/deploytime"
 	"github.com/stackrox/rox/pkg/detection/runtime"
+	"github.com/stackrox/rox/pkg/features"
 	options "github.com/stackrox/rox/pkg/search/options/deployments"
 	"github.com/stackrox/rox/pkg/searchbasedpolicies/matcher"
 )
@@ -16,8 +17,18 @@ type Detector interface {
 	DetectProcess(deployment *storage.Deployment, images []*storage.Image, processIndicator *storage.ProcessIndicator, processOutsideWhitelist bool) []*storage.Alert
 }
 
-// NewLegacyDetector returns a detector that works in the non-BPL world.
-func NewLegacyDetector() Detector {
+// NewDetector returns a new detector.
+func NewDetector() Detector {
+	if !features.BooleanPolicyLogic.Enabled() {
+		return newLegacyDetector()
+	}
+	return &detectorImpl{
+		deploytimeDetector: deploytime.NewDetector(detection.NewPolicySet(detection.NewPolicyCompiler())),
+		runtimeDetector:    runtime.NewDetector(detection.NewPolicySet(detection.NewPolicyCompiler())),
+	}
+}
+
+func newLegacyDetector() Detector {
 	builder := matcher.NewBuilder(
 		matcher.NewRegistry(
 			nil,
@@ -25,8 +36,8 @@ func NewLegacyDetector() Detector {
 		options.OptionsMap,
 	)
 	return &legacyDetectorImpl{
-		deploytimeDetector:       deploytime.NewDetector(detection.NewPolicySet(detection.NewPolicyCompiler(builder))),
-		runtimeDetector:          runtime.NewDetector(detection.NewPolicySet(detection.NewPolicyCompiler(builder))),
-		runtimeWhitelistDetector: runtime.NewDetector(detection.NewPolicySet(detection.NewPolicyCompiler(builder))),
+		deploytimeDetector:       deploytime.NewDetector(detection.NewPolicySet(detection.NewLegacyPolicyCompiler(builder))),
+		runtimeDetector:          runtime.NewDetector(detection.NewPolicySet(detection.NewLegacyPolicyCompiler(builder))),
+		runtimeWhitelistDetector: runtime.NewDetector(detection.NewPolicySet(detection.NewLegacyPolicyCompiler(builder))),
 	}
 }

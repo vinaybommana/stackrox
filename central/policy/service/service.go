@@ -52,7 +52,7 @@ func New(policies datastore.DataStore,
 		reprocessor:       reprocessor,
 		notifiers:         notifiers,
 		buildTimePolicies: buildTimePolicies,
-		policyCompiler:    detectionPkg.NewPolicyCompiler(deploymentMatcherBuilder),
+		policyCompiler:    detectionPkg.NewLegacyPolicyCompiler(deploymentMatcherBuilder),
 		lifecycleManager:  manager,
 		connectionManager: connectionManager,
 

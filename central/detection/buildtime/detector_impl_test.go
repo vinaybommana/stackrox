@@ -29,7 +29,7 @@ func getPolicy(defaultPolicies []*storage.Policy, name string, t *testing.T) *st
 
 func TestDetector(t *testing.T) {
 	controller := gomock.NewController(t)
-	compilerWithoutProcessIndicators := detectionPkg.NewPolicyCompiler(
+	compilerWithoutProcessIndicators := detectionPkg.NewLegacyPolicyCompiler(
 		matcher.NewBuilder(
 			matcher.NewRegistry(nil),
 			mappings.OptionsMap,

@@ -34,7 +34,7 @@ type Detector interface {
 // New returns a new detector
 func New(enforcer enforcer.Enforcer, admCtrlSettingsMgr admissioncontroller.SettingsManager, cache expiringcache.Cache) Detector {
 	return &detectorImpl{
-		unifiedDetector: unified.NewLegacyDetector(),
+		unifiedDetector: unified.NewDetector(),
 
 		output:                    make(chan *central.MsgFromSensor),
 		deploymentAlertOutputChan: make(chan outputResult),
