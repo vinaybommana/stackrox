@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"sort"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -86,7 +85,7 @@ func (s *serviceImpl) GetImageIntegration(ctx context.Context, request *v1.Resou
 		return nil, err
 	}
 	if !exists {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("Image integration %s not found", request.GetId()))
+		return nil, status.Errorf(codes.NotFound, "Image integration %s not found", request.GetId())
 	}
 	scrubImageIntegration(integration)
 	return integration, nil
@@ -204,12 +203,51 @@ func (s *serviceImpl) TestImageIntegration(ctx context.Context, request *storage
 	return &v1.Empty{}, nil
 }
 
-func (s *serviceImpl) UpdateImageIntegration(context.Context, *v1.UpdateImageIntegrationRequest) (*v1.Empty, error) {
-	return nil, status.Error(codes.Unimplemented, "not implemented")
+func (s *serviceImpl) UpdateImageIntegration(ctx context.Context, request *v1.UpdateImageIntegrationRequest) (*v1.Empty, error) {
+	if !request.GetUpdatePassword() {
+		if err := s.validateIntegration(ctx, request.Config); err != nil {
+			return nil, err
+		}
+
+		integration, exists, err := s.datastore.GetImageIntegration(ctx, request.GetConfig().GetId())
+		if err != nil {
+			return nil, err
+		}
+		if !exists {
+			return nil, status.Errorf(codes.NotFound, "Image integration %s not found", request.GetConfig().GetId())
+		}
+
+		if err := s.pullDataFromStoredConfig(request.Config, integration); err != nil {
+			return nil, err
+		}
+	}
+	if _, err := s.PutImageIntegration(ctx, request.Config); err != nil {
+		return nil, err
+	}
+	return &v1.Empty{}, nil
 }
 
-func (s *serviceImpl) TestUpdatedImageIntegration(context.Context, *v1.UpdateImageIntegrationRequest) (*v1.Empty, error) {
-	return nil, status.Error(codes.Unimplemented, "not implemented")
+func (s *serviceImpl) TestUpdatedImageIntegration(ctx context.Context, request *v1.UpdateImageIntegrationRequest) (*v1.Empty, error) {
+	if !request.GetUpdatePassword() {
+		if err := s.validateIntegration(ctx, request.Config); err != nil {
+			return nil, err
+		}
+		integration, exists, err := s.datastore.GetImageIntegration(ctx, request.GetConfig().GetId())
+		if err != nil {
+			return nil, err
+		}
+		if !exists {
+			return nil, status.Errorf(codes.NotFound, "Image integration %s not found", request.GetConfig().GetId())
+		}
+
+		if err := s.pullDataFromStoredConfig(request.Config, integration); err != nil {
+			return nil, err
+		}
+	}
+	if _, err := s.TestImageIntegration(ctx, request.Config); err != nil {
+		return nil, err
+	}
+	return &v1.Empty{}, nil
 }
 
 func (s *serviceImpl) testImageIntegration(request *storage.ImageIntegration) error {
@@ -290,4 +328,20 @@ func (s *serviceImpl) clusterExists(name string, clusters []*storage.Cluster) bo
 		}
 	}
 	return false
+}
+
+func (s *serviceImpl) pullDataFromStoredConfig(request *storage.ImageIntegration, storedConfig *storage.ImageIntegration) error {
+	switch storedConfig.GetIntegrationConfig().(type) {
+	case *storage.ImageIntegration_Docker:
+		if request.GetDocker().GetUsername() != storedConfig.GetDocker().GetUsername() {
+			return errors.New("must explicitly set password when changing username/endpoint")
+		}
+		if request.GetDocker().GetEndpoint() != storedConfig.GetDocker().GetEndpoint() {
+			return errors.New("must explicitly set password when changing username/endpoint")
+		}
+		request.GetDocker().Password = storedConfig.GetDocker().GetPassword()
+	default:
+		return errors.New("the request doesn't have a valid integration config type")
+	}
+	return nil
 }
