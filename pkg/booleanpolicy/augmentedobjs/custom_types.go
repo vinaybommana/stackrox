@@ -6,6 +6,7 @@ const (
 	ComponentAndVersionCustomTag = "Component And Version"
 	NotWhitelistedCustomTag      = "Not Whitelisted"
 	ContainerNameCustomTag       = "Container Name"
+	ImageScanCustomTag           = "Image Scan"
 )
 
 type dockerfileLine struct {

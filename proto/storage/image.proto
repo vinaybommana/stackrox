@@ -17,7 +17,7 @@ message Image {
     ImageName                 name         = 1;
 
     ImageMetadata             metadata     = 2;
-    ImageScan                 scan         = 3;
+    ImageScan                 scan         = 3 [(gogoproto.moretags) = "policy:\"Image Scan\""];
 
     // TODO: Remove when migration is in place, we should get this from relationship instead
     oneof set_components {

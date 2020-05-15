@@ -246,20 +246,33 @@ func generatePtrMatcher(value string, fieldType reflect.Type) (baseMatcherAndExt
 	}
 
 	underlyingType := fieldType.Elem()
+	var subMatcher func(reflect.Value) []valueMatchedPair
 	matcherGenerator, err := getMatcherGeneratorForKind(underlyingType.Kind())
 	if err != nil {
-		return nil, err
+		// If testing for nil, the submatcher is not required, so this is okay.
+		if value != search.NullString {
+			return nil, err
+		}
+		matcherGenerator = nil
 	}
-	subMatcher, err := matcherGenerator(value, underlyingType)
-	if err != nil {
-		return nil, err
+	if matcherGenerator != nil {
+		var err error
+		subMatcher, err = matcherGenerator(value, underlyingType)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return func(instance reflect.Value) []valueMatchedPair {
 		if instance.IsNil() {
 			return []valueMatchedPair{{value: "<nil>", matched: value == search.NullString}}
 		}
-		subMatches := subMatcher(instance.Elem())
+		var subMatches []valueMatchedPair
+		if subMatcher != nil {
+			subMatches = subMatcher(instance.Elem())
+		} else {
+			subMatches = []valueMatchedPair{{value: "<non-nil>"}}
+		}
 		// If the value is null, and the pointer is not nil, it did not match.
 		// So just use the values from the subMatcher but always set matched
 		// to false.

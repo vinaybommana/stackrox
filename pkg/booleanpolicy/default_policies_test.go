@@ -693,11 +693,19 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "Images with no scans",
-			skip:       true,
 			shouldNotMatch: map[string]struct{}{
 				// These deployments have scans on their images.
-				fixtureDep.GetId():    {},
-				oldScannedDep.GetId(): {},
+				fixtureDep.GetId():             {},
+				oldScannedDep.GetId():          {},
+				heartbleedDep.GetId():          {},
+				apkDep.GetId():                 {},
+				curlDep.GetId():                {},
+				componentDeps["apt"].GetId():   {},
+				componentDeps["dnf"].GetId():   {},
+				componentDeps["wget"].GetId():  {},
+				shellshockDep.GetId():          {},
+				strutsDep.GetId():              {},
+				depWithNonSeriousVulns.GetId(): {},
 				// The rest of the deployments have no images!
 				"FAKEID":                                          {},
 				containerPort22Dep.GetId():                        {},
@@ -961,6 +969,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			}
 			if len(c.shouldNotMatch) > 0 {
 				for shouldNotMatchID := range c.shouldNotMatch {
+					assert.Contains(t, suite.deployments, shouldNotMatchID)
 					assert.NotContains(t, actualViolations, shouldNotMatchID)
 				}
 				for id := range suite.deployments {
@@ -1120,8 +1129,17 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "Images with no scans",
-			skip:       true,
 			shouldNotMatch: map[string]struct{}{
+				oldScannedImage.GetId():                          {},
+				suite.imageIDFromDep(heartbleedDep):              {},
+				apkImage.GetId():                                 {},
+				curlImage.GetId():                                {},
+				suite.imageIDFromDep(componentDeps["apt"]):       {},
+				suite.imageIDFromDep(componentDeps["dnf"]):       {},
+				suite.imageIDFromDep(componentDeps["wget"]):      {},
+				shellshockImage.GetId():                          {},
+				strutsImage.GetId():                              {},
+				depWithNonSeriousVulnsImage.GetId():              {},
 				fixtureDep.GetContainers()[0].GetImage().GetId(): {},
 				fixtureDep.GetContainers()[1].GetImage().GetId(): {},
 				suite.imageIDFromDep(oldScannedDep):              {},
@@ -1238,6 +1256,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 				}
 
 				for shouldNotMatchID := range c.shouldNotMatch {
+					assert.Contains(t, suite.images, shouldNotMatchID, "%s is not a known image id in the suite", shouldNotMatchID)
 					assert.NotContains(t, actualViolations, shouldNotMatchID)
 				}
 

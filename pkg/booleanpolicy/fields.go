@@ -61,7 +61,7 @@ var (
 	RequiredAnnotation     = newField("Required Annotation", querybuilders.ForFieldLabelMap(search.Annotation, query.ShouldNotContain), keyValueValueRegex, negationForbidden)
 	RequiredImageLabel     = newField("Required Image Label", querybuilders.ForFieldLabelMap(search.ImageLabel, query.ShouldNotContain), keyValueValueRegex, negationForbidden)
 	RequiredLabel          = newField("Required Label", querybuilders.ForFieldLabelMap(search.Label, query.ShouldNotContain), keyValueValueRegex, negationForbidden)
-	UnscannedImage         = newField("Unscanned Image", querybuilders.ForFieldLabelNil(search.ImageScanTime), booleanValueRegex)
+	UnscannedImage         = newField("Unscanned Image", querybuilders.ForFieldLabelNil(augmentedobjs.ImageScanCustomTag), booleanValueRegex)
 	VolumeDestination      = newField("Volume Destination", querybuilders.ForFieldLabelRegex(search.VolumeDestination), stringValueRegex)
 	VolumeName             = newField("Volume Name", querybuilders.ForFieldLabelRegex(search.VolumeName), stringValueRegex)
 	VolumeSource           = newField("Volume Source", querybuilders.ForFieldLabelRegex(search.VolumeSource), stringValueRegex)

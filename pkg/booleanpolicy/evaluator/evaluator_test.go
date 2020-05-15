@@ -24,15 +24,20 @@ type TopLevel struct {
 type Base struct {
 
 	// These exist for testing base types.
-	ValBaseSlice []string          `search:"BaseSlice"`
-	ValBasePtr   *string           `search:"BasePtr"`
-	ValBaseBool  bool              `search:"BaseBool"`
-	ValBaseTS    *types.Timestamp  `search:"BaseTS"`
-	ValBaseInt   int               `search:"BaseInt"`
-	ValBaseUint  uint              `search:"BaseUint"`
-	ValBaseFloat float64           `search:"BaseFloat"`
-	ValBaseEnum  storage.Access    `search:"BaseEnum"`
-	ValBaseMap   map[string]string `search:"BaseMap"`
+	ValBaseSlice     []string          `search:"BaseSlice"`
+	ValBasePtr       *string           `search:"BasePtr"`
+	ValBaseBool      bool              `search:"BaseBool"`
+	ValBaseTS        *types.Timestamp  `search:"BaseTS"`
+	ValBaseInt       int               `search:"BaseInt"`
+	ValBaseUint      uint              `search:"BaseUint"`
+	ValBaseFloat     float64           `search:"BaseFloat"`
+	ValBaseEnum      storage.Access    `search:"BaseEnum"`
+	ValBaseMap       map[string]string `search:"BaseMap"`
+	ValBaseStructPtr *random           `search:"BaseStructPtr"`
+}
+
+type random struct {
+	Val string
 }
 
 type Nested struct {
@@ -1444,6 +1449,52 @@ func TestDifferentBaseTypes(t *testing.T) {
 						Field: "BaseEnum", Values: []string{">NO_ACCESS", "<READ_WRITE_ACCESS"}, Operator: query.And},
 				},
 			},
+		},
+		{
+			desc: "base struct ptr, nil, matches",
+			obj:  &TopLevel{},
+			q: &query.Query{
+				FieldQueries: []*query.FieldQuery{
+					{
+						Field: "BaseStructPtr", Values: []string{"-"}},
+				},
+			},
+			expectedResult: resultWithSingleMatch("BaseStructPtr", "<nil>"),
+		},
+		{
+			desc: "base struct ptr, not nil, does not match",
+			obj: &TopLevel{
+				Base: Base{ValBaseStructPtr: &random{"asa"}},
+			},
+			q: &query.Query{
+				FieldQueries: []*query.FieldQuery{
+					{
+						Field: "BaseStructPtr", Values: []string{"-"}},
+				},
+			},
+		},
+		{
+			desc: "base struct ptr, nil, negated, does not match",
+			obj:  &TopLevel{},
+			q: &query.Query{
+				FieldQueries: []*query.FieldQuery{
+					{
+						Field: "BaseStructPtr", Values: []string{"-"}, Negate: true},
+				},
+			},
+		},
+		{
+			desc: "base struct ptr, not nil, negated, matches",
+			obj: &TopLevel{
+				Base: Base{ValBaseStructPtr: &random{"asa"}},
+			},
+			q: &query.Query{
+				FieldQueries: []*query.FieldQuery{
+					{
+						Field: "BaseStructPtr", Values: []string{"-"}, Negate: true},
+				},
+			},
+			expectedResult: resultWithSingleMatch("BaseStructPtr", "<non-nil>"),
 		},
 	})
 }
