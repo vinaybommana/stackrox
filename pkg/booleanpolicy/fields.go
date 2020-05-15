@@ -66,7 +66,7 @@ var (
 	VolumeName             = newField("Volume Name", querybuilders.ForFieldLabelRegex(search.VolumeName), stringValueRegex)
 	VolumeSource           = newField("Volume Source", querybuilders.ForFieldLabelRegex(search.VolumeSource), stringValueRegex)
 	VolumeType             = newField("Volume Type", querybuilders.ForFieldLabelRegex(search.VolumeType), stringValueRegex)
-	WhitelistsEnabled      = newField("Unexpected Process Executed", nil, booleanValueRegex, negationForbidden, operatorsForbidden)
+	WhitelistsEnabled      = newField("Unexpected Process Executed", querybuilders.ForFieldLabel(augmentedobjs.NotWhitelistedCustomTag), booleanValueRegex, negationForbidden, operatorsForbidden)
 	WritableHostMount      = newField("Writable Host Mount", querybuilders.ForFieldLabelBoolean(search.ReadOnlyRootFilesystem, true), booleanValueRegex, negationForbidden, operatorsForbidden)
 	WritableVolume         = newField("Writable Volume", querybuilders.ForFieldLabelBoolean(search.VolumeReadonly, true), booleanValueRegex, negationForbidden, operatorsForbidden)
 )

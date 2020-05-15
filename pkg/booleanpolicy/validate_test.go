@@ -56,22 +56,10 @@ func (s *PolicyValueValidator) TestRegex() {
 			r:       comparatorDecimalValueRegex,
 		},
 		{
-			name:    "Integer with comparator",
-			valid:   []string{"0", ">0", "<=12", "1"},
-			invalid: []string{"", "0<", ">", "3>0", ".", ".1", "0.1", "a"},
-			r:       comparatorIntegerValueRegex,
-		},
-		{
 			name:    "Integer",
 			valid:   []string{"0", "12", "1", "111111"},
 			invalid: []string{"", "0<", ">", "3>0", ".", ".1", "0.1"},
 			r:       integerValueRegex,
-		},
-		{
-			name:    "Decimal",
-			valid:   []string{"0", "12", "1", "111111", ".1", "2.2"},
-			invalid: []string{"", "0<", ">", "3>0", "."},
-			r:       decimalValueRegex,
 		},
 		{
 			name:    "Boolean",

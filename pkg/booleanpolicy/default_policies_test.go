@@ -43,11 +43,6 @@ type DefaultPoliciesTestSuite struct {
 }
 
 func (suite *DefaultPoliciesTestSuite) SetupSuite() {
-	suite.deployments = make(map[string]*storage.Deployment)
-	suite.images = make(map[string]*storage.Image)
-	suite.deploymentsToImages = make(map[string][]*storage.Image)
-	suite.deploymentsToIndicators = make(map[string][]*storage.ProcessIndicator)
-
 	defaults.PoliciesPath = policies.Directory()
 
 	defaultPolicies, err := defaults.Policies()
@@ -57,6 +52,13 @@ func (suite *DefaultPoliciesTestSuite) SetupSuite() {
 	for _, p := range defaultPolicies {
 		suite.defaultPolicies[p.GetName()] = p
 	}
+}
+
+func (suite *DefaultPoliciesTestSuite) SetupTest() {
+	suite.deployments = make(map[string]*storage.Deployment)
+	suite.images = make(map[string]*storage.Image)
+	suite.deploymentsToImages = make(map[string][]*storage.Image)
+	suite.deploymentsToIndicators = make(map[string][]*storage.ProcessIndicator)
 }
 
 func (suite *DefaultPoliciesTestSuite) imageIDFromDep(deployment *storage.Deployment) string {
@@ -913,6 +915,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		if c.skip && !features.BooleanPolicyLogic.Enabled() {
 			continue
 		}
+
 		suite.T().Run(fmt.Sprintf("%s (on deployments)", c.policyName), func(t *testing.T) {
 			if len(c.shouldNotMatch) == 0 {
 				assert.True(t, (c.expectedViolations != nil) != (c.expectedProcessViolations != nil), "Every test case must "+
@@ -935,7 +938,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 					deployment := suite.deployments[deploymentID]
 
 					for _, process := range suite.deploymentsToIndicators[deploymentID] {
-						match, err := m.MatchDeployment(context.Background(), deployment, suite.getImagesForDeployment(deployment), process)
+						match, err := m.MatchDeploymentWithProcess(context.Background(), deployment, suite.getImagesForDeployment(deployment), process, false)
 						require.NoError(t, err)
 						if expectedProcesses.Contains(process.GetId()) {
 							assert.NotNil(t, match.ProcessViolation, "process %+v should match", process)
@@ -949,7 +952,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 
 			actualViolations := make(map[string][]*storage.Alert_Violation)
 			for id, deployment := range suite.deployments {
-				violationsForDep, err := m.MatchDeployment(context.Background(), deployment, suite.getImagesForDeployment(deployment), nil)
+				violationsForDep, err := m.MatchDeployment(context.Background(), deployment, suite.getImagesForDeployment(deployment))
 				require.NoError(t, err)
 				assert.Nil(t, violationsForDep.ProcessViolation)
 				if alertViolations := violationsForDep.AlertViolations; len(alertViolations) > 0 {
@@ -1269,11 +1272,11 @@ func (suite *DefaultPoliciesTestSuite) TestMapPolicyMatchOne() {
 	m, err := BuildDeploymentMatcher(policy)
 	suite.NoError(err)
 
-	matched, err := m.MatchDeployment(context.Background(), noAnnotation, nil, nil)
+	matched, err := m.MatchDeployment(context.Background(), noAnnotation, nil)
 	suite.NoError(err)
 	suite.Len(matched.AlertViolations, 1)
 
-	matched, err = m.MatchDeployment(context.Background(), validAnnotation, nil, nil)
+	matched, err = m.MatchDeployment(context.Background(), validAnnotation, nil)
 	suite.NoError(err)
 	suite.Empty(matched.AlertViolations)
 }
@@ -1295,16 +1298,24 @@ func (suite *DefaultPoliciesTestSuite) TestRuntimePolicyFieldsCompile() {
 	}
 }
 
-func policyWithSingleGroup(group *storage.PolicyGroup) *storage.Policy {
+func policyWithGroups(groups ...*storage.PolicyGroup) *storage.Policy {
 	return &storage.Policy{
 		PolicyVersion:  Version,
 		Name:           uuid.NewV4().String(),
-		PolicySections: []*storage.PolicySection{{PolicyGroups: []*storage.PolicyGroup{group}}},
+		PolicySections: []*storage.PolicySection{{PolicyGroups: groups}},
 	}
 }
 
+func policyWithSingleGroup(group *storage.PolicyGroup) *storage.Policy {
+	return policyWithGroups(group)
+}
+
+func policyGroupWithSingleKeyValue(fieldName, value string, negate bool) *storage.PolicyGroup {
+	return &storage.PolicyGroup{FieldName: fieldName, Values: []*storage.PolicyValue{{Value: value}}, Negate: negate}
+}
+
 func policyWithSingleKeyValue(fieldName, value string, negate bool) *storage.Policy {
-	return policyWithSingleGroup(&storage.PolicyGroup{FieldName: fieldName, Values: []*storage.PolicyValue{{Value: value}}, Negate: negate})
+	return policyWithSingleGroup(policyGroupWithSingleKeyValue(fieldName, value, negate))
 }
 
 func policyWithSingleFieldAndValues(fieldName string, values []string, negate bool, op storage.BooleanOperator) *storage.Policy {
@@ -1353,7 +1364,7 @@ func (suite *DefaultPoliciesTestSuite) TestK8sRBACField() {
 			require.NoError(t, err)
 			matched := set.NewStringSet()
 			for depRef, dep := range deployments {
-				violations, err := matcher.MatchDeployment(context.Background(), dep, suite.getImagesForDeployment(dep), nil)
+				violations, err := matcher.MatchDeployment(context.Background(), dep, suite.getImagesForDeployment(dep))
 				require.NoError(t, err)
 				if len(violations.AlertViolations) > 0 {
 					matched.Add(depRef)
@@ -1399,7 +1410,7 @@ func (suite *DefaultPoliciesTestSuite) TestPortExposure() {
 			require.NoError(t, err)
 			matched := set.NewStringSet()
 			for depRef, dep := range deployments {
-				violations, err := matcher.MatchDeployment(context.Background(), dep, suite.getImagesForDeployment(dep), nil)
+				violations, err := matcher.MatchDeployment(context.Background(), dep, suite.getImagesForDeployment(dep))
 				require.NoError(t, err)
 				if len(violations.AlertViolations) > 0 {
 					matched.Add(depRef)
@@ -1456,13 +1467,119 @@ func (suite *DefaultPoliciesTestSuite) TestDropCaps() {
 			require.NoError(t, err)
 			matched := set.NewStringSet()
 			for depRef, dep := range deployments {
-				violations, err := matcher.MatchDeployment(context.Background(), dep, suite.getImagesForDeployment(dep), nil)
+				violations, err := matcher.MatchDeployment(context.Background(), dep, suite.getImagesForDeployment(dep))
 				require.NoError(t, err)
 				if len(violations.AlertViolations) > 0 {
 					matched.Add(depRef)
 				}
 			}
 			assert.ElementsMatch(t, matched.AsSlice(), c.expectedMatches, "Got %v, expected: %v", matched.AsSlice(), c.expectedMatches)
+		})
+	}
+}
+
+func (suite *DefaultPoliciesTestSuite) TestProcessWhitelist() {
+	privilegedDep := fixtures.GetDeployment().Clone()
+	privilegedDep.Id = "PRIVILEGED"
+	suite.addDepAndImages(privilegedDep)
+
+	nonPrivilegedDep := fixtures.GetDeployment().Clone()
+	nonPrivilegedDep.Id = "NOTPRIVILEGED"
+	nonPrivilegedDep.Containers[0].SecurityContext.Privileged = false
+	suite.addDepAndImages(nonPrivilegedDep)
+
+	const aptGetKey = "apt-get"
+	const aptGet2Key = "apt-get2"
+	const curlKey = "curl"
+	const bashKey = "bash"
+
+	indicators := make(map[string]map[string]*storage.ProcessIndicator)
+	for _, dep := range []*storage.Deployment{privilegedDep, nonPrivilegedDep} {
+		indicators[dep.GetId()] = map[string]*storage.ProcessIndicator{
+			aptGetKey:  suite.addIndicator(dep.GetId(), "apt-get", "install nginx", "/bin/apt-get", nil, 0),
+			aptGet2Key: suite.addIndicator(dep.GetId(), "apt-get", "update", "/bin/apt-get", nil, 0),
+			curlKey:    suite.addIndicator(dep.GetId(), "curl", "https://stackrox.io", "/bin/curl", nil, 0),
+			bashKey:    suite.addIndicator(dep.GetId(), "bash", "attach.sh", "/bin/bash", nil, 0),
+		}
+	}
+	processesOutsideWhitelist := map[string]set.StringSet{
+		privilegedDep.GetId():    set.NewStringSet(aptGetKey, aptGet2Key, bashKey),
+		nonPrivilegedDep.GetId(): set.NewStringSet(aptGetKey, curlKey, bashKey),
+	}
+
+	// Plain groups
+	aptGetGroup := policyGroupWithSingleKeyValue(ProcessName, "apt-get", false)
+	privilegedGroup := policyGroupWithSingleKeyValue(Privileged, "true", false)
+	whitelistGroup := policyGroupWithSingleKeyValue(WhitelistsEnabled, "true", false)
+
+	for _, testCase := range []struct {
+		groups []*storage.PolicyGroup
+
+		// Deployment ids to indicator keys
+		expectedMatches map[string][]string
+	}{
+		{
+			groups: []*storage.PolicyGroup{aptGetGroup},
+			expectedMatches: map[string][]string{
+				privilegedDep.GetId():    {aptGetKey, aptGet2Key},
+				nonPrivilegedDep.GetId(): {aptGetKey, aptGet2Key},
+			},
+		},
+		{
+			groups: []*storage.PolicyGroup{whitelistGroup},
+			expectedMatches: map[string][]string{
+				privilegedDep.GetId():    {aptGetKey, aptGet2Key, bashKey},
+				nonPrivilegedDep.GetId(): {aptGetKey, curlKey, bashKey},
+			},
+		},
+		{
+			groups: []*storage.PolicyGroup{privilegedGroup},
+			expectedMatches: map[string][]string{
+				privilegedDep.GetId(): {aptGetKey, aptGet2Key, curlKey, bashKey},
+			},
+		},
+		{
+			groups: []*storage.PolicyGroup{aptGetGroup, whitelistGroup},
+			expectedMatches: map[string][]string{
+				privilegedDep.GetId():    {aptGetKey, aptGet2Key},
+				nonPrivilegedDep.GetId(): {aptGetKey},
+			},
+		},
+		{
+			groups: []*storage.PolicyGroup{aptGetGroup, privilegedGroup},
+			expectedMatches: map[string][]string{
+				privilegedDep.GetId(): {aptGetKey, aptGet2Key},
+			},
+		},
+		{
+			groups: []*storage.PolicyGroup{privilegedGroup, whitelistGroup},
+			expectedMatches: map[string][]string{
+				privilegedDep.GetId(): {aptGetKey, aptGet2Key, bashKey},
+			},
+		},
+		{
+			groups: []*storage.PolicyGroup{aptGetGroup, privilegedGroup, whitelistGroup},
+			expectedMatches: map[string][]string{
+				privilegedDep.GetId(): {aptGetKey, aptGet2Key},
+			},
+		},
+	} {
+		c := testCase
+		suite.T().Run(fmt.Sprintf("%+v", c.groups), func(t *testing.T) {
+			m, err := BuildDeploymentMatcher(policyWithGroups(c.groups...))
+			require.NoError(t, err)
+
+			actualMatches := make(map[string][]string)
+			for _, dep := range []*storage.Deployment{privilegedDep, nonPrivilegedDep} {
+				for _, key := range []string{aptGetKey, aptGet2Key, curlKey, bashKey} {
+					violations, err := m.MatchDeploymentWithProcess(context.Background(), dep, suite.getImagesForDeployment(dep), indicators[dep.GetId()][key], processesOutsideWhitelist[dep.GetId()].Contains(key))
+					suite.Require().NoError(err)
+					if len(violations.AlertViolations) > 0 && violations.ProcessViolation != nil {
+						actualMatches[dep.GetId()] = append(actualMatches[dep.GetId()], key)
+					}
+				}
+			}
+			assert.Equal(t, c.expectedMatches, actualMatches)
 		})
 	}
 }

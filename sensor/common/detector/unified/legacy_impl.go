@@ -41,7 +41,7 @@ func (l *legacyDetectorImpl) DetectDeployment(ctx deploytime.DetectionContext, d
 }
 
 func (l *legacyDetectorImpl) DetectProcess(deployment *storage.Deployment, images []*storage.Image, process *storage.ProcessIndicator, processOutsideWhitelist bool) []*storage.Alert {
-	alerts, err := l.runtimeDetector.Detect(deployment, images, process)
+	alerts, err := l.runtimeDetector.Detect(deployment, images, process, processOutsideWhitelist)
 	if err != nil {
 		log.Errorf("error running runtime policies for deployment %q and process %q: %v", deployment.GetName(), process.GetSignal().GetExecFilePath(), err)
 	}
@@ -49,7 +49,7 @@ func (l *legacyDetectorImpl) DetectProcess(deployment *storage.Deployment, image
 	// We need to handle the whitelist policies separately because there is no distinct logic in the runtime
 	// detection logic and it always returns true
 	if processOutsideWhitelist {
-		whitelistAlerts, err := l.runtimeWhitelistDetector.Detect(deployment, images, process)
+		whitelistAlerts, err := l.runtimeWhitelistDetector.Detect(deployment, images, process, processOutsideWhitelist)
 		if err != nil {
 			log.Errorf("error evaluating whitelist policies against deployment %q and process %q: %v", deployment.GetName(), process.GetSignal().GetExecFilePath(), err)
 		}

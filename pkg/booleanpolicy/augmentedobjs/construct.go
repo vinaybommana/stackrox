@@ -25,8 +25,37 @@ func findMatchingContainerIdxForProcess(deployment *storage.Deployment, process 
 
 }
 
+// ConstructDeploymentWithProcess constructs an augmented deployment with process information.
+func ConstructDeploymentWithProcess(deployment *storage.Deployment, images []*storage.Image, process *storage.ProcessIndicator, processOutsideWhitelist bool) (*pathutil.AugmentedObj, error) {
+	obj, err := ConstructDeployment(deployment, images)
+	if err != nil {
+		return nil, err
+	}
+
+	augmentedProcess := pathutil.NewAugmentedObj(process)
+	err = augmentedProcess.AddPlainObjAt((&pathutil.Path{}).TraverseField(whitelistResultAugmentKey), &whitelistResult{
+		NotWhitelisted: processOutsideWhitelist,
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "adding whitelist result to process")
+	}
+
+	matchingContainerIdx, err := findMatchingContainerIdxForProcess(deployment, process)
+	if err != nil {
+		return nil, err
+	}
+	err = obj.AddAugmentedObjAt(
+		(&pathutil.Path{}).TraverseField("Containers").IndexSlice(matchingContainerIdx).TraverseField(processAugmentKey),
+		augmentedProcess,
+	)
+	if err != nil {
+		return nil, utils.Should(err)
+	}
+	return obj, nil
+}
+
 // ConstructDeployment constructs the augmented deployment object.
-func ConstructDeployment(deployment *storage.Deployment, images []*storage.Image, process *storage.ProcessIndicator) (*pathutil.AugmentedObj, error) {
+func ConstructDeployment(deployment *storage.Deployment, images []*storage.Image) (*pathutil.AugmentedObj, error) {
 	obj := pathutil.NewAugmentedObj(deployment)
 	if len(images) != len(deployment.GetContainers()) {
 		return nil, errors.Errorf("deployment %s/%s had %d containers, but got %d images",
@@ -45,19 +74,6 @@ func ConstructDeployment(deployment *storage.Deployment, images []*storage.Image
 		}
 	}
 
-	if process != nil {
-		matchingContainerIdx, err := findMatchingContainerIdxForProcess(deployment, process)
-		if err != nil {
-			return nil, err
-		}
-		err = obj.AddPlainObjAt(
-			(&pathutil.Path{}).TraverseField("Containers").IndexSlice(matchingContainerIdx).TraverseField(processAugmentKey),
-			process,
-		)
-		if err != nil {
-			return nil, utils.Should(err)
-		}
-	}
 	return obj, nil
 }
 

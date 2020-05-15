@@ -9,8 +9,6 @@ var (
 	booleanValueRegex                  = createRegex("(?i:(true|false))")
 	stringValueRegex                   = createRegex(".*[^[:space:]]+.*")
 	integerValueRegex                  = createRegex("([[:digit:]]+)")
-	decimalValueRegex                  = createRegex(`([[:digit:]]*\.?[[:digit:]]+)`)
-	comparatorIntegerValueRegex        = createRegex("(<|>|<=|>=)?[[:space:]]*[[:digit:]]+")
 	comparatorDecimalValueRegex        = createRegex(`(<|>|<=|>=)?[[:space:]]*[[:digit:]]*\.?[[:digit:]]+`)
 	environmentVariableWithSourceRegex = createRegex("((UNSET|RAW|SECRET_KEY|CONFIG_MAP_KEY|FIELD|RESOURCE_FIELD|UNKNOWN)=.*=.*)")
 	dockerfileLineValueRegex           = createRegex("(?i:(ADD|ARG|CMD|COPY|ENTRYPOINT|ENV|EXPOSE|FROM|LABEL|MAINTAINER|ONBUILD|RUN|STOPSIGNAL|USER|VOLUME|WORKDIR)=).*[^[:space:]]+.*")

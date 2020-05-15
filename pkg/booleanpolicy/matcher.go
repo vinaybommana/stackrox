@@ -23,7 +23,8 @@ type ImageMatcher interface {
 
 // A DeploymentMatcher matches deployments against a policy.
 type DeploymentMatcher interface {
-	MatchDeployment(ctx context.Context, deployment *storage.Deployment, images []*storage.Image, pi *storage.ProcessIndicator) (searchbasedpolicies.Violations, error)
+	MatchDeployment(ctx context.Context, deployment *storage.Deployment, images []*storage.Image) (searchbasedpolicies.Violations, error)
+	MatchDeploymentWithProcess(ctx context.Context, deployment *storage.Deployment, images []*storage.Image, pi *storage.ProcessIndicator, processOutsideWhitelist bool) (searchbasedpolicies.Violations, error)
 }
 
 type sectionAndEvaluator struct {

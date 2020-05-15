@@ -20,7 +20,7 @@ type CompiledPolicy interface {
 	// Note that the Match* functions DO NOT care about whitelists/the policy being disabled.
 	// Callers are responsible for doing those checks separately.
 	// For MatchAgainstDeployment* functions, images _must_ correspond one-to-one with the container specs in the deployment.
-	MatchAgainstDeploymentAndProcess(deployment *storage.Deployment, images []*storage.Image, pi *storage.ProcessIndicator) (searchbasedpolicies.Violations, error)
+	MatchAgainstDeploymentAndProcess(deployment *storage.Deployment, images []*storage.Image, pi *storage.ProcessIndicator, processOutsideWhitelist bool) (searchbasedpolicies.Violations, error)
 	MatchAgainstDeployment(deployment *storage.Deployment, images []*storage.Image) (searchbasedpolicies.Violations, error)
 	MatchAgainstImage(image *storage.Image) (searchbasedpolicies.Violations, error)
 
@@ -84,12 +84,12 @@ type compiledPolicy struct {
 	imageMatcher      booleanpolicy.ImageMatcher
 }
 
-func (cp *compiledPolicy) MatchAgainstDeploymentAndProcess(deployment *storage.Deployment, images []*storage.Image, pi *storage.ProcessIndicator) (searchbasedpolicies.Violations, error) {
+func (cp *compiledPolicy) MatchAgainstDeploymentAndProcess(deployment *storage.Deployment, images []*storage.Image, pi *storage.ProcessIndicator, processOutsideWhitelist bool) (searchbasedpolicies.Violations, error) {
 	if features.BooleanPolicyLogic.Enabled() {
 		if cp.deploymentMatcher == nil {
 			return searchbasedpolicies.Violations{}, errors.Errorf("couldn't match policy %s against deployments and processes", cp.Policy().GetName())
 		}
-		return cp.deploymentMatcher.MatchDeployment(context.Background(), deployment, images, pi)
+		return cp.deploymentMatcher.MatchDeploymentWithProcess(context.Background(), deployment, images, pi, processOutsideWhitelist)
 	}
 	return cp.legacySearchBasedMatcher.MatchOne(context.Background(), deployment, images, pi)
 }
@@ -99,7 +99,7 @@ func (cp *compiledPolicy) MatchAgainstDeployment(deployment *storage.Deployment,
 		if cp.deploymentMatcher == nil {
 			return searchbasedpolicies.Violations{}, errors.Errorf("couldn't match policy %s against deployments", cp.Policy().GetName())
 		}
-		return cp.deploymentMatcher.MatchDeployment(context.Background(), deployment, images, nil)
+		return cp.deploymentMatcher.MatchDeployment(context.Background(), deployment, images)
 	}
 	return cp.legacySearchBasedMatcher.MatchOne(context.Background(), deployment, images, nil)
 }

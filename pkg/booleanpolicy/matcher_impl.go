@@ -27,51 +27,62 @@ func matchWithEvaluator(sectionAndEval sectionAndEvaluator, obj *pathutil.Augmen
 
 }
 
-func (m *matcherImpl) MatchImage(ctx context.Context, image *storage.Image) (searchbasedpolicies.Violations, error) {
-	var allViolations []*storage.Alert_Violation
+func (m *matcherImpl) MatchImage(_ context.Context, image *storage.Image) (searchbasedpolicies.Violations, error) {
 	obj, err := augmentedobjs.ConstructImage(image)
 	if err != nil {
 		return searchbasedpolicies.Violations{}, err
 	}
-	for _, eval := range m.evaluators {
-		result, matched := eval.evaluator.Evaluate(obj.Value())
-		if matched {
-			violations := []*storage.Alert_Violation{{Message: fmt.Sprintf("TODO (%+v)", result)}}
-			allViolations = append(allViolations, violations...)
-		}
-	}
-	// The following line automatically handles the case where there is no match, since allViolations will be nil.
-	return searchbasedpolicies.Violations{AlertViolations: allViolations}, nil
-}
-
-// MatchOne returns detection against the deployment and images using predicate matching
-// The deployment parameter can be nil in the case of image detection
-func (m *matcherImpl) MatchDeployment(ctx context.Context, deployment *storage.Deployment, images []*storage.Image, indicator *storage.ProcessIndicator) (searchbasedpolicies.Violations, error) {
-	var allViolations []*storage.Alert_Violation
-	var atLeastOneMatched bool
-	obj, err := augmentedobjs.ConstructDeployment(deployment, images, indicator)
-	if err != nil {
+	violations, err := m.getViolations(obj)
+	if err != nil || violations == nil {
 		return searchbasedpolicies.Violations{}, err
 	}
+	return *violations, nil
+}
 
+func (m *matcherImpl) getViolations(obj *pathutil.AugmentedObj) (*searchbasedpolicies.Violations, error) {
+	var allViolations []*storage.Alert_Violation
+	var atLeastOneMatched bool
 	for _, eval := range m.evaluators {
 		violations, err := matchWithEvaluator(eval, obj)
 		if err != nil {
-			return searchbasedpolicies.Violations{}, err
+			return nil, err
 		}
 		atLeastOneMatched = atLeastOneMatched || len(violations) > 0
 		allViolations = append(allViolations, violations...)
 	}
 	if !atLeastOneMatched {
-		return searchbasedpolicies.Violations{}, nil
+		return nil, nil
 	}
-	violations := searchbasedpolicies.Violations{
+	return &searchbasedpolicies.Violations{
 		AlertViolations: allViolations,
+	}, nil
+}
+
+func (m *matcherImpl) MatchDeploymentWithProcess(_ context.Context, deployment *storage.Deployment, images []*storage.Image, indicator *storage.ProcessIndicator, processOutsideWhitelist bool) (searchbasedpolicies.Violations, error) {
+	obj, err := augmentedobjs.ConstructDeploymentWithProcess(deployment, images, indicator, processOutsideWhitelist)
+	if err != nil {
+		return searchbasedpolicies.Violations{}, err
 	}
-	if indicator != nil {
-		v := &storage.Alert_ProcessViolation{Processes: []*storage.ProcessIndicator{indicator}}
-		builders.UpdateRuntimeAlertViolationMessage(v)
-		violations.ProcessViolation = v
+
+	violations, err := m.getViolations(obj)
+	if err != nil || violations == nil {
+		return searchbasedpolicies.Violations{}, err
 	}
-	return violations, nil
+	v := &storage.Alert_ProcessViolation{Processes: []*storage.ProcessIndicator{indicator}}
+	builders.UpdateRuntimeAlertViolationMessage(v)
+	violations.ProcessViolation = v
+	return *violations, nil
+}
+
+// MatchDeployment runs detection against the deployment and images.
+func (m *matcherImpl) MatchDeployment(_ context.Context, deployment *storage.Deployment, images []*storage.Image) (searchbasedpolicies.Violations, error) {
+	obj, err := augmentedobjs.ConstructDeployment(deployment, images)
+	if err != nil {
+		return searchbasedpolicies.Violations{}, err
+	}
+	violations, err := m.getViolations(obj)
+	if err != nil || violations == nil {
+		return searchbasedpolicies.Violations{}, err
+	}
+	return *violations, nil
 }
