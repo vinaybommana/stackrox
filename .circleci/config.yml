@@ -2287,7 +2287,7 @@ jobs:
 
       - run:
           name: Export Trusted CA file
-          command: cci-export TRUSTED_CA_FILE "$PWD/tests/bad-ca/superfish.pem"
+          command: cci-export TRUSTED_CA_FILE "$PWD/tests/bad-ca/untrusted-root-badssl-com.pem"
 
       - *setupGoogleAppCreds
       - *setupLicense
