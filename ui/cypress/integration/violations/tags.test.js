@@ -2,10 +2,8 @@ import randomstring from 'randomstring';
 
 import { selectors, url } from '../../constants/ViolationsPage';
 
-import {
-    selectors as searchSelectors,
-    operations as searchOperations,
-} from '../../constants/SearchPage';
+import { selectors as searchSelectors } from '../../constants/SearchPage';
+import search from '../../selectors/search';
 import * as api from '../../constants/apiEndpoints';
 
 import withAuth from '../../helpers/basicAuth';
@@ -26,6 +24,28 @@ function openFirstItemOnViolationsPage() {
     cy.get(selectors.firstPanelTableRow).click();
     cy.wait('@alertById');
     cy.wait(['@getTags', '@tagsAutocomplete']);
+}
+
+function enterPageSearch(searchObj, inputSelector = searchSelectors.pageSearch.input) {
+    cy.route(api.search.autocomplete).as('searchAutocomplete');
+    function selectSearchOption(optionText) {
+        // typing is slow, assuming we'll get autocomplete results, select them
+        // also, likely it'll mimic better typical user's behavior
+        cy.get(inputSelector).type(`${optionText.charAt(0)}`);
+        cy.wait('@searchAutocomplete');
+        cy.get(search.options).contains(optionText).first().click({ force: true });
+    }
+
+    Object.entries(searchObj).forEach(([searchCategory, searchValue]) => {
+        selectSearchOption(searchCategory);
+
+        if (Array.isArray(searchValue)) {
+            searchValue.forEach((val) => selectSearchOption(val));
+        } else {
+            selectSearchOption(searchValue);
+        }
+    });
+    cy.get(inputSelector).blur(); // remove focus to close the autocomplete popup
 }
 
 describe('Violation Page: Tags', () => {
@@ -83,7 +103,7 @@ describe('Violation Page: Tags', () => {
         cy.get(selectors.addTagsDialog.confirmButton).click();
         cy.wait('@bulkAddAlertTags');
 
-        searchOperations.enterPageSearch({ Tag: tag });
+        enterPageSearch({ Tag: tag });
         cy.wait('@alerts');
 
         cy.get(selectors.rows).should('have.length', 2);
@@ -123,10 +143,10 @@ describe('Violation Page: Tags', () => {
         cy.route(api.alerts.pageSearchAutocomplete({ Tag: tag.charAt(0) })).as(
             'pageSearchAutocomplete'
         );
-        cy.get(searchSelectors.pageSearchInput).type('Tag:{enter}');
-        cy.get(searchSelectors.pageSearchInput).type(`${tag.charAt(0)}`);
+        cy.get(searchSelectors.pageSearch.input).type('Tag:{enter}');
+        cy.get(searchSelectors.pageSearch.input).type(`${tag.charAt(0)}`);
         cy.wait('@pageSearchAutocomplete');
-        cy.get(searchSelectors.searchOptions).contains(tag);
+        cy.get(search.options).contains(tag);
     });
 
     it('should remove tag', () => {

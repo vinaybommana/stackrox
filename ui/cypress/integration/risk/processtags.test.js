@@ -3,6 +3,7 @@ import randomstring from 'randomstring';
 import { selectors, url } from '../../constants/RiskPage';
 
 import { selectors as searchSelectors } from '../../constants/SearchPage';
+import search from '../../selectors/search';
 import * as api from '../../constants/apiEndpoints';
 
 import withAuth from '../../helpers/basicAuth';
@@ -61,8 +62,8 @@ describe('Risk Page Process Tags', () => {
         addTagToTheFirstProcessInDeployment('central', tag);
         cy.get(selectors.sidePanel.cancelButton).click(); // close the side panel, we don't need it right now
 
-        cy.get(searchSelectors.pageSearchInput).type('Process Tag{enter}');
-        cy.get(searchSelectors.pageSearchInput).type(`${tag}{enter}`);
+        cy.get(searchSelectors.pageSearch.input).type('Process Tag{enter}');
+        cy.get(searchSelectors.pageSearch.input).type(`${tag}{enter}`);
         cy.wait('@deployments');
 
         cy.get(selectors.table.rows).should('have.length', 1);
@@ -83,9 +84,9 @@ describe('Risk Page Process Tags', () => {
         cy.get(selectors.sidePanel.firstProcessCard.tags.options).contains(tag);
         cy.get(selectors.sidePanel.cancelButton).click(); // close the side panel, we don't need it right now
 
-        cy.get(searchSelectors.pageSearchInput).type('Process Tag:{enter}');
-        cy.get(searchSelectors.pageSearchInput).type(`${tag.charAt(0)}`);
-        cy.get(searchSelectors.searchOptions).contains(tag);
+        cy.get(searchSelectors.pageSearch.input).type('Process Tag:{enter}');
+        cy.get(searchSelectors.pageSearch.input).type(`${tag.charAt(0)}`);
+        cy.get(search.options).contains(tag);
     });
 
     it('should remove tag', () => {

@@ -1,5 +1,6 @@
 import { selectors as RiskPageSelectors, url, errorMessages } from '../../constants/RiskPage';
 import { selectors as searchSelectors } from '../../constants/SearchPage';
+import panel from '../../selectors/panel';
 import * as api from '../../constants/apiEndpoints';
 import withAuth from '../../helpers/basicAuth';
 
@@ -83,9 +84,9 @@ describe('Risk page', () => {
         });
 
         it('should close the side panel on search filter', () => {
-            cy.get(searchSelectors.pageSearchInput).type('Cluster:{enter}', { force: true });
-            cy.get(searchSelectors.pageSearchInput).type('remote{enter}', { force: true });
-            cy.get(searchSelectors.panelHeader).eq(1).should('not.be.visible');
+            cy.get(searchSelectors.pageSearch.input).type('Cluster:{enter}', { force: true });
+            cy.get(searchSelectors.pageSearch.input).type('remote{enter}', { force: true });
+            cy.get(`${panel.header}:eq(1)`).should('not.be.visible');
         });
 
         it('should navigate to network page with selected deployment', () => {

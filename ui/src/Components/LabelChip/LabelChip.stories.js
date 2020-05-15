@@ -7,6 +7,8 @@ export default {
     component: LabelChip,
 };
 
+function doNothing() {}
+
 export const withTypeAlert = () => <LabelChip type="alert" text="14 C" />;
 
 export const withTypeCaution = () => <LabelChip type="caution" text="9 H" />;
@@ -26,3 +28,5 @@ export const withTypeTertiary = () => <LabelChip type="tertiary" text="13 Images
 export const withTypeAccent = () => <LabelChip type="accent" text="Bueños Dios Amigo" />;
 
 export const withTypeSuccess = () => <LabelChip type="success" text="Fixable" />;
+
+export const withOnClick = () => <LabelChip type="base" text="Link" onClick={doNothing} />;

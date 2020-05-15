@@ -99,8 +99,8 @@ describe('Violations page', () => {
 
     it('should close the side panel on search filter', () => {
         cy.visit(violationsUrl);
-        cy.get(searchSelectors.pageSearchInput).type('Cluster:{enter}', { force: true });
-        cy.get(searchSelectors.pageSearchInput).type('remote{enter}', { force: true });
+        cy.get(searchSelectors.pageSearch.input).type('Cluster:{enter}', { force: true });
+        cy.get(searchSelectors.pageSearch.input).type('remote{enter}', { force: true });
         cy.get(ViolationsPageSelectors.panels).eq(1).should('not.be.visible');
     });
 

@@ -1,44 +1,38 @@
-import * as api from './apiEndpoints';
+import scopeSelectors from '../helpers/scopeSelectors';
+import tab from '../selectors/tab';
+import search from '../selectors/search';
+
+const viewOnLabelChip = '[data-testid="view-on-label-chip"]';
+const filterOnLabelChip = '[data-testid="filter-on-label-chip"]';
 
 export const selectors = {
-    panelHeader: 'div[data-testid="panel"]',
-    searchBtn: 'button:contains("Search")',
+    globalSearchButton: 'button:contains("Search")',
     pageSearchSuggestions: 'div.Select-menu-outer',
-    categoryTabs: '[data-testid="tab"]',
-    searchInput: '.search-modal input',
-    pageSearchInput: '[data-testid="page-header"] .react-select__input > input',
-    searchOptions: '.react-select__option',
-    searchResultsHeader: '.bg-base-100.flex-1 > .text-xl',
-    viewOnViolationsChip:
-        'div.rt-tbody > .rt-tr-group:first-child .rt-tr .rt-td:nth-child(3) ul > li:first-child > button',
-    viewOnRiskChip:
-        'div.rt-tbody > .rt-tr-group:nth-child(2) .rt-tr .rt-td:nth-child(3) ul > li:first-child > button',
-    viewOnPoliciesChip:
-        'div.rt-tbody > .rt-tr-group:nth-child(3) .rt-tr .rt-td:nth-child(3) ul > li:first-child > button ',
-    viewOnImagesChip:
-        'div.rt-tbody > .rt-tr-group:nth-child(4) .rt-tr .rt-td:nth-child(3) ul > li:first-child > button',
+    pageSearch: scopeSelectors('[data-testid="page-header"]', {
+        input: search.input,
+        options: search.input,
+    }),
+    globalSearch: scopeSelectors('.search-modal', {
+        input: search.input,
+        options: search.input,
+    }),
+    allTab: `${tab.tabs}:contains("All")`,
+    violationsTab: `${tab.tabs}:contains("Violations")`,
+    policiesTab: `${tab.tabs}:contains("Policies")`,
+    deploymentsTab: `${tab.tabs}:contains("Deployments")`,
+    imagesTab: `${tab.tabs}:contains("Images")`,
+    secretsTab: `${tab.tabs}:contains("Secrets")`,
+    globalSearchResults: scopeSelectors('[data-testid="global-search-results"]', {
+        header: 'h1',
+    }),
+    viewOnRiskLabelChip: `${viewOnLabelChip}:contains("RISK")`,
+    viewOnViolationsLabelChip: `${viewOnLabelChip}:contains("VIOLATIONS")`,
+    viewOnPoliciesLabelChip: `${viewOnLabelChip}:contains("POLICIES")`,
+    viewOnImagesLabelChip: `${viewOnLabelChip}:contains("IMAGES")`,
+    viewOnSecretsLabelChip: `${viewOnLabelChip}:contains("SECRETS")`,
+    filterOnRiskLabelChip: `${filterOnLabelChip}:contains("RISK")`,
+    filterOnViolationsLabelChip: `${filterOnLabelChip}:contains("VIOLATIONS")`,
+    filterOnNetworkLabelChip: `${filterOnLabelChip}:contains("NETWORK")`,
 };
 
-export const operations = {
-    enterPageSearch: (searchObj, inputSelector = selectors.pageSearchInput) => {
-        cy.route(api.search.autocomplete).as('searchAutocomplete');
-        function selectSearchOption(optionText) {
-            // typing is slow, assuming we'll get autocomplete results, select them
-            // also, likely it'll mimic better typical user's behavior
-            cy.get(inputSelector).type(`${optionText.charAt(0)}`);
-            cy.wait('@searchAutocomplete');
-            cy.get(selectors.searchOptions).contains(optionText).first().click({ force: true });
-        }
-
-        Object.entries(searchObj).forEach(([searchCategory, searchValue]) => {
-            selectSearchOption(searchCategory);
-
-            if (Array.isArray(searchValue)) {
-                searchValue.forEach((val) => selectSearchOption(val));
-            } else {
-                selectSearchOption(searchValue);
-            }
-        });
-        cy.get(inputSelector).blur(); // remove focus to close the autocomplete popup
-    },
-};
+export default selectors;

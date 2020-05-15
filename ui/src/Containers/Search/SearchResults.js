@@ -1,18 +1,19 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import capitalize from 'lodash/capitalize';
+import lowerCase from 'lodash/lowerCase';
 import { connect } from 'react-redux';
 import { createSelector, createStructuredSelector } from 'reselect';
+
+import globalSearchEmptyState from 'images/globalSearchEmptyState.svg';
+import { addSearchModifier, addSearchKeyword } from 'utils/searchUtils';
 import { selectors } from 'reducers';
 import { actions as globalSearchActions } from 'reducers/globalSearch';
 import NoResultsMessage from 'Components/NoResultsMessage';
 import Table from 'Components/Table';
-
 import Tabs from 'Components/Tabs';
 import TabContent from 'Components/TabContent';
-import PropTypes from 'prop-types';
-import capitalize from 'lodash/capitalize';
-import lowerCase from 'lodash/lowerCase';
-import globalSearchEmptyState from 'images/globalSearchEmptyState.svg';
-import { addSearchModifier, addSearchKeyword } from 'utils/searchUtils';
+import LabelChip from 'Components/LabelChip';
 
 const defaultTabs = [
     {
@@ -178,20 +179,18 @@ class SearchResults extends Component {
                             {!mapping[category] || !mapping[category].viewOn ? (
                                 <li className="text-base-400">N/A</li>
                             ) : (
-                                mapping[category].viewOn.map((item, index) => (
-                                    <li key={index}>
-                                        <button
-                                            type="button"
+                                mapping[category].viewOn.map((item) => (
+                                    <li key={name}>
+                                        <LabelChip
+                                            dataTestId="view-on-label-chip"
+                                            text={item}
                                             onClick={this.onLinkHandler(
                                                 category,
                                                 item,
                                                 getLink(item, id),
                                                 name
                                             )}
-                                            className="inline-block py-1 px-2 no-underline text-center uppercase bg-primary-100 border-2 border-base-200 mr-1 rounded-sm text-sm text-base-600"
-                                        >
-                                            {item}
-                                        </button>
+                                        />
                                     </li>
                                 ))
                             )}
@@ -202,30 +201,31 @@ class SearchResults extends Component {
             },
             {
                 Header: 'Filter On:',
-                Cell: ({ original }) => (
-                    <ul className="p-0  flex">
-                        {!mapping[original.category] || !mapping[original.category].filterOn ? (
-                            <li className="text-base-400">N/A</li>
-                        ) : (
-                            mapping[original.category].filterOn.map((item, index) => (
-                                <li key={index}>
-                                    <button
-                                        type="button"
-                                        onClick={this.onLinkHandler(
-                                            original.category,
-                                            filterOnMapping[item],
-                                            getLink(item),
-                                            original.name
-                                        )}
-                                        className="inline-block py-1 px-2 no-underline text-center uppercase bg-primary-100 border-2 border-base-200 mr-1 rounded-sm text-sm text-base-600"
-                                    >
-                                        {item}
-                                    </button>
-                                </li>
-                            ))
-                        )}
-                    </ul>
-                ),
+                Cell: ({ original }) => {
+                    const { category, name } = original;
+                    return (
+                        <ul className="p-0 flex">
+                            {!mapping[category] || !mapping[category].filterOn ? (
+                                <li className="text-base-400">N/A</li>
+                            ) : (
+                                mapping[category].filterOn.map((item) => (
+                                    <li key={name} className="mr-2">
+                                        <LabelChip
+                                            dataTestId="filter-on-label-chip"
+                                            text={item}
+                                            onClick={this.onLinkHandler(
+                                                category,
+                                                filterOnMapping[item],
+                                                getLink(item),
+                                                name
+                                            )}
+                                        />
+                                    </li>
+                                ))
+                            )}
+                        </ul>
+                    );
+                },
                 sortable: false,
             },
         ];
@@ -249,7 +249,7 @@ class SearchResults extends Component {
             );
         }
         return (
-            <div className="bg-base-100 flex-1">
+            <div className="bg-base-100 flex-1" data-testid="global-search-results">
                 <h1 className="w-full text-2xl text-primary-700 px-4 py-6 font-600">
                     {this.props.globalSearchResults.length} search results
                 </h1>

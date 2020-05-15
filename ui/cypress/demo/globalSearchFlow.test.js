@@ -12,17 +12,15 @@ describe('Global Search Flow', () => {
     it('should search by CVE and get Deployments and Images as results ', () => {
         cy.visit('/');
         cy.get('button', { timeout: 7000 }).contains('Search').click();
-        cy.get(searchSelectors.searchInput).clear();
-        cy.get(searchSelectors.searchInput).type('CVE:{enter}');
-        cy.get(searchSelectors.searchInput).type(`${CVE}{enter}`);
-        cy.get(searchSelectors.categoryTabs)
-            .contains('Deployments')
+        cy.get(searchSelectors.globalSearch.input).clear();
+        cy.get(searchSelectors.globalSearch.input).type('CVE:{enter}');
+        cy.get(searchSelectors.globalSearch.input).type(`${CVE}{enter}`);
+        cy.get(searchSelectors.deploymentsTab)
             .invoke('text')
             .then((text) => {
                 expect(text).not.to.equal('Deployments (0)');
             });
-        cy.get(searchSelectors.categoryTabs)
-            .contains('Images')
+        cy.get(searchSelectors.tab.images)
             .invoke('text')
             .then((text) => {
                 expect(text).not.to.equal('Images (0)');
@@ -32,9 +30,9 @@ describe('Global Search Flow', () => {
     it('should go to the Risk page when the Risk tile is clicked', () => {
         cy.visit('/');
         cy.get('button', { timeout: 7000 }).contains('Search').click();
-        cy.get(searchSelectors.searchInput).clear();
-        cy.get(searchSelectors.searchInput).type('CVE:{enter}');
-        cy.get(searchSelectors.searchInput).type(`${CVE}{enter}`);
+        cy.get(searchSelectors.globalSearch.input).clear();
+        cy.get(searchSelectors.globalSearch.input).type('CVE:{enter}');
+        cy.get(searchSelectors.globalSearch.input).type(`${CVE}{enter}`);
         cy.get(`${selectors.table.rows}:contains("asset-cache")`)
             .eq(0)
             .find('button')
@@ -47,17 +45,15 @@ describe('Global Search Flow', () => {
     it('Global Search returns results for Policy:CVSS (violations and policies)', () => {
         cy.visit('/');
         cy.get('button', { timeout: 7000 }).contains('Search').click();
-        cy.get(searchSelectors.searchInput).clear();
-        cy.get(searchSelectors.searchInput).type('Policy:{enter}');
-        cy.get(searchSelectors.searchInput).type('CVSS{enter}');
-        cy.get(searchSelectors.categoryTabs)
-            .contains('Violations')
+        cy.get(searchSelectors.globalSearch.input).clear();
+        cy.get(searchSelectors.globalSearch.input).type('Policy:{enter}');
+        cy.get(searchSelectors.globalSearch.input).type('CVSS{enter}');
+        cy.get(searchSelectors.violationsTab)
             .invoke('text')
             .then((text) => {
                 expect(text).not.to.equal('Violations (0)');
             });
-        cy.get(searchSelectors.categoryTabs)
-            .contains('Policies')
+        cy.get(searchSelectors.tab.policies)
             .invoke('text')
             .then((text) => {
                 expect(text).not.to.equal('Policies (0)');
@@ -67,9 +63,9 @@ describe('Global Search Flow', () => {
     it('From Global Search, user is taken to policies page with CVSS >= 7 selected', () => {
         cy.visit('/');
         cy.get('button', { timeout: 7000 }).contains('Search').click();
-        cy.get(searchSelectors.searchInput).clear();
-        cy.get(searchSelectors.searchInput).type('Policy:{enter}');
-        cy.get(searchSelectors.searchInput).type('CVSS{enter}');
+        cy.get(searchSelectors.globalSearch.input).clear();
+        cy.get(searchSelectors.globalSearch.input).type('Policy:{enter}');
+        cy.get(searchSelectors.globalSearch.input).type('CVSS{enter}');
         cy.get(`${selectors.table.rows}:contains("Fixable CVSS >= 7")`)
             .eq(0)
             .find('button')
