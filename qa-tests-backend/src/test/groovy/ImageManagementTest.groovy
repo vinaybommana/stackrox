@@ -75,6 +75,22 @@ class ImageManagementTest extends BaseSpecification {
         "Apache Struts: CVE-2017-5638"    | "apollo-dtr.rox.systems" | "legacy-apps/struts-app" | "latest" | ""
     }
 
+    @Category(BAT)
+    def "Verify two consecutive latest tag image have different scans"() {
+        given:
+        // Scan an ubuntu 14:04 image we're pretending is latest
+        def img = Services.scanImage(
+            "docker.io/library/ubuntu:latest@sha256:ffc76f71dd8be8c9e222d420dc96901a07b61616689a44c7b3ef6a10b7213de4")
+        assert img.scan.componentsList.stream().find { x -> x.name == "eglibc" } != null
+
+        img = Services.scanImage(
+             "docker.io/library/ubuntu:latest@sha256:3235326357dfb65f1781dbc4df3b834546d8bf914e82cce58e6e6b676e23ce8f")
+
+        expect:
+        assert img.scan != null
+        assert img.scan.componentsList.stream().find { x -> x.name == "eglibc" } == null
+    }
+
     @Unroll
     @Category([BAT, Integration])
     def "Verify CI/CD Integration Endpoint Whitelists - #policy - #whitelists"() {

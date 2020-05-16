@@ -2,6 +2,7 @@
 All notable changes to this project that require documentation updates will be documented in this file.
 
 ## [NEXT RELEASE]
+- Previously, a scan for an image that may have been retagged (e.g. using the latest tag) would return a stale scan if it had been previously scanned.
 
 ## [43.0]
 - Detection APIs were not properly handling suppressed CVEs and they were being included in evaluation. This is now resolved.

@@ -139,8 +139,8 @@ func (c *clairify) GetScan(image *storage.Image) (*storage.ImageScan, error) {
 	if image.GetMetadata() == nil {
 		return nil, nil
 	}
-	env, err := c.getScan(image)
-	// If not found, then should trigger a scan
+	// If not found by digest, then should trigger a scan
+	env, err := c.client.RetrieveImageDataBySHA(utils.GetSHA(image), true, true)
 	if err != nil {
 		if err != client.ErrorScanNotFound {
 			return nil, err
