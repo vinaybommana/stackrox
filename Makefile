@@ -369,7 +369,7 @@ main-rhel-build: build-prep main-rhel-build-dockerized
 main-build-dockerized:
 	@echo "+ $@"
 ifdef CI
-	docker container create --name builder $(BUILD_IMAGE) make main-build-nodeps
+	docker container create -e CI -e CIRCLE_TAG -e GOTAGS --name builder $(BUILD_IMAGE) make main-build-nodeps
 	docker cp $(GOPATH) builder:/
 	docker start -i builder
 	docker cp builder:/go/src/github.com/stackrox/rox/bin/linux bin/
@@ -381,7 +381,7 @@ endif
 main-rhel-build-dockerized:
 	@echo "+ $@"
 ifdef CI
-	docker container create --name builder $(RHEL_BUILD_IMAGE) make main-build-nodeps
+	docker container create -e CI -e CIRCLE_TAG -e GOTAGS --name builder $(RHEL_BUILD_IMAGE) make main-build-nodeps
 	docker cp $(GOPATH) builder:/
 	docker start -i builder
 	docker cp builder:/go/src/github.com/stackrox/rox/bin/linux bin/
