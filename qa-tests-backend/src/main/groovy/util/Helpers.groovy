@@ -1,6 +1,7 @@
 package util
 
 import org.codehaus.groovy.runtime.powerassert.PowerAssertionError
+import org.junit.AssumptionViolatedException
 import org.spockframework.runtime.SpockAssertionError
 
 // Helpers defines useful helper methods. Is mixed in to every object in order to be visible everywhere.
@@ -25,6 +26,9 @@ class Helpers {
     }
 
     static boolean determineRetry(Throwable failure) {
+        if (failure instanceof AssumptionViolatedException) {
+            return false
+        }
         retryAttempt++
         if (retryAttempt <= MAX_RETRY_ATTEMTPS) {
             println "An exception occurred which will cause a retry: " + failure
