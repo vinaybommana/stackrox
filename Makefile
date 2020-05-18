@@ -615,7 +615,7 @@ render-helm-yamls:
 	cp -R $(sensorChartDir)/* /tmp/$(TAG)
 	@rm -f /tmp/$(TAG)/main.go
 	cp $(BASE_DIR)/deploy/common/docker-auth.sh  /tmp/$(TAG)/scripts/
-	@go run $(BASE_DIR)/$(sensorChartDir)/main.go "$(TAG)" "$(collectorVersion)" "${BASE_DIR}/$(sensorChartDir)"
+	@go run -tags "$(subst $(comma),$(space),$(GOTAGS))" $(BASE_DIR)/$(sensorChartDir)/main.go "$(TAG)" "$(collectorVersion)" "${BASE_DIR}/$(sensorChartDir)"
 
 .PHONY: ossls-audit
 ossls-audit: download-deps
