@@ -154,7 +154,9 @@ describe('Auth Sagas', () => {
                 [
                     call(LicenseService.fetchLicenses),
                     {
-                        response: { licenses: [{ status: LICENSE_STATUS.VALID }] },
+                        response: {
+                            licenses: [{ status: LICENSE_STATUS.VALID }],
+                        },
                     },
                 ],
                 [call(AuthService.logout), null],

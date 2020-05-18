@@ -1,13 +1,9 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { createStructuredSelector } from 'reselect';
-import { connect } from 'react-redux';
-
-import { selectors } from 'reducers';
 
 import NoResultsMessage from 'Components/NoResultsMessage';
 import Panel, { headerClassName } from 'Components/Panel';
-import Button from 'Containers/AccessControl/AuthProviders/AuthProvider/Button';
+import HeaderButtons from 'Containers/AccessControl/AuthProviders/AuthProvider/HeaderButtons';
 import Form from 'Containers/AccessControl/AuthProviders/AuthProvider/Form/Form';
 import Details from 'Containers/AccessControl/AuthProviders/AuthProvider/Details';
 import { getAuthProviderLabelByValue } from 'constants/accessControl';
@@ -25,7 +21,6 @@ class AuthProvider extends Component {
         onEdit: PropTypes.func.isRequired,
         onCancel: PropTypes.func.isRequired,
         groups: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-        featureFlags: PropTypes.shape({}).isRequired,
     };
 
     static defaultProps = {
@@ -129,6 +124,21 @@ class AuthProvider extends Component {
         this.props.onSave(transformedValues);
     };
 
+    handleTest = () => {
+        if (!this.props.selectedAuthProvider?.active) {
+            const windowFeatures =
+                'location=no,menubar=no,scrollbars=yes,toolbar=no,width=768,height=512,left=0,top=0'; // browser not required to honor these attrs
+
+            const windowObjectReference = window.open(
+                `/sso/login/${this.props.selectedAuthProvider.id}?test=true`,
+                `Test Login for ${this.props.selectedAuthProvider.name}`,
+                windowFeatures
+            );
+
+            windowObjectReference.focus();
+        }
+    };
+
     getGroupsByAuthProviderId = (groups, id) => {
         const filteredGroups = groups.filter(
             (group) =>
@@ -205,14 +215,21 @@ class AuthProvider extends Component {
                 : `Create New ${getAuthProviderLabelByValue(
                       selectedAuthProvider.type
                   )} Auth Provider`;
-            const buttonText = selectedAuthProvider.active ? 'Edit Roles' : 'Edit Provider';
+            const editButtonText = selectedAuthProvider.active ? 'Edit Roles' : 'Edit Provider';
+            const onTest =
+                selectedAuthProvider &&
+                (selectedAuthProvider.type === 'oidc' || selectedAuthProvider.type === 'saml') &&
+                !selectedAuthProvider.active
+                    ? this.handleTest
+                    : null;
             headerComponents = (
-                <Button
-                    text={buttonText}
+                <HeaderButtons
+                    editText={editButtonText}
                     isEditing={isEditing}
                     onEdit={onEdit}
                     onSave={this.onSave}
                     onCancel={onCancel}
+                    onTest={onTest}
                 />
             );
         }
@@ -233,8 +250,4 @@ class AuthProvider extends Component {
     }
 }
 
-const mapStateToProps = createStructuredSelector({
-    featureFlags: selectors.getFeatureFlags,
-});
-
-export default connect(mapStateToProps)(AuthProvider);
+export default AuthProvider;

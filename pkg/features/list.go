@@ -39,4 +39,7 @@ var (
 
 	// PolicyImportExport feature flag enables policy import and export
 	PolicyImportExport = registerFeature("Enable Import/Export for Analyst Workflow", "ROX_POLICY_IMPORT_EXPORT", false)
+
+	// AuthTestMode feature flag allows test mode flow for new auth provider in UI
+	AuthTestMode = registerFeature("Enable Auth Test Mode UI", "ROX_AUTH_TEST_MODE_UI", false)
 )

@@ -4,7 +4,7 @@ import { push } from 'react-router-redux';
 import queryString from 'qs';
 import Raven from 'raven-js';
 
-import { loginPath, accessControlPath, authResponsePrefix } from 'routePaths';
+import { loginPath, testLoginResultsPath, accessControlPath, authResponsePrefix } from 'routePaths';
 import { takeEveryLocation } from 'utils/sagaEffects';
 import * as AuthService from 'services/AuthService';
 import fetchUsersAttributes from 'services/AttributesService';
@@ -114,7 +114,8 @@ function parseFragment(location) {
 
 function* handleOidcResponse(location) {
     const hash = parseFragment(location);
-    if (hash.error) {
+    // eslint-disable-next-line camelcase
+    if (hash.error || !hash?.id_token) {
         return hash;
     }
     try {
@@ -131,7 +132,7 @@ function* handleOidcResponse(location) {
 
 function handleGenericResponse(location) {
     const hash = parseFragment(location);
-    if (hash.error) {
+    if (hash.error || !hash?.token) {
         return hash;
     }
     return { token: hash.token };
@@ -143,6 +144,7 @@ function* dispatchAuthResponse(type, location) {
         oidc: handleOidcResponse,
         generic: handleGenericResponse,
     };
+
     let result = {};
     const handler = responseHandlers[type];
     if (handler) {
@@ -157,6 +159,14 @@ function* dispatchAuthResponse(type, location) {
         // TODO-ivan: seems like react-router-redux doesn't like pushing an action synchronously while handling LOCATION_CHANGE,
         // the bug is that it doesn't produce LOCATION_CHANGE event for this next push. Waiting here should be ok for an user.
         yield delay(10);
+    } else if (result?.userAttributes) {
+        // save the test response for the results page to display
+        const parsedAttributes = JSON.parse(result.userAttributes);
+        const parsedResult = { ...result, userAttributes: parsedAttributes };
+        yield put(actions.setAuthProviderTestResults(parsedResult));
+
+        // set up the redirect to the results page
+        yield call(AuthService.storeRequestedLocation, testLoginResultsPath);
     } else {
         if (!result || !result.error) {
             result = { error: `no auth token received via method ${type}` };

@@ -27,6 +27,7 @@ export const types = {
     AUTH_HTTP_ERROR: 'auth/AUTH_HTTP_ERROR',
     AUTH_IDP_ERROR: 'auth/AUTH_IDP_ERROR',
     SET_AUTH_PROVIDER_EDITING_STATE: 'auth/SET_AUTH_PROVIDER_EDITING_STATE',
+    SET_AUTH_PROVIDER_TEST_RESULTS: 'auth/SET_AUTH_PROVIDER_TEST_RESULTS',
 };
 
 // Actions
@@ -50,6 +51,10 @@ export const actions = {
         type: types.SET_AUTH_PROVIDER_EDITING_STATE,
         value,
     }),
+    setAuthProviderTestResults: (value) => ({
+        type: types.SET_AUTH_PROVIDER_TEST_RESULTS,
+        value,
+    }),
     login: (userData) => ({ type: types.LOGIN, userData }),
     logout: () => ({ type: types.LOGOUT }),
     grantAnonymousAccess: () => ({ type: types.GRANT_ANONYMOUS_ACCESS }),
@@ -69,6 +74,13 @@ const currentUser = (state = {}, action) => {
 const authProviders = (state = [], action) => {
     if (action.type === types.FETCH_AUTH_PROVIDERS.SUCCESS) {
         return isEqual(action.response, state) ? state : action.response;
+    }
+    return state;
+};
+
+const authProviderTestResults = (state = {}, action) => {
+    if (action.type === types.SET_AUTH_PROVIDER_TEST_RESULTS) {
+        return isEqual(action.response, state) ? state : action.value;
     }
     return state;
 };
@@ -143,6 +155,7 @@ const authProviderResponse = (state = {}, action) => {
 
 const reducer = combineReducers({
     authProviders,
+    authProviderTestResults,
     loginAuthProviders,
     selectedAuthProvider,
     authStatus,
@@ -157,6 +170,7 @@ export default reducer;
 
 const getAuthProviders = (state) => state.authProviders;
 const getLoginAuthProviders = (state) => state.loginAuthProviders;
+const getLoginAuthProviderTestResults = (state) => state.authProviderTestResults;
 const getAvailableAuthProviders = (state) => filterAuthProviders(state.authProviders);
 const getSelectedAuthProvider = (state) => state.selectedAuthProvider;
 const getAuthStatus = (state) => state.authStatus;
@@ -167,6 +181,7 @@ const getCurrentUser = (state) => state.currentUser;
 export const selectors = {
     getAuthProviders,
     getLoginAuthProviders,
+    getLoginAuthProviderTestResults,
     getAvailableAuthProviders,
     getSelectedAuthProvider,
     getAuthStatus,

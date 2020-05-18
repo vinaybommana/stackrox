@@ -7,6 +7,7 @@ import useCaseTypes from 'constants/useCaseTypes';
 
 export const mainPath = '/main';
 export const loginPath = '/login';
+export const testLoginResultsPath = '/test-login-results';
 export const licenseStartUpPath = `/license`;
 export const authResponsePrefix = '/auth/response/';
 
