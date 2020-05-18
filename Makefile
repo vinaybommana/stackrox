@@ -17,7 +17,7 @@ RHEL_BUILD_IMAGE := stackrox/main:rocksdb-builder-rhel-6.7.3-1
 
 GOBUILD := $(CURDIR)/scripts/go-build.sh
 
-LOCAL_CACHE_ARGS := "-v$(CURDIR)/linux-gocache:/linux-gocache"
+LOCAL_VOLUME_ARGS := -v$(CURDIR)/linux-gocache:/linux-gocache:delegated -v $(GOPATH):/go:delegated
 
 RELEASE_GOTAGS := release
 ifdef CI
@@ -136,30 +136,22 @@ staticcheck: $(STATICCHECK_BIN)
 	@echo "+ $@"
 	@$(BASE_DIR)/tools/staticcheck-wrap.sh ./...
 
-.PHONY: fast-sensor
-fast-sensor: deps
-	@echo "+ $@"
-	$(GOBUILD) sensor/kubernetes
-
-.PHONY: fast-central
-fast-central:
+.PHONY: fast-central-build
+fast-central-build:
 	@echo "+ $@"
 	$(GOBUILD) central
 
-.PHONY: fast-central-dockerized
-fast-central-dockerized: deps
+.PHONY: fast-central
+fast-central: deps
 	@echo "+ $@"
-	docker run $(LOCAL_CACHE_ARGS) -v $(GOPATH):/go $(BUILD_IMAGE) make fast-central
-
-.PHONY: fast-sensor-dockerized
-fast-sensor-dockerized: deps
-	@echo "+ $@"
-	docker run $(LOCAL_CACHE_ARGS) -v $(GOPATH):/go $(BUILD_IMAGE) make fast-sensor
+	docker run $(LOCAL_VOLUME_ARGS) $(BUILD_IMAGE) make fast-central-build
+	@$(BASE_DIR)/scripts/k8s/kill-central.sh
 
 # fast is a dev mode options when using local dev
-# it will automatically restart Central or Sensor if there are changes to the binary
+# it will automatically restart Central if there are any changes
+# TODO: add sensor
 .PHONY: fast
-fast: fast-central-dockerized fast-sensor-dockerized
+fast: fast-central
 
 .PHONY: fmt
 fmt: blanks
@@ -373,8 +365,10 @@ ifdef CI
 	docker cp $(GOPATH) builder:/
 	docker start -i builder
 	docker cp builder:/go/src/github.com/stackrox/rox/bin/linux bin/
+	CGO_ENABLED=0 $(GOBUILD) sensor/kubernetes sensor/upgrader sensor/admission-control compliance/collection
 else
-	docker run $(LOCAL_CACHE_ARGS) -v $(GOPATH):/go $(BUILD_IMAGE) make main-build-nodeps
+	docker run $(LOCAL_VOLUME_ARGS) $(BUILD_IMAGE) make main-build-nodeps
+	CGO_ENABLED=0 $(GOBUILD) sensor/kubernetes sensor/upgrader sensor/admission-control compliance/collection roxctl
 endif
 
 .PHONY: main-rhel-dockerized
@@ -385,8 +379,10 @@ ifdef CI
 	docker cp $(GOPATH) builder:/
 	docker start -i builder
 	docker cp builder:/go/src/github.com/stackrox/rox/bin/linux bin/
+	CGO_ENABLED=0 $(GOBUILD) sensor/kubernetes sensor/upgrader sensor/admission-control compliance/collection
 else
-	docker run $(LOCAL_CACHE_ARGS) -v $(GOPATH):/go $(RHEL_BUILD_IMAGE) make main-build-nodeps
+	docker run $(LOCAL_VOLUME_ARGS) $(RHEL_BUILD_IMAGE) make main-build-nodeps
+	CGO_ENABLED=0 $(GOBUILD) sensor/kubernetes sensor/upgrader sensor/admission-control compliance/collection roxctl
 endif
 
 .PHONY: main-build-nodeps
@@ -395,13 +391,7 @@ main-build-nodeps:
 	@# PLEASE KEEP THE TWO LISTS BELOW IN SYNC.
 	@# The only exception is that `roxctl` should not be built in CI here, since it's built separately when in CI.
 	@# This isn't pretty, but it saves 30 seconds on every build, which seems worth it.
-ifdef CI
 	$(GOBUILD) central migrator
-	CGO_ENABLED=0 $(GOBUILD) sensor/kubernetes sensor/upgrader sensor/admission-control compliance/collection
-else
-	$(GOBUILD) central migrator
-	CGO_ENABLED=0 $(GOBUILD) sensor/kubernetes sensor/upgrader sensor/admission-control compliance/collection roxctl
-endif
 
 .PHONY: scale-build
 scale-build: build-prep
