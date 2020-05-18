@@ -10,7 +10,7 @@ import (
 func (w *WorkloadManager) getNodes(workload nodeWorkload) []*corev1.Node {
 	nodes := make([]*corev1.Node, 0, workload.NumNodes)
 	for i := 0; i < workload.NumNodes; i++ {
-		name := fmt.Sprintf("gke-setup-devadda2-large-pool-a9523a88-%s", randStringWithLength(6))
+		name := fmt.Sprintf("gke-setup-devadda2-large-pool-a9523a88-%d", i)
 		node := &corev1.Node{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: "v1",
