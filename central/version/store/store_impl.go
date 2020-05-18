@@ -91,8 +91,7 @@ func (s *storeImpl) GetVersion() (*storage.Version, error) {
 			return nil, err
 		}
 		writeHeavyDBName = "rocksdb"
-	}
-	if writeHeavyVersion == nil {
+	} else {
 		writeHeavyVersion, err = s.getBadgerVersion()
 		if err != nil {
 			return nil, err
@@ -126,18 +125,22 @@ func (s *storeImpl) UpdateVersion(version *storage.Version) error {
 		return errors.Wrap(err, "updating version in bolt")
 	}
 
-	err = s.badgerDB.Update(func(txn *badger.Txn) error {
-		return txn.Set(versionBucket, bytes)
-	})
-	if err != nil {
-		return errors.Wrap(err, "updating version in badger")
-	}
+	if features.RocksDB.Enabled() {
+		writeOpts := gorocksdb.NewDefaultWriteOptions()
+		// Purposefully sync this
+		writeOpts.SetSync(true)
+		defer writeOpts.Destroy()
 
-	writeOpts := gorocksdb.NewDefaultWriteOptions()
-	defer writeOpts.Destroy()
-
-	if err := s.rocksDB.Put(writeOpts, versionBucket, bytes); err != nil {
-		return errors.Wrap(err, "updating version in rocksdb")
+		if err := s.rocksDB.Put(writeOpts, versionBucket, bytes); err != nil {
+			return errors.Wrap(err, "updating version in rocksdb")
+		}
+	} else {
+		err = s.badgerDB.Update(func(txn *badger.Txn) error {
+			return txn.Set(versionBucket, bytes)
+		})
+		if err != nil {
+			return errors.Wrap(err, "updating version in badger")
+		}
 	}
 	return nil
 }

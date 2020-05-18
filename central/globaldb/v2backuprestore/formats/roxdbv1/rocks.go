@@ -40,6 +40,7 @@ func restoreRocksDB(ctx common.RestoreFileContext, fileReader io.Reader, size in
 	if err != nil {
 		return errors.Wrap(err, "error initializing backup process")
 	}
+	defer backupEngine.Close()
 
 	// Check DB size vs. availability.
 	err = backupEngine.RestoreDBFromLatestBackup(absDirPath, absDirPath, gorocksdb.NewRestoreOptions())

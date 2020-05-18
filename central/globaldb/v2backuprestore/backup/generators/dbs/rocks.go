@@ -47,6 +47,7 @@ func (rgen *RocksBackup) WriteDirectory(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "error initializing backup process")
 	}
+	defer backupEngine.Close()
 
 	// Check DB size vs. availability.
 	err = backupEngine.CreateNewBackup(rgen.db)
