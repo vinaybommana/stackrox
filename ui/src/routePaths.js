@@ -23,6 +23,7 @@ export const secretsPath = `${mainPath}/configmanagement/secrets/:secretId?`;
 export const apidocsPath = `${mainPath}/apidocs`;
 export const accessControlPath = `${mainPath}/access`;
 export const licensePath = `${mainPath}/license`;
+export const userPath = `${mainPath}/user`;
 export const systemConfigPath = `${mainPath}/systemconfig`;
 export const compliancePath = `${mainPath}/:context(compliance)`;
 export const configManagementPath = `${mainPath}/configmanagement`;

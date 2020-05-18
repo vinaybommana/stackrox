@@ -1,13 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+
 import { useTheme } from 'Containers/ThemeProvider';
+import SubHeader from 'Components/SubHeader';
 
-const renderSubHeader = (subHeader) => {
-    if (!subHeader) return null;
-    return <div className="mt-1 italic capitalize opacity-75">{subHeader}</div>;
-};
-
-const PageHeader = ({ header, subHeader, classes, bgStyle, children }) => {
+const PageHeader = ({ header, subHeader, classes, bgStyle, children, capitalize }) => {
     const { isDarkMode } = useTheme();
     return (
         <div
@@ -24,7 +21,7 @@ const PageHeader = ({ header, subHeader, classes, bgStyle, children }) => {
                 >
                     {header}
                 </h1>
-                {renderSubHeader(subHeader)}
+                {subHeader && <SubHeader text={subHeader} capitalize={capitalize} />}
             </div>
             <div className="flex w-full items-center">{children}</div>
         </div>
@@ -37,6 +34,7 @@ PageHeader.propTypes = {
     classes: PropTypes.string,
     bgStyle: PropTypes.shape({}),
     children: PropTypes.oneOfType([PropTypes.element, PropTypes.arrayOf(PropTypes.element)]),
+    capitalize: PropTypes.bool,
 };
 
 PageHeader.defaultProps = {
@@ -44,6 +42,7 @@ PageHeader.defaultProps = {
     subHeader: null,
     classes: '',
     bgStyle: null,
+    capitalize: true,
 };
 
 export default PageHeader;

@@ -107,10 +107,12 @@ export const storeAccessToken = (token) => accessTokenManager.setToken(token);
  * Calls the server to check auth status, rejects with error if auth status isn't valid.
  * @returns {Promise<void>}
  */
-export function checkAuthStatus() {
+export function getAuthStatus() {
     return axios.get('/v1/auth/status').then(({ data }) => {
+        const { expires, userAttributes, userId, userInfo } = data;
         // while it's a side effect, it's the best place to do it
-        accessTokenManager.updateTokenInfo({ expiry: data.expires });
+        accessTokenManager.updateTokenInfo({ expiry: expires });
+        return { userAttributes, userId, userInfo };
     });
 }
 

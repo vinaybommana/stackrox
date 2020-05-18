@@ -77,10 +77,10 @@ describe('Auth Sagas', () => {
                 ...createStateSelectors([{ name: 'ap1' }]),
                 [call(AuthService.fetchLoginAuthProviders), { response: [{ name: 'ap1' }] }],
                 [call(AuthService.getAccessToken), 'my-token'],
-                [call(AuthService.checkAuthStatus), 'ok'],
+                [call(AuthService.getAuthStatus), 'ok'],
                 [call(fetchUserRolePermissions), { response: {} }],
             ])
-            .put(actions.login())
+            .put(actions.login('ok'))
             .dispatch(createLocationChange('/'))
             .silentRun());
 
@@ -90,7 +90,7 @@ describe('Auth Sagas', () => {
                 ...createStateSelectors([{ name: 'ap1' }]),
                 [call(AuthService.fetchLoginAuthProviders), { response: [{ name: 'ap1' }] }],
                 [call(AuthService.getAccessToken), 'my-token'],
-                [call(AuthService.checkAuthStatus), throwError(new Error('401'))],
+                [call(AuthService.getAuthStatus), throwError(new Error('401'))],
                 [call(AuthService.logout), null],
                 [call(fetchUserRolePermissions), { response: {} }],
             ])

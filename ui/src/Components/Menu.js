@@ -21,6 +21,7 @@ const Menu = ({
     tooltip,
     dataTestId,
     hideCaret,
+    buttonTextClassName,
 }) => {
     const [isMenuOpen, setMenuState] = useState(false);
 
@@ -41,7 +42,7 @@ const Menu = ({
     function renderOptions(formattedOptions) {
         // TO DO: use accessibility friendly semantic HTML elements (<li>, <ul>)
         return formattedOptions.map(
-            ({ className: optionClassName, link, label, icon, onClick }) => {
+            ({ className: optionClassName, link, label, component, icon, onClick }) => {
                 if (link) {
                     return (
                         <Link
@@ -52,6 +53,7 @@ const Menu = ({
                         >
                             {icon}
                             {label && <span className="pl-2">{label}</span>}
+                            {component}
                         </Link>
                     );
                 }
@@ -98,7 +100,7 @@ const Menu = ({
                 >
                     <div className="flex flex-1 justify-center items-center text-left">
                         {buttonIcon}
-                        {buttonText}
+                        {buttonText && <span className={buttonTextClassName}>{buttonText}</span>}
                         {!hideCaret && <ChevronDown className="h-4 ml-1 pointer-events-none w-4" />}
                     </div>
                 </button>
@@ -118,6 +120,7 @@ const Menu = ({
 Menu.propTypes = {
     buttonClass: PropTypes.string,
     buttonText: PropTypes.string.isRequired,
+    buttonTextClassName: PropTypes.string,
     buttonIcon: PropTypes.node,
     menuClassName: PropTypes.string,
     className: PropTypes.string,
@@ -142,6 +145,7 @@ Menu.propTypes = {
 
 Menu.defaultProps = {
     buttonClass: '',
+    buttonTextClassName: '',
     buttonIcon: null,
     disabled: false,
     menuClassName: '',

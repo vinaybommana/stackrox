@@ -18,6 +18,7 @@ import {
     apidocsPath,
     accessControlPath,
     licensePath,
+    userPath,
     systemConfigPath,
     vulnManagementPath,
     configManagementPath,
@@ -54,6 +55,7 @@ const AsyncCompliancePage = asyncComponent(() => import('Containers/Compliance/P
 const AsyncRiskPage = asyncComponent(() => import('Containers/Risk/RiskPage'));
 const AsyncAccessControlPage = asyncComponent(() => import('Containers/AccessControl/Page'));
 const AsyncLicensePage = asyncComponent(() => import('Containers/License/Page'));
+const AsyncUserPage = asyncComponent(() => import('Containers/User/UserPage'));
 const AsyncSystemConfigPage = asyncComponent(() => import('Containers/SystemConfig/Page'));
 const AsyncConfigManagementPage = asyncComponent(() => import('Containers/ConfigManagement/Page'));
 const AsyncVulnMgmtPage = asyncComponent(() => import('Containers/Workflow/WorkflowLayout'));
@@ -116,6 +118,7 @@ class MainPage extends Component {
                         component={AsyncLicensePage}
                         requiredPermission="Licenses"
                     />
+                    <ProtectedRoute path={userPath} component={AsyncUserPage} />
                     <ProtectedRoute path={systemConfigPath} component={AsyncSystemConfigPage} />
                     <ProtectedRoute
                         path={vulnManagementPath}

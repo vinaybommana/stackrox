@@ -50,7 +50,7 @@ export const actions = {
         type: types.SET_AUTH_PROVIDER_EDITING_STATE,
         value,
     }),
-    login: () => ({ type: types.LOGIN }),
+    login: (userData) => ({ type: types.LOGIN, userData }),
     logout: () => ({ type: types.LOGOUT }),
     grantAnonymousAccess: () => ({ type: types.GRANT_ANONYMOUS_ACCESS }),
     handleAuthHttpError: (error) => ({ type: types.AUTH_HTTP_ERROR, error }),
@@ -58,6 +58,13 @@ export const actions = {
 };
 
 // Reducers
+
+const currentUser = (state = {}, action) => {
+    if (action.type === types.LOGIN) {
+        return isEqual(action.userData, state) ? state : action.userData;
+    }
+    return state;
+};
 
 const authProviders = (state = [], action) => {
     if (action.type === types.FETCH_AUTH_PROVIDERS.SUCCESS) {
@@ -141,6 +148,7 @@ const reducer = combineReducers({
     authStatus,
     authProviderResponse,
     isEditingAuthProvider,
+    currentUser,
 });
 
 export default reducer;
@@ -154,6 +162,7 @@ const getSelectedAuthProvider = (state) => state.selectedAuthProvider;
 const getAuthStatus = (state) => state.authStatus;
 const getAuthProviderError = (state) => state.authProviderResponse;
 const getAuthProviderEditingState = (state) => state.isEditingAuthProvider;
+const getCurrentUser = (state) => state.currentUser;
 
 export const selectors = {
     getAuthProviders,
@@ -163,4 +172,5 @@ export const selectors = {
     getAuthStatus,
     getAuthProviderError,
     getAuthProviderEditingState,
+    getCurrentUser,
 };

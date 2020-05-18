@@ -45,9 +45,9 @@ function* evaluateUserAccess() {
     if (tokenExists && authStatus !== AUTH_STATUS.LOGGED_IN) {
         // typical situation if token was stored before and then auth providers were loaded
         try {
-            yield call(AuthService.checkAuthStatus);
+            const result = yield call(AuthService.getAuthStatus);
             // call didn't fail, meaning that the token is fine (should we check the returned result?)
-            yield put(actions.login());
+            yield put(actions.login(result));
         } catch (e) {
             // call failed, assuming that the token is invalid
             yield put(actions.logout());
