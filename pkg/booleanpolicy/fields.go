@@ -6,6 +6,7 @@ import (
 	"github.com/stackrox/rox/pkg/booleanpolicy/augmentedobjs"
 	"github.com/stackrox/rox/pkg/booleanpolicy/query"
 	"github.com/stackrox/rox/pkg/booleanpolicy/querybuilders"
+	"github.com/stackrox/rox/pkg/booleanpolicy/violations"
 	"github.com/stackrox/rox/pkg/search"
 )
 
@@ -25,56 +26,58 @@ type metadataAndQB struct {
 	negationForbidden  bool
 	qb                 querybuilders.QueryBuilder
 	valueRegex         *regexp.Regexp
+	contextFields      violations.ContextQueryFields
 }
 
 // This block enumerates field short names.
 var (
-	AddCaps                = newField("Add Capabilities", querybuilders.ForFieldLabelExact(search.AddCapabilities), capabilitiesValueRegex, negationForbidden)
-	CVE                    = newField("CVE", querybuilders.ForFieldLabelRegex(search.CVE), stringValueRegex)
-	CVSS                   = newField("CVSS", querybuilders.ForFieldLabel(search.CVSS), comparatorDecimalValueRegex, operatorsForbidden)
-	ContainerCPULimit      = newField("Container CPU Limit", querybuilders.ForFieldLabel(search.CPUCoresLimit), comparatorDecimalValueRegex, operatorsForbidden)
-	ContainerCPURequest    = newField("Container CPU Request", querybuilders.ForFieldLabel(search.CPUCoresRequest), comparatorDecimalValueRegex, operatorsForbidden)
-	ContainerMemLimit      = newField("Container Memory Limit", querybuilders.ForFieldLabel(search.MemoryLimit), comparatorDecimalValueRegex, operatorsForbidden)
-	ContainerMemRequest    = newField("Container Memory Request", querybuilders.ForFieldLabel(search.MemoryRequest), comparatorDecimalValueRegex, operatorsForbidden)
-	DisallowedAnnotation   = newField("Disallowed Annotation", querybuilders.ForFieldLabelMap(search.Annotation, query.ShouldContain), keyValueValueRegex, negationForbidden)
-	DisallowedImageLabel   = newField("Disallowed Image Label", querybuilders.ForFieldLabelMap(search.ImageLabel, query.ShouldContain), keyValueValueRegex, negationForbidden)
-	DockerfileLine         = newField("Dockerfile Line", querybuilders.ForCompound(augmentedobjs.DockerfileLineCustomTag), dockerfileLineValueRegex, negationForbidden)
-	DropCaps               = newField("Drop Capabilities", querybuilders.ForDropCaps(), capabilitiesValueRegex, negationForbidden)
-	EnvironmentVariable    = newField("Environment Variable", nil, environmentVariableWithSourceRegex, negationForbidden)
-	FixedBy                = newField("Fixed By", querybuilders.ForFieldLabelRegex(search.FixedBy), stringValueRegex)
-	ImageAge               = newField("Image Age", querybuilders.ForDays(search.ImageCreatedTime), integerValueRegex, negationForbidden, operatorsForbidden)
-	ImageComponent         = newField("Image Component", querybuilders.ForCompound(augmentedobjs.ComponentAndVersionCustomTag), keyValueValueRegex, negationForbidden)
-	ImageRegistry          = newField("Image Registry", querybuilders.ForFieldLabelRegex(search.ImageRegistry), stringValueRegex)
-	ImageRemote            = newField("Image Remote", querybuilders.ForFieldLabelRegex(search.ImageRemote), stringValueRegex, negationForbidden)
-	ImageScanAge           = newField("Image Scan Age", querybuilders.ForDays(search.ImageScanTime), integerValueRegex, negationForbidden, operatorsForbidden)
-	ImageTag               = newField("Image Tag", querybuilders.ForFieldLabelRegex(search.ImageTag), stringValueRegex)
-	MinimumRBACPermissions = newField("Minimum RBAC Permissions", querybuilders.ForK8sRBAC(), rbacPermissionValueRegex, operatorsForbidden)
-	Port                   = newField("Port", querybuilders.ForFieldLabel(search.Port), integerValueRegex)
-	PortExposure           = newField("Port Exposure Method", querybuilders.ForFieldLabel(search.ExposureLevel), portExposureValueRegex)
-	Privileged             = newField("Privileged", querybuilders.ForFieldLabel(search.Privileged), booleanValueRegex, negationForbidden, operatorsForbidden)
-	ProcessAncestor        = newField("Process Ancestor", querybuilders.ForFieldLabelRegex(search.ProcessAncestor), stringValueRegex)
-	ProcessArguments       = newField("Process Arguments", querybuilders.ForFieldLabelRegex(search.ProcessArguments), stringValueRegex)
-	ProcessName            = newField("Process Name", querybuilders.ForFieldLabelRegex(search.ProcessName), stringValueRegex)
-	ProcessUID             = newField("Process UID", querybuilders.ForFieldLabel(search.ProcessUID), stringValueRegex)
-	Protocol               = newField("Protocol", querybuilders.ForFieldLabelUpper(search.PortProtocol), stringValueRegex)
-	ReadOnlyRootFS         = newField("Read-Only Root Filesystem", querybuilders.ForFieldLabel(search.ReadOnlyRootFilesystem), booleanValueRegex, negationForbidden, operatorsForbidden)
-	RequiredAnnotation     = newField("Required Annotation", querybuilders.ForFieldLabelMap(search.Annotation, query.ShouldNotContain), keyValueValueRegex, negationForbidden)
-	RequiredImageLabel     = newField("Required Image Label", querybuilders.ForFieldLabelMap(search.ImageLabel, query.ShouldNotContain), keyValueValueRegex, negationForbidden)
-	RequiredLabel          = newField("Required Label", querybuilders.ForFieldLabelMap(search.Label, query.ShouldNotContain), keyValueValueRegex, negationForbidden)
-	UnscannedImage         = newField("Unscanned Image", querybuilders.ForFieldLabelNil(augmentedobjs.ImageScanCustomTag), booleanValueRegex)
-	VolumeDestination      = newField("Volume Destination", querybuilders.ForFieldLabelRegex(search.VolumeDestination), stringValueRegex)
-	VolumeName             = newField("Volume Name", querybuilders.ForFieldLabelRegex(search.VolumeName), stringValueRegex)
-	VolumeSource           = newField("Volume Source", querybuilders.ForFieldLabelRegex(search.VolumeSource), stringValueRegex)
-	VolumeType             = newField("Volume Type", querybuilders.ForFieldLabelRegex(search.VolumeType), stringValueRegex)
-	WhitelistsEnabled      = newField("Unexpected Process Executed", querybuilders.ForFieldLabel(augmentedobjs.NotWhitelistedCustomTag), booleanValueRegex, negationForbidden, operatorsForbidden)
-	WritableHostMount      = newField("Writable Host Mount", querybuilders.ForFieldLabelBoolean(search.ReadOnlyRootFilesystem, true), booleanValueRegex, negationForbidden, operatorsForbidden)
-	WritableVolume         = newField("Writable Volume", querybuilders.ForFieldLabelBoolean(search.VolumeReadonly, true), booleanValueRegex, negationForbidden, operatorsForbidden)
+	AddCaps                = newField("Add Capabilities", querybuilders.ForFieldLabelExact(search.AddCapabilities), violations.ContainerContextFields, capabilitiesValueRegex, negationForbidden)
+	CVE                    = newField("CVE", querybuilders.ForFieldLabelRegex(search.CVE), violations.VulnContextFields, stringValueRegex)
+	CVSS                   = newField("CVSS", querybuilders.ForFieldLabel(search.CVSS), violations.VulnContextFields, comparatorDecimalValueRegex, operatorsForbidden)
+	ContainerCPULimit      = newField("Container CPU Limit", querybuilders.ForFieldLabel(search.CPUCoresLimit), violations.ResourceContextFields, comparatorDecimalValueRegex, operatorsForbidden)
+	ContainerCPURequest    = newField("Container CPU Request", querybuilders.ForFieldLabel(search.CPUCoresRequest), violations.ResourceContextFields, comparatorDecimalValueRegex, operatorsForbidden)
+	ContainerMemLimit      = newField("Container Memory Limit", querybuilders.ForFieldLabel(search.MemoryLimit), violations.ResourceContextFields, comparatorDecimalValueRegex, operatorsForbidden)
+	ContainerMemRequest    = newField("Container Memory Request", querybuilders.ForFieldLabel(search.MemoryRequest), violations.ResourceContextFields, comparatorDecimalValueRegex, operatorsForbidden)
+	DisallowedAnnotation   = newField("Disallowed Annotation", querybuilders.ForFieldLabelMap(search.Annotation, query.ShouldContain), nil, keyValueValueRegex, negationForbidden)
+	DisallowedImageLabel   = newField("Disallowed Image Label", querybuilders.ForFieldLabelMap(search.ImageLabel, query.ShouldContain), violations.ImageContextFields, keyValueValueRegex, negationForbidden)
+	DockerfileLine         = newField("Dockerfile Line", querybuilders.ForCompound(augmentedobjs.DockerfileLineCustomTag), violations.ImageContextFields, dockerfileLineValueRegex, negationForbidden)
+	DropCaps               = newField("Drop Capabilities", querybuilders.ForDropCaps(), violations.ContainerContextFields, capabilitiesValueRegex, negationForbidden)
+	EnvironmentVariable    = newField("Environment Variable", nil, violations.EnvVarContextFields, environmentVariableWithSourceRegex, negationForbidden)
+	FixedBy                = newField("Fixed By", querybuilders.ForFieldLabelRegex(search.FixedBy), violations.VulnContextFields, stringValueRegex)
+	ImageAge               = newField("Image Age", querybuilders.ForDays(search.ImageCreatedTime), violations.ImageContextFields, integerValueRegex, negationForbidden, operatorsForbidden)
+	ImageComponent         = newField("Image Component", querybuilders.ForCompound(augmentedobjs.ComponentAndVersionCustomTag), violations.ImageContextFields, keyValueValueRegex, negationForbidden)
+	ImageRegistry          = newField("Image Registry", querybuilders.ForFieldLabelRegex(search.ImageRegistry), violations.ImageContextFields, stringValueRegex)
+	ImageRemote            = newField("Image Remote", querybuilders.ForFieldLabelRegex(search.ImageRemote), violations.ImageContextFields, stringValueRegex, negationForbidden)
+	ImageScanAge           = newField("Image Scan Age", querybuilders.ForDays(search.ImageScanTime), violations.ImageContextFields, integerValueRegex, negationForbidden, operatorsForbidden)
+	ImageTag               = newField("Image Tag", querybuilders.ForFieldLabelRegex(search.ImageTag), violations.ImageContextFields, stringValueRegex)
+	MinimumRBACPermissions = newField("Minimum RBAC Permissions", querybuilders.ForK8sRBAC(), nil, rbacPermissionValueRegex, operatorsForbidden)
+	Port                   = newField("Port", querybuilders.ForFieldLabel(search.Port), violations.PortContextFields, integerValueRegex)
+	PortExposure           = newField("Port Exposure Method", querybuilders.ForFieldLabel(search.ExposureLevel), violations.PortContextFields, portExposureValueRegex)
+	Privileged             = newField("Privileged", querybuilders.ForFieldLabel(search.Privileged), violations.ContainerContextFields, booleanValueRegex, negationForbidden, operatorsForbidden)
+	ProcessAncestor        = newField("Process Ancestor", querybuilders.ForFieldLabelRegex(search.ProcessAncestor), nil, stringValueRegex)
+	ProcessArguments       = newField("Process Arguments", querybuilders.ForFieldLabelRegex(search.ProcessArguments), nil, stringValueRegex)
+	ProcessName            = newField("Process Name", querybuilders.ForFieldLabelRegex(search.ProcessName), nil, stringValueRegex)
+	ProcessUID             = newField("Process UID", querybuilders.ForFieldLabel(search.ProcessUID), nil, stringValueRegex)
+	Protocol               = newField("Protocol", querybuilders.ForFieldLabelUpper(search.PortProtocol), violations.PortContextFields, stringValueRegex)
+	ReadOnlyRootFS         = newField("Read-Only Root Filesystem", querybuilders.ForFieldLabel(search.ReadOnlyRootFilesystem), violations.ContainerContextFields, booleanValueRegex, negationForbidden, operatorsForbidden)
+	RequiredAnnotation     = newField("Required Annotation", querybuilders.ForFieldLabelMap(search.Annotation, query.ShouldNotContain), nil, keyValueValueRegex, negationForbidden)
+	RequiredImageLabel     = newField("Required Image Label", querybuilders.ForFieldLabelMap(search.ImageLabel, query.ShouldNotContain), violations.ImageContextFields, keyValueValueRegex, negationForbidden)
+	RequiredLabel          = newField("Required Label", querybuilders.ForFieldLabelMap(search.Label, query.ShouldNotContain), nil, keyValueValueRegex, negationForbidden)
+	UnscannedImage         = newField("Unscanned Image", querybuilders.ForFieldLabelNil(augmentedobjs.ImageScanCustomTag), violations.ImageContextFields, booleanValueRegex)
+	VolumeDestination      = newField("Volume Destination", querybuilders.ForFieldLabelRegex(search.VolumeDestination), violations.VolumeContextFields, stringValueRegex)
+	VolumeName             = newField("Volume Name", querybuilders.ForFieldLabelRegex(search.VolumeName), violations.VolumeContextFields, stringValueRegex)
+	VolumeSource           = newField("Volume Source", querybuilders.ForFieldLabelRegex(search.VolumeSource), violations.VolumeContextFields, stringValueRegex)
+	VolumeType             = newField("Volume Type", querybuilders.ForFieldLabelRegex(search.VolumeType), violations.VolumeContextFields, stringValueRegex)
+	WhitelistsEnabled      = newField("Unexpected Process Executed", querybuilders.ForFieldLabel(augmentedobjs.NotWhitelistedCustomTag), nil, booleanValueRegex, negationForbidden, operatorsForbidden)
+	WritableHostMount      = newField("Writable Host Mount", querybuilders.ForFieldLabelBoolean(search.ReadOnlyRootFilesystem, true), violations.ContainerContextFields, booleanValueRegex, negationForbidden, operatorsForbidden)
+	WritableVolume         = newField("Writable Volume", querybuilders.ForFieldLabelBoolean(search.VolumeReadonly, true), violations.VolumeContextFields, booleanValueRegex, negationForbidden, operatorsForbidden)
 )
 
-func newField(fieldName string, qb querybuilders.QueryBuilder, valueRegex *regexp.Regexp, options ...option) string {
+func newField(fieldName string, qb querybuilders.QueryBuilder, contextFields violations.ContextQueryFields, valueRegex *regexp.Regexp, options ...option) string {
 	m := metadataAndQB{
-		valueRegex: valueRegex,
-		qb:         qb,
+		qb:            qb,
+		contextFields: contextFields,
+		valueRegex:    valueRegex,
 	}
 	for _, o := range options {
 		switch o {

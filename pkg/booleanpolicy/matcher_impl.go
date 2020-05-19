@@ -2,29 +2,26 @@ package booleanpolicy
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/booleanpolicy/augmentedobjs"
 	"github.com/stackrox/rox/pkg/booleanpolicy/evaluator/pathutil"
+	"github.com/stackrox/rox/pkg/booleanpolicy/violations"
 	"github.com/stackrox/rox/pkg/searchbasedpolicies"
 	"github.com/stackrox/rox/pkg/searchbasedpolicies/builders"
 )
 
 type matcherImpl struct {
 	evaluators []sectionAndEvaluator
+	stage      storage.LifecycleStage
 }
 
-func matchWithEvaluator(sectionAndEval sectionAndEvaluator, obj *pathutil.AugmentedObj) ([]*storage.Alert_Violation, error) {
+func matchWithEvaluator(sectionAndEval sectionAndEvaluator, obj *pathutil.AugmentedObj, stage storage.LifecycleStage) ([]*storage.Alert_Violation, error) {
 	finalResult, matched := sectionAndEval.evaluator.Evaluate(obj.Value())
 	if !matched {
 		return nil, nil
 	}
-
-	// TODO(viswa): Figure out how to populate these for Boolean policies.
-	violations := []*storage.Alert_Violation{{Message: fmt.Sprintf("TODO (%+v)", finalResult)}}
-	return violations, nil
-
+	return violations.ViolationPrinter(stage, sectionAndEval.sectionName, finalResult)
 }
 
 func (m *matcherImpl) MatchImage(_ context.Context, image *storage.Image) (searchbasedpolicies.Violations, error) {
@@ -43,7 +40,7 @@ func (m *matcherImpl) getViolations(obj *pathutil.AugmentedObj) (*searchbasedpol
 	var allViolations []*storage.Alert_Violation
 	var atLeastOneMatched bool
 	for _, eval := range m.evaluators {
-		violations, err := matchWithEvaluator(eval, obj)
+		violations, err := matchWithEvaluator(eval, obj, m.stage)
 		if err != nil {
 			return nil, err
 		}

@@ -34,14 +34,13 @@ func (f baseEvaluatorFunc) Evaluate(path *pathutil.Path, value reflect.Value) (*
 	return f(path, value)
 }
 
-func createBaseEvaluator(fieldName string, fieldType reflect.Type, values []string, negate bool, operator query.Operator) (baseEvaluator, error) {
-	if len(values) == 0 {
-		return nil, errors.New("no values in query")
+func createBaseEvaluator(fieldName string, fieldType reflect.Type, values []string, negate bool, operator query.Operator, matchAll bool) (baseEvaluator, error) {
+	lenValues := len(values)
+	if (matchAll && lenValues > 0) || (!matchAll && lenValues == 0) {
+		return nil, errors.New("invalid number of values")
 	}
-	if len(values) > 1 {
-		if operator != query.Or && operator != query.And {
-			return nil, errors.Errorf("invalid operator: %s", operator)
-		}
+	if lenValues > 1 && operator != query.Or && operator != query.And {
+		return nil, errors.Errorf("invalid operator: %s", operator)
 	}
 	kind := fieldType.Kind()
 	generatorForKind, err := getMatcherGeneratorForKind(kind)
@@ -49,9 +48,27 @@ func createBaseEvaluator(fieldName string, fieldType reflect.Type, values []stri
 		return nil, err
 	}
 
+	if matchAll {
+		m, err := generatorForKind("", fieldType, matchAll)
+		if err != nil {
+			return nil, errors.Wrapf(err, "invalid match all generator for field %s", fieldName)
+		}
+		return baseEvaluatorFunc(func(path *pathutil.Path, instance reflect.Value) (*fieldResult, bool) {
+			valuesAndMatches := m(instance)
+			var values []string
+			if len(valuesAndMatches) == 0 {
+				return nil, false
+			}
+			for _, valueAndMatch := range valuesAndMatches {
+				values = append(values, valueAndMatch.value)
+			}
+			return fieldResultWithSingleMatch(fieldName, path, values...), true
+		}), nil
+	}
+
 	baseMatchers := make([]baseMatcherAndExtractor, 0, len(values))
 	for _, value := range values {
-		m, err := generatorForKind(value, fieldType)
+		m, err := generatorForKind(value, fieldType, false)
 		if err != nil {
 			return nil, errors.Wrapf(err, "invalid value: %s for field %s", value, fieldName)
 		}
@@ -158,7 +175,7 @@ func getMatcherGeneratorForKind(kind reflect.Kind) (baseMatcherGenerator, error)
 	}
 }
 
-type baseMatcherGenerator func(string, reflect.Type) (baseMatcherAndExtractor, error)
+type baseMatcherGenerator func(string, reflect.Type, bool) (baseMatcherAndExtractor, error)
 
 // A baseMatcherAndExtractor takes a value of a given type, extracts a human-readable string value
 // and returns whether it matched or not.
@@ -175,37 +192,43 @@ func fieldResultWithSingleMatch(fieldName string, path *pathutil.Path, values ..
 	return &fieldResult{map[string][]Match{fieldName: {{Path: path, Values: values}}}}
 }
 
-func generateStringMatcher(value string, _ reflect.Type) (baseMatcherAndExtractor, error) {
-	baseMatcher, err := basematchers.ForString(value)
-	if err != nil {
-		return nil, err
+func generateStringMatcher(value string, _ reflect.Type, matchAll bool) (baseMatcherAndExtractor, error) {
+	var baseMatcher func(string) bool
+	if matchAll && value != "" {
+		return nil, errors.New("non-empty value for matchAll")
+	}
+	if !matchAll {
+		var err error
+		baseMatcher, err = basematchers.ForString(value)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return func(instance reflect.Value) []valueMatchedPair {
 		if instance.Kind() != reflect.String {
 			return nil
 		}
 		asStr := instance.String()
-		return []valueMatchedPair{{value: asStr, matched: baseMatcher(asStr)}}
+		return []valueMatchedPair{{value: asStr, matched: matchAll || baseMatcher(asStr)}}
 	}, nil
 }
 
-func generateSliceMatcher(value string, fieldType reflect.Type) (baseMatcherAndExtractor, error) {
+func generateSliceMatcher(value string, fieldType reflect.Type, matchAll bool) (baseMatcherAndExtractor, error) {
 	underlyingType := fieldType.Elem()
 	matcherGenerator, err := getMatcherGeneratorForKind(underlyingType.Kind())
 	if err != nil {
 		return nil, err
 	}
-	subMatcher, err := matcherGenerator(value, underlyingType)
+	subMatcher, err := matcherGenerator(value, underlyingType, matchAll)
 	if err != nil {
 		return nil, err
 	}
-
 	return func(instance reflect.Value) []valueMatchedPair {
 		length := instance.Len()
 		if length == 0 {
 			// An empty slice matches no queries, but we want to bubble this up,
 			// for callers that are negating.
-			return []valueMatchedPair{{value: "<empty>", matched: false}}
+			return []valueMatchedPair{{value: "<empty>", matched: matchAll}}
 		}
 		valuesAndMatches := make([]valueMatchedPair, 0, length)
 		for i := 0; i < length; i++ {
@@ -215,13 +238,18 @@ func generateSliceMatcher(value string, fieldType reflect.Type) (baseMatcherAndE
 	}, nil
 }
 
-func generateTimestampMatcher(value string) (baseMatcherAndExtractor, error) {
+func generateTimestampMatcher(value string, matchAll bool) (baseMatcherAndExtractor, error) {
 	var baseMatcher func(*types.Timestamp) bool
-	if value != search.NullString {
-		var err error
-		baseMatcher, err = basematchers.ForTimestamp(value)
-		if err != nil {
-			return nil, err
+	if matchAll && value != "" {
+		return nil, errors.New("non-empty value for matchAll")
+	}
+	if !matchAll {
+		if value != search.NullString {
+			var err error
+			baseMatcher, err = basematchers.ForTimestamp(value)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 	return func(instance reflect.Value) []valueMatchedPair {
@@ -230,42 +258,43 @@ func generateTimestampMatcher(value string) (baseMatcherAndExtractor, error) {
 			return nil
 		}
 		if ts == nil {
-			if value == search.NullString {
+			if matchAll || value == search.NullString {
 				return []valueMatchedPair{{value: "<empty timestamp>", matched: true}}
 			}
 			return nil
 		}
-		return []valueMatchedPair{{value: readable.ProtoTime(ts), matched: value != "-" && baseMatcher(ts)}}
+		return []valueMatchedPair{{value: readable.ProtoTime(ts), matched: matchAll || (value != "-" && baseMatcher((ts)))}}
 	}, nil
 }
 
-func generatePtrMatcher(value string, fieldType reflect.Type) (baseMatcherAndExtractor, error) {
+func generatePtrMatcher(value string, fieldType reflect.Type, matchAll bool) (baseMatcherAndExtractor, error) {
 	// Special case for pointer to timestamp.
 	if fieldType == timestampPtrType {
-		return generateTimestampMatcher(value)
+		return generateTimestampMatcher(value, matchAll)
 	}
-
+	if matchAll && value != "" {
+		return nil, errors.New("non-empty value for matchAll")
+	}
 	underlyingType := fieldType.Elem()
 	var subMatcher func(reflect.Value) []valueMatchedPair
 	matcherGenerator, err := getMatcherGeneratorForKind(underlyingType.Kind())
 	if err != nil {
 		// If testing for nil, the submatcher is not required, so this is okay.
-		if value != search.NullString {
+		if !matchAll && value != search.NullString {
 			return nil, err
 		}
 		matcherGenerator = nil
 	}
 	if matcherGenerator != nil {
 		var err error
-		subMatcher, err = matcherGenerator(value, underlyingType)
+		subMatcher, err = matcherGenerator(value, underlyingType, matchAll)
 		if err != nil {
 			return nil, err
 		}
 	}
-
 	return func(instance reflect.Value) []valueMatchedPair {
 		if instance.IsNil() {
-			return []valueMatchedPair{{value: "<nil>", matched: value == search.NullString}}
+			return []valueMatchedPair{{value: "<nil>", matched: matchAll || value == search.NullString}}
 		}
 		var subMatches []valueMatchedPair
 		if subMatcher != nil {
@@ -276,7 +305,7 @@ func generatePtrMatcher(value string, fieldType reflect.Type) (baseMatcherAndExt
 		// If the value is null, and the pointer is not nil, it did not match.
 		// So just use the values from the subMatcher but always set matched
 		// to false.
-		if value == search.NullString {
+		if !matchAll && value == search.NullString {
 			for i := range subMatches {
 				subMatches[i].matched = false
 			}
@@ -285,67 +314,91 @@ func generatePtrMatcher(value string, fieldType reflect.Type) (baseMatcherAndExt
 	}, nil
 }
 
-func generateBoolMatcher(value string, _ reflect.Type) (baseMatcherAndExtractor, error) {
-	baseMatcher, err := basematchers.ForBool(value)
-	if err != nil {
-		return nil, err
+func generateBoolMatcher(value string, _ reflect.Type, matchAll bool) (baseMatcherAndExtractor, error) {
+	var baseMatcher func(bool) bool
+	if matchAll && value != "" {
+		return nil, errors.New("non-empty value for matchAll")
+	}
+	if !matchAll {
+		var err error
+		baseMatcher, err = basematchers.ForBool(value)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return func(instance reflect.Value) []valueMatchedPair {
 		if instance.Kind() != reflect.Bool {
 			return nil
 		}
 		asBool := instance.Bool()
-		return []valueMatchedPair{{value: fmt.Sprintf("%t", asBool), matched: baseMatcher(asBool)}}
+		return []valueMatchedPair{{value: fmt.Sprintf("%t", asBool), matched: matchAll || baseMatcher(asBool)}}
 	}, nil
 }
 
-func generateIntMatcher(value string, fieldType reflect.Type) (baseMatcherAndExtractor, error) {
+func generateIntMatcher(value string, fieldType reflect.Type, matchAll bool) (baseMatcherAndExtractor, error) {
 	if enum, ok := reflect.Zero(fieldType).Interface().(protoreflect.ProtoEnum); ok {
-		return generateEnumMatcher(value, enum)
+		return generateEnumMatcher(value, enum, matchAll)
 	}
-
-	baseMatcher, err := basematchers.ForInt(value)
-	if err != nil {
-		return nil, err
+	if matchAll && value != "" {
+		return nil, errors.New("non-empty value for matchAll")
 	}
-
+	var baseMatcher func(int64) bool
+	if !matchAll {
+		var err error
+		baseMatcher, err = basematchers.ForInt(value)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return func(instance reflect.Value) []valueMatchedPair {
 		switch instance.Kind() {
 		case reflect.Int, reflect.Int64, reflect.Int32, reflect.Int16, reflect.Int8:
 			asInt := instance.Int()
-			return []valueMatchedPair{{value: fmt.Sprintf("%d", asInt), matched: baseMatcher(asInt)}}
+			return []valueMatchedPair{{value: fmt.Sprintf("%d", asInt), matched: matchAll || baseMatcher(asInt)}}
 		}
 		return nil
 	}, nil
 }
 
-func generateUintMatcher(value string, _ reflect.Type) (baseMatcherAndExtractor, error) {
-	baseMatcher, err := basematchers.ForUint(value)
-	if err != nil {
-		return nil, err
+func generateUintMatcher(value string, _ reflect.Type, matchAll bool) (baseMatcherAndExtractor, error) {
+	var baseMatcher func(uint64) bool
+	if matchAll && value != "" {
+		return nil, errors.New("non-empty value for matchAll")
 	}
-
+	if !matchAll {
+		var err error
+		baseMatcher, err = basematchers.ForUint(value)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return func(instance reflect.Value) []valueMatchedPair {
 		switch instance.Kind() {
 		case reflect.Uint, reflect.Uint64, reflect.Uint32, reflect.Uint16, reflect.Uint8:
 			asUint := instance.Uint()
-			return []valueMatchedPair{{value: fmt.Sprintf("%d", asUint), matched: baseMatcher(asUint)}}
+			return []valueMatchedPair{{value: fmt.Sprintf("%d", asUint), matched: matchAll || baseMatcher(asUint)}}
 		}
 		return nil
 	}, nil
 }
 
-func generateFloatMatcher(value string, _ reflect.Type) (baseMatcherAndExtractor, error) {
-	baseMatcher, err := basematchers.ForFloat(value)
-	if err != nil {
-		return nil, err
+func generateFloatMatcher(value string, _ reflect.Type, matchAll bool) (baseMatcherAndExtractor, error) {
+	var baseMatcher func(float64) bool
+	if matchAll && value != "" {
+		return nil, errors.New("non-empty value for matchAll")
 	}
-
+	if !matchAll {
+		var err error
+		baseMatcher, err = basematchers.ForFloat(value)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return func(instance reflect.Value) []valueMatchedPair {
 		switch instance.Kind() {
 		case reflect.Float32, reflect.Float64:
 			asFloat := instance.Float()
-			return []valueMatchedPair{{value: fmt.Sprintf("%g", asFloat), matched: baseMatcher(asFloat)}}
+			return []valueMatchedPair{{value: fmt.Sprintf("%g", asFloat), matched: matchAll || baseMatcher(asFloat)}}
 		}
 		return nil
 	}, nil
@@ -355,12 +408,25 @@ func isUnsetEnum(value string) bool {
 	return strings.HasPrefix(strings.ToLower(value), "unset")
 }
 
-func generateEnumMatcher(value string, enumRef protoreflect.ProtoEnum) (baseMatcherAndExtractor, error) {
-	baseMatcher, numberToName, err := basematchers.ForEnum(value, enumRef)
-	if err != nil {
-		return nil, err
+func generateEnumMatcher(value string, enumRef protoreflect.ProtoEnum, matchAll bool) (baseMatcherAndExtractor, error) {
+	var baseMatcher func(int64) bool
+	var numberToName map[int32]string
+	if matchAll && value != "" {
+		return nil, errors.New("non-empty value for matchAll")
 	}
-
+	if !matchAll {
+		var err error
+		baseMatcher, numberToName, err = basematchers.ForEnum(value, enumRef)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		enumDesc, err := protoreflect.GetEnumDescriptor(enumRef)
+		if err != nil {
+			return nil, err
+		}
+		_, numberToName = basematchers.MapEnumValues(enumDesc)
+	}
 	return func(instance reflect.Value) []valueMatchedPair {
 		if instance.Kind() != reflect.Int32 {
 			return nil
@@ -368,30 +434,36 @@ func generateEnumMatcher(value string, enumRef protoreflect.ProtoEnum) (baseMatc
 		asInt := instance.Int()
 		matchedValue := numberToName[int32(asInt)]
 		if matchedValue == "" {
-			utils.Should(errors.Errorf("enum query matched (%s), but no value in numberToName (%v) (got number: %d)",
+			utils.Should(errors.Errorf("enum query matched (%v), but no value in numberToName (%v) (got number: %d)",
 				value, numberToName, asInt))
 			matchedValue = strconv.Itoa(int(asInt))
 		}
 		// Treat an unset enum as an undefined value -- it matches no numeric query.
-		if asInt == 0 && isUnsetEnum(matchedValue) {
+		if !matchAll && asInt == 0 && isUnsetEnum(matchedValue) {
 			return nil
 		}
-		return []valueMatchedPair{{value: matchedValue, matched: baseMatcher(asInt)}}
+		return []valueMatchedPair{{value: matchedValue, matched: matchAll || baseMatcher(asInt)}}
 	}, nil
 }
 
-func generateMapMatcher(value string, _ reflect.Type) (baseMatcherAndExtractor, error) {
-	baseMatcher, err := mapeval.Matcher(value)
-	if err != nil {
-		return nil, err
+func generateMapMatcher(value string, _ reflect.Type, matchAll bool) (baseMatcherAndExtractor, error) {
+	var baseMatcher func(*reflect.MapIter) bool
+	if matchAll && value != "" {
+		return nil, errors.New("non-empty value for matchAll")
 	}
-
+	if !matchAll {
+		var err error
+		baseMatcher, err = mapeval.Matcher(value)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return func(instance reflect.Value) []valueMatchedPair {
 		if instance.Kind() != reflect.Map {
 			return nil
 		}
 
 		iter := instance.MapRange()
-		return []valueMatchedPair{{value: "", matched: baseMatcher(iter)}}
+		return []valueMatchedPair{{value: "", matched: matchAll || baseMatcher(iter)}}
 	}, nil
 }

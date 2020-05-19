@@ -89,7 +89,7 @@ func ForEnum(value string, enumRef protoreflect.ProtoEnum) (func(int64) bool, ma
 	if err != nil {
 		return nil, nil, err
 	}
-	nameToNumber, numberToName := mapEnumValues(enumDesc)
+	nameToNumber, numberToName := MapEnumValues(enumDesc)
 
 	// Get the comparator if needed.
 	cmpStr, value := parseNumericPrefix(value)
@@ -172,7 +172,8 @@ func ForTimestamp(value string) (func(*types.Timestamp) bool, error) {
 	}, nil
 }
 
-func mapEnumValues(enumDesc *descriptor.EnumDescriptorProto) (nameToNumber map[string]int32, numberToName map[int32]string) {
+// MapEnumValues provides mappings between enum string name and enum number
+func MapEnumValues(enumDesc *descriptor.EnumDescriptorProto) (nameToNumber map[string]int32, numberToName map[int32]string) {
 	nameToNumber = make(map[string]int32, len(enumDesc.GetValue()))
 	numberToName = make(map[int32]string, len(enumDesc.GetValue()))
 	for _, v := range enumDesc.GetValue() {

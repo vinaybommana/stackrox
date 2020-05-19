@@ -35,34 +35,38 @@ type sectionAndEvaluator struct {
 // BuildDeploymentMatcher builds a matcher for deployments against the given policy,
 // which must be a boolean policy.
 func BuildDeploymentMatcher(p *storage.Policy) (DeploymentMatcher, error) {
-	sectionsAndEvals, err := getSectionsAndEvals(&deploymentEvalFactory, p)
+	sectionsAndEvals, err := getSectionsAndEvals(&deploymentEvalFactory, p, storage.LifecycleStage_DEPLOY)
 	if err != nil {
 		return nil, err
 	}
 
 	return &matcherImpl{
 		evaluators: sectionsAndEvals,
+		stage:      storage.LifecycleStage_DEPLOY,
 	}, nil
 }
 
 // BuildImageMatcher builds a matcher for images against the given policy,
 // which must be a boolean policy.
 func BuildImageMatcher(p *storage.Policy) (ImageMatcher, error) {
-	sectionsAndEvals, err := getSectionsAndEvals(&imageEvalFactory, p)
+	sectionsAndEvals, err := getSectionsAndEvals(&imageEvalFactory, p, storage.LifecycleStage_BUILD)
 	if err != nil {
 		return nil, err
 	}
-	return &matcherImpl{evaluators: sectionsAndEvals}, nil
+	return &matcherImpl{
+		evaluators: sectionsAndEvals,
+		stage:      storage.LifecycleStage_BUILD,
+	}, nil
 }
 
-func getSectionsAndEvals(factory *evaluator.Factory, p *storage.Policy) ([]sectionAndEvaluator, error) {
+func getSectionsAndEvals(factory *evaluator.Factory, p *storage.Policy, stage storage.LifecycleStage) ([]sectionAndEvaluator, error) {
 	if err := Validate(p); err != nil {
 		return nil, err
 	}
 
 	sectionsAndEvals := make([]sectionAndEvaluator, 0, len(p.GetPolicySections()))
 	for _, section := range p.GetPolicySections() {
-		sectionQ, err := sectionToQuery(section)
+		sectionQ, err := sectionToQuery(section, stage)
 		if err != nil {
 			return nil, errors.Wrapf(err, "invalid section %q", section.GetSectionName())
 		}

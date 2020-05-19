@@ -27,7 +27,7 @@ func MustCreateNewFactory(objMeta *pathutil.AugmentedObjMeta) Factory {
 	return f
 }
 
-// NewFactory returns a new Evaluator factory given metadata about the object.
+// NewFactory returns a new Evaluator factory given metadata about the object and (optional) associated lifecycle stage.
 func NewFactory(objMeta *pathutil.AugmentedObjMeta) (Factory, error) {
 	fieldToMetaPaths, err := objMeta.MapSearchTagsToPaths()
 	if err != nil {
@@ -132,7 +132,7 @@ func (f *Factory) generateInternalEvaluatorForFieldQuery(q *query.FieldQuery) (f
 	}
 
 	baseType := fieldPath[len(fieldPath)-1].Type
-	baseEvaluator, err := createBaseEvaluator(q.Field, baseType, q.Values, q.Negate, q.Operator)
+	baseEvaluator, err := createBaseEvaluator(q.Field, baseType, q.Values, q.Negate, q.Operator, q.MatchAll)
 	if err != nil {
 		return nil, errors.Wrapf(err, "invalid query %v", q)
 	}

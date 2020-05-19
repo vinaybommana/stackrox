@@ -25,6 +25,7 @@ type FieldQuery struct {
 	Values   []string
 	Operator Operator
 	Negate   bool
+	MatchAll bool
 }
 
 // A Query represents a query.

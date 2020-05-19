@@ -102,6 +102,9 @@ func imageWithComponents(components []*storage.EmbeddedImageScanComponent) *stor
 func imageWithLayers(layers []*storage.ImageLayer) *storage.Image {
 	return &storage.Image{
 		Id: uuid.NewV4().String(),
+		Name: &storage.ImageName{
+			FullName: "docker.io/stackrox/test-image:0.1",
+		},
 		Metadata: &storage.ImageMetadata{
 			V1: &storage.V1Metadata{
 				Layers: layers,
@@ -280,7 +283,8 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 	}
 	suite.addDepAndImages(heartbleedDep, &storage.Image{
-		Id: "HEARTBLEEDDEPSHA",
+		Id:   "HEARTBLEEDDEPSHA",
+		Name: &storage.ImageName{FullName: "heartbleed"},
 		Scan: &storage.ImageScan{
 			Components: []*storage.EmbeddedImageScanComponent{
 				{Name: "heartbleed", Version: "1.2", Vulns: []*storage.EmbeddedVulnerability{

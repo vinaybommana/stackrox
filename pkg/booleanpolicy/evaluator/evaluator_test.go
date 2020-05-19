@@ -104,6 +104,14 @@ func resultWithSingleMatch(fieldName string, values ...string) *Result {
 	return &Result{[]map[string][]string{{fieldName: values}}}
 }
 
+func (r *Result) addContextMatch(fieldName string, values ...string) *Result {
+	for _, match := range r.Matches {
+		match[fieldName] = values
+	}
+	r.Matches = append(r.Matches, map[string][]string{fieldName: values})
+	return r
+}
+
 func runTestCases(t *testing.T, testCases []testCase) {
 	for _, testCase := range testCases {
 		c := testCase
@@ -1496,5 +1504,86 @@ func TestDifferentBaseTypes(t *testing.T) {
 			},
 			expectedResult: resultWithSingleMatch("BaseStructPtr", "<non-nil>"),
 		},
+	})
+}
+
+func TestDifferentBaseTypesMatchAll(t *testing.T) {
+	nestedFieldQuery := &query.FieldQuery{Field: "A", Values: []string{"A0"}}
+	nestedFieldQueryNegated := &query.FieldQuery{Field: "A", Values: []string{"A0"}, Negate: true}
+	runTestCases(t, []testCase{
+		{
+			desc: "base ptr, nil pointer",
+			obj: &TopLevel{
+				NestedSlice: []Nested{{NestedValA: "A0"}},
+				Base: Base{
+					ValBasePtr: nil},
+			},
+			q: &query.Query{
+				FieldQueries: []*query.FieldQuery{
+					nestedFieldQuery,
+					{Field: "BasePtr", MatchAll: true},
+				},
+			},
+			expectedResult: resultWithSingleMatch("A", "A0").addContextMatch("BasePtr", "<nil>"),
+		},
+		{
+			desc: "base ptr, nil pointer, no match",
+			obj: &TopLevel{
+				NestedSlice: []Nested{{NestedValA: "nomatch"}},
+				Base: Base{
+					ValBasePtr: nil},
+			},
+			q: &query.Query{
+				FieldQueries: []*query.FieldQuery{
+					nestedFieldQuery,
+					{Field: "BasePtr", MatchAll: true},
+				},
+			},
+		},
+		{
+			desc: "base ptr, nil pointer, negated",
+			obj: &TopLevel{
+				NestedSlice: []Nested{{NestedValA: "asdf"}},
+				Base: Base{
+					ValBasePtr: nil},
+			},
+			q: &query.Query{
+				FieldQueries: []*query.FieldQuery{
+					nestedFieldQueryNegated,
+					{Field: "BasePtr", MatchAll: true},
+				},
+			},
+			expectedResult: resultWithSingleMatch("A", "asdf").addContextMatch("BasePtr", "<nil>"),
+		},
+		{
+			desc: "base ptr, nil pointer, negated, no match",
+			obj: &TopLevel{
+				NestedSlice: []Nested{{NestedValA: "A0"}},
+				Base: Base{
+					ValBasePtr: nil},
+			},
+			q: &query.Query{
+				FieldQueries: []*query.FieldQuery{
+					nestedFieldQueryNegated,
+					{Field: "BasePtr", MatchAll: true},
+				},
+			},
+		},
+		{
+			desc: "base ptr, not null query, match",
+			obj: &TopLevel{
+				NestedSlice: []Nested{{NestedValA: "A0"}},
+				Base: Base{
+					ValBasePtr: pointers.String("anything")},
+			},
+			q: &query.Query{
+				FieldQueries: []*query.FieldQuery{
+					nestedFieldQuery,
+					{Field: "BasePtr", MatchAll: true},
+				},
+			},
+			expectedResult: resultWithSingleMatch("A", "A0").addContextMatch("BasePtr", "anything"),
+		},
+		// TODO(rc) test all base types for MatchAll paths
 	})
 }
