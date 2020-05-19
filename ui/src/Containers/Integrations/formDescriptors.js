@@ -726,7 +726,7 @@ const formDescriptors = {
                 label: 'Integration Name',
                 jsonpath: 'name',
                 type: 'text',
-                placeholder: 'AWS ECR',
+                placeholder: 'Amazon ECR',
             },
             {
                 label: 'Types',
@@ -948,7 +948,7 @@ const formDescriptors = {
                 label: 'Integration Name',
                 jsonpath: 'name',
                 type: 'text',
-                placeholder: 'AWS S3',
+                placeholder: 'Amazon S3',
             },
             {
                 label: 'Backups To Retain',

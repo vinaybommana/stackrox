@@ -55,7 +55,7 @@ const integrationsList = {
             disabled: false,
         },
         {
-            label: 'AWS ECR',
+            label: 'Amazon ECR',
             type: 'ecr',
             categories: 'Registry',
             source: 'imageIntegrations',
@@ -201,7 +201,7 @@ const integrationsList = {
     ],
     backups: [
         {
-            label: 'S3',
+            label: 'Amazon S3',
             type: 's3',
             source: 'backups',
             image: s3,
