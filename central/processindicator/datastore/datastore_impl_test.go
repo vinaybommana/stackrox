@@ -163,6 +163,7 @@ func getIndicators() (indicators []*storage.ProcessIndicator, repeatIndicator *s
 		{
 			Id:            "id1",
 			DeploymentId:  "d1",
+			PodUid:        "p1",
 			ContainerName: "container1",
 
 			Signal: repeatedSignal,
@@ -170,6 +171,7 @@ func getIndicators() (indicators []*storage.ProcessIndicator, repeatIndicator *s
 		{
 			Id:            "id2",
 			DeploymentId:  "d2",
+			PodUid:        "p2",
 			ContainerName: "container1",
 
 			Signal: &storage.ProcessSignal{
@@ -183,6 +185,7 @@ func getIndicators() (indicators []*storage.ProcessIndicator, repeatIndicator *s
 	repeatIndicator = &storage.ProcessIndicator{
 		Id:            "id1",
 		DeploymentId:  "d1",
+		PodUid:        "p1",
 		ContainerName: "container1",
 		Signal:        repeatedSignal,
 	}
@@ -309,41 +312,6 @@ func (suite *IndicatorDataStoreTestSuite) TestIndicatorAddOneByOne() {
 	suite.verifyIndicatorsAre(indicators[1], repeatIndicator)
 }
 
-func generateIndicatorsWithTS(deploymentTSs map[string]int64, containerIDs []string) []*storage.ProcessIndicator {
-	var indicators []*storage.ProcessIndicator
-	for d, ts := range deploymentTSs {
-		for _, c := range containerIDs {
-			indicators = append(indicators, &storage.ProcessIndicator{
-				Id:           fmt.Sprintf("indicator_id_%s_%s", d, c),
-				DeploymentId: d,
-				Signal: &storage.ProcessSignal{
-					ContainerId:  fmt.Sprintf("%s_%s", d, c),
-					ExecFilePath: fmt.Sprintf("EXECFILE_%s_%s", d, c),
-				},
-				DeploymentStateTs: ts,
-			})
-		}
-	}
-	return indicators
-}
-
-func generateIndicators(deploymentIDs []string, containerIDs []string) []*storage.ProcessIndicator {
-	var indicators []*storage.ProcessIndicator
-	for _, d := range deploymentIDs {
-		for _, c := range containerIDs {
-			indicators = append(indicators, &storage.ProcessIndicator{
-				Id:           fmt.Sprintf("indicator_id_%s_%s", d, c),
-				DeploymentId: d,
-				Signal: &storage.ProcessSignal{
-					ContainerId:  fmt.Sprintf("%s_%s", d, c),
-					ExecFilePath: fmt.Sprintf("EXECFILE_%s_%s", d, c),
-				},
-			})
-		}
-	}
-	return indicators
-}
-
 func generateIndicatorsWithPods(podIDs []string, containerIDs []string) []*storage.ProcessIndicator {
 	var indicators []*storage.ProcessIndicator
 	for _, p := range podIDs {
@@ -359,28 +327,6 @@ func generateIndicatorsWithPods(podIDs []string, containerIDs []string) []*stora
 		}
 	}
 	return indicators
-}
-
-func (suite *IndicatorDataStoreTestSuite) TestIndicatorRemovalByDeploymentID() {
-	suite.setupDataStoreNoPruning()
-
-	indicators := generateIndicators([]string{"d1", "d2"}, []string{"c1", "c2"})
-	suite.NoError(suite.datastore.AddProcessIndicators(suite.hasWriteCtx, indicators...))
-	suite.verifyIndicatorsAre(indicators...)
-
-	suite.NoError(suite.datastore.RemoveProcessIndicatorsByDeployment(suite.hasWriteCtx, "d1"))
-	suite.verifyIndicatorsAre(generateIndicators([]string{"d2"}, []string{"c1", "c2"})...)
-}
-
-func (suite *IndicatorDataStoreTestSuite) TestIndicatorRemovalByDeploymentIDAgain() {
-	suite.setupDataStoreNoPruning()
-
-	indicators := generateIndicators([]string{"d1", "d2", "d3"}, []string{"c1", "c2", "c3"})
-	suite.NoError(suite.datastore.AddProcessIndicators(suite.hasWriteCtx, indicators...))
-	suite.verifyIndicatorsAre(indicators...)
-
-	suite.NoError(suite.datastore.RemoveProcessIndicatorsByDeployment(suite.hasWriteCtx, "dnonexistent"))
-	suite.verifyIndicatorsAre(indicators...)
 }
 
 func (suite *IndicatorDataStoreTestSuite) TestIndicatorRemovalByPodID() {
@@ -403,72 +349,6 @@ func (suite *IndicatorDataStoreTestSuite) TestIndicatorRemovalByPodIDAgain() {
 
 	suite.NoError(suite.datastore.RemoveProcessIndicatorsByPod(suite.hasWriteCtx, "pnonexistent"))
 	suite.verifyIndicatorsAre(indicators...)
-}
-
-func (suite *IndicatorDataStoreTestSuite) TestIndicatorRemovalByContainerID() {
-	suite.setupDataStoreNoPruning()
-
-	indicators := generateIndicatorsWithTS(map[string]int64{"d1": 1234, "d2": 1234}, []string{"c1", "c2"})
-	suite.NoError(suite.datastore.AddProcessIndicators(suite.hasWriteCtx, indicators...))
-	suite.verifyIndicatorsAre(indicators...)
-
-	deploy1 := &storage.Deployment{
-		Id: "d1",
-		Containers: []*storage.Container{
-			{
-				Instances: []*storage.ContainerInstance{
-					{
-						InstanceId: &storage.ContainerInstanceID{
-							Id: "d1_c2",
-						},
-					},
-				},
-			},
-		},
-		StateTimestamp: 1235,
-	}
-	suite.NoError(suite.datastore.RemoveProcessIndicatorsOfStaleContainers(suite.hasWriteCtx, deploy1))
-	suite.verifyIndicatorsAre(
-		append(generateIndicators([]string{"d1"}, []string{"c2"}), generateIndicators([]string{"d2"}, []string{"c1", "c2"})...)...)
-
-	deploy2 := &storage.Deployment{
-		Id:             "d2",
-		StateTimestamp: 1233,
-	}
-	suite.NoError(suite.datastore.RemoveProcessIndicatorsOfStaleContainers(suite.hasWriteCtx, deploy2))
-	suite.verifyIndicatorsAre(
-		append(generateIndicators([]string{"d1"}, []string{"c2"}), generateIndicators([]string{"d2"}, []string{"c1", "c2"})...)...)
-
-	deploy2 = &storage.Deployment{
-		Id: "d2",
-		Containers: []*storage.Container{
-			{
-				Instances: []*storage.ContainerInstance{
-					{
-						InstanceId: &storage.ContainerInstanceID{
-							Id: "d2_c2",
-						},
-					},
-				},
-			},
-		},
-		StateTimestamp: 1233,
-	}
-	suite.NoError(suite.datastore.RemoveProcessIndicatorsOfStaleContainers(suite.hasWriteCtx, deploy2))
-}
-
-func (suite *IndicatorDataStoreTestSuite) TestIndicatorRemovalByContainerIDAgain() {
-	suite.setupDataStoreNoPruning()
-
-	indicators := generateIndicators([]string{"d1", "d2"}, []string{"c1", "c2"})
-	suite.NoError(suite.datastore.AddProcessIndicators(suite.hasWriteCtx, indicators...))
-	suite.verifyIndicatorsAre(indicators...)
-
-	deploy1 := &storage.Deployment{
-		Id: "d1",
-	}
-	suite.NoError(suite.datastore.RemoveProcessIndicatorsOfStaleContainers(suite.hasWriteCtx, deploy1))
-	suite.verifyIndicatorsAre(generateIndicators([]string{"d2"}, []string{"c1", "c2"})...)
 }
 
 func (suite *IndicatorDataStoreTestSuite) TestIndicatorRemovalByContainerByPodID() {
@@ -597,12 +477,12 @@ func (suite *IndicatorDataStoreTestSuite) TestPruning() {
 	suite.Len(suite.datastore.(*datastoreImpl).prunedArgsLengthCache, 1)
 
 	// Delete all the indicators.
-	uniqueDeploymentIDs := set.NewStringSet()
+	uniquePodIDs := set.NewStringSet()
 	for _, indicator := range expectedIndicators {
-		uniqueDeploymentIDs.Add(indicator.GetDeploymentId())
+		uniquePodIDs.Add(indicator.GetPodUid())
 	}
-	for depID := range uniqueDeploymentIDs {
-		suite.NoError(suite.datastore.RemoveProcessIndicatorsByDeployment(suite.hasWriteCtx, depID))
+	for podID := range uniquePodIDs {
+		suite.NoError(suite.datastore.RemoveProcessIndicatorsByPod(suite.hasWriteCtx, podID))
 	}
 
 	// Allow one more prune through.
@@ -684,29 +564,6 @@ func (suite *IndicatorDataStoreTestSuite) TestAllowsAddMany() {
 	suite.NoError(err, "expected no error trying to write with permissions")
 }
 
-func (suite *IndicatorDataStoreTestSuite) TestEnforcesRemoveByDeployment() {
-	_, indexMock, _ := suite.setupDataStoreWithMocks()
-	indexMock.EXPECT().DeleteProcessIndicators(gomock.Any()).Times(0)
-
-	err := suite.datastore.RemoveProcessIndicatorsByDeployment(suite.hasNoneCtx, "Joseph Rules")
-	suite.Error(err, "expected an error trying to write without permissions")
-
-	err = suite.datastore.RemoveProcessIndicatorsByDeployment(suite.hasReadCtx, "nfsiux")
-	suite.Error(err, "expected an error trying to write without permissions")
-}
-
-func (suite *IndicatorDataStoreTestSuite) TestAllowsRemoveByDeployment() {
-	storeMock, indexMock, searchMock := suite.setupDataStoreWithMocks()
-	searchMock.EXPECT().Search(gomock.Any(), gomock.Any()).Return([]search.Result{{ID: "jkldfjk"}}, nil)
-	storeMock.EXPECT().DeleteMany(gomock.Any()).Return(nil)
-	indexMock.EXPECT().DeleteProcessIndicators(gomock.Any()).Return(nil)
-
-	storeMock.EXPECT().AckKeysIndexed("jkldfjk").Return(nil)
-
-	err := suite.datastore.RemoveProcessIndicatorsByDeployment(suite.hasWriteCtx, "eoiurvbf")
-	suite.NoError(err, "expected no error trying to write with permissions")
-}
-
 func (suite *IndicatorDataStoreTestSuite) TestEnforcesRemoveByPod() {
 	_, indexMock, _ := suite.setupDataStoreWithMocks()
 	indexMock.EXPECT().DeleteProcessIndicators(gomock.Any()).Times(0)
@@ -727,43 +584,6 @@ func (suite *IndicatorDataStoreTestSuite) TestAllowsRemoveByPod() {
 	storeMock.EXPECT().AckKeysIndexed("jkldfjk").Return(nil)
 
 	err := suite.datastore.RemoveProcessIndicatorsByPod(suite.hasWriteCtx, "eoiurvbf")
-	suite.NoError(err, "expected no error trying to write with permissions")
-}
-
-func (suite *IndicatorDataStoreTestSuite) TestEnforcesRemoveByStaleContainers() {
-	storeMock, indexMock, _ := suite.setupDataStoreWithMocks()
-	storeMock.EXPECT().DeleteMany(gomock.Any()).Times(0)
-	indexMock.EXPECT().DeleteProcessIndicators(gomock.Any()).Times(0)
-
-	deploy1 := &storage.Deployment{
-		Id:   uuid.NewV4().String(),
-		Name: "Joseph rules",
-	}
-
-	err := suite.datastore.RemoveProcessIndicatorsOfStaleContainers(suite.hasNoneCtx, deploy1)
-	suite.Error(err, "expected an error trying to write without permissions")
-
-	deploy2 := &storage.Deployment{
-		Id:   uuid.NewV4().String(),
-		Name: "nsfiux",
-	}
-	err = suite.datastore.RemoveProcessIndicatorsOfStaleContainers(suite.hasReadCtx, deploy2)
-	suite.Error(err, "expected an error trying to write without permissions")
-}
-
-func (suite *IndicatorDataStoreTestSuite) TestAllowsRemoveByStaleContainers() {
-	storeMock, indexMock, searchMock := suite.setupDataStoreWithMocks()
-	searchMock.EXPECT().Search(gomock.Any(), gomock.Any()).Return([]search.Result{{ID: "jkldfjk"}}, nil)
-	storeMock.EXPECT().DeleteMany(gomock.Any()).Return(nil)
-	indexMock.EXPECT().DeleteProcessIndicators(gomock.Any()).Return(nil)
-
-	storeMock.EXPECT().AckKeysIndexed("jkldfjk").Return(nil)
-
-	deploy1 := &storage.Deployment{
-		Id:   uuid.NewV4().String(),
-		Name: "eoiurvbf",
-	}
-	err := suite.datastore.RemoveProcessIndicatorsOfStaleContainers(suite.hasWriteCtx, deploy1)
 	suite.NoError(err, "expected no error trying to write with permissions")
 }
 

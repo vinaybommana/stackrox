@@ -24,7 +24,6 @@ import (
 	policyIndex "github.com/stackrox/rox/central/policy/index"
 	policySearcher "github.com/stackrox/rox/central/policy/search"
 	policyStoreMocks "github.com/stackrox/rox/central/policy/store/mocks"
-	"github.com/stackrox/rox/central/processindicator/datastore/mocks"
 	"github.com/stackrox/rox/central/ranking"
 	roleMocks "github.com/stackrox/rox/central/rbac/k8srole/datastore/mocks"
 	roleBindingsMocks "github.com/stackrox/rox/central/rbac/k8srolebinding/datastore/mocks"
@@ -38,7 +37,6 @@ import (
 	"github.com/stackrox/rox/pkg/dackbox/indexer"
 	"github.com/stackrox/rox/pkg/dackbox/utils/queue"
 	"github.com/stackrox/rox/pkg/fixtures"
-	filterMocks "github.com/stackrox/rox/pkg/process/filter/mocks"
 	"github.com/stackrox/rox/pkg/sac"
 	"github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/testutils/rocksdbtest"
@@ -112,16 +110,9 @@ func TestAutocomplete(t *testing.T) {
 	dacky, registry, indexingQ := testDackBoxInstance(t, testDB, idx)
 	registry.RegisterWrapper(deploymentDackBox.Bucket, deploymentIndex.Wrapper{})
 
-	mockIndicators := mocks.NewMockDataStore(mockCtrl)
-	// This gets called as a side effect of `UpsertDeployment`.
-	mockIndicators.EXPECT().RemoveProcessIndicatorsOfStaleContainers(gomock.Any(), gomock.Any()).AnyTimes()
-
 	mockRiskDatastore := riskDatastoreMocks.NewMockDataStore(mockCtrl)
 
-	mockFilter := filterMocks.NewMockFilter(mockCtrl)
-	mockFilter.EXPECT().Update(gomock.Any()).AnyTimes()
-
-	deploymentDS, err := deploymentDatastore.NewBadger(dacky, concurrency.NewKeyFence(), nil, nil, idx, idx, nil, mockIndicators, nil, nil, mockRiskDatastore, nil, mockFilter, ranking.NewRanker(), ranking.NewRanker(), ranking.NewRanker())
+	deploymentDS, err := deploymentDatastore.NewBadger(dacky, concurrency.NewKeyFence(), nil, nil, idx, idx, nil, nil, nil, mockRiskDatastore, nil, nil, ranking.NewRanker(), ranking.NewRanker(), ranking.NewRanker())
 	require.NoError(t, err)
 
 	allAccessCtx := sac.WithAllAccess(context.Background())

@@ -20,7 +20,6 @@ import (
 	componentIndexer "github.com/stackrox/rox/central/imagecomponent/index"
 	imageComponentEdgeIndexer "github.com/stackrox/rox/central/imagecomponentedge/index"
 	nfDS "github.com/stackrox/rox/central/networkflow/datastore"
-	piDS "github.com/stackrox/rox/central/processindicator/datastore"
 	pwDS "github.com/stackrox/rox/central/processwhitelist/datastore"
 	"github.com/stackrox/rox/central/ranking"
 	riskDS "github.com/stackrox/rox/central/risk/datastore"
@@ -52,10 +51,6 @@ type DataStore interface {
 	// the stored deployment.
 	UpsertDeployment(ctx context.Context, deployment *storage.Deployment) error
 
-	// UpsertDeploymentIntoStoreOnly does not index the data on insertion. If the deployment exists, the tags in the deployment
-	// are taken from the stored deployment.
-	UpsertDeploymentIntoStoreOnly(ctx context.Context, deployment *storage.Deployment) error
-
 	AddTagsToProcessKey(ctx context.Context, key *analystnotes.ProcessNoteKey, tags []string) error
 	RemoveTagsFromProcessKey(ctx context.Context, key *analystnotes.ProcessNoteKey, tags []string) error
 	GetTagsForProcessKey(ctx context.Context, key *analystnotes.ProcessNoteKey) ([]string, error)
@@ -67,7 +62,7 @@ type DataStore interface {
 }
 
 func newDataStore(storage store.Store, graphProvider graph.Provider, processTagsStore processtagsstore.Store, bleveIndex bleve.Index, processIndex bleve.Index,
-	images imageDS.DataStore, indicators piDS.DataStore, whitelists pwDS.DataStore, networkFlows nfDS.ClusterDataStore,
+	images imageDS.DataStore, whitelists pwDS.DataStore, networkFlows nfDS.ClusterDataStore,
 	risks riskDS.DataStore, deletedDeploymentCache expiringcache.Cache, processFilter filter.Filter,
 	clusterRanker *ranking.Ranker, nsRanker *ranking.Ranker, deploymentRanker *ranking.Ranker) (DataStore, error) {
 	var searcher search.Searcher
@@ -87,7 +82,7 @@ func newDataStore(storage store.Store, graphProvider graph.Provider, processTags
 		searcher = search.New(storage, nil, nil, nil, nil, nil, nil, indexer)
 	}
 
-	ds, err := newDatastoreImpl(storage, processTagsStore, indexer, searcher, images, indicators, whitelists, networkFlows, risks,
+	ds, err := newDatastoreImpl(storage, processTagsStore, indexer, searcher, images, whitelists, networkFlows, risks,
 		deletedDeploymentCache, processFilter, clusterRanker, nsRanker, deploymentRanker)
 
 	if err != nil {
@@ -100,7 +95,7 @@ func newDataStore(storage store.Store, graphProvider graph.Provider, processTags
 
 // NewBadger creates a deployment datastore based on BadgerDB
 func NewBadger(dacky *dackbox.DackBox, keyFence concurrency.KeyFence, db *badger.DB, processTagsStore processtagsstore.Store, bleveIndex bleve.Index, processIndex bleve.Index,
-	images imageDS.DataStore, indicators piDS.DataStore, whitelists pwDS.DataStore, networkFlows nfDS.ClusterDataStore,
+	images imageDS.DataStore, whitelists pwDS.DataStore, networkFlows nfDS.ClusterDataStore,
 	risks riskDS.DataStore, deletedDeploymentCache expiringcache.Cache, processFilter filter.Filter,
 	clusterRanker *ranking.Ranker, nsRanker *ranking.Ranker, deploymentRanker *ranking.Ranker) (DataStore, error) {
 	var err error
@@ -117,5 +112,5 @@ func NewBadger(dacky *dackbox.DackBox, keyFence concurrency.KeyFence, db *badger
 		}
 	}
 
-	return newDataStore(storage, dacky, processTagsStore, bleveIndex, processIndex, images, indicators, whitelists, networkFlows, risks, deletedDeploymentCache, processFilter, clusterRanker, nsRanker, deploymentRanker)
+	return newDataStore(storage, dacky, processTagsStore, bleveIndex, processIndex, images, whitelists, networkFlows, risks, deletedDeploymentCache, processFilter, clusterRanker, nsRanker, deploymentRanker)
 }

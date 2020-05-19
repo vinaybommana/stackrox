@@ -303,13 +303,14 @@ func (defaultFactory) StartServices() {
 func (f defaultFactory) ServicesToRegister(registry authproviders.Registry) []pkgGRPC.APIService {
 	servicesToRegister := []pkgGRPC.APIService{
 		alertService.Singleton(),
-		authService.New(),
 		apiTokenService.Singleton(),
+		authService.New(),
 		authproviderService.New(registry),
+		backupRestoreService.Singleton(),
 		backupService.Singleton(),
 		clusterService.Singleton(),
-		complianceService.Singleton(),
 		complianceManagerService.Singleton(),
+		complianceService.Singleton(),
 		configService.Singleton(),
 		debugService.Singleton(),
 		deploymentService.Singleton(),
@@ -318,6 +319,7 @@ func (f defaultFactory) ServicesToRegister(registry authproviders.Registry) []pk
 		groupService.Singleton(),
 		imageService.Singleton(),
 		iiService.Singleton(),
+		licenseService.New(false, licenseSingletons.ManagerSingleton()),
 		metadataService.New(f.restartingFlag, licenseSingletons.ManagerSingleton()),
 		namespaceService.Singleton(),
 		networkFlowService.Singleton(),
@@ -325,25 +327,24 @@ func (f defaultFactory) ServicesToRegister(registry authproviders.Registry) []pk
 		nodeService.Singleton(),
 		notifierService.Singleton(),
 		pingService.Singleton(),
+		podService.Singleton(),
 		policyService.Singleton(),
 		probeUploadService.Singleton(),
 		processIndicatorService.Singleton(),
 		processWhitelistService.Singleton(),
-		roleService.Singleton(),
 		rbacService.Singleton(),
+		roleService.Singleton(),
 		sacService.Singleton(),
 		searchService.Singleton(),
 		secretService.Singleton(),
-		sensorUpgradeService.Singleton(),
+		sensorService.New(connection.ManagerSingleton(), all.Singleton(), clusterDataStore.Singleton()),
 		sensorUpgradeControlService.Singleton(),
+		sensorUpgradeService.Singleton(),
 		serviceAccountService.Singleton(),
 		siService.Singleton(),
 		summaryService.Singleton(),
-		userService.Singleton(),
-		sensorService.New(connection.ManagerSingleton(), all.Singleton(), clusterDataStore.Singleton()),
-		licenseService.New(false, licenseSingletons.ManagerSingleton()),
-		backupRestoreService.Singleton(),
 		telemetryService.Singleton(),
+		userService.Singleton(),
 	}
 
 	if features.Dackbox.Enabled() {
@@ -364,10 +365,6 @@ func (f defaultFactory) ServicesToRegister(registry authproviders.Registry) []pk
 
 	if devbuild.IsEnabled() {
 		servicesToRegister = append(servicesToRegister, developmentService.Singleton())
-	}
-
-	if features.PodDeploymentSeparation.Enabled() {
-		servicesToRegister = append(servicesToRegister, podService.Singleton())
 	}
 
 	return servicesToRegister

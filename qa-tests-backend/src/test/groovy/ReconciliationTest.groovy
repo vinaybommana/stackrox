@@ -7,7 +7,6 @@ import objects.NetworkPolicy
 import objects.NetworkPolicyTypes
 import services.ClusterService
 import services.DevelopmentService
-import services.FeatureFlagService
 import services.MetadataService
 import services.NamespaceService
 import services.NetworkPolicyService
@@ -102,14 +101,10 @@ class ReconciliationTest extends BaseSpecification {
                 .addLabel ("app", "testing123")
                 .setCommand(["sleep", "600"])
 
-        def podDeploySeparate = FeatureFlagService.isFeatureFlagEnabled("ROX_POD_DEPLOY_SEPARATE")
-
         // Wait is builtin
         orchestrator.createDeployment(dep)
         assert Services.waitForDeployment(dep)
-        if (podDeploySeparate) {
-            assert Services.getPods().findAll { it.deploymentId == dep.getDeploymentUid() }.size() == 1
-        }
+        assert Services.getPods().findAll { it.deploymentId == dep.getDeploymentUid() }.size() == 1
 
         def violations = getViolationsWithTimeout("testing123", "Latest Tag", 30)
         assert violations.size() == 1
@@ -155,9 +150,7 @@ class ReconciliationTest extends BaseSpecification {
         int numDeployments, numPods, numNamespaces, numNetworkPolicies, numSecrets
         while (t.IsValid()) {
             numDeployments = Services.getDeployments().findAll { it.name == dep.getName() }.size()
-            if (podDeploySeparate) {
-                numPods = Services.getPods().findAll { it.deploymentId == dep.getDeploymentUid() }.size()
-            }
+            numPods = Services.getPods().findAll { it.deploymentId == dep.getDeploymentUid() }.size()
             numNamespaces = NamespaceService.getNamespaces().findAll { it.metadata.name == ns }.size()
             numNetworkPolicies = NetworkPolicyService.getNetworkPolicies().findAll { it.id == networkPolicyID }.size()
             numSecrets = SecretService.getSecrets().findAll { it.id == secretID }.size()
@@ -168,9 +161,7 @@ class ReconciliationTest extends BaseSpecification {
             println "Waiting for all resources to be reconciled"
         }
         assert numDeployments == 0
-        if (podDeploySeparate) {
-            assert numPods == 0
-        }
+        assert numPods == 0
         assert numNamespaces == 0
         assert numNetworkPolicies == 0
         assert numSecrets == 0

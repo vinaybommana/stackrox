@@ -130,16 +130,12 @@ func (g *garbageCollectorImpl) removeOrphanedResources() {
 		return
 	}
 	deploymentSet := set.NewFrozenStringSet(deploymentIDs...)
-	if features.PodDeploymentSeparation.Enabled() {
-		podIDs, err := g.pods.GetPodIDs()
-		if err != nil {
-			log.Error(errors.Wrap(err, "unable to fetch pod IDs in pruning"))
-			return
-		}
-		g.removeOrphanedProcesses(deploymentSet, set.NewFrozenStringSet(podIDs...))
-	} else {
-		g.removeOrphanedProcesses(deploymentSet, set.NewFrozenStringSet())
+	podIDs, err := g.pods.GetPodIDs()
+	if err != nil {
+		log.Error(errors.Wrap(err, "unable to fetch pod IDs in pruning"))
+		return
 	}
+	g.removeOrphanedProcesses(deploymentSet, set.NewFrozenStringSet(podIDs...))
 	g.removeOrphanedProcessWhitelists(deploymentSet)
 	g.markOrphanedAlertsAsResolved(deploymentSet)
 	g.removeOrphanedNetworkFlows(deploymentSet)
@@ -148,33 +144,19 @@ func (g *garbageCollectorImpl) removeOrphanedResources() {
 func (g *garbageCollectorImpl) removeOrphanedProcesses(deploymentIDs, podIDs set.FrozenStringSet) {
 	var processesToPrune []string
 	now := types.TimestampNow()
-	var err error
-	if features.PodDeploymentSeparation.Enabled() {
-		err = g.processes.WalkAll(pruningCtx, func(pi *storage.ProcessIndicator) error {
-			if pi.GetPodUid() != "" && podIDs.Contains(pi.GetPodUid()) {
-				return nil
-			}
-			if pi.GetPodUid() == "" && deploymentIDs.Contains(pi.GetDeploymentId()) {
-				return nil
-			}
-			if protoutils.Sub(now, pi.GetSignal().GetTime()) < orphanWindow {
-				return nil
-			}
-			processesToPrune = append(processesToPrune, pi.GetId())
+	err := g.processes.WalkAll(pruningCtx, func(pi *storage.ProcessIndicator) error {
+		if pi.GetPodUid() != "" && podIDs.Contains(pi.GetPodUid()) {
 			return nil
-		})
-	} else {
-		err = g.processes.WalkAll(pruningCtx, func(pi *storage.ProcessIndicator) error {
-			if deploymentIDs.Contains(pi.GetDeploymentId()) {
-				return nil
-			}
-			if protoutils.Sub(now, pi.GetSignal().GetTime()) < orphanWindow {
-				return nil
-			}
-			processesToPrune = append(processesToPrune, pi.GetId())
+		}
+		if pi.GetPodUid() == "" && deploymentIDs.Contains(pi.GetDeploymentId()) {
 			return nil
-		})
-	}
+		}
+		if protoutils.Sub(now, pi.GetSignal().GetTime()) < orphanWindow {
+			return nil
+		}
+		processesToPrune = append(processesToPrune, pi.GetId())
+		return nil
+	})
 	if err != nil {
 		log.Error(errors.Wrap(err, "unable to walk processes and mark for pruning"))
 		return
@@ -322,33 +304,20 @@ func (g *garbageCollectorImpl) collectImages(config *storage.PrivateConfig) {
 	for _, result := range imageResults {
 		q1 := search.NewQueryBuilder().AddExactMatches(search.ImageSHA, result.ID).ProtoQuery()
 		q2 := search.NewQueryBuilder().AddExactMatches(search.ContainerImageDigest, result.ID).ProtoQuery()
-		if features.PodDeploymentSeparation.Enabled() {
-			deploymentResults, err := g.deployments.Search(pruningCtx, q1)
-			if err != nil {
-				log.Errorf("[Image pruning] searching deployments: %v", err)
-				continue
-			}
+		deploymentResults, err := g.deployments.Search(pruningCtx, q1)
+		if err != nil {
+			log.Errorf("[Image pruning] searching deployments: %v", err)
+			continue
+		}
 
-			podResults, err := g.pods.Search(pruningCtx, q2)
-			if err != nil {
-				log.Errorf("[Image pruning] searching pods: %v", err)
-				continue
-			}
+		podResults, err := g.pods.Search(pruningCtx, q2)
+		if err != nil {
+			log.Errorf("[Image pruning] searching pods: %v", err)
+			continue
+		}
 
-			if len(deploymentResults) == 0 && len(podResults) == 0 {
-				imagesToPrune = append(imagesToPrune, result.ID)
-			}
-		} else {
-			q := search.NewDisjunctionQuery(q1, q2)
-			results, err := g.deployments.Search(pruningCtx, q)
-			if err != nil {
-				log.Error(err)
-				continue
-			}
-			// If there are no deployment queries that match, then allow the image to be pruned
-			if len(results) == 0 {
-				imagesToPrune = append(imagesToPrune, result.ID)
-			}
+		if len(deploymentResults) == 0 && len(podResults) == 0 {
+			imagesToPrune = append(imagesToPrune, result.ID)
 		}
 	}
 	if len(imagesToPrune) > 0 {

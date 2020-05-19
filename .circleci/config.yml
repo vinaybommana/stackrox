@@ -1975,7 +1975,6 @@ jobs:
     environment:
       - GCP_IMAGE_TYPE: "COS"
       - POD_SECURITY_POLICIES: "true"
-      - ROX_POD_DEPLOY_SEPARATE: "true"
     steps:
       - checkout
       - check-backend-changes

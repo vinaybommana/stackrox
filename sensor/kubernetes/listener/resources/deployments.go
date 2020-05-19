@@ -7,7 +7,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/generated/internalapi/central"
 	"github.com/stackrox/rox/generated/storage"
-	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/process/filter"
 	"github.com/stackrox/rox/pkg/protoconv/resources"
 	"github.com/stackrox/rox/pkg/utils"
@@ -116,7 +115,7 @@ func (d *deploymentHandler) processWithType(obj, oldObj interface{}, action cent
 
 	var events []*central.SensorEvent
 	// If the object is a pod, process the pod event.
-	if features.PodDeploymentSeparation.Enabled() && objAsPod != nil {
+	if objAsPod != nil {
 		var owningDeploymentID string
 		uid := string(objAsPod.GetUID())
 		if deploymentWrap != nil {
@@ -157,15 +156,10 @@ func (d *deploymentHandler) processWithType(obj, oldObj interface{}, action cent
 	if action != central.ResourceAction_REMOVE_RESOURCE {
 		d.deploymentStore.addOrUpdateDeployment(deploymentWrap)
 		d.endpointManager.OnDeploymentCreateOrUpdate(deploymentWrap)
-		if !features.PodDeploymentSeparation.Enabled() {
-			d.processFilter.Update(deploymentWrap.GetDeployment())
-		}
 		d.rbac.assignPermissionLevelToDeployment(deploymentWrap)
 	} else {
 		d.deploymentStore.removeDeployment(deploymentWrap)
-		if features.PodDeploymentSeparation.Enabled() {
-			d.podStore.onDeploymentRemove(deploymentWrap)
-		}
+		d.podStore.onDeploymentRemove(deploymentWrap)
 		d.endpointManager.OnDeploymentRemove(deploymentWrap)
 		d.processFilter.Delete(deploymentWrap.GetId())
 	}
