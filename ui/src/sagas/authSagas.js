@@ -229,15 +229,17 @@ function* saveAuthProvider(action) {
             yield put(actions.selectAuthProvider(remaining));
         }
         yield put(actions.setAuthProviderEditingState(false));
+        yield put(actions.setSaveAuthProviderError(null));
     } catch (error) {
         yield put(actions.setAuthProviderEditingState(true));
+        const message =
+            (error.response && error.response.data && error.response.data.error) ||
+            'AuthProvider request timed out';
         yield put(
-            notificationActions.addNotification(
-                (error.response && error.response.data && error.response.data.error) ||
-                    'AuthProvider request timed out'
-            )
+            actions.setSaveAuthProviderError({
+                message,
+            })
         );
-        yield put(notificationActions.removeOldestNotification());
         Raven.captureException(error);
     }
 }

@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 
 import NoResultsMessage from 'Components/NoResultsMessage';
 import Panel, { headerClassName } from 'Components/Panel';
+import Message from 'Components/Message';
 import HeaderButtons from 'Containers/AccessControl/AuthProviders/AuthProvider/HeaderButtons';
 import Form from 'Containers/AccessControl/AuthProviders/AuthProvider/Form/Form';
 import Details from 'Containers/AccessControl/AuthProviders/AuthProvider/Details';
@@ -21,10 +22,14 @@ class AuthProvider extends Component {
         onEdit: PropTypes.func.isRequired,
         onCancel: PropTypes.func.isRequired,
         groups: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+        responseError: PropTypes.shape({
+            message: PropTypes.string,
+        }),
     };
 
     static defaultProps = {
         selectedAuthProvider: null,
+        responseError: null,
     };
 
     populateDefaultValues = (initialValues) => {
@@ -173,7 +178,7 @@ class AuthProvider extends Component {
     );
 
     displayContent = () => {
-        const { selectedAuthProvider, isEditing, groups } = this.props;
+        const { selectedAuthProvider, isEditing, groups, responseError } = this.props;
         let initialValues = { ...selectedAuthProvider };
         if (!selectedAuthProvider.name) {
             initialValues = this.populateDefaultValues(initialValues);
@@ -186,12 +191,16 @@ class AuthProvider extends Component {
             groups: filteredGroups,
             defaultRole,
         };
+
         const content = isEditing ? (
-            <Form
-                key={initialValues.type}
-                onSubmit={this.onSave}
-                initialValues={modifiedInitialValues}
-            />
+            <div className="w-full">
+                {responseError && <Message type="error" message={responseError.message} />}
+                <Form
+                    key={initialValues.type}
+                    onSubmit={this.onSave}
+                    initialValues={modifiedInitialValues}
+                />
+            </div>
         ) : (
             <Details
                 authProvider={selectedAuthProvider}

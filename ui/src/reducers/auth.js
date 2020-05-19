@@ -27,6 +27,7 @@ export const types = {
     AUTH_HTTP_ERROR: 'auth/AUTH_HTTP_ERROR',
     AUTH_IDP_ERROR: 'auth/AUTH_IDP_ERROR',
     SET_AUTH_PROVIDER_EDITING_STATE: 'auth/SET_AUTH_PROVIDER_EDITING_STATE',
+    SET_SAVE_AUTH_PROVIDER_ERROR: 'auth/SET_AUTH_PROVIDER_ERROR',
     SET_AUTH_PROVIDER_TEST_RESULTS: 'auth/SET_AUTH_PROVIDER_TEST_RESULTS',
 };
 
@@ -50,6 +51,10 @@ export const actions = {
     setAuthProviderEditingState: (value) => ({
         type: types.SET_AUTH_PROVIDER_EDITING_STATE,
         value,
+    }),
+    setSaveAuthProviderError: (error) => ({
+        type: types.SET_SAVE_AUTH_PROVIDER_ERROR,
+        error,
     }),
     setAuthProviderTestResults: (value) => ({
         type: types.SET_AUTH_PROVIDER_TEST_RESULTS,
@@ -153,6 +158,16 @@ const authProviderResponse = (state = {}, action) => {
     return state;
 };
 
+const saveAuthProviderError = (state = null, action) => {
+    if (action.type === types.SET_SAVE_AUTH_PROVIDER_ERROR) {
+        if (action.error && action.error.message) {
+            return action.error;
+        }
+        return null;
+    }
+    return state;
+};
+
 const reducer = combineReducers({
     authProviders,
     authProviderTestResults,
@@ -161,6 +176,7 @@ const reducer = combineReducers({
     authStatus,
     authProviderResponse,
     isEditingAuthProvider,
+    saveAuthProviderError,
     currentUser,
 });
 
@@ -176,6 +192,7 @@ const getSelectedAuthProvider = (state) => state.selectedAuthProvider;
 const getAuthStatus = (state) => state.authStatus;
 const getAuthProviderError = (state) => state.authProviderResponse;
 const getAuthProviderEditingState = (state) => state.isEditingAuthProvider;
+const getSaveAuthProviderError = (state) => state.saveAuthProviderError;
 const getCurrentUser = (state) => state.currentUser;
 
 export const selectors = {
@@ -187,5 +204,6 @@ export const selectors = {
     getAuthStatus,
     getAuthProviderError,
     getAuthProviderEditingState,
+    getSaveAuthProviderError,
     getCurrentUser,
 };

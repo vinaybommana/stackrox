@@ -19,6 +19,7 @@ const AuthProviders = ({
     deleteAuthProvider,
     groups,
     isEditing,
+    responseError,
 }) => {
     const setDefaultSelection = useCallback(() => {
         // sets selection to the first provider in the list, or to `null` if there are none
@@ -100,6 +101,7 @@ const AuthProviders = ({
                     onEdit={onEdit}
                     onCancel={onCancel}
                     groups={groups}
+                    responseError={responseError}
                 />
             </div>
             <Dialog
@@ -124,12 +126,16 @@ AuthProviders.propTypes = {
     groups: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
     setAuthProviderEditingState: PropTypes.func.isRequired,
     isEditing: PropTypes.bool,
+    responseError: PropTypes.shape({
+        message: PropTypes.string,
+    }),
 };
 
 AuthProviders.defaultProps = {
     authProviders: [],
     selectedAuthProvider: null,
     isEditing: false,
+    responseError: null,
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -137,6 +143,7 @@ const mapStateToProps = createStructuredSelector({
     selectedAuthProvider: selectors.getSelectedAuthProvider,
     groups: selectors.getRuleGroups,
     isEditing: selectors.getAuthProviderEditingState,
+    responseError: selectors.getSaveAuthProviderError,
 });
 
 const mapDispatchToProps = {
