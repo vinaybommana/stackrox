@@ -141,8 +141,12 @@ func (m *manager) processNewSettings(newSettings *sensor.AdmissionControlSetting
 
 	policySet := detection.NewPolicySet(detection.NewLegacyPolicyCompiler(builder))
 	for _, policy := range newSettings.GetEnforcedDeployTimePolicies().GetPolicies() {
+		if policy.GetFields().GetSetNoScanExists() != nil && !newSettings.GetClusterConfig().GetAdmissionControllerConfig().GetScanInline() {
+			log.Warnf("Policy %q (%s) depends on the existence of image scans, but this is only enforceable if the 'Contact image scanners' option is enabled (which it currently isn't)", policy.GetName(), policy.GetId())
+			continue
+		}
 		if err := policySet.UpsertPolicy(policy); err != nil {
-			log.Errorf("Unable to upsert policy %s (%s), will not be able to enforce", policy.GetName(), policy.GetId())
+			log.Errorf("Unable to upsert policy %q (%s), will not be able to enforce", policy.GetName(), policy.GetId())
 		}
 	}
 
@@ -173,7 +177,7 @@ func (m *manager) processNewSettings(newSettings *sensor.AdmissionControlSetting
 	}
 	m.lastSettingsUpdate = newSettings.GetTimestamp()
 
-	log.Infof("Applied new admission control settings (enforcing on %d policies).", len(newSettings.GetEnforcedDeployTimePolicies().GetPolicies()))
+	log.Infof("Applied new admission control settings (enforcing on %d policies).", len(policySet.GetCompiledPolicies()))
 	m.settingsStream.Push(newSettings)
 }
 
