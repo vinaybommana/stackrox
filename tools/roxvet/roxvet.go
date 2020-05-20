@@ -8,6 +8,7 @@ import (
 	"github.com/stackrox/rox/tools/storedprotos/storeinterface"
 	"github.com/stackrox/rox/tools/uncheckederrors"
 	"github.com/stackrox/rox/tools/uncheckedifassign"
+	"github.com/stackrox/rox/tools/unusedroxctlargs"
 	"golang.org/x/tools/go/analysis/unitchecker"
 )
 
@@ -20,5 +21,6 @@ func main() {
 		regexes.Analyzer,
 		uncheckedifassign.Analyzer,
 		protoclone.Analyzer,
+		unusedroxctlargs.Analyzer,
 	)
 }

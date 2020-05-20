@@ -26,6 +26,7 @@ import (
 	"github.com/stackrox/rox/pkg/zip"
 	"github.com/stackrox/rox/roxctl/common/flags"
 	"github.com/stackrox/rox/roxctl/common/mode"
+	"github.com/stackrox/rox/roxctl/common/util"
 )
 
 func generateJWTSigningKey(fileMap map[string][]byte) error {
@@ -249,11 +250,11 @@ func interactive() *cobra.Command {
 	return &cobra.Command{
 		Use:   "interactive",
 		Short: "Interactive runs the CLI in interactive mode with user prompts",
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: util.RunENoArgs(func(*cobra.Command) error {
 			c := Command()
 			c.SilenceUsage = true
 			return runInteractive(c)
-		},
+		}),
 		SilenceUsage: true,
 	}
 }

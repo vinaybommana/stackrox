@@ -12,6 +12,7 @@ import (
 	"github.com/stackrox/rox/pkg/roxctl/defaults"
 	"github.com/stackrox/rox/pkg/utils"
 	"github.com/stackrox/rox/roxctl/common/flags"
+	"github.com/stackrox/rox/roxctl/common/util"
 )
 
 type persistentFlagsWrapper struct {
@@ -51,9 +52,9 @@ Output is a zip file printed to stdout.`, shortName, longName),
 		Annotations: map[string]string{
 			categoryAnnotation: "Enter orchestrator",
 		},
-		RunE: func(*cobra.Command, []string) error {
+		RunE: util.RunENoArgs(func(*cobra.Command) error {
 			return errors.New("storage type must be specified")
-		},
+		}),
 	}
 	if !roxctl.InMainImage() {
 		c.PersistentFlags().Var(newOutputDir(&cfg.OutputDir), "output-dir", "the directory to output the deployment bundle to")
