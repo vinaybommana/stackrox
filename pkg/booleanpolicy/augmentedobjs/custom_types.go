@@ -7,6 +7,7 @@ const (
 	NotWhitelistedCustomTag      = "Not Whitelisted"
 	ContainerNameCustomTag       = "Container Name"
 	ImageScanCustomTag           = "Image Scan"
+	EnvironmentVarCustomTag      = "Environment Variable"
 )
 
 type dockerfileLine struct {
@@ -19,4 +20,8 @@ type componentAndVersion struct {
 
 type whitelistResult struct {
 	NotWhitelisted bool `search:"Not Whitelisted"`
+}
+
+type envVar struct {
+	EnvVar string `search:"Environment Variable"`
 }

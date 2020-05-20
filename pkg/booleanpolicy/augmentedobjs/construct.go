@@ -74,6 +74,20 @@ func ConstructDeployment(deployment *storage.Deployment, images []*storage.Image
 		}
 	}
 
+	for idx, container := range deployment.GetContainers() {
+		for i, env := range container.GetConfig().GetEnv() {
+			envVarObj := &envVar{EnvVar: fmt.Sprintf("%s%s%s%s%s", env.GetEnvVarSource(), CompositeFieldCharSep, env.GetKey(), CompositeFieldCharSep, env.GetValue())}
+			err := obj.AddPlainObjAt(
+				(&pathutil.Path{}).TraverseField("Containers").IndexSlice(idx).TraverseField("Config").TraverseField("Env").IndexSlice(i).TraverseField(envVarAugmentKey),
+				envVarObj,
+			)
+
+			if err != nil {
+				return nil, utils.Should(err)
+			}
+		}
+	}
+
 	return obj, nil
 }
 

@@ -17,8 +17,8 @@ var (
 		[]string{search.ImageName.String()},
 		[]string{search.ImageName.String(), augmentedobjs.ContainerNameCustomTag})
 	EnvVarContextFields = newContextFields(
-		[]string{search.ImageName.String()},
-		[]string{search.ImageName.String(), augmentedobjs.ContainerNameCustomTag})
+		nil,
+		[]string{augmentedobjs.ContainerNameCustomTag})
 	VulnContextFields = newContextFields(
 		[]string{search.ImageName.String(), search.CVE.String(), search.CVSS.String(), augmentedobjs.ComponentAndVersionCustomTag},
 		[]string{search.ImageName.String(), augmentedobjs.ContainerNameCustomTag, search.CVE.String(), search.CVSS.String(), augmentedobjs.ComponentAndVersionCustomTag})

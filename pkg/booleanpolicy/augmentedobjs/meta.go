@@ -13,6 +13,7 @@ const (
 	dockerfileLineAugmentKey      = "DockerfileLine"
 	componentAndVersionAugmentKey = "ComponentAndVersion"
 	whitelistResultAugmentKey     = "WhitelistResult"
+	envVarAugmentKey              = "EnvironmentVariable"
 )
 
 // This block enumerates metadata about the augmented objects we use in policies.
@@ -23,7 +24,7 @@ var (
 			[]string{"Containers", processAugmentKey},
 			pathutil.NewAugmentedObjMeta((*storage.ProcessIndicator)(nil)).
 				AddPlainObjectAt([]string{whitelistResultAugmentKey}, (*whitelistResult)(nil)),
-		)
+		).AddPlainObjectAt([]string{"Containers", "Config", "Env", envVarAugmentKey}, (*envVar)(nil))
 
 	ImageMeta = pathutil.NewAugmentedObjMeta((*storage.Image)(nil)).
 			AddPlainObjectAt([]string{"Metadata", "V1", "Layers", dockerfileLineAugmentKey}, (*dockerfileLine)(nil)).

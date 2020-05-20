@@ -805,7 +805,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "Environment Variable Contains Secret",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				secretEnvDep.GetId(): {
 					{
@@ -816,7 +815,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		},
 		{
 			policyName: "Secret Mounted as Environment Variable",
-			skip:       true,
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				secretKeyRefDep.GetId(): {
 					{
