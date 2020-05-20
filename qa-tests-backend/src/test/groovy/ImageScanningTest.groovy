@@ -131,7 +131,7 @@ class ImageScanningTest extends BaseSpecification {
         }
         if (!strictIntegrationTesting && imageDetail.scan.componentsCount == 0) {
             // Ignore flaky external services
-            Assume.assumeNoException("Failed to scan the image using ${integration}. Skipping test!: ", e)
+            Assume.assumeNoException("Failed to scan the image using ${integration}. Skipping test!")
         }
         assert imageDetail.scan.componentsCount > 0
         for (String cve : cves) {
