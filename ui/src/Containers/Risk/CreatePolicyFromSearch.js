@@ -47,7 +47,6 @@ function CreatePolicyFromSearch({
 
                 const newPolicy = {
                     ...response?.policy,
-                    name: '<policy from Risk search>',
                     severity: null,
                 };
 
