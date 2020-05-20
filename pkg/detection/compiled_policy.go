@@ -61,8 +61,17 @@ func newCompiledPolicy(policy *storage.Policy, matcher searchbasedpolicies.Match
 		whitelists = append(whitelists, w)
 	}
 
+	scopes := make([]*scopecomp.CompiledScope, 0, len(policy.GetScope()))
+	for _, s := range policy.GetScope() {
+		compiled, err := scopecomp.CompileScope(s)
+		if err != nil {
+			return nil, errors.Wrapf(err, "compiling scope %+v", s)
+		}
+		scopes = append(scopes, compiled)
+	}
+
 	if policies.AppliesAtDeployTime(policy) || policies.AppliesAtRunTime(policy) {
-		compiled.predicates = append(compiled.predicates, &deploymentPredicate{policy: policy, whitelists: whitelists})
+		compiled.predicates = append(compiled.predicates, &deploymentPredicate{scopes: scopes, whitelists: whitelists})
 	}
 	if policies.AppliesAtBuildTime(policy) {
 		compiled.predicates = append(compiled.predicates, &imagePredicate{
@@ -178,8 +187,8 @@ func (cw *compiledWhitelist) MatchesDeployment(deployment *storage.Deployment) b
 
 // Predicate for deployments.
 type deploymentPredicate struct {
-	policy     *storage.Policy
 	whitelists []*compiledWhitelist
+	scopes     []*scopecomp.CompiledScope
 }
 
 func (cp *deploymentPredicate) AppliesTo(input interface{}) bool {
@@ -188,7 +197,12 @@ func (cp *deploymentPredicate) AppliesTo(input interface{}) bool {
 		return false
 	}
 
-	return !matchesDeploymentWhitelists(deployment, cp.whitelists)
+	// In the pre-BPL world, scopes are handled by constructing a conjunction query in the matcher.
+	if !features.BooleanPolicyLogic.Enabled() {
+		return !deploymentMatchesWhitelists(deployment, cp.whitelists)
+	}
+
+	return deploymentMatchesScopes(deployment, cp.scopes) && !deploymentMatchesWhitelists(deployment, cp.whitelists)
 }
 
 // Predicate for images.
