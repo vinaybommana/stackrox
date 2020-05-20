@@ -42,7 +42,9 @@ function PolicySection({ fields, sectionName, removeSectionHandler, readOnly, is
                         let { fieldKey } = field;
                         if (!fieldKey) {
                             fieldKey = policyConfiguration.descriptor.find(
-                                (fieldObj) => fieldObj.name === field.fieldName
+                                (fieldObj) =>
+                                    fieldObj.name === field.fieldName ||
+                                    fieldObj.label === field.fieldName
                             );
                         }
                         return (
