@@ -20,7 +20,9 @@ const SideBar = ({
     function onRowSelectHandler() {
         return (row) => {
             onSelectRow(row);
-            onCancel();
+            if (onCancel) {
+                onCancel();
+            }
         };
     }
 
@@ -32,7 +34,7 @@ const SideBar = ({
     }
 
     function renderRowActionButtons(row) {
-        if (row.noAction) return null;
+        if (!onDelete || row.noAction) return null;
         return (
             <div className="border-2 border-base-400 bg-base-100 flex">
                 <RowActionButton
@@ -88,12 +90,14 @@ SideBar.propTypes = {
     selected: PropTypes.shape({}),
     onSelectRow: PropTypes.func.isRequired,
     addRowButton: PropTypes.node.isRequired,
-    onCancel: PropTypes.func.isRequired,
-    onDelete: PropTypes.func.isRequired,
+    onCancel: PropTypes.func,
+    onDelete: PropTypes.func,
     type: PropTypes.string.isRequired,
 };
 
 SideBar.defaultProps = {
+    onCancel: null,
+    onDelete: null,
     selected: null,
 };
 

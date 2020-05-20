@@ -57,4 +57,5 @@ Form.defaultProps = {
 
 export default reduxForm({
     form: 'role-form',
+    enableReinitialize: true,
 })(Form);
