@@ -36,9 +36,9 @@ class Notifier {
         return NotifierService.testNotifier(notifier)
     }
 
-    void validateViolationNotification(Policy policy, Deployment deployment) { }
+    void validateViolationNotification(Policy policy, Deployment deployment, boolean strictIntegrationTesting) { }
 
-    void validateNetpolNotification(String yaml) { }
+    void validateNetpolNotification(String yaml, boolean strictIntegrationTesting) { }
 
     String getId() {
         return notifier.id
@@ -69,11 +69,14 @@ class EmailNotifier extends Notifier {
         mail.logout()
     }
 
-    void validateViolationNotification(Policy policy, Deployment deployment) {
+    void validateViolationNotification(Policy policy, Deployment deployment, boolean strictIntegrationTesting) {
         String policySeverity = policy.severity.valueDescriptor.toString().split("_")[0].toLowerCase()
         try {
             mail.login()
         } catch (Exception e) {
+            if (strictIntegrationTesting) {
+                throw(e)
+            }
             Assume.assumeNoException("Failed to login to GMAIL service... skipping test!: ", e)
         }
 
@@ -103,11 +106,14 @@ class EmailNotifier extends Notifier {
         mail.logout()
     }
 
-    void validateNetpolNotification(String yaml) {
+    void validateNetpolNotification(String yaml, boolean strictIntegrationTesting) {
         Timer t = new Timer(30, 3)
         try {
             mail.login()
         } catch (Exception e) {
+            if (strictIntegrationTesting) {
+                throw(e)
+            }
             Assume.assumeNoException("Failed to login to GMAIL service... skipping test!: ", e)
         }
         Message[] notifications = []
@@ -137,7 +143,7 @@ class GenericNotifier extends Notifier {
                 integrationName, enableTLS, caCert, skipTLSVerification, auditLoggingEnabled)
     }
 
-    void validateViolationNotification(Policy policy, Deployment deployment) {
+    void validateViolationNotification(Policy policy, Deployment deployment, boolean strictIntegrationTesting) {
         def get = new URL("http://localhost:8080").openConnection()
         def jsonSlurper = new JsonSlurper()
         def object = jsonSlurper.parseText(get.getInputStream().getText())
@@ -151,7 +157,7 @@ class GenericNotifier extends Notifier {
         assert generic["data"]["alert"]["deployment"]["name"] == deployment.name
     }
 
-    void validateNetpolNotification(String yaml) {
+    void validateNetpolNotification(String yaml, boolean strictIntegrationTesting) {
         def get = new URL("http://localhost:8080").openConnection()
         def jsonSlurper = new JsonSlurper()
         def object = jsonSlurper.parseText(get.getInputStream().getText())
@@ -193,7 +199,7 @@ class PagerDutyNotifier extends Notifier {
         incidentWatcherIndex = getLatestPagerDutyIncident().incidents[0].incident_number
     }
 
-    void validateViolationNotification(Policy policy, Deployment deployment) {
+    void validateViolationNotification(Policy policy, Deployment deployment, boolean strictIntegrationTesting) {
         def newIncidents = waitForPagerDutyUpdate(incidentWatcherIndex)
         assert newIncidents != null
         assert newIncidents.incidents[0].description.contains(policy.description)
@@ -251,7 +257,7 @@ class SplunkNotifier extends Notifier {
         notifier = NotifierService.addNotifier(notifier)
     }
 
-    void validateViolationNotification(Policy policy, Deployment deployment) {
+    void validateViolationNotification(Policy policy, Deployment deployment, boolean strictIntegrationTesting) {
         def response = SplunkUtil.waitForSplunkAlerts(splunkPort, 30)
 
         assert response.find { it.deployment.id == deployment.deploymentUid }

@@ -12,6 +12,7 @@ import org.junit.rules.TestName
 import org.junit.rules.Timeout
 import services.BaseService
 import services.ImageIntegrationService
+import services.MetadataService
 import services.RoleService
 import services.SACService
 import spock.lang.Retry
@@ -45,6 +46,8 @@ class BaseSpecification extends Specification {
 
     protected static String allAccessToken = null
 
+    public static strictIntegrationTesting = false
+
     private static globalSetup() {
         if (globalSetupDone) {
             return
@@ -52,11 +55,30 @@ class BaseSpecification extends Specification {
 
         println "Performing global setup"
 
+        if (!Env.IN_CI || Env.get("CIRCLE_TAG")) {
+            // Strictly test integration with external services when running in
+            // a dev environment or in CI against tagged builds (e.g. nightly builds).
+            println "Will perform strict integration testing (if any is required)"
+            strictIntegrationTesting = true
+        }
+
         RoleOuterClass.Role testRole = null
         ApiTokenService.GenerateTokenResponse tokenResp = null
 
         BaseService.useBasicAuth()
         BaseService.setUseClientCert(false)
+
+        withRetry(10, 1) {
+            try {
+                def metadata = MetadataService.getMetadataServiceClient().getMetadata()
+                println "Testing against:"
+                println metadata
+            }
+            catch (Exception ex) {
+                println "Check the test target deployment, auth credentials, kube service proxy, etc."
+                throw(ex)
+            }
+        }
 
         withRetry(30, 1) {
             def allResources = RoleService.getResources()

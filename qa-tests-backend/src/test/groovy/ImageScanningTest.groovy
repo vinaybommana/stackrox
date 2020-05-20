@@ -129,6 +129,10 @@ class ImageScanningTest extends BaseSpecification {
             ImageService.scanImage(deployment.image)
             imageDetail = ImageService.getImage(ImageService.getImages().find { it.name == deployment.image }?.id)
         }
+        if (!strictIntegrationTesting && imageDetail.scan.componentsCount == 0) {
+            // Ignore flaky external services
+            Assume.assumeNoException("Failed to scan the image using ${integration}. Skipping test!: ", e)
+        }
         assert imageDetail.scan.componentsCount > 0
         for (String cve : cves) {
             println "Validating existence of ${cve} cve..."

@@ -230,7 +230,7 @@ ObOdSTZUQI4TZOXOpJCpa97CnqroNi7RrT05JOfoe/DPmhoJmF4AUrnd/YUb8pgF
 
         then:
         "Verify the messages are seen in the json"
-        notifier.validateViolationNotification(policy.build(), nginxdeployment)
+        notifier.validateViolationNotification(policy.build(), nginxdeployment, strictIntegrationTesting)
 
         cleanup:
         "remove Deployment and services"
@@ -280,7 +280,7 @@ ObOdSTZUQI4TZOXOpJCpa97CnqroNi7RrT05JOfoe/DPmhoJmF4AUrnd/YUb8pgF
         and:
         "validate notification"
         for (Notifier notifier : notifierTypes) {
-            notifier.validateNetpolNotification(orchestrator.generateYaml(policy))
+            notifier.validateNetpolNotification(orchestrator.generateYaml(policy), strictIntegrationTesting)
         }
 
         cleanup:
@@ -339,7 +339,7 @@ ObOdSTZUQI4TZOXOpJCpa97CnqroNi7RrT05JOfoe/DPmhoJmF4AUrnd/YUb8pgF
         then:
         "Validate Notification details"
         for (Notifier notifier : notifierTypes) {
-            notifier.validateViolationNotification(policy.build(), deployment)
+            notifier.validateViolationNotification(policy.build(), deployment, strictIntegrationTesting)
         }
 
         cleanup:
