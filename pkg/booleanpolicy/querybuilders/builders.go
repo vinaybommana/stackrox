@@ -70,13 +70,7 @@ type fieldLabelQueryBuilder struct {
 }
 
 func (f *fieldLabelQueryBuilder) FieldQueriesForGroup(group *storage.PolicyGroup) []*query.FieldQuery {
-	fq := &query.FieldQuery{
-		Field:    f.fieldLabel.String(),
-		Values:   mapValues(group, f.valueMapFunc),
-		Operator: operatorProtoMap[group.GetBooleanOperator()],
-		Negate:   group.GetNegate(),
-	}
-	return []*query.FieldQuery{fq}
+	return []*query.FieldQuery{fieldQueryFromGroup(group, f.fieldLabel, f.valueMapFunc)}
 }
 
 // ForFieldLabelExact returns a query builder that simply queries for the exact field value with the given search field label.
@@ -173,4 +167,13 @@ func ForFieldLabelNil(label search.FieldLabel) QueryBuilder {
 			Negate: negate != group.GetNegate(),
 		}}
 	})
+}
+
+func fieldQueryFromGroup(group *storage.PolicyGroup, label search.FieldLabel, mapFunc func(string) string) *query.FieldQuery {
+	return &query.FieldQuery{
+		Field:    label.String(),
+		Values:   mapValues(group, mapFunc),
+		Operator: operatorProtoMap[group.GetBooleanOperator()],
+		Negate:   group.GetNegate(),
+	}
 }

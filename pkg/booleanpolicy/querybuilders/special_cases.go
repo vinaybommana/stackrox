@@ -15,13 +15,9 @@ import (
 // is greater than or equal to that value.
 func ForK8sRBAC() QueryBuilder {
 	return queryBuilderFunc(func(group *storage.PolicyGroup) []*query.FieldQuery {
-		return []*query.FieldQuery{{
-			Field: search.ServiceAccountPermissionLevel.String(),
-			Values: mapValues(group, func(s string) string {
-				return fmt.Sprintf("%s%s", basematchers.GreaterThanOrEqualTo, s)
-			}),
-			Negate: group.GetNegate(),
-		}}
+		return []*query.FieldQuery{fieldQueryFromGroup(group, search.ServiceAccountPermissionLevel, func(s string) string {
+			return fmt.Sprintf("%s%s", basematchers.GreaterThanOrEqualTo, s)
+		})}
 	})
 }
 
@@ -36,5 +32,31 @@ func ForDropCaps() QueryBuilder {
 			Values:   mapValues(group, valueToStringExact),
 			Operator: operatorProtoMap[group.GetBooleanOperator()],
 		}}
+	})
+}
+
+// ForCVE returns a query builder for CVEs.
+func ForCVE() QueryBuilder {
+	return queryBuilderFunc(func(group *storage.PolicyGroup) []*query.FieldQuery {
+		return []*query.FieldQuery{
+			fieldQueryFromGroup(group, search.CVE, valueToStringRegex),
+			{
+				Field:  search.CVESuppressed.String(),
+				Values: []string{"false"},
+			},
+		}
+	})
+}
+
+// ForCVSS returns a query builder for CVSS scores.
+func ForCVSS() QueryBuilder {
+	return queryBuilderFunc(func(group *storage.PolicyGroup) []*query.FieldQuery {
+		return []*query.FieldQuery{
+			fieldQueryFromGroup(group, search.CVSS, nil),
+			{
+				Field:  search.CVESuppressed.String(),
+				Values: []string{"false"},
+			},
+		}
 	})
 }

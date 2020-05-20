@@ -32,8 +32,8 @@ type metadataAndQB struct {
 // This block enumerates field short names.
 var (
 	AddCaps                = newField("Add Capabilities", querybuilders.ForFieldLabelExact(search.AddCapabilities), violations.ContainerContextFields, capabilitiesValueRegex, negationForbidden)
-	CVE                    = newField("CVE", querybuilders.ForFieldLabelRegex(search.CVE), violations.VulnContextFields, stringValueRegex)
-	CVSS                   = newField("CVSS", querybuilders.ForFieldLabel(search.CVSS), violations.VulnContextFields, comparatorDecimalValueRegex, operatorsForbidden)
+	CVE                    = newField("CVE", querybuilders.ForCVE(), violations.VulnContextFields, stringValueRegex)
+	CVSS                   = newField("CVSS", querybuilders.ForCVSS(), violations.VulnContextFields, comparatorDecimalValueRegex, operatorsForbidden)
 	ContainerCPULimit      = newField("Container CPU Limit", querybuilders.ForFieldLabel(search.CPUCoresLimit), violations.ResourceContextFields, comparatorDecimalValueRegex, operatorsForbidden)
 	ContainerCPURequest    = newField("Container CPU Request", querybuilders.ForFieldLabel(search.CPUCoresRequest), violations.ResourceContextFields, comparatorDecimalValueRegex, operatorsForbidden)
 	ContainerMemLimit      = newField("Container Memory Limit", querybuilders.ForFieldLabel(search.MemoryLimit), violations.ResourceContextFields, comparatorDecimalValueRegex, operatorsForbidden)

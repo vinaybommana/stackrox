@@ -322,6 +322,15 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 	shellshockDep := deploymentWithImageAnyID(shellshockImage)
 	suite.addDepAndImages(shellshockDep, shellshockImage)
 
+	suppressedShellshockImage := imageWithComponents([]*storage.EmbeddedImageScanComponent{
+		{Name: "shellshock", Version: "1.2", Vulns: []*storage.EmbeddedVulnerability{
+			{Cve: "CVE-2014-6271", Link: "https://shellshock", Cvss: 6, Suppressed: true},
+			{Cve: "CVE-ARBITRARY", Link: "https://notshellshock"},
+		}},
+	})
+	suppressedShellShockDep := deploymentWithImageAnyID(suppressedShellshockImage)
+	suite.addDepAndImages(suppressedShellShockDep, suppressedShellshockImage)
+
 	strutsImage := imageWithComponents([]*storage.EmbeddedImageScanComponent{
 		{Name: "struts", Version: "1.2", Vulns: []*storage.EmbeddedVulnerability{
 			{Cve: "CVE-2017-5638", Link: "https://struts", Cvss: 8, SetFixedBy: &storage.EmbeddedVulnerability_FixedBy{FixedBy: "v1.3"}},
@@ -332,6 +341,17 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 	})
 	strutsDep := deploymentWithImageAnyID(strutsImage)
 	suite.addDepAndImages(strutsDep, strutsImage)
+
+	strutsImageSuppressed := imageWithComponents([]*storage.EmbeddedImageScanComponent{
+		{Name: "struts", Version: "1.2", Vulns: []*storage.EmbeddedVulnerability{
+			{Cve: "CVE-2017-5638", Link: "https://struts", Suppressed: true, Cvss: 8, SetFixedBy: &storage.EmbeddedVulnerability_FixedBy{FixedBy: "v1.3"}},
+		}},
+		{Name: "OTHER", Version: "1.3", Vulns: []*storage.EmbeddedVulnerability{
+			{Cve: "CVE-1223-451", Link: "https://cvefake"},
+		}},
+	})
+	strutsDepSuppressed := deploymentWithImageAnyID(strutsImageSuppressed)
+	suite.addDepAndImages(strutsDepSuppressed, strutsImageSuppressed)
 
 	depWithNonSeriousVulnsImage := imageWithComponents([]*storage.EmbeddedImageScanComponent{
 		{Name: "NOSERIOUS", Version: "2.3", Vulns: []*storage.EmbeddedVulnerability{
@@ -699,17 +719,19 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			policyName: "Images with no scans",
 			shouldNotMatch: map[string]struct{}{
 				// These deployments have scans on their images.
-				fixtureDep.GetId():             {},
-				oldScannedDep.GetId():          {},
-				heartbleedDep.GetId():          {},
-				apkDep.GetId():                 {},
-				curlDep.GetId():                {},
-				componentDeps["apt"].GetId():   {},
-				componentDeps["dnf"].GetId():   {},
-				componentDeps["wget"].GetId():  {},
-				shellshockDep.GetId():          {},
-				strutsDep.GetId():              {},
-				depWithNonSeriousVulns.GetId(): {},
+				fixtureDep.GetId():              {},
+				oldScannedDep.GetId():           {},
+				heartbleedDep.GetId():           {},
+				apkDep.GetId():                  {},
+				curlDep.GetId():                 {},
+				componentDeps["apt"].GetId():    {},
+				componentDeps["dnf"].GetId():    {},
+				componentDeps["wget"].GetId():   {},
+				shellshockDep.GetId():           {},
+				suppressedShellShockDep.GetId(): {},
+				strutsDep.GetId():               {},
+				strutsDepSuppressed.GetId():     {},
+				depWithNonSeriousVulns.GetId():  {},
 				// The rest of the deployments have no images!
 				"FAKEID":                                          {},
 				containerPort22Dep.GetId():                        {},
@@ -1140,7 +1162,9 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 				suite.imageIDFromDep(componentDeps["dnf"]):       {},
 				suite.imageIDFromDep(componentDeps["wget"]):      {},
 				shellshockImage.GetId():                          {},
+				suppressedShellshockImage.GetId():                {},
 				strutsImage.GetId():                              {},
+				strutsImageSuppressed.GetId():                    {},
 				depWithNonSeriousVulnsImage.GetId():              {},
 				fixtureDep.GetContainers()[0].GetImage().GetId(): {},
 				fixtureDep.GetContainers()[1].GetImage().GetId(): {},
