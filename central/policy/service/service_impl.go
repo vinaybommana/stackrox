@@ -185,6 +185,19 @@ func (s *serviceImpl) ListPolicies(ctx context.Context, request *v1.RawQuery) (*
 	return resp, nil
 }
 
+func (s *serviceImpl) convertAndValidate(ctx context.Context, p *storage.Policy) error {
+	if features.BooleanPolicyLogic.Enabled() {
+		if err := booleanpolicy.EnsureConverted(p); err != nil {
+			return status.Errorf(codes.InvalidArgument, "Could not ensure policy format: %v", err.Error())
+		}
+	}
+
+	if err := s.validator.validate(ctx, p); err != nil {
+		return status.Error(codes.InvalidArgument, err.Error())
+	}
+	return nil
+}
+
 func (s *serviceImpl) addOrUpdatePolicy(ctx context.Context, request *storage.Policy, extraValidateFunc func(*storage.Policy) error, updateFunc func(context.Context, *storage.Policy) error) (*storage.Policy, error) {
 	if extraValidateFunc != nil {
 		if err := extraValidateFunc(request); err != nil {
@@ -192,13 +205,8 @@ func (s *serviceImpl) addOrUpdatePolicy(ctx context.Context, request *storage.Po
 		}
 	}
 
-	if features.BooleanPolicyLogic.Enabled() {
-		if err := booleanpolicy.EnsureConverted(request); err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "Could not ensure policy format: %v", err.Error())
-		}
-	}
-	if err := s.validator.validate(ctx, request); err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+	if err := s.convertAndValidate(ctx, request); err != nil {
+		return nil, err
 	}
 
 	request.LastUpdated = protoconv.ConvertTimeToTimestamp(time.Now())
@@ -302,8 +310,8 @@ func (s *serviceImpl) ReassessPolicies(context.Context, *v1.Empty) (*v1.Empty, e
 }
 
 func (s *serviceImpl) SubmitDryRunPolicyJob(ctx context.Context, request *storage.Policy) (*v1.JobId, error) {
-	if err := s.validator.validate(ctx, request); err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+	if err := s.convertAndValidate(ctx, request); err != nil {
+		return nil, err
 	}
 
 	t := func(c concurrency.ErrorWaitable, res *backgroundtasks.ExecutionResult) error {
@@ -369,10 +377,6 @@ func (s *serviceImpl) CancelDryRunJob(ctx context.Context, jobid *v1.JobId) (*v1
 }
 
 func (s *serviceImpl) predicateBasedDryRunPolicy(ctx context.Context, cancelCtx concurrency.ErrorWaitable, request *storage.Policy) (*v1.DryRunResponse, error) {
-	if err := s.validator.validate(ctx, request); err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
-	}
-
 	var resp v1.DryRunResponse
 
 	// Dry runs do not apply to policies with whitelists or runtime lifecycle stage because they are evaluated
@@ -472,6 +476,10 @@ func (s *serviceImpl) predicateBasedDryRunPolicy(ctx context.Context, cancelCtx 
 
 // DryRunPolicy runs a dry run of the policy and determines what deployments would violate it
 func (s *serviceImpl) DryRunPolicy(ctx context.Context, request *storage.Policy) (*v1.DryRunResponse, error) {
+	if err := s.convertAndValidate(ctx, request); err != nil {
+		return nil, err
+	}
+
 	return s.predicateBasedDryRunPolicy(ctx, ctx, request)
 }
 
@@ -717,6 +725,20 @@ func (s *serviceImpl) ExportPolicies(ctx context.Context, request *v1.ExportPoli
 	}, nil
 }
 
+func (s *serviceImpl) convertAndValidateForImport(p *storage.Policy) error {
+	if features.BooleanPolicyLogic.Enabled() {
+		if err := booleanpolicy.EnsureConverted(p); err != nil {
+			return err
+		}
+	}
+	if err := s.validator.validateImport(p); err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
 func (s *serviceImpl) ImportPolicies(ctx context.Context, request *v1.ImportPoliciesRequest) (*v1.ImportPoliciesResponse, error) {
 	if !features.PolicyImportExport.Enabled() {
 		return nil, status.Error(codes.Unimplemented, "not implemented")
@@ -727,16 +749,8 @@ func (s *serviceImpl) ImportPolicies(ctx context.Context, request *v1.ImportPoli
 	// Validate input policies
 	validPolicyList := make([]*storage.Policy, 0, len(request.GetPolicies()))
 	for _, policy := range request.GetPolicies() {
-		if features.BooleanPolicyLogic.Enabled() {
-			var err error
-			policy, err = booleanpolicy.CloneAndEnsureConverted(policy)
-			if err != nil {
-				allValidationSucceeded = false
-				responses = append(responses, makeValidationError(policy, err))
-				continue
-			}
-		}
-		if err := s.validator.validateImport(policy); err != nil {
+		err := s.convertAndValidateForImport(policy)
+		if err != nil {
 			allValidationSucceeded = false
 			responses = append(responses, makeValidationError(policy, err))
 			continue

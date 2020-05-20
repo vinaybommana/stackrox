@@ -49,11 +49,15 @@ func EnsureConverted(p *storage.Policy) error {
 	if p.GetPolicyVersion() != legacyVersion && p.GetPolicyVersion() != Version {
 		return errors.New("unknown version")
 	}
-	if p.GetPolicyVersion() == Version && p.GetPolicySections() == nil {
+	if p.GetPolicyVersion() == Version && len(p.GetPolicySections()) == 0 {
 		return errors.New("empty sections")
 	}
-	if p.GetPolicyVersion() == legacyVersion && p.GetFields() == nil {
-		return errors.New("empty fields")
+	if p.GetPolicyVersion() == legacyVersion {
+		// If a policy is sent with legacyVersion, but contains sections, that's okay -- we will use those sections
+		// as-is, and infer that it's of the new Version.
+		if p.GetFields() == nil && len(p.GetPolicySections()) == 0 {
+			return errors.New("empty policy")
+		}
 	}
 	if p.GetPolicyVersion() == legacyVersion {
 		p.PolicyVersion = Version

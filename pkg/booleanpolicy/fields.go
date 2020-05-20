@@ -47,7 +47,7 @@ var (
 	ImageAge               = newField("Image Age", querybuilders.ForDays(search.ImageCreatedTime), violations.ImageContextFields, integerValueRegex, negationForbidden, operatorsForbidden)
 	ImageComponent         = newField("Image Component", querybuilders.ForCompound(augmentedobjs.ComponentAndVersionCustomTag, 2), violations.ImageContextFields, keyValueValueRegex, negationForbidden)
 	ImageRegistry          = newField("Image Registry", querybuilders.ForFieldLabelRegex(search.ImageRegistry), violations.ImageContextFields, stringValueRegex)
-	ImageRemote            = newField("Image Remote", querybuilders.ForFieldLabelRegex(search.ImageRemote), violations.ImageContextFields, stringValueRegex, negationForbidden)
+	ImageRemote            = newField("Image Remote", querybuilders.ForFieldLabelRegex(search.ImageRemote), violations.ImageContextFields, stringValueRegex)
 	ImageScanAge           = newField("Image Scan Age", querybuilders.ForDays(search.ImageScanTime), violations.ImageContextFields, integerValueRegex, negationForbidden, operatorsForbidden)
 	ImageTag               = newField("Image Tag", querybuilders.ForFieldLabelRegex(search.ImageTag), violations.ImageContextFields, stringValueRegex)
 	MinimumRBACPermissions = newField("Minimum RBAC Permissions", querybuilders.ForK8sRBAC(), nil, rbacPermissionValueRegex, operatorsForbidden)
