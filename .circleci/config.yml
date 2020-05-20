@@ -2984,6 +2984,26 @@ jobs:
       - *waitForSensorK8s
 
       - run:
+          name: Wait for Central reconciliation before running smoke tests
+          command: |
+            # Reconciliation is rather slow in this case, since the central has a DB with a bunch of deployments,
+            # none of which exist. So when sensor connects, the reconciliation deletion takes a while to flush.
+            # This causes flakiness with the smoke tests.
+            # To mitigate this, wait for the deployments to get deleted before running the tests.
+            success=0
+            for i in $(seq 1 60); do
+              numDeployments="$(curl -sSk -u "admin:${ROX_PASSWORD}" "https://${API_ENDPOINT}/v1/summary/counts" | jq '.numDeployments' -r)"
+              echo "Try number ${i}. Number of deployments in Central: ${numDeployments}"
+              [[ -n "${numDeployments}" ]]
+              if [[ "${numDeployments}" -lt 100 ]]; then
+                success=1
+                break
+              fi
+              sleep 10
+            done
+            [[ "${success}" == 1 ]]
+
+      - run:
           name: Run smoke tests now that sensor is up
           command: |
             export CLUSTER=K8S
