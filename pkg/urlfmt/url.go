@@ -85,6 +85,15 @@ func GetServerFromURL(endpoint string) string {
 	return u.Host
 }
 
+// GetSchemeFromURL returns the scheme from the URL
+func GetSchemeFromURL(endpoint string) string {
+	u, err := url.Parse(endpoint)
+	if err != nil {
+		return ""
+	}
+	return u.Scheme
+}
+
 // TrimHTTPPrefixes cuts off the http prefixes if they exist on the URL
 func TrimHTTPPrefixes(url string) string {
 	url = strings.TrimPrefix(url, "http://")

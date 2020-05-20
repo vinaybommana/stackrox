@@ -3,6 +3,7 @@ package imageintegrations
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	clusterDatastore "github.com/stackrox/rox/central/cluster/datastore"
 	"github.com/stackrox/rox/central/imageintegration"
@@ -96,6 +97,24 @@ func (s *pipelineImpl) getMatchingImageIntegration(auto *storage.ImageIntegratio
 	return integrationToUpdate, true
 }
 
+func parseEndpointForURL(endpoint string) string {
+	url := urlfmt.FormatURL(endpoint, urlfmt.HTTPS, urlfmt.NoTrailingSlash)
+
+	server := urlfmt.GetServerFromURL(url)
+	if strings.HasSuffix(server, "docker.io") || strings.HasSuffix(server, "docker.io:443") {
+		return "https://registry-1.docker.io"
+	}
+
+	scheme := urlfmt.GetSchemeFromURL(url)
+	switch scheme {
+	case "http":
+		url = urlfmt.FormatURL(server, urlfmt.InsecureHTTP, urlfmt.NoTrailingSlash)
+	default:
+		url = urlfmt.FormatURL(server, urlfmt.HTTPS, urlfmt.NoTrailingSlash)
+	}
+	return url
+}
+
 // Run runs the pipeline template on the input and returns the output.
 func (s *pipelineImpl) Run(ctx context.Context, clusterID string, msg *central.MsgFromSensor, _ common.MessageInjector) error {
 	defer countMetrics.IncrementResourceProcessedCounter(pipeline.ActionToOperation(msg.GetEvent().GetAction()), metrics.ImageIntegration)
@@ -116,12 +135,14 @@ func (s *pipelineImpl) Run(ctx context.Context, clusterID string, msg *central.M
 		return err
 	}
 
-	if imageIntegration.GetDocker() == nil {
+	dockerIntegration := imageIntegration.GetDocker()
+	if dockerIntegration == nil {
 		return nil
 	}
 
 	// Using GetDocker() because the config is within a oneof
-	imageIntegration.GetDocker().Insecure = !validTLS
+	dockerIntegration.Insecure = !validTLS
+	dockerIntegration.Endpoint = parseEndpointForURL(dockerIntegration.GetEndpoint())
 
 	// Action is currently always update
 	// We should not overwrite image integrations that already have a username and password
@@ -130,7 +151,6 @@ func (s *pipelineImpl) Run(ctx context.Context, clusterID string, msg *central.M
 	if err != nil {
 		return err
 	}
-
 	integrationToUpdate, shouldInsert := s.getMatchingImageIntegration(imageIntegration, existingIntegrations)
 	if !shouldInsert {
 		return nil
@@ -140,6 +160,7 @@ func (s *pipelineImpl) Run(ctx context.Context, clusterID string, msg *central.M
 		if err := s.toNotify.NotifyUpdated(imageIntegration); err != nil {
 			return err
 		}
+
 		if _, err := s.datastore.AddImageIntegration(ctx, imageIntegration); err != nil {
 			return err
 		}
