@@ -10,6 +10,7 @@ import services.ImageIntegrationService
 import spock.lang.Shared
 import spock.lang.Unroll
 import util.Env
+import util.Timer
 
 class AdmissionControllerNoImageScanTest extends BaseSpecification {
     @Shared
@@ -124,7 +125,20 @@ class AdmissionControllerNoImageScanTest extends BaseSpecification {
 
         def created = orchestrator.createDeploymentNoWait(deployment)
         if (created) {
-            orchestrator.deleteAndWaitForDeploymentDeletion(deployment)
+            def timer = new Timer(30, 1)
+            def deleted = false
+            while (!deleted && timer.IsValid()) {
+                try {
+                    orchestrator.deleteDeployment(deployment)
+                    deleted = true
+                } catch (NullPointerException ignore) {
+                    println "Caught NPE while deleting deployment, retrying in 1s..."
+                }
+            }
+            if (!deleted) {
+                println "Warning: failed to delete deployment. Subsequent tests may be affected ..."
+            }
+            orchestrator.waitForDeploymentDeletion(deployment)
         }
         return created
     }
