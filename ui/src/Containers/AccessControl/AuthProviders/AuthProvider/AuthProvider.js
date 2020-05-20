@@ -8,6 +8,8 @@ import HeaderButtons from 'Containers/AccessControl/AuthProviders/AuthProvider/H
 import Form from 'Containers/AccessControl/AuthProviders/AuthProvider/Form/Form';
 import Details from 'Containers/AccessControl/AuthProviders/AuthProvider/Details';
 import { getAuthProviderLabelByValue } from 'constants/accessControl';
+import FeatureEnabled from 'Containers/FeatureEnabled';
+import { knownBackendFlags } from 'utils/featureFlags';
 
 class AuthProvider extends Component {
     static propTypes = {
@@ -193,22 +195,39 @@ class AuthProvider extends Component {
         };
 
         const content = isEditing ? (
-            <div className="w-full">
+            <>
                 {responseError && <Message type="error" message={responseError.message} />}
                 <Form
                     key={initialValues.type}
                     onSubmit={this.onSave}
                     initialValues={modifiedInitialValues}
                 />
-            </div>
+            </>
         ) : (
-            <Details
-                authProvider={selectedAuthProvider}
-                groups={filteredGroups}
-                defaultRole={defaultRole}
-            />
+            <>
+                {!selectedAuthProvider.active && (
+                    <FeatureEnabled featureFlag={knownBackendFlags.ROX_AUTH_TEST_MODE_UI}>
+                        <div className="w-full pt-4 pl-4 pr-4">
+                            <Message
+                                type="guidance"
+                                message={
+                                    <span>
+                                        Select <strong className="font-700">Test Login</strong> to
+                                        check that your authentication provider is working properly.
+                                    </span>
+                                }
+                            />
+                        </div>
+                    </FeatureEnabled>
+                )}
+                <Details
+                    authProvider={selectedAuthProvider}
+                    groups={filteredGroups}
+                    defaultRole={defaultRole}
+                />
+            </>
         );
-        return content;
+        return <div className="w-full">{content}</div>;
     };
 
     render() {

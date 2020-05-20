@@ -18,7 +18,7 @@ export const withStringErrorStyle = () => (
 );
 
 export const withStringGuidanceStyle = () => (
-    <Message type="warn" message="This is a guidance message." />
+    <Message type="guidance" message="This is a guidance message." />
 );
 
 export const withStringLoadingStyle = () => (
