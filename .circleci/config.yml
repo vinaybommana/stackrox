@@ -2173,7 +2173,7 @@ jobs:
   provision-kops-api-e2e-tests:
     machine: true
     environment:
-      - KOPS_AUTOMATION_VERSION: 0.2.7
+      - KOPS_AUTOMATION_VERSION: 0.2.8
     steps:
       - checkout
       - check-label-exists-or-skip:
@@ -3214,7 +3214,7 @@ jobs:
   kops-api-e2e-tests:
     executor: custom
     environment:
-      - KOPS_AUTOMATION_VERSION: 0.2.7
+      - KOPS_AUTOMATION_VERSION: 0.2.8
       - LOCAL_PORT: 8000
       - RUNTIME_SUPPORT: kernel-module
       - MONITORING_SUPPORT: true
@@ -3305,6 +3305,7 @@ jobs:
             docker cp kops/id_rsa.pub        kops:/data
             docker cp kops/terraform.tfstate kops:/data
             docker cp kops/cluster_name      kops:/data
+            docker cp kops/kops_s3_bucket    kops:/data
             docker cp kops/delete-cluster-$(cat kops/cluster_name).sh kops:/data
           when: always
 
