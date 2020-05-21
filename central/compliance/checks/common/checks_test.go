@@ -7,10 +7,9 @@ import (
 	"github.com/stackrox/rox/central/compliance/checks/testutils"
 	"github.com/stackrox/rox/pkg/features"
 	pkgTestUtils "github.com/stackrox/rox/pkg/testutils"
-	"github.com/stretchr/testify/assert"
 )
 
-func TestCheckAtLeastOnePolicyEnabledReferringToVulns(t *testing.T) {
+func TestCheckSecretsInEnv(t *testing.T) {
 	for _, testCase := range []struct {
 		desc        string
 		policies    []testutils.LightPolicy
@@ -18,55 +17,42 @@ func TestCheckAtLeastOnePolicyEnabledReferringToVulns(t *testing.T) {
 		shouldPass  bool
 	}{
 		{
-			desc: "no policies referring to vulns",
+			desc: "no policies with secrets in env",
 			policies: []testutils.LightPolicy{
-				{Name: "Definitely not about vulns"},
+				{Name: "Definitely not about secrets"},
 				{Name: "Random other"},
 			},
 			shouldPass: false,
 		},
 		{
-			desc: "one CVSS policy",
+			desc: "one policy with secrets in env, not enforced",
 			policies: []testutils.LightPolicy{
-				{ID: "blah", Name: "Bad CVSS is bad", CVSSGreaterThan: 6},
-			},
-			expectedIDs: []string{"blah"},
-			shouldPass:  true,
-		},
-		{
-			desc: "one CVSS policy, disabled",
-			policies: []testutils.LightPolicy{
-				{Name: "Bad CVSS is bad", CVSSGreaterThan: 6, Disabled: true},
+				{Name: "Definitely about secrets", EnvKey: "this_is_secret", EnvValue: "DONTLOOKATME"},
+				{Name: "Random other"},
 			},
 			shouldPass: false,
 		},
 		{
-			desc: "one CVE policy",
+			desc: "one policy with secrets in env, enforced",
 			policies: []testutils.LightPolicy{
-				{ID: "anycve", Name: "Any CVE", CVE: ".*"},
+				{Name: "Definitely about secrets", EnvKey: "this_is_secret", EnvValue: "DONTLOOKATME", Enforced: true},
+				{Name: "Random other"},
 			},
-			expectedIDs: []string{"anycve"},
-			shouldPass:  true,
+			shouldPass: true,
 		},
 		{
-			desc: "another CVE policy",
+			desc: "one policy with secrets in env, enforced but disabled",
 			policies: []testutils.LightPolicy{
-				{ID: "anycve", Name: "Any CVE", CVE: "CVE-2017-.+"},
-			},
-			expectedIDs: []string{"anycve"},
-			shouldPass:  true,
-		},
-		{
-			desc: "exact CVE policy",
-			policies: []testutils.LightPolicy{
-				{Name: "Any CVE", CVE: "CVE-2017-1234"},
+				{Name: "Definitely about secrets", EnvKey: "this_is_secret", EnvValue: "DONTLOOKATME", Disabled: true, Enforced: true},
+				{Name: "Random other"},
 			},
 			shouldPass: false,
 		},
 		{
-			desc: "one CVE policy, disabled",
+			desc: "one policy with secrets in env, enforced but no value",
 			policies: []testutils.LightPolicy{
-				{Name: "Any CVE", CVE: ".*", Disabled: true},
+				{Name: "Definitely about secrets", EnvKey: "this_is_secret", Enforced: true},
+				{Name: "Random other"},
 			},
 			shouldPass: false,
 		},
@@ -77,9 +63,8 @@ func TestCheckAtLeastOnePolicyEnabledReferringToVulns(t *testing.T) {
 			defer ctrl.Finish()
 			mockCtx, mockData, records := testutils.SetupMockCtxAndMockData(ctrl)
 			testutils.MockOutLightPolicies(mockData, c.policies)
-			policyIDSet := CheckAtLeastOnePolicyEnabledReferringToVulns(mockCtx)
+			CheckSecretsInEnv(mockCtx)
 			records.AssertExpectedResult(c.shouldPass, t)
-			assert.ElementsMatch(t, c.expectedIDs, policyIDSet.AsSlice())
 		})
 	}
 }

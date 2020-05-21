@@ -7,6 +7,7 @@ import (
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/generated/internalapi/sensor"
+	"github.com/stackrox/rox/pkg/booleanpolicy/policyfields"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/detection"
 	"github.com/stackrox/rox/pkg/detection/deploytime"
@@ -141,7 +142,7 @@ func (m *manager) processNewSettings(newSettings *sensor.AdmissionControlSetting
 
 	policySet := detection.NewPolicySet(detection.NewLegacyPolicyCompiler(builder))
 	for _, policy := range newSettings.GetEnforcedDeployTimePolicies().GetPolicies() {
-		if policy.GetFields().GetSetNoScanExists() != nil && !newSettings.GetClusterConfig().GetAdmissionControllerConfig().GetScanInline() {
+		if policyfields.ContainsUnscannedImageField(policy) && !newSettings.GetClusterConfig().GetAdmissionControllerConfig().GetScanInline() {
 			log.Warnf("Policy %q (%s) depends on the existence of image scans, but this is only enforceable if the 'Contact image scanners' option is enabled (which it currently isn't)", policy.GetName(), policy.GetId())
 			continue
 		}

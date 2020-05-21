@@ -9,6 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/booleanpolicy/policyfields"
 	"github.com/stackrox/rox/pkg/detection/deploytime"
 	"github.com/stackrox/rox/pkg/enforcers"
 	"github.com/stackrox/rox/pkg/kubernetes"
@@ -117,7 +118,7 @@ func (m *manager) shouldBypass(s *state, req *admission.AdmissionRequest) bool {
 // due to the absence (or presence) of image scans.
 func hasNonNoScanAlerts(alerts []*storage.Alert) bool {
 	for _, a := range alerts {
-		if a.GetPolicy().GetFields().GetSetNoScanExists() == nil {
+		if !policyfields.ContainsUnscannedImageField(a.GetPolicy()) {
 			return true
 		}
 	}
@@ -129,7 +130,7 @@ func hasNonNoScanAlerts(alerts []*storage.Alert) bool {
 func filterOutNoScanAlerts(alerts []*storage.Alert) []*storage.Alert {
 	filteredAlerts := alerts[:0]
 	for _, a := range alerts {
-		if a.GetPolicy().GetFields().GetNoScanExists() {
+		if policyfields.ContainsUnscannedImageField(a.GetPolicy()) {
 			continue
 		}
 		filteredAlerts = append(filteredAlerts, a)
