@@ -19,6 +19,7 @@ import {
 } from 'Containers/Policies/Wizard/Form/descriptors';
 import { clientOnlyWhitelistFieldNames } from 'Containers/Policies/Wizard/Form/whitelistFieldNames';
 import { preFormatPolicyFields } from 'Containers/Policies/Wizard/Form/utils';
+import { knownBackendFlags, isBackendFeatureFlagEnabled } from 'utils/featureFlags';
 
 // Wizard is the side panel that pops up when you click on a row in the table.
 function Wizard({
@@ -77,8 +78,13 @@ Wizard.defaultProps = {
 };
 
 const getFieldGroups = createSelector(
-    [selectors.getNotifiers, selectors.getImages, selectors.getPolicyCategories],
-    (notifiers, images, policyCategories) => {
+    [
+        selectors.getNotifiers,
+        selectors.getImages,
+        selectors.getPolicyCategories,
+        selectors.getFeatureFlags,
+    ],
+    (notifiers, images, policyCategories, featureFlags) => {
         const { descriptor } = policyDetails;
         const policyDetailsFormFields = descriptor.map((field) => {
             const newField = { ...field };
@@ -109,7 +115,13 @@ const getFieldGroups = createSelector(
             return newField;
         });
         policyDetails.descriptor = policyDetailsFormFields;
-        return [policyStatus, policyDetails, policyConfiguration];
+        const fieldGroups = [policyStatus, policyDetails];
+        const BPLenabled = isBackendFeatureFlagEnabled(
+            featureFlags,
+            knownBackendFlags.ROX_BOOLEAN_POLICY_LOGIC,
+            false
+        );
+        return BPLenabled ? fieldGroups : [...fieldGroups, policyConfiguration];
     }
 );
 

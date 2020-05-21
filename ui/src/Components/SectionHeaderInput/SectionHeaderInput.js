@@ -12,7 +12,10 @@ function SectionHeaderInput({ input, readOnly }) {
     const { value, onChange } = input;
 
     return (
-        <div className="flex flex-1 justify-between items-center" data-testid="section-header">
+        <div
+            className="flex flex-1 justify-between items-center capitalize"
+            data-testid="section-header"
+        >
             {!isEditing && (
                 <>
                     <span className="p-2 text-base-600 font-700">{value}</span>
