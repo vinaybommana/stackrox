@@ -159,10 +159,14 @@ function* dispatchAuthResponse(type, location) {
         // TODO-ivan: seems like react-router-redux doesn't like pushing an action synchronously while handling LOCATION_CHANGE,
         // the bug is that it doesn't produce LOCATION_CHANGE event for this next push. Waiting here should be ok for an user.
         yield delay(10);
-    } else if (result?.userAttributes) {
+    } else if (result?.userAttributes || result?.error) {
         // save the test response for the results page to display
-        const parsedAttributes = JSON.parse(result.userAttributes);
-        const parsedResult = { ...result, userAttributes: parsedAttributes };
+        const parsedAttributes = JSON.parse(result.userAttributes || null);
+        const parsedResult = {
+            ...result,
+            userAttributes: parsedAttributes,
+            error: result.error || null,
+        };
         yield put(actions.setAuthProviderTestResults(parsedResult));
 
         // set up the redirect to the results page
