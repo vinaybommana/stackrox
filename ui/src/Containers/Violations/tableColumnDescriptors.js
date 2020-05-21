@@ -11,7 +11,6 @@ import TooltipOverlay from 'Components/TooltipOverlay';
 import { severityLabels, lifecycleStageLabels } from 'messages/common';
 
 import {
-    wrapClassName,
     defaultHeaderClassName,
     defaultColumnClassName,
     rtTrActionsClassName,
@@ -160,7 +159,7 @@ export default function getColumns(setSelectedAlertId) {
             accessor: 'deployment.name',
             searchField: 'Deployment',
             headerClassName: `w-1/6 left-checkbox-offset ${defaultHeaderClassName}`,
-            className: `w-1/6 left-checkbox-offset ${wrapClassName} ${defaultColumnClassName}`,
+            className: `w-1/6 left-checkbox-offset ${defaultColumnClassName}`,
             Cell: DeploymentColumn,
         },
         {
@@ -168,7 +167,7 @@ export default function getColumns(setSelectedAlertId) {
             accessor: 'deployment.clusterName',
             searchField: 'Cluster',
             headerClassName: `w-1/7  ${defaultHeaderClassName}`,
-            className: `w-1/7 ${wrapClassName} ${defaultColumnClassName}`,
+            className: `w-1/7 ${defaultColumnClassName}`,
             Cell: StringValueColumn,
         },
         {
@@ -176,7 +175,7 @@ export default function getColumns(setSelectedAlertId) {
             accessor: 'deployment.namespace',
             searchField: 'Namespace',
             headerClassName: `w-1/7 ${defaultHeaderClassName}`,
-            className: `w-1/7 ${wrapClassName} ${defaultColumnClassName}`,
+            className: `w-1/7 ${defaultColumnClassName}`,
             Cell: StringValueColumn,
         },
         {
@@ -184,7 +183,7 @@ export default function getColumns(setSelectedAlertId) {
             accessor: 'policy.name',
             searchField: 'Policy',
             headerClassName: `w-1/6 ${defaultHeaderClassName}`,
-            className: `w-1/6 ${wrapClassName} ${defaultColumnClassName}`,
+            className: `w-1/6 ${defaultColumnClassName}`,
             Cell: PolicyColumn,
         },
         {
@@ -192,7 +191,7 @@ export default function getColumns(setSelectedAlertId) {
             accessor: 'Enforcement Count',
             searchField: 'Policy',
             headerClassName: `w-1/10  ${defaultHeaderClassName}`,
-            className: `w-1/10 ${wrapClassName} ${defaultColumnClassName}`,
+            className: `w-1/10 ${defaultColumnClassName}`,
             Cell: EnforcementColumn,
         },
         {
@@ -200,7 +199,7 @@ export default function getColumns(setSelectedAlertId) {
             accessor: 'policy.severity',
             searchField: 'Severity',
             headerClassName: `text-center ${defaultHeaderClassName}`,
-            className: `text-center ${wrapClassName} ${defaultColumnClassName}`,
+            className: `text-center ${defaultColumnClassName}`,
             Cell: SeverityColumn,
             sortMethod: sortSeverity,
             width: 90,
@@ -210,7 +209,7 @@ export default function getColumns(setSelectedAlertId) {
             accessor: 'policy.categories',
             searchField: 'Category',
             headerClassName: `w-1/10 ${defaultHeaderClassName}`,
-            className: `w-1/10 ${wrapClassName} ${defaultColumnClassName}`,
+            className: `w-1/10 ${defaultColumnClassName}`,
             Cell: CategoryColumn,
         },
         {
@@ -218,7 +217,7 @@ export default function getColumns(setSelectedAlertId) {
             accessor: 'lifecycleStage',
             searchField: 'Lifecycle Stage',
             headerClassName: `${defaultHeaderClassName}`,
-            className: `${wrapClassName} ${defaultColumnClassName}`,
+            className: `${defaultColumnClassName}`,
             Cell: ({ value }) => lifecycleStageLabels[value],
         },
         {
@@ -226,7 +225,7 @@ export default function getColumns(setSelectedAlertId) {
             accessor: 'time',
             searchField: 'Violation Time',
             headerClassName: `w-1/10 ${defaultHeaderClassName}`,
-            className: `w-1/10 ${wrapClassName} ${defaultColumnClassName}`,
+            className: `w-1/10 ${defaultColumnClassName}`,
             Cell: ({ value }) => dateFns.format(value, dateTimeFormat),
             sortMethod: sortDate,
         },
