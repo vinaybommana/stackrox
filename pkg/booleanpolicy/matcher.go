@@ -28,8 +28,8 @@ type DeploymentMatcher interface {
 }
 
 type sectionAndEvaluator struct {
-	sectionName string
-	evaluator   evaluator.Evaluator
+	section   *storage.PolicySection
+	evaluator evaluator.Evaluator
 }
 
 // BuildDeploymentMatcher builds a matcher for deployments against the given policy,
@@ -74,7 +74,7 @@ func getSectionsAndEvals(factory *evaluator.Factory, p *storage.Policy, stage st
 		if err != nil {
 			return nil, errors.Wrapf(err, "generating evaluator for section %q", section.GetSectionName())
 		}
-		sectionsAndEvals = append(sectionsAndEvals, sectionAndEvaluator{section.GetSectionName(), eval})
+		sectionsAndEvals = append(sectionsAndEvals, sectionAndEvaluator{section, eval})
 	}
 
 	return sectionsAndEvals, nil

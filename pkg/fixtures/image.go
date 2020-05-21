@@ -48,6 +48,7 @@ func GetImage() *storage.Image {
 			Registry: "stackrox.io",
 			Remote:   "srox/mongo",
 			Tag:      "latest",
+			FullName: "stackrox.io/srox/mongo:latest",
 		},
 		Metadata: &storage.ImageMetadata{
 			V1: &storage.V1Metadata{

@@ -21,6 +21,7 @@ import (
 	"github.com/stackrox/rox/pkg/readable"
 	"github.com/stackrox/rox/pkg/set"
 	"github.com/stackrox/rox/pkg/sliceutils"
+	"github.com/stackrox/rox/pkg/testutils"
 	"github.com/stackrox/rox/pkg/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -40,6 +41,8 @@ type DefaultPoliciesTestSuite struct {
 	images                  map[string]*storage.Image
 	deploymentsToImages     map[string][]*storage.Image
 	deploymentsToIndicators map[string][]*storage.ProcessIndicator
+
+	envIsolator *testutils.EnvIsolator
 }
 
 func (suite *DefaultPoliciesTestSuite) SetupSuite() {
@@ -52,6 +55,7 @@ func (suite *DefaultPoliciesTestSuite) SetupSuite() {
 	for _, p := range defaultPolicies {
 		suite.defaultPolicies[p.GetName()] = p
 	}
+	suite.envIsolator = testutils.NewEnvIsolator(suite.T())
 }
 
 func (suite *DefaultPoliciesTestSuite) SetupTest() {
@@ -92,7 +96,7 @@ func (suite *DefaultPoliciesTestSuite) addDepAndImages(deployment *storage.Deplo
 func imageWithComponents(components []*storage.EmbeddedImageScanComponent) *storage.Image {
 	return &storage.Image{
 		Id:   uuid.NewV4().String(),
-		Name: &storage.ImageName{FullName: "ASFASF"},
+		Name: &storage.ImageName{FullName: "docker.io/ASFASF", Remote: "ASFASF"},
 		Scan: &storage.ImageScan{
 			Components: components,
 		},
@@ -101,10 +105,8 @@ func imageWithComponents(components []*storage.EmbeddedImageScanComponent) *stor
 
 func imageWithLayers(layers []*storage.ImageLayer) *storage.Image {
 	return &storage.Image{
-		Id: uuid.NewV4().String(),
-		Name: &storage.ImageName{
-			FullName: "docker.io/stackrox/test-image:0.1",
-		},
+		Id:   uuid.NewV4().String(),
+		Name: &storage.ImageName{FullName: "docker.io/ASFASF", Remote: "ASFASF"},
 		Metadata: &storage.ImageMetadata{
 			V1: &storage.V1Metadata{
 				Layers: layers,
@@ -118,9 +120,12 @@ func deploymentWithImageAnyID(img *storage.Image) *storage.Deployment {
 }
 
 func deploymentWithImage(id string, img *storage.Image) *storage.Deployment {
+	remoteSplit := strings.Split(img.GetName().GetFullName(), "/")
+	alphaOnly := regexp.MustCompile("[^A-Za-z]+")
+	containerName := alphaOnly.ReplaceAllString(remoteSplit[len(remoteSplit)-1], "")
 	return &storage.Deployment{
 		Id:         id,
-		Containers: []*storage.Container{{Image: types.ToContainerImage(img)}},
+		Containers: []*storage.Container{{Name: containerName, Image: types.ToContainerImage(img)}},
 	}
 }
 
@@ -180,6 +185,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			Registry: "docker.io",
 			Remote:   "library/nginx",
 			Tag:      "1.10",
+			FullName: "docker.io/library/nginx:1.10",
 		},
 	}
 
@@ -187,8 +193,12 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 	suite.addDepAndImages(nginx110Dep, nginx110)
 
 	oldScannedTime := time.Now().Add(-31 * 24 * time.Hour)
+
 	oldScannedImage := &storage.Image{
 		Id: "SHAOLDSCANNED",
+		Name: &storage.ImageName{
+			FullName: "docker.io/stackrox/old-scanned-image:0.1",
+		},
 		Scan: &storage.ImageScan{
 			ScanTime: protoconv.ConvertTimeToTimestamp(oldScannedTime),
 		},
@@ -240,6 +250,9 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 	oldImageCreationTime := time.Now().Add(-100 * 24 * time.Hour)
 	oldCreatedImage := &storage.Image{
 		Id: "SHA:OLDCREATEDIMAGE",
+		Name: &storage.ImageName{
+			FullName: "docker.io/stackrox/old-image:0.1",
+		},
 		Metadata: &storage.ImageMetadata{
 			V1: &storage.V1Metadata{
 				Created: protoconv.ConvertTimeToTimestamp(oldImageCreationTime),
@@ -277,6 +290,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		Id: "HEARTBLEEDDEPID",
 		Containers: []*storage.Container{
 			{
+				Name:            "nginx",
 				SecurityContext: &storage.SecurityContext{Privileged: true},
 				Image:           &storage.ContainerImage{Id: "HEARTBLEEDDEPSHA"},
 			},
@@ -298,12 +312,16 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		Id: "requiredImageLabel",
 		Containers: []*storage.Container{
 			{
+				Name:  "REQUIREDIMAGELABEL",
 				Image: &storage.ContainerImage{Id: "requiredImageLabelImage"},
 			},
 		},
 	}
 	suite.addDepAndImages(requiredImageLabel, &storage.Image{
 		Id: "requiredImageLabelImage",
+		Name: &storage.ImageName{
+			FullName: "docker.io/stackrox/required-image:0.1",
+		},
 		Metadata: &storage.ImageMetadata{
 			V1: &storage.V1Metadata{
 				Labels: map[string]string{
@@ -365,10 +383,12 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 	dockerSockDep := &storage.Deployment{
 		Id: "DOCKERSOCDEP",
 		Containers: []*storage.Container{
-			{Volumes: []*storage.Volume{
-				{Source: "/var/run/docker.sock", Name: "DOCKERSOCK"},
-				{Source: "NOTDOCKERSOCK"},
-			}},
+			{
+				Name: "dockersock",
+				Volumes: []*storage.Volume{
+					{Source: "/var/run/docker.sock", Name: "DOCKERSOCK"},
+					{Source: "NOTDOCKERSOCK"},
+				}},
 		},
 	}
 	suite.addDepAndImages(dockerSockDep)
@@ -385,12 +405,14 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 	secretEnvDep := &storage.Deployment{
 		Id: "SECRETENVDEP",
 		Containers: []*storage.Container{
-			{Config: &storage.ContainerConfig{
-				Env: []*storage.ContainerConfig_EnvironmentConfig{
-					{Key: "THIS_IS_SECRET_VAR", Value: "stealthmode", EnvVarSource: storage.ContainerConfig_EnvironmentConfig_RAW},
-					{Key: "HOME", Value: "/home/stackrox"},
-				},
-			}},
+			{
+				Name: "secretenv",
+				Config: &storage.ContainerConfig{
+					Env: []*storage.ContainerConfig_EnvironmentConfig{
+						{Key: "THIS_IS_SECRET_VAR", Value: "stealthmode", EnvVarSource: storage.ContainerConfig_EnvironmentConfig_RAW},
+						{Key: "HOME", Value: "/home/stackrox"},
+					},
+				}},
 		},
 	}
 	suite.addDepAndImages(secretEnvDep)
@@ -398,11 +420,13 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 	secretEnvSrcUnsetDep := &storage.Deployment{
 		Id: "SECRETENVSRCUNSETDEP",
 		Containers: []*storage.Container{
-			{Config: &storage.ContainerConfig{
-				Env: []*storage.ContainerConfig_EnvironmentConfig{
-					{Key: "THIS_IS_SECRET_VAR", Value: "stealthmode"},
-				},
-			}},
+			{
+				Name: "secretenvsrcunset",
+				Config: &storage.ContainerConfig{
+					Env: []*storage.ContainerConfig_EnvironmentConfig{
+						{Key: "THIS_IS_SECRET_VAR", Value: "stealthmode"},
+					},
+				}},
 		},
 	}
 	suite.addDepAndImages(secretEnvSrcUnsetDep)
@@ -464,6 +488,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		Id: "SYSADMINDEPID",
 		Containers: []*storage.Container{
 			{
+				Name: "cap-sys",
 				SecurityContext: &storage.SecurityContext{
 					AddCapabilities: []string{"CAP_SYS_ADMIN"},
 				},
@@ -496,10 +521,12 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 	hostMountDep := &storage.Deployment{
 		Id: "HOSTMOUNT",
 		Containers: []*storage.Container{
-			{Volumes: []*storage.Volume{
-				{Source: "/etc/passwd", Name: "HOSTMOUNT"},
-				{Source: "/var/lib/kubelet", Name: "KUBELET"},
-			}},
+			{
+				Name: "hostmount",
+				Volumes: []*storage.Volume{
+					{Source: "/etc/passwd", Name: "HOSTMOUNT"},
+					{Source: "/var/lib/kubelet", Name: "KUBELET"},
+				}},
 		},
 	}
 	suite.addDepAndImages(hostMountDep)
@@ -525,7 +552,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				fixtureDep.GetId(): {
 					{
-						Message: "Image tag 'latest' matched latest",
+						Message: "Container 'supervulnerable' has image with tag 'latest'",
 					},
 				},
 			},
@@ -535,24 +562,12 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				fixtureDep.GetId(): {
 					{
-						Message: "Image tag '1.10' matched 1.10",
-					},
-					{
-						Message: "Image registry 'docker.io' matched docker.io",
-					},
-					{
-						Message: "Image remote 'library/nginx' matched nginx",
+						Message: "Container 'nginx110container' has image with registry 'docker.io', remote 'library/nginx', and tag '1.10'",
 					},
 				},
 				nginx110Dep.GetId(): {
 					{
-						Message: "Image tag '1.10' matched 1.10",
-					},
-					{
-						Message: "Image registry 'docker.io' matched docker.io",
-					},
-					{
-						Message: "Image remote 'library/nginx' matched nginx",
+						Message: "Container 'nginx' has image with registry 'docker.io', remote 'library/nginx', and tag '1.10'",
 					},
 				},
 			},
@@ -562,7 +577,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				apkDep.GetId(): {
 					{
-						Message: "Component name 'apk' matched apk",
+						Message: "Container 'ASFASF' includes component apk 1.2",
 					},
 				},
 			},
@@ -572,7 +587,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				componentDeps["apt"].GetId(): {
 					{
-						Message: "Component name 'apt' matched apt|dpkg",
+						Message: "Container 'ASFASF' includes component apt",
 					},
 				},
 			},
@@ -582,7 +597,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				curlDep.GetId(): {
 					{
-						Message: "Component name 'curl' matched curl",
+						Message: "Container 'ASFASF' includes component curl 1.3",
 					},
 				},
 			},
@@ -592,7 +607,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				componentDeps["dnf"].GetId(): {
 					{
-						Message: "Component name 'dnf' matched rpm|dnf|yum",
+						Message: "Container 'ASFASF' includes component dnf",
 					},
 				},
 			},
@@ -602,7 +617,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				componentDeps["wget"].GetId(): {
 					{
-						Message: "Component name 'wget' matched wget",
+						Message: "Container 'ASFASF' includes component wget",
 					},
 				},
 			},
@@ -612,7 +627,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				dockerSockDep.GetId(): {
 					{
-						Message: "Volume source '/var/run/docker.sock' matched /var/run/docker.sock",
+						Message: "Writable volume 'DOCKERSOCK' has source '/var/run/docker.sock'",
 					},
 				},
 			},
@@ -622,7 +637,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				oldImageDep.GetId(): {
 					{
-						Message: fmt.Sprintf("Time of image creation '%s' was more than 90 days ago", readable.Time(oldImageCreationTime)),
+						Message: fmt.Sprintf("Container 'oldimage' has image with time of creation %s", readable.Time(oldImageCreationTime)),
 					},
 				},
 			},
@@ -632,7 +647,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				oldScannedDep.GetId(): {
 					{
-						Message: fmt.Sprintf("Time of last scan '%s' was more than 30 days ago", readable.Time(oldScannedTime)),
+						Message: fmt.Sprintf("Container 'oldscannedimage' has image with time of last scan %s", readable.Time(oldScannedTime)),
 					},
 				},
 			},
@@ -642,7 +657,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				imagePort22Dep.GetId(): {
 					{
-						Message: "Dockerfile Line 'EXPOSE 22/tcp' matches the rule EXPOSE (22/tcp|\\s+22/tcp)",
+						Message: "Dockerfile line 'EXPOSE 22/tcp' present in container 'ASFASF'",
 					},
 				},
 			},
@@ -652,10 +667,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				containerPort22Dep.GetId(): {
 					{
-						Message: "Port '22' matched 22",
-					},
-					{
-						Message: "Protocol 'tcp' matched tcp",
+						Message: "Exposed port 22/TCP is present",
 					},
 				},
 			},
@@ -665,12 +677,12 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				fixtureDep.GetId(): {
 					{
-						Message: "Privileged container found",
+						Message: "Container 'nginx110container' is privileged",
 					},
 				},
 				heartbleedDep.GetId(): {
 					{
-						Message: "Privileged container found",
+						Message: "Container 'nginx' is privileged",
 					},
 				},
 			},
@@ -680,17 +692,17 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				heartbleedDep.GetId(): {
 					{
-						Message: "Container using read-write root filesystem found",
+						Message: "Container 'nginx' using read-write root filesystem",
 					},
 				},
 				fixtureDep.GetId(): {
 					{
-						Message: "Container using read-write root filesystem found",
+						Message: "Container 'nginx110container' using read-write root filesystem",
 					},
 				},
 				sysAdminDep.GetId(): {
 					{
-						Message: "Container using read-write root filesystem found",
+						Message: "Container 'cap-sys' using read-write root filesystem",
 					},
 				},
 			},
@@ -700,7 +712,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				insecureCMDDep.GetId(): {
 					{
-						Message: "Dockerfile Line 'CMD do an insecure thing' matches the rule CMD .*insecure.*",
+						Message: "Dockerfile line 'CMD do an insecure thing' present in container 'ASFASF'",
 					},
 				},
 			},
@@ -710,7 +722,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				runSecretsDep.GetId(): {
 					{
-						Message: "Dockerfile Line 'VOLUME /run/secrets' matches the rule VOLUME /run/secrets",
+						Message: "Dockerfile line 'VOLUME /run/secrets' present in container 'ASFASF'",
 					},
 				},
 			},
@@ -748,7 +760,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 				depWithEnforcementBypassAnnotation.GetId():        {},
 				hostMountDep.GetId():                              {},
 			},
-			sampleViolationForMatched: "Image has not been scanned",
+			sampleViolationForMatched: "Image in container '%s' has not been scanned",
 		},
 		{
 			policyName:                "Required Label: Email",
@@ -775,7 +787,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				sysAdminDep.GetId(): {
 					{
-						Message: "CAP_SYS_ADMIN was in the ADD CAPABILITIES list",
+						Message: "Container cap-sys adds capability CAP_SYS_ADMIN",
 					},
 				},
 			},
@@ -785,12 +797,12 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				shellshockDep.GetId(): {
 					{
-						Message: "CVE CVE-2014-6271 matched regex 'CVE-2014-(6271|6277|6278|7169|7186|7187)'",
+						Message: "CVE-2014-6271 (CVSS 6) found in component shellshock-1.2 in container 'ASFASF'",
 					},
 				},
 				fixtureDep.GetId(): {
 					{
-						Message: "CVE CVE-2014-6271 matched regex 'CVE-2014-(6271|6277|6278|7169|7186|7187)'",
+						Message: "CVE-2014-6271 (CVSS 5) found in component name-1.2.3.4 in container 'supervulnerable'",
 					},
 				},
 			},
@@ -800,7 +812,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				strutsDep.GetId(): {
 					{
-						Message: "CVE CVE-2017-5638 matched regex 'CVE-2017-5638'",
+						Message: "CVE-2017-5638 (CVSS 8) found in component struts-1.2 in container 'ASFASF'",
 					},
 				},
 			},
@@ -810,7 +822,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				heartbleedDep.GetId(): {
 					{
-						Message: "CVE CVE-2014-0160 matched regex 'CVE-2014-0160'",
+						Message: "CVE-2014-0160 (CVSS 6) found in component heartbleed-1.2 in container 'nginx'",
 					},
 				},
 			},
@@ -819,9 +831,9 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			policyName: "No resource requests or limits specified",
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				fixtureDep.GetId(): {
-					{Message: "The CPU resource limit of 0 is equal to the threshold of 0.00"},
-					{Message: "The memory resource limit of 0 is equal to the threshold of 0.00"},
-					{Message: "The memory resource request of 0 is equal to the threshold of 0.00"},
+					{Message: "CPU limit of 0 cores"},
+					{Message: "Memory limit of 0 MB"},
+					{Message: "Memory request of 0 MB"},
 				},
 			},
 		},
@@ -830,7 +842,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				secretEnvDep.GetId(): {
 					{
-						Message: "Container Environment (key='THIS_IS_SECRET_VAR', value='stealthmode') matched environment policy (key = '.*SECRET.*|.*PASSWORD.*', value from = 'RAW')",
+						Message: "Environment variable 'THIS_IS_SECRET_VAR' is present in container 'secretenv'",
 					},
 				},
 			},
@@ -840,7 +852,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				secretKeyRefDep.GetId(): {
 					{
-						Message: "Container Environment (key='THIS_IS_SECRET_VAR', value='') matched environment policy (value from = 'SECRET_KEY')",
+						Message: "Environment variable 'THIS_IS_SECRET_VAR' is present and references a secret key",
 					},
 				},
 			},
@@ -850,10 +862,10 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				heartbleedDep.GetId(): {
 					{
-						Message: "Found a CVSS score of 6 (greater than or equal to 6.0) (cve: CVE-2014-0160) that is fixable",
+						Message: "Fixable CVE-2014-0160 (CVSS 6) found in component heartbleed-1.2 in container 'nginx', resolved by version v1.2",
 					},
 					{
-						Message: "Privileged container found",
+						Message: "Container 'nginx' is privileged",
 					},
 				},
 			},
@@ -863,7 +875,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				strutsDep.GetId(): {
 					{
-						Message: "Found a CVSS score of 8 (greater than or equal to 7.0) (cve: CVE-2017-5638) that is fixable",
+						Message: "Fixable CVE-2017-5638 (CVSS 8) found in component struts-1.2 in container 'ASFASF', resolved by version v1.3",
 					},
 				},
 			},
@@ -873,15 +885,15 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				addDockerFileDep.GetId(): {
 					{
-						Message: "Dockerfile Line 'ADD deploy.sh' matches the rule ADD .*",
+						Message: "Dockerfile line 'ADD deploy.sh' present in container 'ASFASF'",
 					},
 				},
 				fixtureDep.GetId(): {
 					{
-						Message: "Dockerfile Line 'ADD FILE:blah' matches the rule ADD .*",
+						Message: "Dockerfile line 'ADD FILE:blah' present in container 'nginx110container'",
 					},
 					{
-						Message: "Dockerfile Line 'ADD file:4eedf861fb567fffb2694b65ebdd58d5e371a2c28c3863f363f333cb34e5eb7b in /' matches the rule ADD .*",
+						Message: "Dockerfile line 'ADD file:4eedf861fb567fffb2694b65ebd...' present in container 'supervulnerable'",
 					},
 				},
 			},
@@ -922,7 +934,8 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			policyName: "Emergency Deployment Annotation",
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				depWithEnforcementBypassAnnotation.GetId(): {
-					{Message: "Disallowed annotation found (key = 'admission.stackrox.io/break-glass')"},
+					// TODO(rc) with map values
+					{Message: "Deployment includes no annotations"},
 				},
 			},
 		},
@@ -930,11 +943,11 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			policyName: "Mounting Sensitive Host Directories",
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				hostMountDep.GetId(): {
-					{Message: "Volume source '/etc/passwd' matched (/etc/.*|/sys/.*|/dev/.*|/proc/.*|/var/.*)"},
-					{Message: "Volume source '/var/lib/kubelet' matched (/etc/.*|/sys/.*|/dev/.*|/proc/.*|/var/.*)"},
+					{Message: "Writable volume 'KUBELET' has source '/var/lib/kubelet'"},
+					{Message: "Writable volume 'HOSTMOUNT' has source '/etc/passwd'"},
 				},
 				dockerSockDep.GetId(): {
-					{Message: "Volume source '/var/run/docker.sock' matched (/etc/.*|/sys/.*|/dev/.*|/proc/.*|/var/.*)"},
+					{Message: "Writable volume 'DOCKERSOCK' has source '/var/run/docker.sock'"},
 				},
 			},
 		},
@@ -947,7 +960,6 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 		if c.skip && !features.BooleanPolicyLogic.Enabled() {
 			continue
 		}
-
 		suite.T().Run(fmt.Sprintf("%s (on deployments)", c.policyName), func(t *testing.T) {
 			if len(c.shouldNotMatch) == 0 {
 				assert.True(t, (c.expectedViolations != nil) != (c.expectedProcessViolations != nil), "Every test case must "+
@@ -999,14 +1011,23 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 				for id := range suite.deployments {
 					if _, shouldNotMatch := c.shouldNotMatch[id]; !shouldNotMatch {
 						assert.Contains(t, actualViolations, id)
+
+						// TODO(rc) update for BPL and check all sampleViolationForMatched
+						if c.policyName == "Images with no scans" {
+							if len(suite.deployments[id].GetContainers()) == 1 {
+								msg := fmt.Sprintf(c.sampleViolationForMatched, suite.deployments[id].GetContainers()[0].GetName())
+								assert.ElementsMatch(t, actualViolations[id], []*storage.Alert_Violation{{Message: msg}})
+							}
+						}
 					}
 				}
 				return
 			}
 			for id := range suite.deployments {
-				_, expected := c.expectedViolations[id]
+				violations, expected := c.expectedViolations[id]
 				if expected {
 					assert.Contains(t, actualViolations, id)
+					assert.ElementsMatch(t, violations, actualViolations[id])
 				} else {
 					assert.NotContains(t, actualViolations, id)
 				}
@@ -1020,7 +1041,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			policyName: "Latest tag",
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				fixtureDep.GetContainers()[1].GetImage().GetId(): {
-					{Message: "Image tag 'latest' matched latest"},
+					{Message: "Image has tag 'latest'"},
 				},
 			},
 		},
@@ -1029,24 +1050,12 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				fixtureDep.GetContainers()[0].GetImage().GetId(): {
 					{
-						Message: "Image tag '1.10' matched 1.10",
-					},
-					{
-						Message: "Image registry 'docker.io' matched docker.io",
-					},
-					{
-						Message: "Image remote 'library/nginx' matched nginx",
+						Message: "Image has registry 'docker.io', remote 'library/nginx', and tag '1.10'",
 					},
 				},
 				suite.imageIDFromDep(nginx110Dep): {
 					{
-						Message: "Image tag '1.10' matched 1.10",
-					},
-					{
-						Message: "Image registry 'docker.io' matched docker.io",
-					},
-					{
-						Message: "Image remote 'library/nginx' matched nginx",
+						Message: "Image has registry 'docker.io', remote 'library/nginx', and tag '1.10'",
 					},
 				},
 			},
@@ -1056,7 +1065,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(apkDep): {
 					{
-						Message: "Component name 'apk' matched apk",
+						Message: "Image includes component apk 1.2",
 					},
 				},
 			},
@@ -1066,7 +1075,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(componentDeps["apt"]): {
 					{
-						Message: "Component name 'apt' matched apt|dpkg",
+						Message: "Image includes component apt",
 					},
 				},
 			},
@@ -1076,7 +1085,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(curlDep): {
 					{
-						Message: "Component name 'curl' matched curl",
+						Message: "Image includes component curl 1.3",
 					},
 				},
 			},
@@ -1086,7 +1095,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(componentDeps["dnf"]): {
 					{
-						Message: "Component name 'dnf' matched rpm|dnf|yum",
+						Message: "Image includes component dnf",
 					},
 				},
 			},
@@ -1096,7 +1105,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(componentDeps["wget"]): {
 					{
-						Message: "Component name 'wget' matched wget",
+						Message: "Image includes component wget",
 					},
 				},
 			},
@@ -1106,7 +1115,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(oldImageDep): {
 					{
-						Message: fmt.Sprintf("Time of image creation '%s' was more than 90 days ago", readable.Time(oldImageCreationTime)),
+						Message: fmt.Sprintf("Image has time of creation %s", readable.Time(oldImageCreationTime)),
 					},
 				},
 			},
@@ -1116,7 +1125,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(oldScannedDep): {
 					{
-						Message: fmt.Sprintf("Time of last scan '%s' was more than 30 days ago", readable.Time(oldScannedTime)),
+						Message: fmt.Sprintf("Image has time of last scan %s", readable.Time(oldScannedTime)),
 					},
 				},
 			},
@@ -1126,7 +1135,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(imagePort22Dep): {
 					{
-						Message: "Dockerfile Line 'EXPOSE 22/tcp' matches the rule EXPOSE (22/tcp|\\s+22/tcp)",
+						Message: "Dockerfile line 'EXPOSE 22/tcp' present",
 					},
 				},
 			},
@@ -1136,7 +1145,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(insecureCMDDep): {
 					{
-						Message: "Dockerfile Line 'CMD do an insecure thing' matches the rule CMD .*insecure.*",
+						Message: "Dockerfile line 'CMD do an insecure thing' present",
 					},
 				},
 			},
@@ -1146,7 +1155,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(runSecretsDep): {
 					{
-						Message: "Dockerfile Line 'VOLUME /run/secrets' matches the rule VOLUME /run/secrets",
+						Message: "Dockerfile line 'VOLUME /run/secrets' present",
 					},
 				},
 			},
@@ -1171,18 +1180,19 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 				suite.imageIDFromDep(oldScannedDep):              {},
 			},
 			sampleViolationForMatched: "Image has not been scanned",
+			expectedViolations:        map[string][]*storage.Alert_Violation{},
 		},
 		{
 			policyName: "Shellshock: Multiple CVEs",
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(shellshockDep): {
 					{
-						Message: "CVE CVE-2014-6271 matched regex 'CVE-2014-(6271|6277|6278|7169|7186|7187)'",
+						Message: "CVE-2014-6271 (CVSS 6) found in component shellshock-1.2",
 					},
 				},
 				fixtureDep.GetContainers()[1].GetImage().GetId(): {
 					{
-						Message: "CVE CVE-2014-6271 matched regex 'CVE-2014-(6271|6277|6278|7169|7186|7187)'",
+						Message: "CVE-2014-6271 (CVSS 5) found in component name-1.2.3.4",
 					},
 				},
 			},
@@ -1192,7 +1202,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(strutsDep): {
 					{
-						Message: "CVE CVE-2017-5638 matched regex 'CVE-2017-5638'",
+						Message: "CVE-2017-5638 (CVSS 8) found in component struts-1.2",
 					},
 				},
 			},
@@ -1202,7 +1212,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(heartbleedDep): {
 					{
-						Message: "CVE CVE-2014-0160 matched regex 'CVE-2014-0160'",
+						Message: "CVE-2014-0160 (CVSS 6) found in component heartbleed-1.2",
 					},
 				},
 			},
@@ -1212,7 +1222,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(strutsDep): {
 					{
-						Message: "Found a CVSS score of 8 (greater than or equal to 7.0) (cve: CVE-2017-5638) that is fixable",
+						Message: "Fixable CVE-2017-5638 (CVSS 8) found in component struts-1.2, resolved by version v1.3",
 					},
 				},
 			},
@@ -1222,17 +1232,17 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			expectedViolations: map[string][]*storage.Alert_Violation{
 				suite.imageIDFromDep(addDockerFileDep): {
 					{
-						Message: "Dockerfile Line 'ADD deploy.sh' matches the rule ADD .*",
+						Message: "Dockerfile line 'ADD deploy.sh' present",
 					},
 				},
 				fixtureDep.GetContainers()[0].GetImage().GetId(): {
 					{
-						Message: "Dockerfile Line 'ADD FILE:blah' matches the rule ADD .*",
+						Message: "Dockerfile line 'ADD FILE:blah' present",
 					},
 				},
 				fixtureDep.GetContainers()[1].GetImage().GetId(): {
 					{
-						Message: "Dockerfile Line 'ADD file:4eedf861fb567fffb2694b65ebdd58d5e371a2c28c3863f363f333cb34e5eb7b in /' matches the rule ADD .*",
+						Message: "Dockerfile line 'ADD file:4eedf861fb567fffb2694b65ebd...' present",
 					},
 				},
 			},
@@ -1242,6 +1252,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 			shouldNotMatch: map[string]struct{}{
 				"requiredImageLabelImage": {},
 			},
+			sampleViolationForMatched: "Image includes no labels",
 		},
 	}
 
@@ -1269,8 +1280,9 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 				}
 			}
 
-			for id := range c.expectedViolations {
+			for id, violations := range c.expectedViolations {
 				assert.Contains(t, actualViolations, id)
+				assert.ElementsMatch(t, violations, actualViolations[id])
 			}
 			if len(c.shouldNotMatch) > 0 {
 				if c.policyName == "Required Image Label" {
@@ -1289,6 +1301,7 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 				for id := range suite.images {
 					if _, shouldNotMatch := c.shouldNotMatch[id]; !shouldNotMatch {
 						assert.Contains(t, actualViolations, id)
+						assert.ElementsMatch(t, actualViolations[id], []*storage.Alert_Violation{{Message: c.sampleViolationForMatched}})
 					}
 				}
 			}
@@ -1297,9 +1310,9 @@ func (suite *DefaultPoliciesTestSuite) TestDefaultPolicies() {
 }
 
 func (suite *DefaultPoliciesTestSuite) TestMapPolicyMatchOne() {
-	if !features.BooleanPolicyLogic.Enabled() {
-		return
-	}
+	suite.envIsolator.Setenv(features.BooleanPolicyLogic.EnvVar(), "true")
+	defer suite.envIsolator.RestoreAll()
+
 	noAnnotation := &storage.Deployment{
 		Id: "noAnnotation",
 	}
@@ -1311,15 +1324,23 @@ func (suite *DefaultPoliciesTestSuite) TestMapPolicyMatchOne() {
 			"email": "joseph@rules.gov",
 		},
 	}
+	// TODO(rc) update when we have map values
+	expectedViolations := []*storage.Alert_Violation{{Message: "Deployment includes no annotations"}}
+
 	suite.addDepAndImages(validAnnotation)
 
-	policy := suite.defaultPolicies["Required Annotation: Email"]
+	legacyPolicy := suite.defaultPolicies["Required Annotation: Email"]
+	policy, err := CloneAndEnsureConverted(legacyPolicy)
+	suite.NoError(err)
+
 	m, err := BuildDeploymentMatcher(policy)
 	suite.NoError(err)
 
 	matched, err := m.MatchDeployment(context.Background(), noAnnotation, nil)
 	suite.NoError(err)
+
 	suite.Len(matched.AlertViolations, 1)
+	suite.ElementsMatch(matched.AlertViolations, expectedViolations)
 
 	matched, err = m.MatchDeployment(context.Background(), validAnnotation, nil)
 	suite.NoError(err)
@@ -1369,6 +1390,36 @@ func policyWithSingleFieldAndValues(fieldName string, values []string, negate bo
 	}).([]*storage.PolicyValue), Negate: negate, BooleanOperator: op})
 }
 
+func processWhitelistMessage(dep *storage.Deployment, whitelist bool, privileged bool, processNames ...string) []*storage.Alert_Violation {
+	violations := make([]*storage.Alert_Violation, 0, len(processNames))
+	containerName := dep.GetContainers()[0].GetName()
+	for _, p := range processNames {
+		if whitelist {
+			msg := fmt.Sprintf("Unexpected process '%s' in container '%s'", p, containerName)
+			violations = append(violations, &storage.Alert_Violation{Message: msg})
+		}
+		if privileged {
+			violations = append(violations, privilegedMessage(dep)...)
+		}
+	}
+	return violations
+}
+
+func privilegedMessage(dep *storage.Deployment) []*storage.Alert_Violation {
+	containerName := dep.GetContainers()[0].GetName()
+	return []*storage.Alert_Violation{{Message: fmt.Sprintf("Container '%s' is privileged", containerName)}}
+}
+
+func rbacPermissionMessage(level string) []*storage.Alert_Violation {
+	permissionToDescMap := map[string]string{
+		"NONE":                  "no specified access",
+		"DEFAULT":               "default access",
+		"ELEVATED_IN_NAMESPACE": "elevated access in namespace",
+		"ELEVATED_CLUSTER_WIDE": "elevated access cluster wide",
+		"CLUSTER_ADMIN":         "cluster admin access"}
+	return []*storage.Alert_Violation{{Message: fmt.Sprintf("Service account permission level with %s", permissionToDescMap[level])}}
+}
+
 func (suite *DefaultPoliciesTestSuite) TestK8sRBACField() {
 	deployments := make(map[string]*storage.Deployment)
 	for permissionLevelStr, permissionLevel := range storage.PermissionLevel_value {
@@ -1381,30 +1432,50 @@ func (suite *DefaultPoliciesTestSuite) TestK8sRBACField() {
 		value           string
 		negate          bool
 		expectedMatches []string
+		// Deployment ids to violations
+		expectedViolations map[string][]*storage.Alert_Violation
 	}{
 		{
 			"DEFAULT",
 			false,
 			[]string{"DEFAULT", "ELEVATED_IN_NAMESPACE", "ELEVATED_CLUSTER_WIDE", "CLUSTER_ADMIN"},
+			map[string][]*storage.Alert_Violation{
+				"DEFAULT":               rbacPermissionMessage("DEFAULT"),
+				"ELEVATED_CLUSTER_WIDE": rbacPermissionMessage("ELEVATED_CLUSTER_WIDE"),
+				"ELEVATED_IN_NAMESPACE": rbacPermissionMessage("ELEVATED_IN_NAMESPACE"),
+				"CLUSTER_ADMIN":         rbacPermissionMessage("CLUSTER_ADMIN"),
+			},
 		},
 		{
 			"ELEVATED_CLUSTER_WIDE",
 			false,
 			[]string{"ELEVATED_CLUSTER_WIDE", "CLUSTER_ADMIN"},
+			map[string][]*storage.Alert_Violation{
+				"ELEVATED_CLUSTER_WIDE": rbacPermissionMessage("ELEVATED_CLUSTER_WIDE"),
+				"CLUSTER_ADMIN":         rbacPermissionMessage("CLUSTER_ADMIN"),
+			},
 		},
 		{
 			"cluster_admin",
 			false,
 			[]string{"CLUSTER_ADMIN"},
+			map[string][]*storage.Alert_Violation{
+				"CLUSTER_ADMIN": rbacPermissionMessage("CLUSTER_ADMIN"),
+			},
 		},
 		{
 			"ELEVATED_CLUSTER_WIDE",
 			true,
 			[]string{"NONE", "DEFAULT", "ELEVATED_IN_NAMESPACE"},
+			map[string][]*storage.Alert_Violation{
+				"ELEVATED_IN_NAMESPACE": rbacPermissionMessage("ELEVATED_IN_NAMESPACE"),
+				"NONE":                  rbacPermissionMessage("NONE"),
+				"DEFAULT":               rbacPermissionMessage("DEFAULT"),
+			},
 		},
 	} {
 		c := testCase
-		suite.T().Run(fmt.Sprintf("%+v", c), func(t *testing.T) {
+		suite.T().Run(fmt.Sprintf("%+v", c.expectedMatches), func(t *testing.T) {
 			matcher, err := BuildDeploymentMatcher(policyWithSingleKeyValue(MinimumRBACPermissions, c.value, c.negate))
 			require.NoError(t, err)
 			matched := set.NewStringSet()
@@ -1413,6 +1484,9 @@ func (suite *DefaultPoliciesTestSuite) TestK8sRBACField() {
 				require.NoError(t, err)
 				if len(violations.AlertViolations) > 0 {
 					matched.Add(depRef)
+					assert.ElementsMatch(t, violations.AlertViolations, c.expectedViolations[depRef])
+				} else {
+					assert.Empty(t, c.expectedViolations[depRef])
 				}
 			}
 			assert.ElementsMatch(t, matched.AsSlice(), c.expectedMatches, "Got %v, expected: %v", matched.AsSlice(), c.expectedMatches)
@@ -1420,6 +1494,7 @@ func (suite *DefaultPoliciesTestSuite) TestK8sRBACField() {
 	}
 }
 
+// TODO(rc) check violation messages for port exposure
 func (suite *DefaultPoliciesTestSuite) TestPortExposure() {
 	deployments := make(map[string]*storage.Deployment)
 	for exposureLevelStr, exposureLevel := range storage.PortConfig_ExposureLevel_value {
@@ -1466,6 +1541,7 @@ func (suite *DefaultPoliciesTestSuite) TestPortExposure() {
 	}
 }
 
+// TODO(rc) check violation messages for drop caps
 func (suite *DefaultPoliciesTestSuite) TestDropCaps() {
 	testCaps := []string{"CAP_SYS_MODULE", "CAP_SYS_NICE", "CAP_SYS_PTRACE"}
 
@@ -1561,11 +1637,16 @@ func (suite *DefaultPoliciesTestSuite) TestProcessWhitelist() {
 		groups []*storage.PolicyGroup
 
 		// Deployment ids to indicator keys
-		expectedMatches map[string][]string
+		expectedMatches        map[string][]string
+		expectedProcessMatches map[string][]string
+		// Deployment ids to violations
+		expectedViolations map[string][]*storage.Alert_Violation
 	}{
 		{
 			groups: []*storage.PolicyGroup{aptGetGroup},
-			expectedMatches: map[string][]string{
+			// only process violation, no alert violation
+			expectedMatches: map[string][]string{},
+			expectedProcessMatches: map[string][]string{
 				privilegedDep.GetId():    {aptGetKey, aptGet2Key},
 				nonPrivilegedDep.GetId(): {aptGetKey, aptGet2Key},
 			},
@@ -1576,16 +1657,34 @@ func (suite *DefaultPoliciesTestSuite) TestProcessWhitelist() {
 				privilegedDep.GetId():    {aptGetKey, aptGet2Key, bashKey},
 				nonPrivilegedDep.GetId(): {aptGetKey, curlKey, bashKey},
 			},
+			expectedProcessMatches: map[string][]string{},
+			expectedViolations: map[string][]*storage.Alert_Violation{
+				privilegedDep.GetId():    processWhitelistMessage(privilegedDep, true, false, "apt-get", "apt-get", "bash"),
+				nonPrivilegedDep.GetId(): processWhitelistMessage(nonPrivilegedDep, true, false, "apt-get", "bash", "curl"),
+			},
 		},
+
 		{
 			groups: []*storage.PolicyGroup{privilegedGroup},
 			expectedMatches: map[string][]string{
 				privilegedDep.GetId(): {aptGetKey, aptGet2Key, curlKey, bashKey},
 			},
+			expectedProcessMatches: map[string][]string{},
+			expectedViolations: map[string][]*storage.Alert_Violation{
+				privilegedDep.GetId(): processWhitelistMessage(privilegedDep, false, true, "apt-get", "apt-get", "curl", "bash"),
+			},
 		},
 		{
 			groups: []*storage.PolicyGroup{aptGetGroup, whitelistGroup},
 			expectedMatches: map[string][]string{
+				privilegedDep.GetId():    {aptGetKey, aptGet2Key},
+				nonPrivilegedDep.GetId(): {aptGetKey},
+			},
+			expectedViolations: map[string][]*storage.Alert_Violation{
+				privilegedDep.GetId():    processWhitelistMessage(privilegedDep, true, false, "apt-get", "apt-get"),
+				nonPrivilegedDep.GetId(): processWhitelistMessage(nonPrivilegedDep, true, false, "apt-get"),
+			},
+			expectedProcessMatches: map[string][]string{
 				privilegedDep.GetId():    {aptGetKey, aptGet2Key},
 				nonPrivilegedDep.GetId(): {aptGetKey},
 			},
@@ -1595,16 +1694,32 @@ func (suite *DefaultPoliciesTestSuite) TestProcessWhitelist() {
 			expectedMatches: map[string][]string{
 				privilegedDep.GetId(): {aptGetKey, aptGet2Key},
 			},
+			expectedViolations: map[string][]*storage.Alert_Violation{
+				privilegedDep.GetId(): processWhitelistMessage(privilegedDep, false, true, "apt-get", "apt-get"),
+			},
+			expectedProcessMatches: map[string][]string{
+				privilegedDep.GetId(): {aptGetKey, aptGet2Key},
+			},
 		},
 		{
 			groups: []*storage.PolicyGroup{privilegedGroup, whitelistGroup},
 			expectedMatches: map[string][]string{
 				privilegedDep.GetId(): {aptGetKey, aptGet2Key, bashKey},
 			},
+			expectedViolations: map[string][]*storage.Alert_Violation{
+				privilegedDep.GetId(): processWhitelistMessage(privilegedDep, true, true, "apt-get", "apt-get", "bash"),
+			},
+			expectedProcessMatches: map[string][]string{},
 		},
 		{
 			groups: []*storage.PolicyGroup{aptGetGroup, privilegedGroup, whitelistGroup},
 			expectedMatches: map[string][]string{
+				privilegedDep.GetId(): {aptGetKey, aptGet2Key},
+			},
+			expectedViolations: map[string][]*storage.Alert_Violation{
+				privilegedDep.GetId(): processWhitelistMessage(privilegedDep, true, true, "apt-get", "apt-get"),
+			},
+			expectedProcessMatches: map[string][]string{
 				privilegedDep.GetId(): {aptGetKey, aptGet2Key},
 			},
 		},
@@ -1615,16 +1730,29 @@ func (suite *DefaultPoliciesTestSuite) TestProcessWhitelist() {
 			require.NoError(t, err)
 
 			actualMatches := make(map[string][]string)
+			actualProcessMatches := make(map[string][]string)
+			actualViolations := make(map[string][]*storage.Alert_Violation)
 			for _, dep := range []*storage.Deployment{privilegedDep, nonPrivilegedDep} {
 				for _, key := range []string{aptGetKey, aptGet2Key, curlKey, bashKey} {
 					violations, err := m.MatchDeploymentWithProcess(context.Background(), dep, suite.getImagesForDeployment(dep), indicators[dep.GetId()][key], processesOutsideWhitelist[dep.GetId()].Contains(key))
 					suite.Require().NoError(err)
-					if len(violations.AlertViolations) > 0 && violations.ProcessViolation != nil {
+					if len(violations.AlertViolations) > 0 {
 						actualMatches[dep.GetId()] = append(actualMatches[dep.GetId()], key)
+						actualViolations[dep.GetId()] = append(actualViolations[dep.GetId()], violations.AlertViolations...)
 					}
+					if violations.ProcessViolation != nil {
+						actualProcessMatches[dep.GetId()] = append(actualProcessMatches[dep.GetId()], key)
+					}
+
 				}
 			}
 			assert.Equal(t, c.expectedMatches, actualMatches)
+			assert.Equal(t, c.expectedProcessMatches, actualProcessMatches)
+
+			for id, violations := range c.expectedViolations {
+				assert.Contains(t, actualViolations, id)
+				assert.ElementsMatch(t, violations, actualViolations[id])
+			}
 		})
 	}
 }

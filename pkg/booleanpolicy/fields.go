@@ -68,9 +68,10 @@ var (
 	VolumeName             = newField("Volume Name", querybuilders.ForFieldLabelRegex(search.VolumeName), violations.VolumeContextFields, stringValueRegex)
 	VolumeSource           = newField("Volume Source", querybuilders.ForFieldLabelRegex(search.VolumeSource), violations.VolumeContextFields, stringValueRegex)
 	VolumeType             = newField("Volume Type", querybuilders.ForFieldLabelRegex(search.VolumeType), violations.VolumeContextFields, stringValueRegex)
-	WhitelistsEnabled      = newField("Unexpected Process Executed", querybuilders.ForFieldLabel(augmentedobjs.NotWhitelistedCustomTag), nil, booleanValueRegex, negationForbidden, operatorsForbidden)
-	WritableHostMount      = newField("Writable Host Mount", querybuilders.ForFieldLabelBoolean(search.ReadOnlyRootFilesystem, true), violations.ContainerContextFields, booleanValueRegex, negationForbidden, operatorsForbidden)
-	WritableVolume         = newField("Writable Volume", querybuilders.ForFieldLabelBoolean(search.VolumeReadonly, true), violations.VolumeContextFields, booleanValueRegex, negationForbidden, operatorsForbidden)
+	WhitelistsEnabled      = newField("Unexpected Process Executed", querybuilders.ForFieldLabel(augmentedobjs.NotWhitelistedCustomTag), violations.ProcessWhitelistContextFields, booleanValueRegex, negationForbidden, operatorsForbidden)
+	// TODO(rc) check volume type is hostpath and not read only
+	WritableHostMount = newField("Writable Host Mount", nil, violations.VolumeContextFields, booleanValueRegex, negationForbidden, operatorsForbidden)
+	WritableVolume    = newField("Writable Volume", querybuilders.ForFieldLabelBoolean(search.VolumeReadonly, true), violations.VolumeContextFields, booleanValueRegex, negationForbidden, operatorsForbidden)
 )
 
 func newField(fieldName string, qb querybuilders.QueryBuilder, contextFields violations.ContextQueryFields, valueRegex *regexp.Regexp, options ...option) string {

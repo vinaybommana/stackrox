@@ -7,36 +7,35 @@ import (
 	"github.com/stackrox/rox/pkg/set"
 )
 
-// ContextQueryFields is a map of lifecycle stage to violation context fields.
+// ContextQueryFields is a map of lifecycle stage to query field names to be added for violation message context
 type ContextQueryFields map[storage.LifecycleStage]set.FrozenStringSet
 
 // Context Fields to be added to queries
 var (
-	// Build stage context fields
 	ImageContextFields = newContextFields(
-		[]string{search.ImageName.String()},
-		[]string{search.ImageName.String(), augmentedobjs.ContainerNameCustomTag})
+		[]string{},
+		[]string{augmentedobjs.ContainerNameCustomTag})
+	VulnContextFields = newContextFields(
+		[]string{search.CVE.String(), search.CVSS.String(), augmentedobjs.ComponentAndVersionCustomTag},
+		[]string{augmentedobjs.ContainerNameCustomTag, search.CVE.String(), search.CVSS.String(), augmentedobjs.ComponentAndVersionCustomTag})
+	VolumeContextFields = newContextFields(
+		nil,
+		[]string{augmentedobjs.ContainerNameCustomTag, search.VolumeName.String(), search.VolumeSource.String(), search.VolumeDestination.String(), search.VolumeReadonly.String(), search.VolumeType.String()})
+	ContainerContextFields = newContextFields(
+		nil,
+		[]string{augmentedobjs.ContainerNameCustomTag})
+	ResourceContextFields = newContextFields(
+		nil,
+		[]string{augmentedobjs.ContainerNameCustomTag})
 	EnvVarContextFields = newContextFields(
 		nil,
 		[]string{augmentedobjs.ContainerNameCustomTag})
-	VulnContextFields = newContextFields(
-		[]string{search.ImageName.String(), search.CVE.String(), search.CVSS.String(), augmentedobjs.ComponentAndVersionCustomTag},
-		[]string{search.ImageName.String(), augmentedobjs.ContainerNameCustomTag, search.CVE.String(), search.CVSS.String(), augmentedobjs.ComponentAndVersionCustomTag})
-
-	// Deploy stage context fields
-	VolumeContextFields = newContextFields(
-		[]string{},
-		[]string{augmentedobjs.ContainerNameCustomTag, search.VolumeName.String(), search.VolumeSource.String(), search.VolumeDestination.String(), search.VolumeReadonly.String(), search.VolumeType.String()})
-	ContainerContextFields = newContextFields(
-		[]string{},
-		[]string{augmentedobjs.ContainerNameCustomTag})
-	ResourceContextFields = newContextFields(
-		[]string{},
-		[]string{augmentedobjs.ContainerNameCustomTag})
-	// TODO(rc) can we add container name to port context?
 	PortContextFields = newContextFields(
-		[]string{},
+		nil,
 		[]string{augmentedobjs.ContainerNameCustomTag, search.Port.String(), search.PortProtocol.String()})
+	ProcessWhitelistContextFields = newContextFields(
+		nil,
+		[]string{augmentedobjs.ContainerNameCustomTag, search.ProcessName.String()})
 )
 
 func newContextFields(buildStageContext []string, deployStageContext []string) ContextQueryFields {

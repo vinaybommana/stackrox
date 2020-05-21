@@ -5,6 +5,7 @@ import (
 
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/booleanpolicy/augmentedobjs"
+	"github.com/stackrox/rox/pkg/booleanpolicy/evaluator"
 	"github.com/stackrox/rox/pkg/booleanpolicy/evaluator/pathutil"
 	"github.com/stackrox/rox/pkg/booleanpolicy/violations"
 	"github.com/stackrox/rox/pkg/searchbasedpolicies"
@@ -16,12 +17,12 @@ type matcherImpl struct {
 	stage      storage.LifecycleStage
 }
 
-func matchWithEvaluator(sectionAndEval sectionAndEvaluator, obj *pathutil.AugmentedObj, stage storage.LifecycleStage) ([]*storage.Alert_Violation, error) {
+func matchWithEvaluator(sectionAndEval sectionAndEvaluator, obj *pathutil.AugmentedObj, stage storage.LifecycleStage) (*evaluator.Result, error) {
 	finalResult, matched := sectionAndEval.evaluator.Evaluate(obj.Value())
 	if !matched {
 		return nil, nil
 	}
-	return violations.ViolationPrinter(stage, sectionAndEval.sectionName, finalResult)
+	return finalResult, nil
 }
 
 func (m *matcherImpl) MatchImage(_ context.Context, image *storage.Image) (searchbasedpolicies.Violations, error) {
@@ -29,30 +30,41 @@ func (m *matcherImpl) MatchImage(_ context.Context, image *storage.Image) (searc
 	if err != nil {
 		return searchbasedpolicies.Violations{}, err
 	}
-	violations, err := m.getViolations(obj)
+	violations, err := m.getViolations(obj, nil)
 	if err != nil || violations == nil {
 		return searchbasedpolicies.Violations{}, err
 	}
 	return *violations, nil
 }
 
-func (m *matcherImpl) getViolations(obj *pathutil.AugmentedObj) (*searchbasedpolicies.Violations, error) {
-	var allViolations []*storage.Alert_Violation
+func (m *matcherImpl) getViolations(obj *pathutil.AugmentedObj, indicator *storage.ProcessIndicator) (*searchbasedpolicies.Violations, error) {
+	v := &searchbasedpolicies.Violations{}
 	var atLeastOneMatched bool
+	var processIndicatorMatched bool
 	for _, eval := range m.evaluators {
-		violations, err := matchWithEvaluator(eval, obj, m.stage)
+		result, err := matchWithEvaluator(eval, obj, m.stage)
 		if err != nil {
 			return nil, err
 		}
-		atLeastOneMatched = atLeastOneMatched || len(violations) > 0
-		allViolations = append(allViolations, violations...)
+		if result == nil {
+			continue
+		}
+		alertViolations, isProcessViolation, err := violations.ViolationPrinter(m.stage, eval.section, result, indicator)
+		if err != nil {
+			return nil, err
+		}
+		atLeastOneMatched = atLeastOneMatched || len(alertViolations) > 0
+		processIndicatorMatched = processIndicatorMatched || isProcessViolation
+		v.AlertViolations = append(v.AlertViolations, alertViolations...)
 	}
-	if !atLeastOneMatched {
+	if !atLeastOneMatched && !processIndicatorMatched {
 		return nil, nil
 	}
-	return &searchbasedpolicies.Violations{
-		AlertViolations: allViolations,
-	}, nil
+	if processIndicatorMatched {
+		v.ProcessViolation = &storage.Alert_ProcessViolation{Processes: []*storage.ProcessIndicator{indicator}}
+		builders.UpdateRuntimeAlertViolationMessage(v.ProcessViolation)
+	}
+	return v, nil
 }
 
 func (m *matcherImpl) MatchDeploymentWithProcess(_ context.Context, deployment *storage.Deployment, images []*storage.Image, indicator *storage.ProcessIndicator, processOutsideWhitelist bool) (searchbasedpolicies.Violations, error) {
@@ -60,14 +72,10 @@ func (m *matcherImpl) MatchDeploymentWithProcess(_ context.Context, deployment *
 	if err != nil {
 		return searchbasedpolicies.Violations{}, err
 	}
-
-	violations, err := m.getViolations(obj)
+	violations, err := m.getViolations(obj, indicator)
 	if err != nil || violations == nil {
 		return searchbasedpolicies.Violations{}, err
 	}
-	v := &storage.Alert_ProcessViolation{Processes: []*storage.ProcessIndicator{indicator}}
-	builders.UpdateRuntimeAlertViolationMessage(v)
-	violations.ProcessViolation = v
 	return *violations, nil
 }
 
@@ -77,7 +85,7 @@ func (m *matcherImpl) MatchDeployment(_ context.Context, deployment *storage.Dep
 	if err != nil {
 		return searchbasedpolicies.Violations{}, err
 	}
-	violations, err := m.getViolations(obj)
+	violations, err := m.getViolations(obj, nil)
 	if err != nil || violations == nil {
 		return searchbasedpolicies.Violations{}, err
 	}

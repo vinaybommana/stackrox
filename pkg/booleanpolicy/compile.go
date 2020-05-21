@@ -16,7 +16,7 @@ func sectionToQuery(section *storage.PolicySection, stage storage.LifecycleStage
 		}
 		fieldQueries = append(fieldQueries, fqs...)
 	}
-	contextQueries := constructRemainingContextQueries(fieldQueries, stage)
+	contextQueries := constructRemainingContextQueries(stage, section, fieldQueries)
 	fieldQueries = append(fieldQueries, contextQueries...)
 
 	return &query.Query{FieldQueries: fieldQueries}, nil
@@ -54,13 +54,15 @@ func matchAllQueryForField(fieldName string) *query.FieldQuery {
 	}
 }
 
-func constructRemainingContextQueries(fieldQueries []*query.FieldQuery, stage storage.LifecycleStage) []*query.FieldQuery {
+// Add matchAll field queries for context fields that are not already included fieldQueries
+func constructRemainingContextQueries(stage storage.LifecycleStage, section *storage.PolicySection, fieldQueries []*query.FieldQuery) []*query.FieldQuery {
 	fieldSet := set.NewStringSet()
 	for _, query := range fieldQueries {
 		fieldSet.Add(query.Field)
 	}
 	contextFieldSet := set.NewStringSet()
-	for _, field := range fieldSet.AsSlice() {
+	for _, group := range section.GetPolicyGroups() {
+		field := group.GetFieldName()
 		if metadata, ok := fieldsToQB[field]; ok {
 			if contextFieldsToAdd, ok := metadata.contextFields[stage]; ok {
 				for _, contextField := range contextFieldsToAdd.AsSlice() {
