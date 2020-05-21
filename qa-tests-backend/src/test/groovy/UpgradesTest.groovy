@@ -1,23 +1,17 @@
+import com.google.protobuf.Timestamp
 import com.google.protobuf.UnknownFieldSet
 import groups.Upgrade
-import com.google.protobuf.Timestamp
-import io.stackrox.proto.api.v1.AlertServiceOuterClass
-import io.stackrox.proto.api.v1.DeploymentServiceOuterClass
-import io.stackrox.proto.api.v1.SearchServiceOuterClass
 import io.stackrox.proto.api.v1.SummaryServiceOuterClass
 import io.stackrox.proto.storage.ClusterOuterClass
 import io.stackrox.proto.storage.ProcessIndicatorOuterClass
 import org.junit.Assume
 import org.junit.experimental.categories.Category
-import services.AlertService
 import services.ClusterService
 import services.ConfigService
-import services.DeploymentService
-import services.ImageService
-import services.PolicyService
+import services.GraphQLService
 import services.ProcessService
-import services.SecretService
 import services.SummaryService
+import spock.lang.Unroll
 import util.Env
 
 class UpgradesTest extends BaseSpecification {
@@ -104,54 +98,6 @@ class UpgradesTest extends BaseSpecification {
     }
 
     @Category(Upgrade)
-    def "Verify that deployments are searchable post upgrade"() {
-        expect:
-        "Deployments should be searchable after the upgrade"
-        DeploymentServiceOuterClass.ListDeploymentsResponse resp = DeploymentService.listDeploymentsSearch(
-                SearchServiceOuterClass.RawQuery.newBuilder().setQuery("Cluster ID:${CLUSTERID}").build())
-        assert resp.deploymentsList.size() > 0
-    }
-
-    @Category(Upgrade)
-    def "Verify that images are searchable post upgrade"() {
-        expect:
-        "Images should be searchable after the upgrade"
-        def imageList = ImageService.getImages(
-                SearchServiceOuterClass.RawQuery.newBuilder().setQuery("Cluster ID:${CLUSTERID}").build()
-        )
-        assert imageList.size() > 0
-    }
-
-    @Category(Upgrade)
-    def "Verify that alerts are searchable post upgrade"() {
-        expect:
-        "Alerts should be searchable after the upgrade"
-        def alertList = AlertService.getViolations(
-                AlertServiceOuterClass.ListAlertsRequest.newBuilder().setQuery("Cluster ID:${CLUSTERID}").build())
-        assert alertList.size() > 0
-    }
-
-    @Category(Upgrade)
-    def "Verify that secrets are searchable post upgrade"() {
-        expect:
-        "Secrets should be searchable after the upgrade"
-        def secretList = SecretService.getSecrets(
-                SearchServiceOuterClass.RawQuery.newBuilder().setQuery("Cluster ID:${CLUSTERID}").build()
-        )
-        assert secretList.size() > 0
-    }
-
-    @Category(Upgrade)
-    def "Verify that policies are searchable post upgrade"() {
-        expect:
-        "Policies should be searchable after the upgrade"
-        def policyList = PolicyService.getPolicies(
-                SearchServiceOuterClass.RawQuery.newBuilder().setQuery("Policy:Latest Tag").build()
-        )
-        assert policyList.size() > 0
-    }
-
-    @Category(Upgrade)
     def "Verify that summary API returns non-zero values on upgrade"() {
         expect:
         "Summary API returns non-zero values on upgrade"
@@ -162,6 +108,43 @@ class UpgradesTest extends BaseSpecification {
         assert resp.numClusters != 0
         assert resp.numImages != 0
         assert resp.numNodes != 0
+    }
+
+    @Unroll
+    @Category(Upgrade)
+    def "verify that we find the correct number of #resourceType for query"() {
+        when:
+        "Fetch the #resourceType from GraphQL"
+        def gqlService = new GraphQLService()
+        def resultRet = gqlService.Call(getQuery(resourceType), [ query: searchQuery ])
+        assert resultRet.getCode() == 200
+        println "return code " + resultRet.getCode()
+
+        then:
+        "Check that we got the correct number of #resourceType from GraphQL "
+        assert resultRet.getValue() != null
+        def items = resultRet.getValue()[resourceType]
+        assert items.size() >= minResults
+
+        where:
+        "Data Inputs Are:"
+        resourceType      | searchQuery               | minResults
+        "policies"        | "Policy:Latest Tag"       | 1
+        "nodes"           | "Cluster ID:${CLUSTERID}" | 2
+        "violations"      | ""                        | 1
+        "secrets"         | "Cluster ID:${CLUSTERID}" | 1
+        "deployments"     | "Cluster ID:${CLUSTERID}" | 1
+        "images"          | "Cluster ID:${CLUSTERID}" | 1
+        "components"      | "Cluster ID:${CLUSTERID}" | 1
+        "vulnerabilities" | "Cluster ID:${CLUSTERID}" | 1
+    }
+
+    static getQuery(resourceType) {
+        return """query get${resourceType}(\$query: String!) {
+                ${resourceType} : ${resourceType}(query: \$query) {
+                     id
+                }
+            }"""
     }
 
     // TODO

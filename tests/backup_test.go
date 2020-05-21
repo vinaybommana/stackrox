@@ -2,7 +2,6 @@ package tests
 
 import (
 	"archive/zip"
-	"context"
 	"crypto/tls"
 	"io"
 	"io/ioutil"
@@ -13,7 +12,6 @@ import (
 
 	deploymentBadgerStore "github.com/stackrox/rox/central/deployment/store/badger"
 	"github.com/stackrox/rox/central/globaldb/badgerutils"
-	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/pkg/badgerhelper"
 	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/tar"
@@ -26,32 +24,12 @@ import (
 
 const scratchPath = "backuptest"
 
-// This doesn't actually check for the existence of a specific deployment, but any deployment
-func checkDeploymentExists(t *testing.T) {
-	conn := testutils.GRPCConnectionToCentral(t)
-
-	service := v1.NewDeploymentServiceClient(conn)
-
-	// 10 seconds should be enough for a deployment to be returned
-	for i := 0; i < 5; i++ {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		resp, err := service.ListDeployments(ctx, &v1.RawQuery{})
-		cancel()
-		require.NoError(t, err)
-		if len(resp.Deployments) != 0 {
-			return
-		}
-		time.Sleep(2 * time.Second)
-	}
-	assert.Fail(t, "Failed to find a deployment")
-}
-
 // Grab the backup DB and open it, ensuring that there are values for deployments
 func TestBackup(t *testing.T) {
 	setupNginxLatestTagDeployment(t)
 	defer teardownNginxLatestTagDeployment(t)
 
-	checkDeploymentExists(t)
+	waitForDeployment(t, nginxDeploymentName)
 
 	out, err := os.Create("backup.zip")
 	require.NoError(t, err)
