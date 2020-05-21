@@ -6,12 +6,7 @@ import (
 
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/pkg/derivedfields/counter"
-	"github.com/stackrox/rox/pkg/logging"
 	"github.com/stackrox/rox/pkg/search"
-)
-
-var (
-	log = logging.LoggerForModule()
 )
 
 // CountSortedSearcher generates a searcher that applies derived field sorting.
