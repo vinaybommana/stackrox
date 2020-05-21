@@ -22,6 +22,8 @@ export function parsePolicyImportErrors(responses = []) {
                     incomingName: res?.policy?.name,
                     incomingId: res?.policy?.id,
                     duplicateName: err.duplicateName,
+                    validationError: err?.validationError || null,
+                    message: err.message,
                 };
 
                 return errList.concat(thisErr);
@@ -62,10 +64,23 @@ export function isDuplicateResolved(resolutionObj) {
  */
 export function getErrorMessages(policyErrors) {
     const errorMessages = policyErrors.map((err) => {
-        const msg =
-            err.type === 'duplicate_id'
-                ? `An existing policy with the name “${err.duplicateName}” has the same ID—${err.incomingId}—as the policy “${err.incomingName}” you are trying to import.`
-                : `An existing policy has the same name, “${err.duplicateName}”, as the one you are trying to import.`;
+        let msg = '';
+        switch (err.type) {
+            case 'duplicate_id': {
+                msg = `An existing policy with the name “${err.duplicateName}” has the same ID—${err.incomingId}—as the policy “${err.incomingName}” you are trying to import.`;
+                break;
+            }
+            case 'duplicate_name': {
+                msg = `An existing policy has the same name, “${err.duplicateName}”, as the one you are trying to import.`;
+                break;
+            }
+            case 'invalid_policy':
+            default: {
+                msg = `${err.message}: ${err.validationError}`;
+                break;
+            }
+        }
+
         return {
             type: err.type,
             msg,
@@ -114,4 +129,50 @@ export function getResolvedPolicies(policies, errors, duplicateResolution) {
  */
 export function hasDuplicateIdOnly(importErrors) {
     return importErrors?.length === 1 && importErrors[0].type === 'duplicate_id';
+}
+
+/**
+ * simple function to abstract the test for only duplicate errors
+ *
+ * @param   {array}  importErrors  Array< type: string, value: string } >
+ *
+ * @return  {boolean}              true if there are only dupe errors, no validation errors
+ */
+export function checkDupeOnlyErrors(importErrors) {
+    return (
+        importErrors?.length &&
+        importErrors.find((policyErrors) => {
+            const hasInvalidPolicy = policyErrors.some((err) => err.type === 'invalid_policy');
+            const hasDupeErrors = policyErrors.some((err) => err.type.includes('dup'));
+
+            return hasDupeErrors && !hasInvalidPolicy;
+        })
+    );
+}
+
+/**
+ * function to abstract checks for whether importing is currently blocked
+ *
+ * @param   {object}  settings  Object{ numPolicies: number,
+ *                                      messageType: string
+ *                                      hasDuplicateErrors: boolean,
+ *                                      duplicateResolution: Object{ resolution: string,
+ *                                                           newName?: string
+ *                                                         }
+ *                                    }
+ *
+ * @return  {boolean}              true if submission blocked by current state, false otherwise
+ */
+export function checkForBlockedSubmit({
+    numPolicies,
+    messageType,
+    hasDuplicateErrors,
+    duplicateResolution,
+}) {
+    return (
+        numPolicies < 1 || // at least one policy must be in selected file
+        messageType === 'info' || // an info message means upload has already succeeded
+        (!hasDuplicateErrors && messageType === 'error') || // error without dupes means a validation error
+        (hasDuplicateErrors && !isDuplicateResolved(duplicateResolution)) // dupes, not resolved by user yet
+    );
 }

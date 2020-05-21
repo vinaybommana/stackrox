@@ -12,14 +12,14 @@ const KeepBothSection = ({ changeRadio }) => {
 
     return (
         <label
-            htmlFor="overwrite-radio"
+            htmlFor="keep-both"
             className={`flex items-center py-2 px-2 py-4 rounded text-base-600 font-700 ${highlightColor}`}
         >
             <Field name="resolution">
                 {({ field }) => (
                     <input
                         name={field.name}
-                        id="overwrite-radio"
+                        id="keep-both"
                         type="radio"
                         className="form-radio border-base-600 text-base-600"
                         value="keepBoth"

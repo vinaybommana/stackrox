@@ -17,10 +17,11 @@ import {
     MIN_POLICY_NAME_LENGTH,
     POLICY_DUPE_ACTIONS,
     parsePolicyImportErrors,
-    isDuplicateResolved,
     getResolvedPolicies,
     getErrorMessages,
     hasDuplicateIdOnly,
+    checkDupeOnlyErrors,
+    checkForBlockedSubmit,
 } from './PolicyImport.utils';
 
 const RESOLUTION = { resolution: '', newName: '' };
@@ -28,7 +29,7 @@ const RESOLUTION = { resolution: '', newName: '' };
 const PolicyImportDialogue = ({ closeAction, importPolicySuccess }) => {
     const [messageObj, setMessageObj] = useState(null);
     const [policies, setPolicies] = useState([]);
-    const [importErrors, setImportErrors] = useState(null);
+    const [duplicateErrors, setDuplicateErrors] = useState(null);
     const [duplicateResolution, setDuplicateResolution] = useState(RESOLUTION);
     const dialogueRef = useRef(null);
 
@@ -41,7 +42,7 @@ const PolicyImportDialogue = ({ closeAction, importPolicySuccess }) => {
 
     const onDrop = useCallback((acceptedFiles) => {
         setMessageObj(null);
-        setImportErrors(null);
+        setDuplicateErrors(null);
 
         acceptedFiles.forEach((file) => {
             // check file type.
@@ -78,7 +79,7 @@ const PolicyImportDialogue = ({ closeAction, importPolicySuccess }) => {
         //   see decision in comment on Jira story, https://stack-rox.atlassian.net/browse/ROX-4409
         const [policiesToImport, metadata] = getResolvedPolicies(
             policies,
-            importErrors,
+            duplicateErrors,
             duplicateResolution
         );
 
@@ -95,7 +96,10 @@ const PolicyImportDialogue = ({ closeAction, importPolicySuccess }) => {
                     importPolicySuccess(importedPolicyId);
                 } else {
                     const errors = parsePolicyImportErrors(response?.responses);
-                    setImportErrors(errors[0]);
+                    const onlyHasDupeErrors = checkDupeOnlyErrors(errors);
+                    if (onlyHasDupeErrors) {
+                        setDuplicateErrors(errors[0]);
+                    }
 
                     const errorMessages = getErrorMessages(errors[0]);
                     setMessageObj({
@@ -128,11 +132,13 @@ const PolicyImportDialogue = ({ closeAction, importPolicySuccess }) => {
         closeAction();
     }
 
-    const isBlocked =
-        policies.length < 1 ||
-        messageObj?.type === 'info' ||
-        (!!importErrors && !isDuplicateResolved(duplicateResolution));
-    const showKeepBothPolicies = hasDuplicateIdOnly(importErrors);
+    const isBlocked = checkForBlockedSubmit({
+        numPolicies: policies?.length || 0,
+        messageType: messageObj?.type,
+        hasDuplicateErrors: !!duplicateErrors,
+        duplicateResolution,
+    });
+    const showKeepBothPolicies = hasDuplicateIdOnly(duplicateErrors);
 
     return (
         <CustomDialogue
@@ -197,7 +203,7 @@ const PolicyImportDialogue = ({ closeAction, importPolicySuccess }) => {
                         </div>
                     )}
                     {messageObj && <Message type={messageObj.type} message={messageObj.message} />}
-                    {importErrors && (
+                    {duplicateErrors && (
                         <div className="w-full py-4">
                             <Formik
                                 initialValues={RESOLUTION}

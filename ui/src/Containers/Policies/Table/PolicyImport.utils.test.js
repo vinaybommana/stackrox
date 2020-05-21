@@ -6,6 +6,7 @@ import {
     getResolvedPolicies,
     getErrorMessages,
     hasDuplicateIdOnly,
+    checkForBlockedSubmit,
 } from './PolicyImport.utils';
 
 describe('PolicyImport.utils', () => {
@@ -31,6 +32,8 @@ describe('PolicyImport.utils', () => {
                         incomingId: response.responses[0].policy.id,
                         incomingName: response.responses[0].policy.name,
                         type: 'duplicate_name',
+                        message: 'Could not add policy due to name validation',
+                        validationError: null,
                     },
                 ],
             ]);
@@ -49,6 +52,9 @@ describe('PolicyImport.utils', () => {
                         incomingId: response.responses[0].policy.id,
                         incomingName: response.responses[0].policy.name,
                         type: 'duplicate_id',
+                        message:
+                            'Policy Fixable CVSS >= 9 (f09f8da1-6111-4ca0-8f49-294a76c65117) cannot be added because it already exists',
+                        validationError: null,
                     },
                 ],
             ]);
@@ -67,12 +73,17 @@ describe('PolicyImport.utils', () => {
                         incomingId: response.responses[0].policy.id,
                         incomingName: response.responses[0].policy.name,
                         type: 'duplicate_name',
+                        message: 'Could not add policy due to name validation',
+                        validationError: null,
                     },
                     {
                         duplicateName: response.responses[0].errors[0].duplicateName,
                         incomingId: response.responses[0].policy.id,
                         incomingName: response.responses[0].policy.name,
                         type: 'duplicate_id',
+                        message:
+                            'Policy Fixable CVSS >= 9 (f09f8da1-6111-4ca0-8f49-294a76c65117) cannot be added because it already exists',
+                        validationError: null,
                     },
                 ],
             ]);
@@ -200,6 +211,29 @@ describe('PolicyImport.utils', () => {
                     msg:
                         'An existing policy with the name “Another policy name” has the same ID—1234-5678-9012-3456—as the policy “A policy name” you are trying to import.',
                     type: 'duplicate_id',
+                },
+            ]);
+        });
+
+        it('should return a message for invalid policy error', () => {
+            const policyErrors = [
+                {
+                    incomingId: '1234-5678-9012-3456',
+                    incomingName: 'A policy name',
+                    type: 'invalid_policy',
+                    message: 'Invalid policy',
+                    validationError:
+                        'policy invalid error: error validating lifecycle stage error: deploy time policy cannot contain runtime fields',
+                },
+            ];
+
+            const errStr = getErrorMessages(policyErrors);
+
+            expect(errStr).toEqual([
+                {
+                    msg:
+                        'Invalid policy: policy invalid error: error validating lifecycle stage error: deploy time policy cannot contain runtime fields',
+                    type: 'invalid_policy',
                 },
             ]);
         });
@@ -361,6 +395,107 @@ describe('PolicyImport.utils', () => {
             const onlyDupeId = hasDuplicateIdOnly(errors);
 
             expect(onlyDupeId).toBe(false);
+        });
+    });
+
+    describe('checkForBlockedSubmit', () => {
+        it('should return true if no policies selected yet', () => {
+            const policies = [];
+            const messageObj = null;
+            const duplicateErrors = null;
+            const duplicateResolution = { resolution: '', newName: '' };
+
+            const isBlocked = checkForBlockedSubmit({
+                numPolicies: policies?.length || 0,
+                messageType: messageObj?.type,
+                hasDuplicateErrors: !!duplicateErrors,
+                duplicateResolution,
+            });
+
+            expect(isBlocked).toBe(true);
+        });
+
+        it('should return false if nothing blocks policy submission', () => {
+            const policies = [{ name: 'Snafu' }];
+            const messageObj = null;
+            const duplicateErrors = null;
+            const duplicateResolution = { resolution: '', newName: '' };
+
+            const isBlocked = checkForBlockedSubmit({
+                numPolicies: policies?.length || 0,
+                messageType: messageObj?.type,
+                hasDuplicateErrors: !!duplicateErrors,
+                duplicateResolution,
+            });
+
+            expect(isBlocked).toBe(false);
+        });
+
+        it('should return true if info message means successful submission', () => {
+            const policies = [{ name: 'Snafu' }];
+            const messageObj = { type: 'info' };
+            const duplicateErrors = null;
+            const duplicateResolution = { resolution: '', newName: '' };
+
+            const isBlocked = checkForBlockedSubmit({
+                numPolicies: policies?.length || 0,
+                messageType: messageObj?.type,
+                hasDuplicateErrors: !!duplicateErrors,
+                duplicateResolution,
+            });
+
+            expect(isBlocked).toBe(true);
+        });
+
+        it('should return true if message is error, even if no dupes', () => {
+            const policies = [{ name: 'Snafu' }];
+            const messageObj = { type: 'error' };
+            const duplicateErrors = null;
+            const duplicateResolution = { resolution: '', newName: '' };
+
+            const isBlocked = checkForBlockedSubmit({
+                numPolicies: policies?.length || 0,
+                messageType: messageObj?.type,
+                hasDuplicateErrors: !!duplicateErrors,
+                duplicateResolution,
+            });
+
+            expect(isBlocked).toBe(true);
+        });
+
+        it('should return true if dupe error, with no resolution yet', () => {
+            const policies = [{ name: 'CVE >= 7' }];
+            const messageObj = { type: 'error' };
+            const duplicateErrors = [{ dupeName: 'CVE >= 7' }];
+            const duplicateResolution = { resolution: '', newName: '' };
+
+            const isBlocked = checkForBlockedSubmit({
+                numPolicies: policies?.length || 0,
+                messageType: messageObj?.type,
+                hasDuplicateErrors: !!duplicateErrors,
+                duplicateResolution,
+            });
+
+            expect(isBlocked).toBe(true);
+        });
+
+        it('should return false if dupe error, but has been resolved', () => {
+            const policies = [{ name: 'CVE >= 7' }];
+            const messageObj = { type: 'error' };
+            const duplicateErrors = [{ dupeName: 'CVE >= 7' }];
+            const duplicateResolution = {
+                resolution: POLICY_DUPE_ACTIONS.OVERWRITE,
+                newName: '',
+            };
+
+            const isBlocked = checkForBlockedSubmit({
+                numPolicies: policies?.length || 0,
+                messageType: messageObj?.type,
+                hasDuplicateErrors: !!duplicateErrors,
+                duplicateResolution,
+            });
+
+            expect(isBlocked).toBe(false);
         });
     });
 });
