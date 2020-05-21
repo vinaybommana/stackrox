@@ -68,8 +68,9 @@ const formDescriptors = {
             },
             {
                 jsonpath: 'config.mode',
-                type: 'hidden',
+                type: 'text',
                 value: 'fragment',
+                hidden: true,
             },
         ],
         saml: [
@@ -524,7 +525,12 @@ const formDescriptors = {
                 label: 'Password',
                 jsonpath: 'docker.password',
                 type: 'password',
-                placeholder: '',
+                checkStoredCredentials: true,
+                helpFunction: (initialValues) => {
+                    if (initialValues?.hasStoredCredentials)
+                        return 'Leave this empty to use the currently stored credentials';
+                    return '';
+                },
             },
             {
                 label: 'Disable TLS Certificate Validation (Insecure)',

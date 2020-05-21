@@ -26,10 +26,11 @@ export const actions = {
     fetchNotifiers: createFetchingActions(types.FETCH_NOTIFIERS),
     fetchBackups: createFetchingActions(types.FETCH_BACKUPS),
     fetchImageIntegrations: createFetchingActions(types.FETCH_IMAGE_INTEGRATIONS),
-    testIntegration: (source, integration) => ({
+    testIntegration: (source, integration, options) => ({
         type: types.TEST_INTEGRATION,
         source,
         integration,
+        options,
     }),
     deleteIntegrations: (source, sourceType, ids) => ({
         type: types.DELETE_INTEGRATIONS,

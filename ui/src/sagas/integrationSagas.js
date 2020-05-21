@@ -91,15 +91,16 @@ function* watchFetchRequest() {
 }
 
 function* saveIntegration(action) {
-    const { source, sourceType, integration } = action.params;
+    const { source, sourceType, integration, options } = action.params;
     try {
         if (source === 'authProviders') {
             yield call(AuthService.saveAuthProvider, integration);
             if (sourceType === 'apitoken') yield put(fetchIntegrationsActionMap[sourceType]);
             else yield put(fetchIntegrationsActionMap[source]);
         } else {
-            if (integration.id) yield call(service.saveIntegration, source, integration);
-            else yield call(service.createIntegration, source, integration);
+            if (integration.id) {
+                yield call(service.saveIntegration, source, integration, options);
+            } else yield call(service.createIntegration, source, integration);
             yield put(fetchIntegrationsActionMap[source]);
         }
         yield put(
@@ -138,9 +139,9 @@ function* deleteIntegrations({ source, sourceType, ids }) {
 }
 
 function* testIntegration(action) {
-    const { source, integration } = action;
+    const { source, integration, options } = action;
     try {
-        yield call(service.testIntegration, source, integration);
+        yield call(service.testIntegration, source, integration, options);
         yield put(notificationActions.addNotification('Integration test was successful'));
         yield put(notificationActions.removeOldestNotification());
     } catch (error) {
