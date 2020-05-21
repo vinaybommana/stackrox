@@ -1,13 +1,13 @@
+/* eslint-disable react/display-name */
 import React, { forwardRef } from 'react';
 import PropTypes from 'prop-types';
 
-const WhitelistedProcessActivityIcon = forwardRef(({ height, width }, ref) => {
-    const iconHeight = height || width;
-    return (
+const ProcessActivityEvent = forwardRef(({ whitelisted, size }, ref) => {
+    return whitelisted ? (
         <svg
             data-testid="whitelisted-process-activity-event"
-            width={width}
-            height={iconHeight}
+            width={size}
+            height={size}
             viewBox="0 0 15 15"
             version="1.1"
             xmlns="http://www.w3.org/2000/svg"
@@ -35,16 +35,39 @@ const WhitelistedProcessActivityIcon = forwardRef(({ height, width }, ref) => {
                 </g>
             </g>
         </svg>
+    ) : (
+        <svg
+            data-testid="process-activity-event"
+            width={size}
+            height={size}
+            viewBox="0 0 15 15"
+            version="1.1"
+            xmlns="http://www.w3.org/2000/svg"
+            ref={ref}
+        >
+            <g id="Singles" stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
+                <g id="iqt-timeline" transform="translate(-689.000000, -673.000000)" fill="#5677DD">
+                    <rect
+                        id="Rectangle-Copy-38"
+                        x="689"
+                        y="673.1"
+                        width="14.5799992"
+                        height="14.5799992"
+                        rx="2.42999987"
+                    />
+                </g>
+            </g>
+        </svg>
     );
 });
 
-WhitelistedProcessActivityIcon.propTypes = {
-    width: PropTypes.number.isRequired,
-    height: PropTypes.number,
+ProcessActivityEvent.propTypes = {
+    whitelisted: PropTypes.bool,
+    size: PropTypes.number.isRequired,
 };
 
-WhitelistedProcessActivityIcon.defaultProps = {
-    height: null,
+ProcessActivityEvent.defaultProps = {
+    whitelisted: false,
 };
 
-export default WhitelistedProcessActivityIcon;
+export default ProcessActivityEvent;

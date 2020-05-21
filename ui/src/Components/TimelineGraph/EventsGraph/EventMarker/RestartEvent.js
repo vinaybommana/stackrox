@@ -1,13 +1,13 @@
+/* eslint-disable react/display-name */
 import React, { forwardRef } from 'react';
 import PropTypes from 'prop-types';
 
-const RestartIcon = forwardRef(({ height, width }, ref) => {
-    const iconHeight = height || width;
+const RestartEvent = forwardRef(({ size }, ref) => {
     return (
         <svg
             data-testid="restart-event"
-            width={width}
-            height={iconHeight}
+            width={size}
+            height={size}
             viewBox="0 0 16 16"
             version="1.1"
             xmlns="http://www.w3.org/2000/svg"
@@ -27,13 +27,8 @@ const RestartIcon = forwardRef(({ height, width }, ref) => {
     );
 });
 
-RestartIcon.propTypes = {
-    width: PropTypes.number.isRequired,
-    height: PropTypes.number,
+RestartEvent.propTypes = {
+    size: PropTypes.number.isRequired,
 };
 
-RestartIcon.defaultProps = {
-    height: null,
-};
-
-export default RestartIcon;
+export default RestartEvent;

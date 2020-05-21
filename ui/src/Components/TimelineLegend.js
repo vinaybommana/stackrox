@@ -3,11 +3,10 @@ import React from 'react';
 import Tooltip from 'Components/Tooltip';
 import TooltipOverlay from 'Components/TooltipOverlay';
 import Button from 'Components/Button';
-import PolicyViolationIcon from 'Components/TimelineGraph/EventsGraph/EventMarker/PolicyViolationEvent/PolicyViolationIcon';
-import ProcessActivityIcon from 'Components/TimelineGraph/EventsGraph/EventMarker/ProcessActivityEvent/ProcessActivityIcon';
-import WhitelistedProcessActivityIcon from 'Components/TimelineGraph/EventsGraph/EventMarker/ProcessActivityEvent/WhitelistedProcessActivityIcon';
-import RestartIcon from 'Components/TimelineGraph/EventsGraph/EventMarker/RestartEvent/RestartIcon';
-import TerminationIcon from 'Components/TimelineGraph/EventsGraph/EventMarker/TerminationEvent/TerminationIcon';
+import PolicyViolationEvent from 'Components/TimelineGraph/EventsGraph/EventMarker/PolicyViolationEvent';
+import ProcessActivityEvent from 'Components/TimelineGraph/EventsGraph/EventMarker/ProcessActivityEvent';
+import RestartEvent from 'Components/TimelineGraph/EventsGraph/EventMarker/RestartEvent';
+import TerminationEvent from 'Components/TimelineGraph/EventsGraph/EventMarker/TerminationEvent';
 
 const ICON_SIZE = 15;
 
@@ -15,23 +14,23 @@ const TimelineLegend = () => {
     const content = (
         <TooltipOverlay>
             <div className="flex items-center mb-2">
-                <ProcessActivityIcon width={ICON_SIZE} />
+                <ProcessActivityEvent size={ICON_SIZE} />
                 <span className="ml-2">Process Activity</span>
             </div>
             <div className="flex items-center mb-2">
-                <PolicyViolationIcon width={ICON_SIZE} />
+                <PolicyViolationEvent size={ICON_SIZE} />
                 <span className="ml-2">Process Activity with Violation</span>
             </div>
             <div className="flex items-center mb-2">
-                <WhitelistedProcessActivityIcon width={ICON_SIZE} />
+                <ProcessActivityEvent size={ICON_SIZE} whitelisted />
                 <span className="ml-2">Whitelisted Process Activity</span>
             </div>
             <div className="flex items-center mb-2">
-                <RestartIcon width={ICON_SIZE} />
+                <RestartEvent size={ICON_SIZE} />
                 <span className="ml-2">Container Restart</span>
             </div>
             <div className="flex items-center">
-                <TerminationIcon width={ICON_SIZE} />
+                <TerminationEvent size={ICON_SIZE} />
                 <span className="ml-2">Container Termination</span>
             </div>
         </TooltipOverlay>

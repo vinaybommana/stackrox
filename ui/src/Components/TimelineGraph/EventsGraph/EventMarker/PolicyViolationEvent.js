@@ -1,13 +1,13 @@
+/* eslint-disable react/display-name */
 import React, { forwardRef } from 'react';
 import PropTypes from 'prop-types';
 
-const PolicyViolationIcon = forwardRef(({ height, width }, ref) => {
-    const iconHeight = height || width;
+const PolicyViolationEvent = forwardRef(({ size }, ref) => {
     return (
         <svg
             data-testid="policy-violation-event"
-            width={width}
-            height={iconHeight}
+            width={size}
+            height={size}
             viewBox="0 0 15 15"
             version="1.1"
             xmlns="http://www.w3.org/2000/svg"
@@ -40,13 +40,8 @@ const PolicyViolationIcon = forwardRef(({ height, width }, ref) => {
     );
 });
 
-PolicyViolationIcon.propTypes = {
-    width: PropTypes.number.isRequired,
-    height: PropTypes.number,
+PolicyViolationEvent.propTypes = {
+    size: PropTypes.number.isRequired,
 };
 
-PolicyViolationIcon.defaultProps = {
-    height: null,
-};
-
-export default PolicyViolationIcon;
+export default PolicyViolationEvent;

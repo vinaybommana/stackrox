@@ -1,13 +1,13 @@
+/* eslint-disable react/display-name */
 import React, { forwardRef } from 'react';
 import PropTypes from 'prop-types';
 
-const TerminationIcon = forwardRef(({ height, width }, ref) => {
-    const iconHeight = height || width;
+const TerminationEvent = forwardRef(({ size }, ref) => {
     return (
         <svg
             data-testid="termination-event"
-            width={width}
-            height={iconHeight}
+            width={size}
+            height={size}
             viewBox="0 0 16 16"
             version="1.1"
             xmlns="http://www.w3.org/2000/svg"
@@ -26,13 +26,8 @@ const TerminationIcon = forwardRef(({ height, width }, ref) => {
     );
 });
 
-TerminationIcon.propTypes = {
-    width: PropTypes.number.isRequired,
-    height: PropTypes.number,
+TerminationEvent.propTypes = {
+    size: PropTypes.number.isRequired,
 };
 
-TerminationIcon.defaultProps = {
-    height: null,
-};
-
-export default TerminationIcon;
+export default TerminationEvent;

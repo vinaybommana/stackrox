@@ -11,32 +11,34 @@ exports[`should show a container restart event marker 1`] = `
       data-testid="timeline-event-marker"
       transform="translate(NaN, -5)"
     >
-      <svg
-        data-testid="restart-event"
-        height="10"
-        version="1.1"
-        viewBox="0 0 16 16"
-        width="10"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <g
-          transform="matrix(1,0,0,1,-650,-843)"
+      <g>
+        <svg
+          data-testid="restart-event"
+          height="10"
+          version="1.1"
+          viewBox="0 0 16 16"
+          width="10"
+          xmlns="http://www.w3.org/2000/svg"
         >
           <g
-            id="Singles"
+            transform="matrix(1,0,0,1,-650,-843)"
           >
             <g
-              fill="#FF9064"
-              id="iqt-timeline"
+              id="Singles"
             >
-              <path
-                d="M659.202,844.183L665.814,855.451C666.197,856.105 665.97,856.94 665.306,857.317C665.095,857.437 664.855,857.5 664.612,857.5L651.388,857.5C650.621,857.5 650,856.888 650,856.134C650,855.894 650.064,855.659 650.186,855.451L656.798,844.183C657.181,843.53 658.03,843.306 658.694,843.683C658.905,843.803 659.08,843.976 659.202,844.183Z"
-                id="Polygon-Copy-5"
-              />
+              <g
+                fill="#FF9064"
+                id="iqt-timeline"
+              >
+                <path
+                  d="M659.202,844.183L665.814,855.451C666.197,856.105 665.97,856.94 665.306,857.317C665.095,857.437 664.855,857.5 664.612,857.5L651.388,857.5C650.621,857.5 650,856.888 650,856.134C650,855.894 650.064,855.659 650.186,855.451L656.798,844.183C657.181,843.53 658.03,843.306 658.694,843.683C658.905,843.803 659.08,843.976 659.202,844.183Z"
+                  id="Polygon-Copy-5"
+                />
+              </g>
             </g>
           </g>
-        </g>
-      </svg>
+        </svg>
+      </g>
     </g>
   </svg>
 </DocumentFragment>
@@ -53,34 +55,36 @@ exports[`should show a container termination event marker 1`] = `
       data-testid="timeline-event-marker"
       transform="translate(NaN, -5)"
     >
-      <svg
-        data-testid="termination-event"
-        height="10"
-        version="1.1"
-        viewBox="0 0 16 16"
-        width="10"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <g
-          fill="none"
-          fill-rule="evenodd"
-          id="Singles"
-          stroke="none"
-          stroke-width="1"
+      <g>
+        <svg
+          data-testid="termination-event"
+          height="10"
+          version="1.1"
+          viewBox="0 0 16 16"
+          width="10"
+          xmlns="http://www.w3.org/2000/svg"
         >
           <g
-            fill="#FF9064"
-            id="iqt-timeline"
-            transform="translate(-650.000000, -843.000000)"
+            fill="none"
+            fill-rule="evenodd"
+            id="Singles"
+            stroke="none"
+            stroke-width="1"
           >
-            <path
-              d="M659.202024,844.183144 L665.813796,855.451253 C666.197113,856.10452 665.969636,856.939849 665.305712,857.317013 C665.094692,857.43689 664.855321,857.5 664.611656,857.5 L651.388112,857.5 C650.621479,857.5 650,856.888496 650,856.134169 C650,855.894415 650.064139,855.658885 650.185972,855.451253 L656.797744,844.183144 C657.18106,843.529877 658.030016,843.306051 658.69394,843.683215 C658.90496,843.803092 659.080192,843.975511 659.202024,844.183144 Z"
-              id="Polygon-Copy-5"
-              transform="translate(658.000000, 850.500000) scale(1, -1) translate(-658.000000, -850.500000) "
-            />
+            <g
+              fill="#FF9064"
+              id="iqt-timeline"
+              transform="translate(-650.000000, -843.000000)"
+            >
+              <path
+                d="M659.202024,844.183144 L665.813796,855.451253 C666.197113,856.10452 665.969636,856.939849 665.305712,857.317013 C665.094692,857.43689 664.855321,857.5 664.611656,857.5 L651.388112,857.5 C650.621479,857.5 650,856.888496 650,856.134169 C650,855.894415 650.064139,855.658885 650.185972,855.451253 L656.797744,844.183144 C657.18106,843.529877 658.030016,843.306051 658.69394,843.683215 C658.90496,843.803092 659.080192,843.975511 659.202024,844.183144 Z"
+                id="Polygon-Copy-5"
+                transform="translate(658.000000, 850.500000) scale(1, -1) translate(-658.000000, -850.500000) "
+              />
+            </g>
           </g>
-        </g>
-      </svg>
+        </svg>
+      </g>
     </g>
   </svg>
 </DocumentFragment>
@@ -97,53 +101,55 @@ exports[`should show a policy violation event marker 1`] = `
       data-testid="timeline-event-marker"
       transform="translate(NaN, -5)"
     >
-      <svg
-        data-testid="policy-violation-event"
-        height="10"
-        version="1.1"
-        viewBox="0 0 15 15"
-        width="10"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <g
-          fill="none"
-          fill-rule="evenodd"
-          id="Page-1"
-          stroke="none"
-          stroke-width="1"
+      <g>
+        <svg
+          data-testid="policy-violation-event"
+          height="10"
+          version="1.1"
+          viewBox="0 0 15 15"
+          width="10"
+          xmlns="http://www.w3.org/2000/svg"
         >
           <g
-            id="iqt-timeline-popover"
-            transform="translate(-908.000000, -673.000000)"
+            fill="none"
+            fill-rule="evenodd"
+            id="Page-1"
+            stroke="none"
+            stroke-width="1"
           >
             <g
-              id="Group-73-Copy-3"
-              transform="translate(908.000000, 673.000000)"
+              id="iqt-timeline-popover"
+              transform="translate(-908.000000, -673.000000)"
             >
               <g
-                id="Group-71-Copy"
-                transform="translate(0.000000, 0.100000)"
+                id="Group-73-Copy-3"
+                transform="translate(908.000000, 673.000000)"
               >
-                <rect
-                  fill="#FF5782"
-                  height="14.5799992"
-                  id="Rectangle-Copy-38"
-                  rx="2.42999987"
-                  width="14.5799992"
-                  x="0"
-                  y="0"
-                />
-                <path
-                  d="M8.07143356,8.37042581 L6.61628124,8.37042581 L6.29069921,2.78569543 L8.41030465,2.78569543 L8.07143356,8.37042581 Z M6.23754296,10.5896992 C6.23754296,10.2441819 6.32945805,9.97618846 6.513291,9.78571095 C6.69712395,9.59523344 6.97065441,9.49999611 7.3338906,9.49999611 C7.69712679,9.49999611 7.97176466,9.59412603 8.15781246,9.78238868 C8.34386027,9.97065134 8.43688277,10.2397522 8.43688277,10.5896992 C8.43688277,10.9352166 8.34053804,11.20321 8.14784567,11.3936875 C7.9551533,11.584165 7.68383766,11.6794023 7.3338906,11.6794023 C6.97508412,11.6794023 6.70266107,11.5830576 6.51661327,11.3903652 C6.33056547,11.1976729 6.23754296,10.9307869 6.23754296,10.5896992 Z"
-                  fill="#FFFFFF"
-                  fill-rule="nonzero"
-                  id="!"
-                />
+                <g
+                  id="Group-71-Copy"
+                  transform="translate(0.000000, 0.100000)"
+                >
+                  <rect
+                    fill="#FF5782"
+                    height="14.5799992"
+                    id="Rectangle-Copy-38"
+                    rx="2.42999987"
+                    width="14.5799992"
+                    x="0"
+                    y="0"
+                  />
+                  <path
+                    d="M8.07143356,8.37042581 L6.61628124,8.37042581 L6.29069921,2.78569543 L8.41030465,2.78569543 L8.07143356,8.37042581 Z M6.23754296,10.5896992 C6.23754296,10.2441819 6.32945805,9.97618846 6.513291,9.78571095 C6.69712395,9.59523344 6.97065441,9.49999611 7.3338906,9.49999611 C7.69712679,9.49999611 7.97176466,9.59412603 8.15781246,9.78238868 C8.34386027,9.97065134 8.43688277,10.2397522 8.43688277,10.5896992 C8.43688277,10.9352166 8.34053804,11.20321 8.14784567,11.3936875 C7.9551533,11.584165 7.68383766,11.6794023 7.3338906,11.6794023 C6.97508412,11.6794023 6.70266107,11.5830576 6.51661327,11.3903652 C6.33056547,11.1976729 6.23754296,10.9307869 6.23754296,10.5896992 Z"
+                    fill="#FFFFFF"
+                    fill-rule="nonzero"
+                    id="!"
+                  />
+                </g>
               </g>
             </g>
           </g>
-        </g>
-      </svg>
+        </svg>
+      </g>
     </g>
   </svg>
 </DocumentFragment>
@@ -160,37 +166,39 @@ exports[`should show a process activity event marker 1`] = `
       data-testid="timeline-event-marker"
       transform="translate(NaN, -5)"
     >
-      <svg
-        data-testid="process-activity-event"
-        height="10"
-        version="1.1"
-        viewBox="0 0 15 15"
-        width="10"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <g
-          fill="none"
-          fill-rule="evenodd"
-          id="Singles"
-          stroke="none"
-          stroke-width="1"
+      <g>
+        <svg
+          data-testid="process-activity-event"
+          height="10"
+          version="1.1"
+          viewBox="0 0 15 15"
+          width="10"
+          xmlns="http://www.w3.org/2000/svg"
         >
           <g
-            fill="#5677DD"
-            id="iqt-timeline"
-            transform="translate(-689.000000, -673.000000)"
+            fill="none"
+            fill-rule="evenodd"
+            id="Singles"
+            stroke="none"
+            stroke-width="1"
           >
-            <rect
-              height="14.5799992"
-              id="Rectangle-Copy-38"
-              rx="2.42999987"
-              width="14.5799992"
-              x="689"
-              y="673.1"
-            />
+            <g
+              fill="#5677DD"
+              id="iqt-timeline"
+              transform="translate(-689.000000, -673.000000)"
+            >
+              <rect
+                height="14.5799992"
+                id="Rectangle-Copy-38"
+                rx="2.42999987"
+                width="14.5799992"
+                x="689"
+                y="673.1"
+              />
+            </g>
           </g>
-        </g>
-      </svg>
+        </svg>
+      </g>
     </g>
   </svg>
 </DocumentFragment>
@@ -207,48 +215,50 @@ exports[`should show a whitelisted process activity event marker 1`] = `
       data-testid="timeline-event-marker"
       transform="translate(NaN, -5)"
     >
-      <svg
-        data-testid="whitelisted-process-activity-event"
-        height="10"
-        version="1.1"
-        viewBox="0 0 15 15"
-        width="10"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <g
-          fill="none"
-          fill-rule="evenodd"
-          id="Page-1"
-          stroke="none"
-          stroke-width="1"
+      <g>
+        <svg
+          data-testid="whitelisted-process-activity-event"
+          height="10"
+          version="1.1"
+          viewBox="0 0 15 15"
+          width="10"
+          xmlns="http://www.w3.org/2000/svg"
         >
           <g
-            id="iqt-timeline-popover"
-            transform="translate(-689.000000, -673.000000)"
+            fill="none"
+            fill-rule="evenodd"
+            id="Page-1"
+            stroke="none"
+            stroke-width="1"
           >
             <g
-              id="Group-70"
-              transform="translate(689.000000, 673.100000)"
+              id="iqt-timeline-popover"
+              transform="translate(-689.000000, -673.000000)"
             >
-              <rect
-                fill="#56DDB2"
-                height="14.5799992"
-                id="Rectangle-Copy-38"
-                rx="2.42999987"
-                width="14.5799992"
-                x="2.14939178e-13"
-                y="-1.24344979e-14"
-              />
-              <path
-                d="M4.45866889,6.7675062 C4.1519101,6.40536439 3.62404701,6.37328328 3.27965367,6.69585103 C2.93526034,7.01841878 2.90475151,7.57348555 3.2115103,7.93562737 L5.89698061,11.1059394 C6.24340685,11.5149103 6.85744163,11.4942771 7.17832948,11.0628827 L11.8226518,4.8191603 C12.1067965,4.43716259 12.0426478,3.88527656 11.6793717,3.58648835 C11.3160956,3.28770014 10.7912573,3.35515476 10.5071127,3.73715248 L6.4789459,9.1525292 L4.45866889,6.7675062 Z"
-                fill="#FFFFFF"
-                fill-rule="nonzero"
-                id="Path-2"
-              />
+              <g
+                id="Group-70"
+                transform="translate(689.000000, 673.100000)"
+              >
+                <rect
+                  fill="#56DDB2"
+                  height="14.5799992"
+                  id="Rectangle-Copy-38"
+                  rx="2.42999987"
+                  width="14.5799992"
+                  x="2.14939178e-13"
+                  y="-1.24344979e-14"
+                />
+                <path
+                  d="M4.45866889,6.7675062 C4.1519101,6.40536439 3.62404701,6.37328328 3.27965367,6.69585103 C2.93526034,7.01841878 2.90475151,7.57348555 3.2115103,7.93562737 L5.89698061,11.1059394 C6.24340685,11.5149103 6.85744163,11.4942771 7.17832948,11.0628827 L11.8226518,4.8191603 C12.1067965,4.43716259 12.0426478,3.88527656 11.6793717,3.58648835 C11.3160956,3.28770014 10.7912573,3.35515476 10.5071127,3.73715248 L6.4789459,9.1525292 L4.45866889,6.7675062 Z"
+                  fill="#FFFFFF"
+                  fill-rule="nonzero"
+                  id="Path-2"
+                />
+              </g>
             </g>
           </g>
-        </g>
-      </svg>
+        </svg>
+      </g>
     </g>
   </svg>
 </DocumentFragment>

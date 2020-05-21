@@ -6,6 +6,7 @@ import { getWidth } from 'utils/d3Utils';
 import { eventTypes } from 'constants/timelineTypes';
 import mainViewSelector from 'Components/TimelineGraph/MainView/selectors';
 import D3Anchor from 'Components/D3Anchor';
+import EventTooltip from 'Components/TimelineGraph/EventsGraph/EventTooltip';
 import PolicyViolationEvent from './PolicyViolationEvent';
 import RestartEvent from './RestartEvent';
 import ProcessActivityEvent from './ProcessActivityEvent';
@@ -54,34 +55,26 @@ const EventMarker = ({
             translateY={translateY}
             onUpdate={onUpdate}
         >
-            {type === eventTypes.POLICY_VIOLATION && (
-                <PolicyViolationEvent name={name} type={type} timestamp={timestamp} width={size} />
-            )}
-            {type === eventTypes.PROCESS_ACTIVITY && (
-                <ProcessActivityEvent
-                    name={name}
-                    args={args}
-                    type={type}
-                    uid={uid}
-                    parentName={parentName}
-                    parentUid={parentUid}
-                    timestamp={timestamp}
-                    whitelisted={whitelisted}
-                    width={size}
-                />
-            )}
-            {type === eventTypes.RESTART && (
-                <RestartEvent name={name} type={type} timestamp={timestamp} width={size} />
-            )}
-            {type === eventTypes.TERMINATION && (
-                <TerminationEvent
-                    name={name}
-                    type={type}
-                    reason={reason}
-                    timestamp={timestamp}
-                    width={size}
-                />
-            )}
+            <EventTooltip
+                name={name}
+                args={args}
+                type={type}
+                uid={uid}
+                parentName={parentName}
+                parentUid={parentUid}
+                timestamp={timestamp}
+                reason={reason}
+                whitelisted={whitelisted}
+            >
+                <g>
+                    {type === eventTypes.POLICY_VIOLATION && <PolicyViolationEvent size={size} />}
+                    {type === eventTypes.PROCESS_ACTIVITY && (
+                        <ProcessActivityEvent size={size} whitelisted={whitelisted} />
+                    )}
+                    {type === eventTypes.RESTART && <RestartEvent size={size} />}
+                    {type === eventTypes.TERMINATION && <TerminationEvent size={size} />}
+                </g>
+            </EventTooltip>
         </D3Anchor>
     );
 };
