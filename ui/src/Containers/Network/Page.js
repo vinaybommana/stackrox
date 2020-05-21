@@ -28,7 +28,7 @@ class Page extends Component {
     render() {
         return (
             <section className="flex flex-1 h-full w-full">
-                <div className="flex flex-1 flex-col w-full">
+                <div className="flex flex-1 flex-col w-full overflow-hidden">
                     <div className="flex">
                         <Header />
                     </div>
