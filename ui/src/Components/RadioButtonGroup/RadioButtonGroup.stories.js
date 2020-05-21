@@ -80,3 +80,37 @@ export const withDisabledButtons = () => {
         </MemoryRouter>
     );
 };
+
+export const withBooleanValues = () => {
+    // eslint-disable-next-line
+    const [selected, setSelected] = useState(true);
+    const buttons = [
+        { text: 'Fixable', value: true },
+        { text: 'All', value: false },
+    ];
+    function onClick(data) {
+        setSelected(data);
+    }
+    return (
+        <MemoryRouter>
+            <RadioButtonGroup buttons={buttons} selected={selected} onClick={onClick} useBoolean />
+        </MemoryRouter>
+    );
+};
+
+export const withStringBooleanValues = () => {
+    // eslint-disable-next-line
+    const [selected, setSelected] = useState('true');
+    const buttons = [
+        { text: 'Fixable', value: true },
+        { text: 'All', value: false },
+    ];
+    function onClick(data) {
+        setSelected(data);
+    }
+    return (
+        <MemoryRouter>
+            <RadioButtonGroup buttons={buttons} selected={selected} onClick={onClick} />
+        </MemoryRouter>
+    );
+};

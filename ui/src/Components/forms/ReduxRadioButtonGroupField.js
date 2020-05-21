@@ -4,7 +4,7 @@ import { Field } from 'redux-form';
 
 import RadioButtonGroup from 'Components/RadioButtonGroup';
 
-function ReduxRadioButtonGroup({ input, buttons, groupClassName, useBoolean }) {
+function ReduxRadioButtonGroup({ input, buttons, groupClassName, useBoolean, disabled }) {
     const { value, onChange } = input;
     return (
         <RadioButtonGroup
@@ -13,11 +13,12 @@ function ReduxRadioButtonGroup({ input, buttons, groupClassName, useBoolean }) {
             selected={value}
             groupClassName={groupClassName}
             useBoolean={useBoolean}
+            disabled={disabled}
         />
     );
 }
 
-function ReduxRadioButtonGroupField({ name, buttons, groupClassName, useBoolean }) {
+function ReduxRadioButtonGroupField({ name, buttons, groupClassName, useBoolean, disabled }) {
     return (
         <Field
             key={name}
@@ -27,6 +28,7 @@ function ReduxRadioButtonGroupField({ name, buttons, groupClassName, useBoolean 
             buttons={buttons}
             groupClassName={groupClassName}
             useBoolean={useBoolean}
+            disabled={disabled}
         />
     );
 }
@@ -41,11 +43,13 @@ ReduxRadioButtonGroupField.propTypes = {
     ).isRequired,
     groupClassName: PropTypes.string,
     useBoolean: PropTypes.bool,
+    disabled: PropTypes.bool,
 };
 
 ReduxRadioButtonGroupField.defaultProps = {
     groupClassName: '',
     useBoolean: false,
+    disabled: false,
 };
 
 export default ReduxRadioButtonGroupField;
