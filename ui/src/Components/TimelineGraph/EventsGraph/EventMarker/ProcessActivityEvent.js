@@ -8,31 +8,17 @@ const ProcessActivityEvent = forwardRef(({ whitelisted, size }, ref) => {
             data-testid="whitelisted-process-activity-event"
             width={size}
             height={size}
-            viewBox="0 0 15 15"
-            version="1.1"
+            viewBox="0 0 16 16"
             xmlns="http://www.w3.org/2000/svg"
             ref={ref}
         >
-            <g id="Page-1" stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
-                <g id="iqt-timeline-popover" transform="translate(-689.000000, -673.000000)">
-                    <g id="Group-70" transform="translate(689.000000, 673.100000)">
-                        <rect
-                            id="Rectangle-Copy-38"
-                            fill="#56DDB2"
-                            x="2.14939178e-13"
-                            y="-1.24344979e-14"
-                            width="14.5799992"
-                            height="14.5799992"
-                            rx="2.42999987"
-                        />
-                        <path
-                            d="M4.45866889,6.7675062 C4.1519101,6.40536439 3.62404701,6.37328328 3.27965367,6.69585103 C2.93526034,7.01841878 2.90475151,7.57348555 3.2115103,7.93562737 L5.89698061,11.1059394 C6.24340685,11.5149103 6.85744163,11.4942771 7.17832948,11.0628827 L11.8226518,4.8191603 C12.1067965,4.43716259 12.0426478,3.88527656 11.6793717,3.58648835 C11.3160956,3.28770014 10.7912573,3.35515476 10.5071127,3.73715248 L6.4789459,9.1525292 L4.45866889,6.7675062 Z"
-                            id="Path-2"
-                            fill="#FFFFFF"
-                            fillRule="nonzero"
-                        />
-                    </g>
-                </g>
+            <g transform="translate(0 .1)" fill="none" fillRule="evenodd">
+                <rect fill="#56DDB2" width="14.58" height="14.58" rx="2.43" />
+                <path
+                    d="M4.459 6.768a.807.807 0 00-1.18-.072.91.91 0 00-.067 1.24l2.685 3.17a.81.81 0 001.281-.043l4.645-6.244a.909.909 0 00-.144-1.233.808.808 0 00-1.172.151L6.48 9.153l-2.02-2.385z"
+                    fill="#FFF"
+                    fillRule="nonzero"
+                />
             </g>
         </svg>
     ) : (
@@ -40,23 +26,20 @@ const ProcessActivityEvent = forwardRef(({ whitelisted, size }, ref) => {
             data-testid="process-activity-event"
             width={size}
             height={size}
-            viewBox="0 0 15 15"
-            version="1.1"
+            viewBox="0 0 16 16"
             xmlns="http://www.w3.org/2000/svg"
             ref={ref}
         >
-            <g id="Singles" stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
-                <g id="iqt-timeline" transform="translate(-689.000000, -673.000000)" fill="#5677DD">
-                    <rect
-                        id="Rectangle-Copy-38"
-                        x="689"
-                        y="673.1"
-                        width="14.5799992"
-                        height="14.5799992"
-                        rx="2.42999987"
-                    />
-                </g>
-            </g>
+            <rect
+                x="689"
+                y="673.1"
+                width="14.58"
+                height="14.58"
+                rx="2.43"
+                transform="translate(-689 -673)"
+                fill="#5677DD"
+                fillRule="evenodd"
+            />
         </svg>
     );
 });
