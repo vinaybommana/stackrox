@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { eventTypes, rootTypes } from 'constants/timelineTypes';
+import { selectOptionEventTypes, rootTypes } from 'constants/timelineTypes';
 import NotFoundMessage from 'Components/NotFoundMessage';
 import DeploymentEventTimeline from './DeploymentEventTimeline';
 import PodEventTimeline from './PodEventTimeline';
@@ -21,7 +21,7 @@ const EventTimeline = ({ deploymentId }) => {
         },
     ];
     const [currentPage, setPage] = useState(1);
-    const [selectedEventType, selectEventType] = useState(eventTypes.ALL);
+    const [selectedEventType, selectEventType] = useState(selectOptionEventTypes.ALL);
     const [view, setView] = useState(rootView);
 
     function getCurrentView() {
@@ -29,7 +29,7 @@ const EventTimeline = ({ deploymentId }) => {
     }
 
     function resetSelectedEventType() {
-        selectEventType(eventTypes.ALL);
+        selectEventType(selectOptionEventTypes.ALL);
     }
 
     function goToRootView() {

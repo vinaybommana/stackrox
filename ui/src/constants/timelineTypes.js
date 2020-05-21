@@ -17,9 +17,19 @@ export const graphTypes = {
 };
 
 export const eventTypes = {
-    ALL: 'All',
     POLICY_VIOLATION: 'PolicyViolationEvent',
     PROCESS_ACTIVITY: 'ProcessActivityEvent',
     RESTART: 'ContainerRestartEvent',
     TERMINATION: 'ContainerTerminationEvent',
+};
+
+export const clusteredEventTypes = {
+    ...eventTypes,
+    WHITELISTED_PROCESS_ACTIVITY: 'WhitelistedProcessActivityEvent',
+    GENERIC: 'Generic',
+};
+
+export const selectOptionEventTypes = {
+    ALL: 'All',
+    ...eventTypes,
 };
