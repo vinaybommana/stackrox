@@ -21,6 +21,7 @@ import (
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/internalapi/central"
 	"github.com/stackrox/rox/generated/storage"
+	pkgCluster "github.com/stackrox/rox/pkg/cluster"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/dackbox/graph"
 	"github.com/stackrox/rox/pkg/logging"
@@ -57,6 +58,8 @@ type DataStore interface {
 	UpdateClusterCertExpiryStatus(ctx context.Context, id string, clusterCertExpiryStatus *storage.ClusterCertExpiryStatus) error
 	UpdateClusterHealth(ctx context.Context, id string, clusterHealthStatus *storage.ClusterHealthStatus) error
 	UpdateSensorDeploymentIdentification(ctx context.Context, id string, identification *storage.SensorDeploymentIdentification) error
+
+	AddClusterProblem(ctx context.Context, id string, clusterProblem pkgCluster.Problem) error
 
 	Search(ctx context.Context, q *v1.Query) ([]pkgSearch.Result, error)
 	SearchRawClusters(ctx context.Context, q *v1.Query) ([]*storage.Cluster, error)

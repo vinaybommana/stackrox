@@ -24,6 +24,7 @@ import (
 	v1 "github.com/stackrox/rox/generated/api/v1"
 	"github.com/stackrox/rox/generated/internalapi/central"
 	"github.com/stackrox/rox/generated/storage"
+	pkgCluster "github.com/stackrox/rox/pkg/cluster"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/errorhelpers"
 	"github.com/stackrox/rox/pkg/features"
@@ -362,6 +363,34 @@ func (ds *datastoreImpl) UpdateCluster(ctx context.Context, cluster *storage.Clu
 		log.Error(err)
 	}
 	return nil
+}
+
+// TODO(alexr): Eventually, resolved problems shall be removed.
+func (ds *datastoreImpl) AddClusterProblem(ctx context.Context, id string, clusterProblem pkgCluster.Problem) error {
+	if err := checkWriteSac(ctx, id); err != nil {
+		return err
+	}
+
+	ds.lock.Lock()
+	defer ds.lock.Unlock()
+
+	cluster, err := ds.getClusterOnly(id)
+	if err != nil {
+		return err
+	}
+
+	// Check the problem is not already there.
+	//
+	// TODO(alexr): Use compare-and-swap to efficiently insert avoiding duplicates.
+	p := clusterProblem.ToProto()
+	for _, e := range cluster.GetClusterProblems() {
+		if p.GetShortName() == e.GetShortName() {
+			return nil
+		}
+	}
+
+	cluster.ClusterProblems = append(cluster.ClusterProblems, p)
+	return ds.clusterStorage.Upsert(cluster)
 }
 
 func (ds *datastoreImpl) UpdateClusterHealth(ctx context.Context, id string, clusterHealthStatus *storage.ClusterHealthStatus) error {
