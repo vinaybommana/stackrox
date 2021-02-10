@@ -15,6 +15,7 @@ import (
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/booleanpolicy/policyversion"
 	"github.com/stackrox/rox/pkg/centralsensor"
+	pkgCluster "github.com/stackrox/rox/pkg/cluster"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/logging"
@@ -22,6 +23,7 @@ import (
 	"github.com/stackrox/rox/pkg/sac"
 	"github.com/stackrox/rox/pkg/stringutils"
 	"github.com/stackrox/rox/pkg/sync"
+	"github.com/stackrox/rox/pkg/version"
 )
 
 var (
@@ -242,6 +244,8 @@ func (c *sensorConnection) getPolicySyncMsg(ctx context.Context) (*central.MsgTo
 		return nil, errors.Wrap(err, "error getting policies for initial sync")
 	}
 
+	// TODO(alexr): Wipe any related cluster problems from the store.
+
 	// Older sensors do not broadcast the policy version they support, so if we
 	// observe an empty string, we guess the version at Version1 and persist it.
 	sensorPolicyVersionStr := stringutils.FirstNonEmpty(c.sensorHello.GetPolicyVersion(), policyversion.Version1().String())
@@ -249,12 +253,24 @@ func (c *sensorConnection) getPolicySyncMsg(ctx context.Context) (*central.MsgTo
 	// Forward policies as is if we don't understand sensor's version.
 	if sensorPolicyVersion, err := policyversion.FromString(sensorPolicyVersionStr); err != nil {
 		log.Errorf("Cannot understand sensor's policy version %q: %v", sensorPolicyVersionStr, err)
+
+		// TODO(alexr): Add an UnknownSensorPolicyVersion cluster problem here as well.
 	} else {
 		// Downgrade all policies if necessary. If we can't downgrade one,
 		// we likely can't convert any of them, so no need to spam the log.
 		if policyversion.Compare(policyversion.CurrentVersion(), sensorPolicyVersion) >= 0 {
 			log.Infof("Downgrading %d policies from central's version %q to sensor's version %q",
 				len(policies), policyversion.CurrentVersion().String(), sensorPolicyVersion.String())
+
+			err := c.clusterMgr.AddClusterProblem(ctx, c.ClusterID(), pkgCluster.SensorPolicyVersionMismatch{
+				CentralVersion: version.GetMainVersion(),
+				CentralPolicyVersion: policyversion.CurrentVersion().String(),
+				SensorVersion: c.sensorHello.GetSensorVersion(),
+				SensorPolicyVersion: sensorPolicyVersion.String(),
+			})
+			if err != nil {
+				log.Errorf("Cannot record the problem in the cluster's store: %v", err)
+			}
 
 			downgradedPolicies := make([]*storage.Policy, 0, len(policies))
 
@@ -269,6 +285,15 @@ func (c *sensorConnection) getPolicySyncMsg(ctx context.Context) (*central.MsgTo
 			}
 			if downgradeErr != nil {
 				log.Errorf("Policy downgrade failed: %v", downgradeErr)
+
+				err := c.clusterMgr.AddClusterProblem(ctx, c.clusterID, pkgCluster.IncompatibleSensorPolicyVersion{
+					CentralVersion: version.GetMainVersion(),
+					CentralPolicyVersion: policyversion.CurrentVersion().String(),
+					SensorPolicyVersion: sensorPolicyVersion.String(),
+				})
+				if err != nil {
+					log.Errorf("Cannot record the problem in the cluster's store: %v", err)
+				}
 			}
 
 			policies = downgradedPolicies

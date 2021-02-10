@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/stackrox/rox/generated/storage"
+	pkgCluster "github.com/stackrox/rox/pkg/cluster"
 )
 
 // ClusterManager envelopes functions that interact with clusters
@@ -13,6 +14,7 @@ type ClusterManager interface {
 	UpdateSensorDeploymentIdentification(ctx context.Context, clusterID string, identification *storage.SensorDeploymentIdentification) error
 	GetCluster(ctx context.Context, id string) (*storage.Cluster, bool, error)
 	GetClusters(ctx context.Context) ([]*storage.Cluster, error)
+	AddClusterProblem(ctx context.Context, id string, clusterProblem pkgCluster.Problem) error
 }
 
 // PolicyManager implements an interface to retrieve policies
