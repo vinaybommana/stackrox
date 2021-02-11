@@ -124,11 +124,11 @@ const ClusterSummary = ({ healthStatus, status, centralVersion, currentDatetime,
         
         <div className="mb-4 w-full">
             {clusterProblems && clusterProblems.length > 0 && (
-                <Widget header="Cluster Problems" bodyClassName="p-2">
+                <Widget header="Cluster Error Events" bodyClassName="p-2">
                     <table>
                         <tbody>
                             {clusterProblems.map((p) => (
-                                <tr className={trClass} key="Cluster Problem">
+                                <tr className={trClass} key="Cluster Error Events">
                                     <th className={thClass} scope="row">
                                         {p.shortName}:
                                     </th>
