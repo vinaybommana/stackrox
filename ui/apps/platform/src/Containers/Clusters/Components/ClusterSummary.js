@@ -28,7 +28,7 @@ const tdClass = 'px-0 py-1';
  *
  * Metadata renders a special purpose Widget whose body has built-in p-3 (too bad, so sad)
  */
-const ClusterSummary = ({ healthStatus, status, centralVersion, currentDatetime, clusterId }) => (
+const ClusterSummary = ({ healthStatus, status, centralVersion, currentDatetime, clusterId, clusterProblems }) => (
     <CollapsibleSection title="Cluster Summary" titleClassName="text-xl">
         <div className="grid grid-columns-1 md:grid-columns-2 xl:grid-columns-4 grid-gap-4 xl:grid-gap-6 mb-4 w-full">
             <div className="s-1">
@@ -121,6 +121,33 @@ const ClusterSummary = ({ healthStatus, status, centralVersion, currentDatetime,
                 </Widget>
             </div>
         </div>
+        
+        <div className="mb-4 w-full">
+            {clusterProblems && clusterProblems.length > 0 && (
+                <Widget header="Cluster Problems" bodyClassName="p-2">
+                    <table>
+                        <tbody>
+                            {clusterProblems.map((p) => (
+                                <tr className={trClass} key="Cluster Problem">
+                                    <th className={thClass} scope="row">
+                                        {p.shortName}:
+                                    </th>
+                                    <td className={tdClass}>
+                                        {p.description}
+                                    </td>
+                                    <th className={thClass}>
+                                        Remedy:
+                                    </th>
+                                    <td className={tdClass}>
+                                        {p.remedy}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </Widget>
+            )}
+        </div>
     </CollapsibleSection>
 );
 
@@ -166,6 +193,11 @@ ClusterSummary.propTypes = {
     centralVersion: PropTypes.string.isRequired,
     currentDatetime: PropTypes.instanceOf(Date).isRequired,
     clusterId: PropTypes.string.isRequired,
+    clusterProblems: PropTypes.arrayOf(PropTypes.shape({
+        shortName: PropTypes.string,
+        description:PropTypes.string,
+        remedy: PropTypes.string,
+    })),
 };
 
 export default ClusterSummary;

@@ -21,6 +21,7 @@ function ClusterEditForm({ centralEnv, centralVersion, selectedCluster, handleCh
                     centralVersion={centralVersion}
                     currentDatetime={new Date()}
                     clusterId={selectedCluster.id}
+                    clusterProblems={selectedCluster.clusterProblems}
                 />
             )}
             <form
@@ -115,6 +116,11 @@ ClusterEditForm.propTypes = {
             lastContact: PropTypes.string, // ISO 8601
             healthInfoComplete: PropTypes.bool,
         }),
+        clusterProblems: PropTypes.arrayOf(PropTypes.shape({
+            shortName: PropTypes.string,
+            description:PropTypes.string,
+            remedy: PropTypes.string,
+        })),
     }).isRequired,
     handleChange: PropTypes.func.isRequired,
     isLoading: PropTypes.bool.isRequired,
