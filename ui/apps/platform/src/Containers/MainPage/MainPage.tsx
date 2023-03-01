@@ -34,7 +34,7 @@ type ClusterCountResponse = {
 };
 
 const CLUSTER_COUNT = gql`
-    query summary_counts {
+    query cluster_summary_counts {
         clusterCount
     }
 `;
