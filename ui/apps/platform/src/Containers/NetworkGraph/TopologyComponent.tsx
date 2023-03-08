@@ -12,10 +12,13 @@ import {
     TopologyControlBar,
     useVisualizationController,
     VisualizationSurface,
+    GRAPH_POSITION_CHANGE_EVENT,
+    NODE_POSITIONED_EVENT,
 } from '@patternfly/react-topology';
 
 import { networkBasePathPF } from 'routePaths';
 import { getQueryObject, getQueryString } from 'utils/queryStringUtils';
+import { debounce } from 'lodash';
 import DeploymentSideBar from './deployment/DeploymentSideBar';
 import NamespaceSideBar from './namespace/NamespaceSideBar';
 import CidrBlockSideBar from './cidr/CidrBlockSideBar';
@@ -147,6 +150,13 @@ const TopologyComponent = ({
     useEventListener<SelectionEventListener>(SELECTION_EVENT, (ids) => {
         onNodeClick(ids);
     });
+
+    useEventListener(
+        NODE_POSITIONED_EVENT,
+        debounce(() => {
+            console.log(controller.toModel());
+        }, 1000)
+    );
 
     useEffect(() => {
         // we don't want to reset view on init
