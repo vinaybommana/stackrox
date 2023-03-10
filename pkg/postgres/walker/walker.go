@@ -25,6 +25,7 @@ type context struct {
 	ignorePK           bool
 	ignoreUnique       bool
 	ignoreFKs          bool
+	ignoreIndex        bool
 	ignoreSearchLabels set.StringSet
 }
 
@@ -51,6 +52,7 @@ func (c context) childContext(name string, searchDisabled bool, opts PostgresOpt
 		ignorePK:           c.ignorePK || opts.IgnorePrimaryKey,
 		ignoreUnique:       c.ignoreUnique || opts.IgnoreUniqueConstraint,
 		ignoreFKs:          c.ignoreFKs || opts.IgnoreChildFKs,
+		ignoreIndex:        c.ignoreIndex || opts.IgnoreChildIndexes,
 		ignoreSearchLabels: c.ignoreSearchLabels.Union(opts.IgnoreSearchLabels),
 	}
 }
@@ -232,6 +234,8 @@ func getPostgresOptions(tag string, topLevel bool, ignorePK, ignoreUnique, ignor
 			opts.Reference.Directional = true
 		case field == "ignore-fks":
 			opts.IgnoreChildFKs = true
+		case field == "ignore-index":
+			opts.IgnoreChildIndexes = true
 		case strings.HasPrefix(field, "type"):
 			typeName := field[strings.Index(field, "(")+1 : strings.Index(field, ")")]
 			opts.ColumnType = typeName
@@ -381,7 +385,13 @@ func handleStruct(ctx context, schema *Schema, original reflect.Type) {
 			// Take all the primary keys of the parent and copy them into the child schema
 			// with references to the parent so we that we can create
 			schema.Children = append(schema.Children, childSchema)
-			handleStruct(context{searchDisabled: ctx.searchDisabled || searchOpts.Ignored, ignorePK: opts.IgnorePrimaryKey, ignoreUnique: opts.IgnoreUniqueConstraint, ignoreFKs: opts.IgnoreChildFKs}, childSchema, structField.Type.Elem().Elem())
+			handleStruct(context{searchDisabled: ctx.searchDisabled || searchOpts.Ignored,
+				ignorePK:     opts.IgnorePrimaryKey,
+				ignoreUnique: opts.IgnoreUniqueConstraint,
+				ignoreFKs:    opts.IgnoreChildFKs,
+				ignoreIndex:  opts.IgnoreChildIndexes},
+				childSchema,
+				structField.Type.Elem().Elem())
 		case reflect.Struct:
 			handleStruct(ctx.childContext(field.Name, searchOpts.Ignored, opts), schema, structField.Type)
 		case reflect.Uint8:

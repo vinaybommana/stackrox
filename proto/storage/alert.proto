@@ -23,7 +23,7 @@ message Alert {
         string                  cluster_id          = 9;  // This field has to be duplicated in Alert for scope management and search.
         string                  cluster_name        = 10; // This field has to be duplicated in Alert for scope management and search.
         message Container {
-            ContainerImage      image               = 3 [(gogoproto.moretags) = 'search:"-" sql:"ignore-fks"'];
+            ContainerImage      image               = 3 [(gogoproto.moretags) = 'search:"-" sql:"ignore-fks,ignore-index"'];
             string              name                = 10;
         }
         repeated Container      containers          = 11;
