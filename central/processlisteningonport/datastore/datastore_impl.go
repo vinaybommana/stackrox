@@ -88,6 +88,18 @@ func (ds *datastoreImpl) AddProcessListeningOnPort(
 	allPLOPs := append(normalizedPLOPs, completedInBatch...)
 	indicatorIds := getIndicatorIdsForPlops(allPLOPs)
 
+	indicators, empty, err := ds.indicatorDataStore.GetProcessIndicators(ctx, indicatorIds)
+	indicatorsMap := map[string]*storage.ProcessIndicator{}
+
+	// Used to do best efforts of identifying orphaned PLOP. Note, that as
+	// usual, this could be done together with fetchExistingPLOPs in the same
+	// custom query.
+	if !empty && err != nil {
+		for _, ind := range indicators {
+			indicatorsMap[ind.GetId()] = ind
+		}
+	}
+
 	// TODO ROX-14376: This ticket might need to be changed, but is not completely obsolete
 	existingPLOPMap, err := ds.fetchExistingPLOPs(ctx, indicatorIds)
 	if err != nil {
@@ -96,10 +108,20 @@ func (ds *datastoreImpl) AddProcessListeningOnPort(
 
 	plopObjects := []*storage.ProcessListeningOnPortStorage{}
 	for _, val := range normalizedPLOPs {
+		var processInfo *storage.ProcessIndicatorUniqueKey
+
 		indicatorID := getIndicatorIDForPlop(val)
 		plopKey := getPlopKeyFromParts(val.GetProtocol(), val.GetPort(), indicatorID)
 
 		existingPLOP, prevExists := existingPLOPMap[plopKey]
+
+		// Best efforst to not duplicate data. If no process indicator with
+		// such an id exists, we deal with a potentially orphaned PLOP, and
+		// need to store the process information. Otherwise processInfo is nil
+		// and will not be stored.
+		if _, indicatorExists := indicatorsMap[indicatorID]; !indicatorExists {
+			processInfo = val.GetProcess()
+		}
 
 		// There are three options:
 		// * We found an existing PLOP object with different close timestamp.
@@ -123,7 +145,7 @@ func (ds *datastoreImpl) AddProcessListeningOnPort(
 				log.Warnf("Found no matching PLOP to close for %+v", val)
 			}
 
-			plopObjects = addNewPLOP(plopObjects, indicatorID, nil, val)
+			plopObjects = addNewPLOP(plopObjects, indicatorID, processInfo, val)
 		}
 	}
 
@@ -134,11 +156,20 @@ func (ds *datastoreImpl) AddProcessListeningOnPort(
 	// timestamp
 	// * If no existing PLOP is present, they will create a new closed PLOP
 	for _, val := range completedInBatch {
+		var processInfo *storage.ProcessIndicatorUniqueKey
 
 		indicatorID := getIndicatorIDForPlop(val)
 		plopKey := getPlopKeyFromParts(val.GetProtocol(), val.GetPort(), indicatorID)
 
 		existingPLOP, prevExists := existingPLOPMap[plopKey]
+
+		// Best efforst to not duplicate data. If no process indicator with
+		// such an id exists, we deal with a potentially orphaned PLOP, and
+		// need to store the process information. Otherwise processInfo is nil
+		// and will not be stored.
+		if _, indicatorExists := indicatorsMap[indicatorID]; !indicatorExists {
+			processInfo = val.GetProcess()
+		}
 
 		if prevExists {
 			log.Debugf("Got existing PLOP to update timestamp: %+v", existingPLOP)
@@ -160,7 +191,7 @@ func (ds *datastoreImpl) AddProcessListeningOnPort(
 				log.Warnf("Found active PLOP completed in the batch %+v", val)
 			}
 
-			plopObjects = addNewPLOP(plopObjects, indicatorID, nil, val)
+			plopObjects = addNewPLOP(plopObjects, indicatorID, processInfo, val)
 		}
 	}
 
