@@ -223,6 +223,7 @@ func (a *authProviderCmd) openShiftCommand() *cobra.Command {
 		Short: "Create a declarative configuration for an OpenShift-Auth auth provider",
 	}
 
+	flags.HideInheritedFlags(cmd, persistentFlagsToShow...)
 	return cmd
 }
 
