@@ -1,0 +1,4 @@
+Global Flags:
+      --ca string                  Custom CA certificate to use (PEM format)
+      --direct-grpc                Use direct gRPC (advanced; only use if you encounter connection issues) (default false)
+  -e, --endpoint string            endpoint for service to contact. Alternatively, set the endpoint via the ROX_ENDPOINT environment variable (default "localhost:8443")

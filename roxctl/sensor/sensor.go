@@ -22,6 +22,7 @@ func Command(cliEnvironment environment.Environment) *cobra.Command {
 		getbundle.Command(cliEnvironment),
 		generatecerts.Command(cliEnvironment),
 	)
+	flags.AddCentralConnectivityFlags(c)
 	flags.AddTimeoutWithDefault(c, 30*time.Second)
 	return c
 }

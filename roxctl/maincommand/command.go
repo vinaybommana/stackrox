@@ -46,7 +46,6 @@ func versionCommand(cliEnvironment environment.Environment) *cobra.Command {
 		},
 	}
 	c.PersistentFlags().Bool("json", false, "display extended version information as JSON")
-	flags.HideInheritedFlags(c)
 	return c
 }
 
@@ -58,9 +57,6 @@ func Command() *cobra.Command {
 	}
 
 	flags.AddNoColor(c)
-	flags.AddPassword(c)
-	flags.AddConnectionFlags(c)
-	flags.AddAPITokenFile(c)
 
 	cliEnvironment := environment.CLIEnvironment()
 	c.SetErr(errorWriter{

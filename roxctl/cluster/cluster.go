@@ -16,6 +16,8 @@ func Command(cliEnvironment environment.Environment) *cobra.Command {
 		Short: "Commands related to a cluster.",
 	}
 
+	flags.AddCentralConnectivityFlags(c)
+
 	c.AddCommand(delete.Command(cliEnvironment))
 	flags.AddTimeoutWithDefault(c, 5*time.Second)
 	return c

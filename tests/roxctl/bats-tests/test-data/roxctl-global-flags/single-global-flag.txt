@@ -1,0 +1,2 @@
+Global Flags:
+      --no-color   Disable color output (default false)

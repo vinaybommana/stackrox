@@ -17,6 +17,7 @@ func Command(cliEnvironment environment.Environment) *cobra.Command {
 		Short: "Commands related to the Scanner service.",
 	}
 	flags.AddTimeoutWithDefault(c, time.Minute)
+	flags.AddCentralConnectivityFlags(c)
 	c.AddCommand(
 		generate.Command(cliEnvironment),
 		uploaddb.Command(cliEnvironment),

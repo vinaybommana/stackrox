@@ -12,6 +12,7 @@ import (
 	"github.com/stackrox/rox/roxctl/central/userpki"
 	"github.com/stackrox/rox/roxctl/central/whoami"
 	"github.com/stackrox/rox/roxctl/common/environment"
+	"github.com/stackrox/rox/roxctl/common/flags"
 )
 
 // Command defines the central command tree
@@ -20,6 +21,9 @@ func Command(cliEnvironment environment.Environment) *cobra.Command {
 		Use:   "central",
 		Short: "Commands related to the Central service.",
 	}
+
+	flags.AddCentralConnectivityFlags(c)
+
 	c.AddCommand(
 		cert.Command(cliEnvironment),
 		generate.Command(cliEnvironment),

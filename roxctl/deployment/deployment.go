@@ -18,5 +18,6 @@ func Command(cliEnvironment environment.Environment) *cobra.Command {
 
 	c.AddCommand(check.Command(cliEnvironment))
 	flags.AddTimeoutWithDefault(c, 1*time.Minute)
+	flags.AddCentralConnectivityFlags(c)
 	return c
 }

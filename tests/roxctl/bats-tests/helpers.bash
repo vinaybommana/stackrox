@@ -357,3 +357,13 @@ delete_cluster() {
   run roxctl_authenticated cluster delete --name "$name" --timeout=1m
   assert_success
 }
+
+assert_single_global_flag() {
+    expected_output=$(cat "$test_data/roxctl-global-flags/single-global-flag.txt")
+    assert_output --partial "$expected_output"
+}
+
+assert_multiple_global_flags() {
+    expected_output=$(cat "$test_data/roxctl-global-flags/multiple-global-flags.txt")
+    assert_output --partial "$expected_output"
+}
