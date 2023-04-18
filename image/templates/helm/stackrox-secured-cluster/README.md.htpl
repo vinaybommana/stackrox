@@ -433,7 +433,8 @@ to a particular cluster by using the following `roxctl` CLI command:
 
 ```sh
 export ROX_API_TOKEN=<StackRox API token>
-roxctl -e <central endpoint and port> sensor generate-certs <cluster name>
+export ROX_ENDPOINT=<Central endpoint and port>
+roxctl sensor generate-certs <cluster name>
 ```
 Running this command create a file called `cluster-<cluster-name>-tls.yaml` in
 the current directory. The file contains YAML manifests for the

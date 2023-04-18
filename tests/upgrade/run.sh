@@ -251,8 +251,8 @@ validate_db_backup_and_restore() {
     local db_backup="db_backup.zip"
 
     rm -f "$db_backup"
-    roxctl -e "$API_ENDPOINT" -p "$ROX_PASSWORD" central db backup --output "$db_backup"
-    roxctl -e "$API_ENDPOINT" -p "$ROX_PASSWORD" central db restore "$db_backup"
+    roxctl central db backup -e "$API_ENDPOINT" -p "$ROX_PASSWORD" --output "$db_backup"
+    roxctl central db restore -e "$API_ENDPOINT" -p "$ROX_PASSWORD" "$db_backup"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then

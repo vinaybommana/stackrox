@@ -42,4 +42,4 @@ elif is_operator_on_openshift; then
   printf "$endpoint\t$password" > "${cache}"
 fi
 
-"$roxctl_bin" -e "https://${endpoint}" -p "$password" --insecure-skip-tls-verify "$@"
+"$roxctl_bin" "$@" -e "https://${endpoint}" -p "$password" --insecure-skip-tls-verify

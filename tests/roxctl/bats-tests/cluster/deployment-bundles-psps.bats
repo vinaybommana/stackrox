@@ -26,7 +26,7 @@ sensor_bundle_psp_enabled() {
     shift
     local sensor_name="sensor-test-${RANDOM}-${RANDOM}-${RANDOM}"
     local bundle_dir="${out_dir}/bundle-${sensor_name}"
-    roxctl-release -e "$API_ENDPOINT" -p "$ROX_PASSWORD" sensor generate "${cluster_type}" --name="${sensor_name}" "$@" --output-dir="${bundle_dir}"
+    roxctl-release sensor generate -e "$API_ENDPOINT" -p "$ROX_PASSWORD" "${cluster_type}" --name="${sensor_name}" "$@" --output-dir="${bundle_dir}"
     run grep -rq "kind: PodSecurityPolicy" "${bundle_dir}"
     assert_success
 }
@@ -36,7 +36,7 @@ sensor_bundle_psp_disabled() {
     shift
     local sensor_name="sensor-test-${RANDOM}-${RANDOM}-${RANDOM}"
     local bundle_dir="${out_dir}/bundle-${sensor_name}"
-    roxctl-release -e "$API_ENDPOINT" -p "$ROX_PASSWORD" sensor generate "${cluster_type}" --name="${sensor_name}" "$@" --output-dir="${bundle_dir}"
+    roxctl-release sensor generate "${cluster_type}" -e "$API_ENDPOINT" -p "$ROX_PASSWORD" --name="${sensor_name}" "$@" --output-dir="${bundle_dir}"
     run grep -rq "kind: PodSecurityPolicy" "${bundle_dir}"
     assert_failure
 }

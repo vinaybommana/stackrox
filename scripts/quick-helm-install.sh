@@ -82,9 +82,9 @@ kubectl -n stackrox port-forward deploy/central --pod-running-timeout=1m0s 8000:
 
 echo "Generating an init bundle with stackrox-secured-cluster-services provisioning secrets"
 
-kubectl -n stackrox exec deploy/central -- roxctl --insecure-skip-tls-verify \
-  --password "${STACKROX_ADMIN_PASSWORD}" \
-  central init-bundles generate stackrox-init-bundle --output - 1> stackrox-init-bundle.yaml
+kubectl -n stackrox exec deploy/central -- roxctl \
+  central init-bundles generate stackrox-init-bundle --insecure-skip-tls-verify \
+    --password "${STACKROX_ADMIN_PASSWORD}" --output - 1> stackrox-init-bundle.yaml
 
 installflags=()
 if [[ "$SMALL_INSTALL" == "true" ]]; then

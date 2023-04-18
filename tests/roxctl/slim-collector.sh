@@ -54,8 +54,8 @@ test_collector_image_references_in_deployment_bundles() {
     echo "Testing correctness of collector image references for clusters generated with $SLIM_COLLECTOR_FLAG (cluster name is $CLUSTER_NAME)"
 
     # Verify that generating a cluster works.
-    if OUTPUT="$(roxctl --insecure-skip-tls-verify --insecure -e "$API_ENDPOINT" \
-    sensor generate k8s --name "$CLUSTER_NAME" "$SLIM_COLLECTOR_FLAG" 2>&1)"; then
+    if OUTPUT="$(roxctl sensor generate k8s --insecure-skip-tls-verify --insecure -e "$API_ENDPOINT" \
+        --name "$CLUSTER_NAME" "$SLIM_COLLECTOR_FLAG" 2>&1)"; then
         echo "[OK] Generating cluster works"
     else
         eecho "[FAIL] Failed to generate cluster"
@@ -89,8 +89,8 @@ test_collector_image_references_in_deployment_bundles() {
     rm -r "sensor-${CLUSTER_NAME}"
 
     # Verify that refetching deployment bundle for newly created cluster works as expected (i.e. that the bundle references the expected collector image).
-    OUTPUT="$(roxctl --insecure-skip-tls-verify --insecure -e "$API_ENDPOINT" \
-    sensor get-bundle --output-dir="sensor-${CLUSTER_NAME}-refetched" "$CLUSTER_NAME" 2>&1)"
+    OUTPUT="$(roxctl sensor get-bundle  --insecure-skip-tls-verify --insecure -e "$API_ENDPOINT" \
+        --output-dir="sensor-${CLUSTER_NAME}-refetched" "$CLUSTER_NAME" 2>&1)"
     COLLECTOR_IMAGE="$(egrep 'image: \S+/collector' "sensor-${CLUSTER_NAME}-refetched/collector.yaml" | sed -e 's/[^:]*: "\(.*\)"$/\1/;')"
 
     if check_image "$COLLECTOR_IMAGE" "$EXPECTED_IMAGE_CONDITION"; then

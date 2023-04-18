@@ -62,9 +62,9 @@ deploy_stackrox_with_custom_sensor() {
     if [ ! -f "$password_file" ]; then
         die "password file $password_file not found after deploying central"
     fi
-    kubectl -n stackrox exec deploy/central -- roxctl --insecure-skip-tls-verify \
-        --password "$(cat "$password_file")" \
-      central init-bundles generate stackrox-init-bundle --output - 1> stackrox-init-bundle.yaml
+    kubectl -n stackrox exec deploy/central -- roxctl
+      central init-bundles generate stackrox-init-bundle --insecure-skip-tls-verify \
+        --password "$(cat "$password_file")" --output - 1> stackrox-init-bundle.yaml
 
     deploy_sensor_from_helm_charts "$target_version" ./stackrox-init-bundle.yaml
 
@@ -313,8 +313,8 @@ setup_client_CA_auth_provider() {
     require_environment "ROX_PASSWORD"
     require_environment "CLIENT_CA_PATH"
 
-    roxctl -e "$API_ENDPOINT" -p "$ROX_PASSWORD" \
-        central userpki create test-userpki -r Analyst -c "$CLIENT_CA_PATH"
+    roxctl \
+        central userpki create test-userpki -e "$API_ENDPOINT" -p "$ROX_PASSWORD" -r Analyst -c "$CLIENT_CA_PATH"
 }
 
 setup_generated_certs_for_test() {
@@ -329,8 +329,8 @@ setup_generated_certs_for_test() {
     require_environment "API_ENDPOINT"
     require_environment "ROX_PASSWORD"
 
-    roxctl -e "$API_ENDPOINT" -p "$ROX_PASSWORD" \
-        sensor generate-certs remote --output-dir "$dir"
+    roxctl \
+        sensor generate-certs remote -e "$API_ENDPOINT" -p "$ROX_PASSWORD" --output-dir "$dir"
     [[ -f "$dir"/cluster-remote-tls.yaml ]]
     # Use the certs in future steps that will use client auth.
     # This will ensure that the certs are valid.
@@ -679,8 +679,8 @@ restore_56_1_backup() {
     require_environment "ROX_PASSWORD"
 
     gsutil cp gs://stackrox-ci-upgrade-test-dbs/stackrox_56_1_fixed_upgrade.zip .
-    roxctl -e "$API_ENDPOINT" -p "$ROX_PASSWORD" \
-        central db restore --timeout 2m stackrox_56_1_fixed_upgrade.zip
+    roxctl \
+        central db restore -e "$API_ENDPOINT" -p "$ROX_PASSWORD" --timeout 2m stackrox_56_1_fixed_upgrade.zip
 }
 
 db_backup_and_restore_test() {
@@ -699,15 +699,15 @@ db_backup_and_restore_test() {
     local output_dir="$1"
     info "Backing up to ${output_dir}"
     mkdir -p "$output_dir"
-    roxctl -e "${API_ENDPOINT}" -p "${ROX_PASSWORD}" central backup --output "$output_dir" || touch DB_TEST_FAIL
+    roxctl central backup -e "${API_ENDPOINT}" -p "${ROX_PASSWORD}" --output "$output_dir" || touch DB_TEST_FAIL
 
     if [[ ! -e DB_TEST_FAIL ]]; then
         if [ "${ROX_POSTGRES_DATASTORE:-}" == "true" ]; then
             info "Restoring from ${output_dir}/postgres_db_*"
-            roxctl -e "${API_ENDPOINT}" -p "${ROX_PASSWORD}" central db restore "$output_dir"/postgres_db_* || touch DB_TEST_FAIL
+            roxctl central db restore  -e "${API_ENDPOINT}" -p "${ROX_PASSWORD}" "$output_dir"/postgres_db_* || touch DB_TEST_FAIL
         else
             info "Restoring from ${output_dir}/stackrox_db_*"
-            roxctl -e "${API_ENDPOINT}" -p "${ROX_PASSWORD}" central db restore "$output_dir"/stackrox_db_* || touch DB_TEST_FAIL
+            roxctl central db restore -e "${API_ENDPOINT}" -p "${ROX_PASSWORD}" "$output_dir"/stackrox_db_* || touch DB_TEST_FAIL
         fi
     fi
 

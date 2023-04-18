@@ -85,7 +85,7 @@ curl_central_admin /v1/apitokens/generate -d '{"name": "test", "roles": ["Analys
 FAILED_CHECKS=0
 
 # Run authorization trace collection in the background.
-nohup roxctl --endpoint "$API_ENDPOINT" --insecure-skip-tls-verify --insecure -p "$ROX_PASSWORD" -t 20s central debug authz-trace > trace.out &
+nohup roxctl central debug authz-trace --endpoint "$API_ENDPOINT" --insecure-skip-tls-verify --insecure -p "$ROX_PASSWORD" -t 20s > trace.out &
 # Wait for roxctl to subscribe for authz traces.
 sleep 5
 

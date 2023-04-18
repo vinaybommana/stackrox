@@ -562,8 +562,9 @@ function launch_sensor {
     else
       if [[ -x "$(command -v roxctl)" && "$(roxctl version)" == "$MAIN_IMAGE_TAG" ]]; then
         [[ -n "${ROX_ADMIN_PASSWORD}" ]] || { echo >&2 "ROX_ADMIN_PASSWORD not found! Cannot launch sensor."; return 1; }
-        roxctl -p ${ROX_ADMIN_PASSWORD} --endpoint "${API_ENDPOINT}" sensor generate --main-image-repository="${MAIN_IMAGE_REPO}" --central="$CLUSTER_API_ENDPOINT" --name="$CLUSTER" \
+        roxctl sensor generate --main-image-repository="${MAIN_IMAGE_REPO}" --central="$CLUSTER_API_ENDPOINT" --name="$CLUSTER" \
              --collection-method="$COLLECTION_METHOD" \
+             -p ${ROX_ADMIN_PASSWORD} --endpoint "${API_ENDPOINT}" \
              "${ORCH}" \
              "${extra_config[@]+"${extra_config[@]}"}"
         mv "sensor-${CLUSTER}" "$k8s_dir/sensor-deploy"
