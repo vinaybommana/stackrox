@@ -28,9 +28,8 @@ test_roxctl_cmd() {
   echo "Testing command: roxctl " "$@"
 
   # Verify that specifying a token file works.
-  if OUTPUT=$(roxctl --insecure-skip-tls-verify --insecure -e "$API_ENDPOINT" \
+  if OUTPUT=$(roxctl "$@" --insecure-skip-tls-verify --insecure -e "$API_ENDPOINT" \
     --token-file "$TOKEN_FILE" \
-    "$@" \
     2>&1); then
       echo "[OK] Specifying only --token-file works"
   else
@@ -41,10 +40,9 @@ test_roxctl_cmd() {
   fi
 
   # Verify that specifying a token file and password at the same time fails.
-  if OUTPUT=$(roxctl --insecure-skip-tls-verify --insecure -e "$API_ENDPOINT" \
+  if OUTPUT=$(roxctl "$@" --insecure-skip-tls-verify --insecure -e "$API_ENDPOINT" \
     --token-file "$TOKEN_FILE" \
     --password "secret" \
-    "$@" \
     2>&1); then
       eecho "[FAIL] Specifying --token-file and --password did not produce error"
       eecho "Captured output was:"
@@ -60,9 +58,8 @@ test_roxctl_cmd() {
   fi
 
   # Verify that token on the command line has precedence over token in the environment
-  if OUTPUT=$(ROX_API_TOKEN="invalid-token" roxctl --insecure-skip-tls-verify --insecure -e "$API_ENDPOINT" \
+  if OUTPUT=$(ROX_API_TOKEN="invalid-token" roxctl "$@" --insecure-skip-tls-verify --insecure -e "$API_ENDPOINT" \
     --token-file "$TOKEN_FILE" \
-    "$@" \
     2>&1); then
       echo "[OK] --token-file has precedence over ROX_API_TOKEN environment variable"
   else
@@ -73,9 +70,8 @@ test_roxctl_cmd() {
   fi
 
   # Verify that a password on the command line has precedence over token in the environment
-  if OUTPUT=$(ROX_API_TOKEN="invalid-token" roxctl --insecure-skip-tls-verify --insecure -e "$API_ENDPOINT" \
+  if OUTPUT=$(ROX_API_TOKEN="invalid-token" roxctl "$@" --insecure-skip-tls-verify --insecure -e "$API_ENDPOINT" \
     --password "$ROX_PASSWORD" \
-    "$@" \
     2>&1); then
       echo "[OK] --password has precedence over ROX_API_TOKEN environment variable"
   else
@@ -92,9 +88,8 @@ test_roxctl_cmd() {
     exit 1
   fi
 
-  if OUTPUT=$(roxctl --insecure-skip-tls-verify --insecure -e "$API_ENDPOINT" \
+  if OUTPUT=$(roxctl "$@" --insecure-skip-tls-verify --insecure -e "$API_ENDPOINT" \
     --token-file "$NON_EXISTING" \
-    "$@" \
     2>&1); then
       eecho "[FAIL] Specifying invalid file with --token-file succeeded"
       FAILURES=$((FAILURES + 1))
