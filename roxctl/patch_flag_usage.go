@@ -2,13 +2,15 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
 
 func processFlag(flag *pflag.Flag) {
-	if flag.Value.Type() == "bool" && flag.DefValue == "false" {
+	if flag.Value.Type() == "bool" && flag.DefValue == "false" &&
+		!strings.Contains(flag.Usage, fmt.Sprintf("(default %s", flag.DefValue)) {
 		flag.Usage = fmt.Sprintf("%s (default %s)", flag.Usage, flag.DefValue)
 	}
 }
