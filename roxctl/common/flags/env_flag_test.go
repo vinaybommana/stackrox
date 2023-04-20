@@ -15,17 +15,17 @@ func TestFlagOrSettingValue(t *testing.T) {
 
 	assert.Empty(t, Password())
 
-	// 2. Change the flag value. The changed flag value should be returned, irrespective of whether the setting is set.
+	// 2. Default flag value and setting's value set should return the settings value instead.
+	t.Setenv("ROX_ADMIN_PASSWORD", "some-test-value")
+	cmd = &cobra.Command{}
+	AddPassword(cmd)
+	assert.Equal(t, "some-test-value", Password())
+
+	// 3. Change the flag value. The changed flag value should be returned, irrespective of whether the setting is set.
 	t.Setenv("ROX_ADMIN_PASSWORD", "some-test-value")
 	cmd = &cobra.Command{}
 	AddPassword(cmd)
 	err := cmd.PersistentFlags().Set("password", "some-other-test-value")
 	assert.NoError(t, err)
 	assert.Equal(t, "some-other-test-value", Password())
-
-	// 3. Default flag value and setting's value set should return the settings value instead.
-	t.Setenv("ROX_ADMIN_PASSWORD", "some-test-value")
-	cmd = &cobra.Command{}
-	AddPassword(cmd)
-	assert.Equal(t, "some-test-value", Password())
 }
