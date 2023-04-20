@@ -6,8 +6,10 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
 	"github.com/stackrox/rox/pkg/env"
 	"github.com/stackrox/rox/pkg/errox"
+	"github.com/stackrox/rox/pkg/sync"
 )
 
 var (
@@ -26,23 +28,30 @@ var (
 	insecureSkipTLSVerifySet *bool
 
 	caCertFile string
+
+	connectionFlagsOnce sync.Once
+	connectionFlagSet   *flag.FlagSet
 )
 
 // AddConnectionFlags adds connection-related flags to roxctl.
 func AddConnectionFlags(c *cobra.Command) {
-	c.PersistentFlags().StringVarP(&endpoint, "endpoint", "e", "localhost:8443",
-		"endpoint for service to contact. Alternatively, set the endpoint via the ROX_ENDPOINT environment variable")
-	endpointChanged = &c.PersistentFlags().Lookup("endpoint").Changed
-	c.PersistentFlags().StringVarP(&serverName, "server-name", "s", "", "TLS ServerName to use for SNI (if empty, derived from endpoint)")
-	c.PersistentFlags().BoolVar(&directGRPC, "direct-grpc", false, "Use direct gRPC (advanced; only use if you encounter connection issues)")
-	c.PersistentFlags().BoolVar(&forceHTTP1, "force-http1", false, "Always use HTTP/1 for all connections (advanced; only use if you encounter connection issues)")
+	connectionFlagsOnce.Do(func() {
+		connectionFlagSet = flag.NewFlagSet("", flag.ContinueOnError)
+		connectionFlagSet.StringVarP(&endpoint, "endpoint", "e", "localhost:8443",
+			"endpoint for service to contact. Alternatively, set the endpoint via the ROX_ENDPOINT environment variable")
+		endpointChanged = &connectionFlagSet.Lookup("endpoint").Changed
+		connectionFlagSet.StringVarP(&serverName, "server-name", "s", "", "TLS ServerName to use for SNI (if empty, derived from endpoint)")
+		connectionFlagSet.BoolVar(&directGRPC, "direct-grpc", false, "Use direct gRPC (advanced; only use if you encounter connection issues)")
+		connectionFlagSet.BoolVar(&forceHTTP1, "force-http1", false, "Always use HTTP/1 for all connections (advanced; only use if you encounter connection issues)")
 
-	c.PersistentFlags().BoolVar(&plaintext, "plaintext", false, "Use a plaintext (unencrypted) connection; only works in conjunction with --insecure")
-	plaintextSet = &c.PersistentFlags().Lookup("plaintext").Changed
-	c.PersistentFlags().BoolVar(&insecure, "insecure", false, "Enable insecure connection options (DANGEROUS; USE WITH CAUTION)")
-	c.PersistentFlags().BoolVar(&insecureSkipTLSVerify, "insecure-skip-tls-verify", false, "Skip TLS certificate validation")
-	insecureSkipTLSVerifySet = &c.PersistentFlags().Lookup("insecure-skip-tls-verify").Changed
-	c.PersistentFlags().StringVar(&caCertFile, "ca", "", "Custom CA certificate to use (PEM format)")
+		connectionFlagSet.BoolVar(&plaintext, "plaintext", false, "Use a plaintext (unencrypted) connection; only works in conjunction with --insecure")
+		plaintextSet = &connectionFlagSet.Lookup("plaintext").Changed
+		connectionFlagSet.BoolVar(&insecure, "insecure", false, "Enable insecure connection options (DANGEROUS; USE WITH CAUTION)")
+		connectionFlagSet.BoolVar(&insecureSkipTLSVerify, "insecure-skip-tls-verify", false, "Skip TLS certificate validation")
+		insecureSkipTLSVerifySet = &connectionFlagSet.Lookup("insecure-skip-tls-verify").Changed
+		connectionFlagSet.StringVar(&caCertFile, "ca", "", "Custom CA certificate to use (PEM format)")
+	})
+	c.PersistentFlags().AddFlagSet(connectionFlagSet)
 }
 
 // EndpointAndPlaintextSetting returns the Central endpoint to connect to, as well as a bool indicating whether to
