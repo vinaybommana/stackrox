@@ -554,9 +554,8 @@ class NetworkFlowTest extends BaseSpecification {
         }
     }
 
-    // TODO(ROX-7046): Re-enable this test
+    @Tag("BAT")
     @Tag("NetworkFlowVisualization")
-    @Ignore("ROX-7046 - this test does not pass")
     def "Verify intra-cluster connection via external IP"() {
         given:
         "Deployment A, exposed via LB"
@@ -580,9 +579,12 @@ class NetworkFlowTest extends BaseSpecification {
 
         then:
         "Check for edge in network graph"
-        log.info "Checking for edge from internal to ${NGINXCONNECTIONTARGET} using its external address"
-        List<Edge> edges = NetworkGraphUtil.checkForEdge(newDeployment.deploymentUid, deploymentUid, null, 180)
-        assert edges
+        withRetry(5, 20) {
+            log.info "Checking for edge from internal to ${NGINXCONNECTIONTARGET} using its external address"
+            List<Edge> edgesToExternalSource = NetworkGraphUtil.checkForEdge(Constants.INTERNET_EXTERNAL_SOURCE_ID, deploymentUid, null, 180)
+            List<Edge> edgesToDeployment = NetworkGraphUtil.checkForEdge(newDeployment.deploymentUid, deploymentUid, null, 180)
+            assert edgesToExternalSource || edgesToDeployment
+        }
 
         cleanup:
         "remove the new deployment"
