@@ -4959,8 +4959,8 @@ export type GetDeploymentMetadataQuery = {
     __typename?: 'Query';
     deployment?: {
         __typename?: 'Deployment';
-        id: string;
         name: string;
+        id: string;
         namespace: string;
         clusterName: string;
         created?: string | null;
@@ -5091,7 +5091,6 @@ export type GetCvesForDeploymentQuery = {
 
 export type ImageResourcesFragment = {
     __typename?: 'Deployment';
-    imageCount: number;
     images: Array<{
         __typename?: 'Image';
         id: string;
@@ -5169,6 +5168,7 @@ export type GetCvEsForImageQuery = {
     __typename?: 'Query';
     image?: {
         __typename?: 'Image';
+        imageVulnerabilityCount: number;
         id: string;
         imageCVECountBySeverity: {
             __typename?: 'ResourceCountByCVESeverity';
@@ -5177,6 +5177,18 @@ export type GetCvEsForImageQuery = {
             important: { __typename?: 'ResourceCountByFixability'; total: number; fixable: number };
             critical: { __typename?: 'ResourceCountByFixability'; total: number; fixable: number };
         };
+        name?: { __typename?: 'ImageName'; registry: string; remote: string; tag: string } | null;
+        metadata?: {
+            __typename?: 'ImageMetadata';
+            v1?: {
+                __typename?: 'V1Metadata';
+                layers: Array<{
+                    __typename?: 'ImageLayer';
+                    instruction: string;
+                    value: string;
+                } | null>;
+            } | null;
+        } | null;
         imageVulnerabilities: Array<{
             __typename?: 'ImageVulnerability';
             severity: string;
@@ -5200,18 +5212,6 @@ export type GetCvEsForImageQuery = {
                 } | null>;
             }>;
         } | null>;
-        name?: { __typename?: 'ImageName'; registry: string; remote: string; tag: string } | null;
-        metadata?: {
-            __typename?: 'ImageMetadata';
-            v1?: {
-                __typename?: 'V1Metadata';
-                layers: Array<{
-                    __typename?: 'ImageLayer';
-                    instruction: string;
-                    value: string;
-                } | null>;
-            } | null;
-        } | null;
     } | null;
 };
 
@@ -5375,6 +5375,14 @@ export type ImageCveMetadataFragment = {
         link: string;
         operatingSystem: string;
     }>;
+};
+
+export type ResourceCountsByCveSeverityFragment = {
+    __typename?: 'ResourceCountByCVESeverity';
+    low: { __typename?: 'ResourceCountByFixability'; total: number };
+    moderate: { __typename?: 'ResourceCountByFixability'; total: number };
+    important: { __typename?: 'ResourceCountByFixability'; total: number };
+    critical: { __typename?: 'ResourceCountByFixability'; total: number };
 };
 
 export type ResourceCountsByCveSeverityAndStatusFragment = {
@@ -5603,28 +5611,31 @@ export type ImageComponentVulnerabilitiesFragment = {
     } | null>;
 };
 
-export type ImageVulnerabilityFieldsFragment = {
-    __typename?: 'ImageVulnerability';
-    severity: string;
-    cve: string;
-    summary: string;
-    cvss: number;
-    scoreVersion: string;
-    discoveredAtImage?: string | null;
-    imageComponents: Array<{
-        __typename?: 'ImageComponent';
-        name: string;
-        version: string;
-        location: string;
-        source: SourceType;
-        layerIndex?: number | null;
-        imageVulnerabilities: Array<{
-            __typename?: 'ImageVulnerability';
-            severity: string;
-            fixedByVersion: string;
-            vulnerabilityId: string;
-        } | null>;
-    }>;
+export type ImageVulnerabilitiesFragment = {
+    __typename?: 'Image';
+    imageVulnerabilities: Array<{
+        __typename?: 'ImageVulnerability';
+        severity: string;
+        cve: string;
+        summary: string;
+        cvss: number;
+        scoreVersion: string;
+        discoveredAtImage?: string | null;
+        imageComponents: Array<{
+            __typename?: 'ImageComponent';
+            name: string;
+            version: string;
+            location: string;
+            source: SourceType;
+            layerIndex?: number | null;
+            imageVulnerabilities: Array<{
+                __typename?: 'ImageVulnerability';
+                severity: string;
+                fixedByVersion: string;
+                vulnerabilityId: string;
+            } | null>;
+        }>;
+    } | null>;
 };
 
 export type GetImageListQueryVariables = Exact<{
@@ -5729,17 +5740,6 @@ export const ImageResourcesFragmentDoc = {
             selectionSet: {
                 kind: 'SelectionSet',
                 selections: [
-                    {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'imageCount' },
-                        arguments: [
-                            {
-                                kind: 'Argument',
-                                name: { kind: 'Name', value: 'query' },
-                                value: { kind: 'Variable', name: { kind: 'Name', value: 'query' } },
-                            },
-                        ],
-                    },
                     {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'images' },
@@ -5888,6 +5888,56 @@ export const ImageCveMetadataFragmentDoc = {
         },
     ],
 } as unknown as DocumentNode<ImageCveMetadataFragment, unknown>;
+export const ResourceCountsByCveSeverityFragmentDoc = {
+    kind: 'Document',
+    definitions: [
+        {
+            kind: 'FragmentDefinition',
+            name: { kind: 'Name', value: 'ResourceCountsByCVESeverity' },
+            typeCondition: {
+                kind: 'NamedType',
+                name: { kind: 'Name', value: 'ResourceCountByCVESeverity' },
+            },
+            selectionSet: {
+                kind: 'SelectionSet',
+                selections: [
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'low' },
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [{ kind: 'Field', name: { kind: 'Name', value: 'total' } }],
+                        },
+                    },
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'moderate' },
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [{ kind: 'Field', name: { kind: 'Name', value: 'total' } }],
+                        },
+                    },
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'important' },
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [{ kind: 'Field', name: { kind: 'Name', value: 'total' } }],
+                        },
+                    },
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'critical' },
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [{ kind: 'Field', name: { kind: 'Name', value: 'total' } }],
+                        },
+                    },
+                ],
+            },
+        },
+    ],
+} as unknown as DocumentNode<ResourceCountsByCveSeverityFragment, unknown>;
 export const ResourceCountsByCveSeverityAndStatusFragmentDoc = {
     kind: 'Document',
     definitions: [
@@ -6729,41 +6779,71 @@ export const DeploymentWithVulnerabilitiesFragmentDoc = {
         },
     ],
 } as unknown as DocumentNode<DeploymentWithVulnerabilitiesFragment, unknown>;
-export const ImageVulnerabilityFieldsFragmentDoc = {
+export const ImageVulnerabilitiesFragmentDoc = {
     kind: 'Document',
     definitions: [
         {
             kind: 'FragmentDefinition',
-            name: { kind: 'Name', value: 'ImageVulnerabilityFields' },
-            typeCondition: {
-                kind: 'NamedType',
-                name: { kind: 'Name', value: 'ImageVulnerability' },
-            },
+            name: { kind: 'Name', value: 'ImageVulnerabilities' },
+            typeCondition: { kind: 'NamedType', name: { kind: 'Name', value: 'Image' } },
             selectionSet: {
                 kind: 'SelectionSet',
                 selections: [
-                    { kind: 'Field', name: { kind: 'Name', value: 'severity' } },
-                    { kind: 'Field', name: { kind: 'Name', value: 'cve' } },
-                    { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
-                    { kind: 'Field', name: { kind: 'Name', value: 'cvss' } },
-                    { kind: 'Field', name: { kind: 'Name', value: 'scoreVersion' } },
-                    { kind: 'Field', name: { kind: 'Name', value: 'discoveredAtImage' } },
                     {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'imageComponents' },
+                        name: { kind: 'Name', value: 'imageVulnerabilities' },
                         arguments: [
                             {
                                 kind: 'Argument',
                                 name: { kind: 'Name', value: 'query' },
                                 value: { kind: 'Variable', name: { kind: 'Name', value: 'query' } },
                             },
+                            {
+                                kind: 'Argument',
+                                name: { kind: 'Name', value: 'pagination' },
+                                value: {
+                                    kind: 'Variable',
+                                    name: { kind: 'Name', value: 'pagination' },
+                                },
+                            },
                         ],
                         selectionSet: {
                             kind: 'SelectionSet',
                             selections: [
+                                { kind: 'Field', name: { kind: 'Name', value: 'severity' } },
+                                { kind: 'Field', name: { kind: 'Name', value: 'cve' } },
+                                { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+                                { kind: 'Field', name: { kind: 'Name', value: 'cvss' } },
+                                { kind: 'Field', name: { kind: 'Name', value: 'scoreVersion' } },
                                 {
-                                    kind: 'FragmentSpread',
-                                    name: { kind: 'Name', value: 'ImageComponentVulnerabilities' },
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'discoveredAtImage' },
+                                },
+                                {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'imageComponents' },
+                                    arguments: [
+                                        {
+                                            kind: 'Argument',
+                                            name: { kind: 'Name', value: 'query' },
+                                            value: {
+                                                kind: 'Variable',
+                                                name: { kind: 'Name', value: 'query' },
+                                            },
+                                        },
+                                    ],
+                                    selectionSet: {
+                                        kind: 'SelectionSet',
+                                        selections: [
+                                            {
+                                                kind: 'FragmentSpread',
+                                                name: {
+                                                    kind: 'Name',
+                                                    value: 'ImageComponentVulnerabilities',
+                                                },
+                                            },
+                                        ],
+                                    },
                                 },
                             ],
                         },
@@ -6810,7 +6890,7 @@ export const ImageVulnerabilityFieldsFragmentDoc = {
             },
         },
     ],
-} as unknown as DocumentNode<ImageVulnerabilityFieldsFragment, unknown>;
+} as unknown as DocumentNode<ImageVulnerabilitiesFragment, unknown>;
 export const ImageDetailsFragmentDoc = {
     kind: 'Document',
     definitions: [
@@ -8581,6 +8661,7 @@ export const GetDeploymentMetadataDocument = {
                         selectionSet: {
                             kind: 'SelectionSet',
                             selections: [
+                                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                                 {
                                     kind: 'FragmentSpread',
                                     name: { kind: 'Name', value: 'DeploymentMetadata' },
@@ -8654,6 +8735,20 @@ export const GetDeploymentResourcesDocument = {
                             selections: [
                                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                                 {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'imageCount' },
+                                    arguments: [
+                                        {
+                                            kind: 'Argument',
+                                            name: { kind: 'Name', value: 'query' },
+                                            value: {
+                                                kind: 'Variable',
+                                                name: { kind: 'Name', value: 'query' },
+                                            },
+                                        },
+                                    ],
+                                },
+                                {
                                     kind: 'FragmentSpread',
                                     name: { kind: 'Name', value: 'ImageResources' },
                                 },
@@ -8670,17 +8765,6 @@ export const GetDeploymentResourcesDocument = {
             selectionSet: {
                 kind: 'SelectionSet',
                 selections: [
-                    {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'imageCount' },
-                        arguments: [
-                            {
-                                kind: 'Argument',
-                                name: { kind: 'Name', value: 'query' },
-                                value: { kind: 'Variable', name: { kind: 'Name', value: 'query' } },
-                            },
-                        ],
-                    },
                     {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'images' },
@@ -8807,6 +8891,13 @@ export const GetDeploymentSummaryDataDocument = {
                                                 kind: 'FragmentSpread',
                                                 name: {
                                                     kind: 'Name',
+                                                    value: 'ResourceCountsByCVESeverity',
+                                                },
+                                            },
+                                            {
+                                                kind: 'FragmentSpread',
+                                                name: {
+                                                    kind: 'Name',
                                                     value: 'ResourceCountsByCVESeverityAndStatus',
                                                 },
                                             },
@@ -8814,6 +8905,51 @@ export const GetDeploymentSummaryDataDocument = {
                                     },
                                 },
                             ],
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            kind: 'FragmentDefinition',
+            name: { kind: 'Name', value: 'ResourceCountsByCVESeverity' },
+            typeCondition: {
+                kind: 'NamedType',
+                name: { kind: 'Name', value: 'ResourceCountByCVESeverity' },
+            },
+            selectionSet: {
+                kind: 'SelectionSet',
+                selections: [
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'low' },
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [{ kind: 'Field', name: { kind: 'Name', value: 'total' } }],
+                        },
+                    },
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'moderate' },
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [{ kind: 'Field', name: { kind: 'Name', value: 'total' } }],
+                        },
+                    },
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'important' },
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [{ kind: 'Field', name: { kind: 'Name', value: 'total' } }],
+                        },
+                    },
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'critical' },
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [{ kind: 'Field', name: { kind: 'Name', value: 'total' } }],
                         },
                     },
                 ],
@@ -9437,6 +9573,24 @@ export const GetCvEsForImageDocument = {
                                     name: { kind: 'Name', value: 'ImageMetadataContext' },
                                 },
                                 {
+                                    kind: 'FragmentSpread',
+                                    name: { kind: 'Name', value: 'ImageVulnerabilities' },
+                                },
+                                {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'imageVulnerabilityCount' },
+                                    arguments: [
+                                        {
+                                            kind: 'Argument',
+                                            name: { kind: 'Name', value: 'query' },
+                                            value: {
+                                                kind: 'Variable',
+                                                name: { kind: 'Name', value: 'query' },
+                                            },
+                                        },
+                                    ],
+                                },
+                                {
                                     kind: 'Field',
                                     name: { kind: 'Name', value: 'imageCVECountBySeverity' },
                                     arguments: [
@@ -9456,41 +9610,14 @@ export const GetCvEsForImageDocument = {
                                                 kind: 'FragmentSpread',
                                                 name: {
                                                     kind: 'Name',
-                                                    value: 'ResourceCountsByCVESeverityAndStatus',
+                                                    value: 'ResourceCountsByCVESeverity',
                                                 },
                                             },
-                                        ],
-                                    },
-                                },
-                                {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'imageVulnerabilities' },
-                                    arguments: [
-                                        {
-                                            kind: 'Argument',
-                                            name: { kind: 'Name', value: 'query' },
-                                            value: {
-                                                kind: 'Variable',
-                                                name: { kind: 'Name', value: 'query' },
-                                            },
-                                        },
-                                        {
-                                            kind: 'Argument',
-                                            name: { kind: 'Name', value: 'pagination' },
-                                            value: {
-                                                kind: 'Variable',
-                                                name: { kind: 'Name', value: 'pagination' },
-                                            },
-                                        },
-                                    ],
-                                    selectionSet: {
-                                        kind: 'SelectionSet',
-                                        selections: [
                                             {
                                                 kind: 'FragmentSpread',
                                                 name: {
                                                     kind: 'Name',
-                                                    value: 'ImageVulnerabilityFields',
+                                                    value: 'ResourceCountsByCVESeverityAndStatus',
                                                 },
                                             },
                                         ],
@@ -9603,6 +9730,120 @@ export const GetCvEsForImageDocument = {
         },
         {
             kind: 'FragmentDefinition',
+            name: { kind: 'Name', value: 'ImageVulnerabilities' },
+            typeCondition: { kind: 'NamedType', name: { kind: 'Name', value: 'Image' } },
+            selectionSet: {
+                kind: 'SelectionSet',
+                selections: [
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'imageVulnerabilities' },
+                        arguments: [
+                            {
+                                kind: 'Argument',
+                                name: { kind: 'Name', value: 'query' },
+                                value: { kind: 'Variable', name: { kind: 'Name', value: 'query' } },
+                            },
+                            {
+                                kind: 'Argument',
+                                name: { kind: 'Name', value: 'pagination' },
+                                value: {
+                                    kind: 'Variable',
+                                    name: { kind: 'Name', value: 'pagination' },
+                                },
+                            },
+                        ],
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [
+                                { kind: 'Field', name: { kind: 'Name', value: 'severity' } },
+                                { kind: 'Field', name: { kind: 'Name', value: 'cve' } },
+                                { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+                                { kind: 'Field', name: { kind: 'Name', value: 'cvss' } },
+                                { kind: 'Field', name: { kind: 'Name', value: 'scoreVersion' } },
+                                {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'discoveredAtImage' },
+                                },
+                                {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'imageComponents' },
+                                    arguments: [
+                                        {
+                                            kind: 'Argument',
+                                            name: { kind: 'Name', value: 'query' },
+                                            value: {
+                                                kind: 'Variable',
+                                                name: { kind: 'Name', value: 'query' },
+                                            },
+                                        },
+                                    ],
+                                    selectionSet: {
+                                        kind: 'SelectionSet',
+                                        selections: [
+                                            {
+                                                kind: 'FragmentSpread',
+                                                name: {
+                                                    kind: 'Name',
+                                                    value: 'ImageComponentVulnerabilities',
+                                                },
+                                            },
+                                        ],
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            kind: 'FragmentDefinition',
+            name: { kind: 'Name', value: 'ResourceCountsByCVESeverity' },
+            typeCondition: {
+                kind: 'NamedType',
+                name: { kind: 'Name', value: 'ResourceCountByCVESeverity' },
+            },
+            selectionSet: {
+                kind: 'SelectionSet',
+                selections: [
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'low' },
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [{ kind: 'Field', name: { kind: 'Name', value: 'total' } }],
+                        },
+                    },
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'moderate' },
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [{ kind: 'Field', name: { kind: 'Name', value: 'total' } }],
+                        },
+                    },
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'important' },
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [{ kind: 'Field', name: { kind: 'Name', value: 'total' } }],
+                        },
+                    },
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'critical' },
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [{ kind: 'Field', name: { kind: 'Name', value: 'total' } }],
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            kind: 'FragmentDefinition',
             name: { kind: 'Name', value: 'ResourceCountsByCVESeverityAndStatus' },
             typeCondition: {
                 kind: 'NamedType',
@@ -9652,45 +9893,6 @@ export const GetCvEsForImageDocument = {
                             selections: [
                                 { kind: 'Field', name: { kind: 'Name', value: 'total' } },
                                 { kind: 'Field', name: { kind: 'Name', value: 'fixable' } },
-                            ],
-                        },
-                    },
-                ],
-            },
-        },
-        {
-            kind: 'FragmentDefinition',
-            name: { kind: 'Name', value: 'ImageVulnerabilityFields' },
-            typeCondition: {
-                kind: 'NamedType',
-                name: { kind: 'Name', value: 'ImageVulnerability' },
-            },
-            selectionSet: {
-                kind: 'SelectionSet',
-                selections: [
-                    { kind: 'Field', name: { kind: 'Name', value: 'severity' } },
-                    { kind: 'Field', name: { kind: 'Name', value: 'cve' } },
-                    { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
-                    { kind: 'Field', name: { kind: 'Name', value: 'cvss' } },
-                    { kind: 'Field', name: { kind: 'Name', value: 'scoreVersion' } },
-                    { kind: 'Field', name: { kind: 'Name', value: 'discoveredAtImage' } },
-                    {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'imageComponents' },
-                        arguments: [
-                            {
-                                kind: 'Argument',
-                                name: { kind: 'Name', value: 'query' },
-                                value: { kind: 'Variable', name: { kind: 'Name', value: 'query' } },
-                            },
-                        ],
-                        selectionSet: {
-                            kind: 'SelectionSet',
-                            selections: [
-                                {
-                                    kind: 'FragmentSpread',
-                                    name: { kind: 'Name', value: 'ImageComponentVulnerabilities' },
-                                },
                             ],
                         },
                     },

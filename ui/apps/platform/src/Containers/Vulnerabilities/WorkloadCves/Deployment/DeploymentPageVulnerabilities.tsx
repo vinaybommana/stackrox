@@ -16,7 +16,7 @@ import {
     Text,
     Title,
 } from '@patternfly/react-core';
-import { gql, useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 
 import useURLPagination from 'hooks/useURLPagination';
 import useURLSearch from 'hooks/useURLSearch';
@@ -26,49 +26,41 @@ import { getHasSearchApplied } from 'utils/searchUtils';
 import { getAxiosErrorMessage } from 'utils/responseErrorUtils';
 
 import NotFoundMessage from 'Components/NotFoundMessage';
+import { graphql } from 'generated/graphql-codegen';
 import { DynamicTableLabel } from '../components/DynamicIcon';
 import WorkloadTableToolbar from '../components/WorkloadTableToolbar';
 import TableErrorComponent from '../components/TableErrorComponent';
 import BySeveritySummaryCard from '../SummaryCards/BySeveritySummaryCard';
-import CvesByStatusSummaryCard, {
-    resourceCountByCveSeverityAndStatusFragment,
-    ResourceCountByCveSeverityAndStatus,
-} from '../SummaryCards/CvesByStatusSummaryCard';
+import CvesByStatusSummaryCard from '../SummaryCards/CvesByStatusSummaryCard';
 import {
     parseQuerySearchFilter,
     getHiddenSeverities,
     getHiddenStatuses,
     getCveStatusScopedQueryString,
 } from '../searchUtils';
-import { imageMetadataContextFragment } from '../Tables/table.utils';
-import DeploymentVulnerabilitiesTable, {
-    deploymentWithVulnerabilitiesFragment,
-    DeploymentWithVulnerabilities,
-} from '../Tables/DeploymentVulnerabilitiesTable';
+import DeploymentVulnerabilitiesTable from '../Tables/DeploymentVulnerabilitiesTable';
 import { Resource } from '../components/FilterResourceDropdown';
 
-const summaryQuery = gql`
-    ${resourceCountByCveSeverityAndStatusFragment}
+const summaryQuery = graphql(/* GraphQL */ `
     query getDeploymentSummaryData($id: ID!, $query: String!) {
         deployment(id: $id) {
             id
             imageCVECountBySeverity(query: $query) {
+                ...ResourceCountsByCVESeverity
                 ...ResourceCountsByCVESeverityAndStatus
             }
         }
     }
-`;
+`);
 
-const vulnerabilityQuery = gql`
-    ${imageMetadataContextFragment}
-    ${deploymentWithVulnerabilitiesFragment}
+const vulnerabilityQuery = graphql(/* GraphQL */ `
     query getCvesForDeployment($id: ID!, $query: String!, $pagination: Pagination!) {
         deployment(id: $id) {
             imageVulnerabilityCount(query: $query)
             ...DeploymentWithVulnerabilities
         }
     }
-`;
+`);
 
 const defaultSortFields = ['CVE'];
 
@@ -98,15 +90,7 @@ function DeploymentPageVulnerabilities({ deploymentId }: DeploymentPageVulnerabi
 
     const query = getCveStatusScopedQueryString(querySearchFilter);
 
-    const summaryRequest = useQuery<
-        {
-            deployment: {
-                id: string;
-                imageCVECountBySeverity: ResourceCountByCveSeverityAndStatus;
-            } | null;
-        },
-        { id: string; query: string }
-    >(summaryQuery, {
+    const summaryRequest = useQuery(summaryQuery, {
         variables: { id: deploymentId, query },
     });
 
@@ -118,20 +102,7 @@ function DeploymentPageVulnerabilities({ deploymentId }: DeploymentPageVulnerabi
         sortOption,
     };
 
-    const vulnerabilityRequest = useQuery<
-        {
-            deployment:
-                | (DeploymentWithVulnerabilities & {
-                      imageVulnerabilityCount: number;
-                  })
-                | null;
-        },
-        {
-            id: string;
-            query: string;
-            pagination: PaginationParam;
-        }
-    >(vulnerabilityQuery, {
+    const vulnerabilityRequest = useQuery(vulnerabilityQuery, {
         variables: { id: deploymentId, query, pagination },
     });
 
