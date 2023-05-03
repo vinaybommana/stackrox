@@ -6,7 +6,6 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	v1 "github.com/stackrox/rox/generated/api/v1"
-	"github.com/stackrox/rox/pkg/env"
 	"github.com/stackrox/rox/pkg/features"
 	"github.com/stackrox/rox/pkg/grpc/authz"
 	"github.com/stackrox/rox/pkg/grpc/authz/allow"
@@ -36,26 +35,6 @@ func (s *serviceImpl) GetFeatureFlags(context.Context, *v1.Empty) (*v1.GetFeatur
 		})
 	}
 
-	extraFlags := []*v1.FeatureFlag{
-		// HACK: Inject in the postgres env var as a feature flag response so that the UI can work as-is without modifications
-		// TODO: When GA'ing postgres remove this hack (and all conditional checks). https://issues.redhat.com/browse/ROX-12848
-		{
-			Name:    "Enable Postgres Datastore",
-			EnvVar:  env.PostgresDatastoreEnabled.EnvVar(),
-			Enabled: env.PostgresDatastoreEnabled.BooleanSetting(),
-		},
-		{
-			Name:    "Enable Active Vulnerability Management",
-			EnvVar:  env.ActiveVulnMgmt.EnvVar(),
-			Enabled: env.ActiveVulnMgmt.BooleanSetting(),
-		},
-		{
-			Name:    "Enable Secured Cluster Notifiers",
-			EnvVar:  env.SecuredClusterNotifiers.EnvVar(),
-			Enabled: env.SecuredClusterNotifiers.BooleanSetting(),
-		},
-	}
-	resp.FeatureFlags = append(resp.FeatureFlags, extraFlags...)
 	sort.Slice(resp.FeatureFlags, func(i, j int) bool {
 		return resp.FeatureFlags[i].GetName() < resp.FeatureFlags[j].GetName()
 	})
