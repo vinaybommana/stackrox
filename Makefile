@@ -72,7 +72,9 @@ ifeq ($(UNAME_M),arm64)
 endif
 endif
 
-TARGET_ARCH := "amd64"
+TARGET_ARCH := $(ARCH)
+GOARCH := $(ARCH)
+
 ifeq ($(UNAME_M),arm64)
 TARGET_ARCH = "arm64"
 endif
@@ -84,6 +86,11 @@ else
 BIND_GOCACHE ?= 1
 BIND_GOPATH ?= 1
 endif
+
+ifeq ($(UNAME_S),Linux)
+PLATFORM := linux/$(TARGET_ARCH)
+ifeq ($(UNAME_S),Darwin)
+PLATFORM := darwin/$(TARGET_ARCH)
 
 ifeq ($(BIND_GOCACHE),1)
 GOCACHE_VOLUME_SRC := $(CURDIR)/linux-gocache
@@ -656,7 +663,7 @@ mock-grpc-server-image: mock-grpc-server-build clean-image
 		integration-tests/mock-grpc-server/image
 
 $(CURDIR)/image/postgres/bundle.tar.gz:
-	/usr/bin/env DEBUG_BUILD="$(DEBUG_BUILD)" $(CURDIR)/image/postgres/create-bundle.sh $(CURDIR)/image/postgres $(CURDIR)/image/postgres
+	/usr/bin/env DEBUG_BUILD="$(DEBUG_BUILD)" $(CURDIR)/image/postgres/create-bundle.sh $(CURDIR)/image/postgres $(CURDIR)/image/postgres $(TARGET_ARCH) $(PLATFORM)
 
 .PHONY: $(CURDIR)/image/postgres/Dockerfile.gen
 $(CURDIR)/image/postgres/Dockerfile.gen:
@@ -666,9 +673,9 @@ $(CURDIR)/image/postgres/Dockerfile.gen:
 
 .PHONY: central-db-image
 central-db-image: $(CURDIR)/image/postgres/bundle.tar.gz $(CURDIR)/image/postgres/Dockerfile.gen
-	docker build \
-		-t stackrox/central-db:$(TAG) \
-		-t $(DEFAULT_IMAGE_REGISTRY)/central-db:$(TAG) \
+	docker buildx build --load --platform ${PLATFORM} \
+		-t stackrox/central-db:$(TAG)-$(TARGET_ARCH) \
+		-t $(DEFAULT_IMAGE_REGISTRY)/central-db:$(TAG)-$(TARGET_ARCH) \
 		--build-arg ROX_IMAGE_FLAVOR=$(ROX_IMAGE_FLAVOR) \
 		--file image/postgres/Dockerfile.gen \
 		image/postgres
