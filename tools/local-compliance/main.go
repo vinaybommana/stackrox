@@ -42,11 +42,6 @@ type LocalCompliance struct {
 
 // mock compliance
 func main() {
-	utils.CrashOnError(os.Setenv("ROX_MTLS_CERT_FILE", "tools/local-compliance/certs/collector-cert.pem"))
-	utils.CrashOnError(os.Setenv("ROX_MTLS_KEY_FILE", "tools/local-compliance/certs/collector-key.pem"))
-	utils.CrashOnError(os.Setenv("ROX_MTLS_CA_FILE", "tools/local-compliance/certs/ca.pem"))
-	utils.CrashOnError(os.Setenv("ROX_ADVERTISED_ENDPOINT", "localhost:8443"))
-
 	log := logging.LoggerForModule()
 	localCompliance := LocalCompliance{log}
 	localCompliance.startCompliance()
