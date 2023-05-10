@@ -46,8 +46,8 @@ func CheckTLS(ctx context.Context, origAddr string) (bool, error) {
 		case x509.CertificateInvalidError,
 			x509.HostnameError,
 			x509.UnknownAuthorityError,
-			tls.RecordHeaderError,
-			*tls.CertificateVerificationError:
+			tls.RecordHeaderError:
+			//*tls.CertificateVerificationError:
 			return false, nil
 		}
 		return false, err
