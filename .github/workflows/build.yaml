@@ -62,6 +62,8 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: quay.io/stackrox-io/apollo-ci:stackrox-test-0.3.58
+      env:
+        ARCH: ${{ matrix.arch }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -80,7 +82,13 @@ jobs:
       - uses: ./.github/actions/handle-tagged-build
 
       - name: Build CLI
-        run: make cli
+        run: |
+
+          if [[ "$ARCH" == "ppc64le" ]]; then
+            make cli_linux-ppc64le
+          else
+            make cli
+          fi
 
       - name: Bundle build to preserve permissions
         run: tar -cvzf cli-build.tgz bin
@@ -98,6 +106,8 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: quay.io/stackrox-io/apollo-ci:stackrox-test-0.3.58
+      env:
+        ARCH: ${{ matrix.arch }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -219,8 +229,10 @@ jobs:
     strategy:
       matrix:
         branding: [ RHACS_BRANDING, STACKROX_BRANDING ]
+        arch: [ amd64, ppc64le ]
     env:
       ROX_PRODUCT_BRANDING: ${{ matrix.branding }}
+      ARCH: ${{ matrix.arch }}
     container:
       image: quay.io/stackrox-io/apollo-ci:stackrox-test-0.3.58
       env:
@@ -230,6 +242,7 @@ jobs:
         QUAY_RHACS_ENG_RW_PASSWORD: ${{ secrets.QUAY_RHACS_ENG_RW_PASSWORD }}
         QUAY_STACKROX_IO_RW_USERNAME: ${{ secrets.QUAY_STACKROX_IO_RW_USERNAME }}
         QUAY_STACKROX_IO_RW_PASSWORD: ${{ secrets.QUAY_STACKROX_IO_RW_PASSWORD }}
+        ARCH: ${{ matrix.arch }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -314,7 +327,7 @@ jobs:
             if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_name }}" == "master" ]]; then
               push_context="merge-to-master"
             fi
-            push_main_image_set "$push_context" "${{ env.ROX_PRODUCT_BRANDING }}"
+            push_main_image_set "$push_context" "${{ env.ROX_PRODUCT_BRANDING }}-${{ env.ARCH }}"
 
       - name: Push matching collector and scanner images
         # Skip for external contributions.
@@ -322,7 +335,7 @@ jobs:
           github.event_name == 'push' || !github.event.pull_request.head.repo.fork
         run: |
             source ./scripts/ci/lib.sh
-            push_matching_collector_scanner_images "${{ env.ROX_PRODUCT_BRANDING }}"
+            push_matching_collector_scanner_images "${{ env.ROX_PRODUCT_BRANDING }}-${{ env.ARCH }}"
 
       - name: Comment on the PR
         # Skip for external contributions.
