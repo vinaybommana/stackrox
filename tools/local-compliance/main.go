@@ -37,13 +37,14 @@ import (
 // it does not connect to a real central, but instead it dumps all gRPC messages that would be sent to central in a file.
 
 type LocalCompliance struct {
-	log *logging.Logger
+	log          *logging.Logger
+	nodeProvider nodeProvider
 }
 
 // mock compliance
 func main() {
 	log := logging.LoggerForModule()
-	localCompliance := LocalCompliance{log}
+	localCompliance := LocalCompliance{log: log, nodeProvider: &dummyNodeProvider{}}
 	localCompliance.startCompliance()
 }
 
@@ -88,7 +89,7 @@ func (l *LocalCompliance) startCompliance() {
 	cli := sensor.NewComplianceServiceClient(conn)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	ctx = metadata.AppendToOutgoingContext(ctx, "rox-compliance-nodename", l.getNode())
+	ctx = metadata.AppendToOutgoingContext(ctx, "rox-compliance-nodename", l.nodeProvider.getNode())
 
 	stoppedSig := concurrency.NewSignal()
 
@@ -122,7 +123,7 @@ func (l *LocalCompliance) startCompliance() {
 
 func (l *LocalCompliance) manageNodeScanLoop(ctx context.Context, i intervals.NodeScanIntervals, scanner scannerV1.NodeInventoryServiceClient) <-chan *sensor.MsgFromCompliance {
 	nodeInventoriesC := make(chan *sensor.MsgFromCompliance)
-	nodeName := l.getNode()
+	nodeName := l.nodeProvider.getNode()
 	go func() {
 		defer close(nodeInventoriesC)
 		t := time.NewTicker(i.Initial())
@@ -139,7 +140,7 @@ func (l *LocalCompliance) manageNodeScanLoop(ctx context.Context, i intervals.No
 					nodeInventoriesC <- msg
 				}
 				interval := i.Next()
-				cmetrics.ObserveRescanInterval(interval, l.getNode())
+				cmetrics.ObserveRescanInterval(interval, l.nodeProvider.getNode())
 				t.Reset(interval)
 			}
 		}
@@ -147,31 +148,6 @@ func (l *LocalCompliance) manageNodeScanLoop(ctx context.Context, i intervals.No
 	return nodeInventoriesC
 }
 
-func (l *LocalCompliance) getNode() string {
-	/*
-		l.once.Do(func() {
-			l.node = os.Getenv(string(orchestrators.NodeName))
-			if l.node == "" {
-				log.Fatal("No node name found in the environment")
-			}
-		})
-		return l.node
-	*/
-	return getNode()
-}
-
-func getNode() string {
-	/*
-		l.once.Do(func() {
-			l.node = os.Getenv(string(orchestrators.NodeName))
-			if l.node == "" {
-				log.Fatal("No node name found in the environment")
-			}
-		})
-		return l.node
-	*/
-	return "Foo"
-}
 func (l *LocalCompliance) scanNode(ctx context.Context, scanner scannerV1.NodeInventoryServiceClient) (*sensor.MsgFromCompliance, error) {
 	ctx, cancel := context.WithTimeout(ctx, env.NodeAnalysisDeadline.DurationSetting())
 	defer cancel()
@@ -251,7 +227,7 @@ func (l *LocalCompliance) runRecv(ctx context.Context, client sensor.ComplianceS
 				auditReader = l.startAuditLogCollection(ctx, client, r.StartReq)
 			case *sensor.MsgToCompliance_AuditLogCollectionRequest_StopReq:
 				if auditReader != nil {
-					l.log.Infof("Stopping audit log reader on node %s.", getNode())
+					l.log.Infof("Stopping audit log reader on node %s.", l.nodeProvider.getNode())
 					auditReader.StopReader()
 					auditReader = nil
 				} else {
@@ -283,13 +259,13 @@ func (l *LocalCompliance) runRecv(ctx context.Context, client sensor.ComplianceS
 
 func (l *LocalCompliance) startAuditLogCollection(ctx context.Context, client sensor.ComplianceService_CommunicateClient, request *sensor.MsgToCompliance_AuditLogCollectionRequest_StartRequest) auditlog.Reader {
 	if request.GetCollectStartState() == nil {
-		l.log.Infof("Starting audit log reader on node %s in cluster %s with no saved state", getNode(), request.GetClusterId())
+		l.log.Infof("Starting audit log reader on node %s in cluster %s with no saved state", l.nodeProvider.getNode(), request.GetClusterId())
 	} else {
 		l.log.Infof("Starting audit log reader on node %s in cluster %s using previously saved state: %s)",
-			getNode(), request.GetClusterId(), protoutils.NewWrapper(request.GetCollectStartState()))
+			l.nodeProvider.getNode(), request.GetClusterId(), protoutils.NewWrapper(request.GetCollectStartState()))
 	}
 
-	auditReader := auditlog.NewReader(client, getNode(), request.GetClusterId(), request.GetCollectStartState())
+	auditReader := auditlog.NewReader(client, l.nodeProvider.getNode(), request.GetClusterId(), request.GetCollectStartState())
 	start, err := auditReader.StartReader(ctx)
 	if err != nil {
 		l.log.Errorf("Failed to start audit log reader %v", err)
