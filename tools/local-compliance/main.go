@@ -13,8 +13,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/compliance/collection/auditlog"
 	"github.com/stackrox/rox/compliance/collection/intervals"
-	"github.com/stackrox/rox/compliance/collection/inventory"
-	cmetrics "github.com/stackrox/rox/compliance/collection/metrics"
 	"github.com/stackrox/rox/generated/internalapi/sensor"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/clientconn"
@@ -22,12 +20,10 @@ import (
 	"github.com/stackrox/rox/pkg/env"
 	"github.com/stackrox/rox/pkg/k8sutil"
 	"github.com/stackrox/rox/pkg/logging"
-	"github.com/stackrox/rox/pkg/metrics"
 	"github.com/stackrox/rox/pkg/mtls"
 	"github.com/stackrox/rox/pkg/protoutils"
 	"github.com/stackrox/rox/pkg/utils"
 	"github.com/stackrox/rox/pkg/version"
-	scannerV1 "github.com/stackrox/scanner/generated/scanner/api/v1"
 	"google.golang.org/grpc/metadata"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )
@@ -38,13 +34,25 @@ import (
 
 type LocalCompliance struct {
 	log          *logging.Logger
-	nodeProvider nodeProvider
+	nodeProvider nodeNameProvider
+	nodeScanner  nodeScanner
 }
 
-// mock compliance
 func main() {
 	log := logging.LoggerForModule()
-	localCompliance := LocalCompliance{log: log, nodeProvider: &dummyNodeProvider{}}
+	np := &dummyNodeNameProvider{}
+
+	scanner := &NodeInventoryComponentScanner{
+		log:          log,
+		nodeProvider: np,
+	}
+	scanner.Connect(env.NodeScanningEndpoint.Setting())
+
+	localCompliance := LocalCompliance{
+		log:          log,
+		nodeProvider: np,
+		nodeScanner:  scanner,
+	}
 	localCompliance.startCompliance()
 }
 
@@ -54,25 +62,6 @@ func (l *LocalCompliance) startCompliance() {
 
 	// Set the random seed based on the current time.
 	rand.Seed(time.Now().UnixNano())
-
-	var nodeInventoryClient scannerV1.NodeInventoryServiceClient
-	if !env.NodeInventoryContainerEnabled.BooleanSetting() {
-		l.log.Infof("Compliance will not call the node-inventory container, because this is not Openshift 4 cluster")
-	} else if env.RHCOSNodeScanning.BooleanSetting() {
-		// Start the prometheus metrics server
-		metrics.NewDefaultHTTPServer(metrics.ComplianceSubsystem).RunForever()
-		metrics.GatherThrottleMetricsForever(metrics.ComplianceSubsystem.String())
-
-		// Set up Compliance <-> NodeInventory connection
-		niConn, err := clientconn.AuthenticatedGRPCConnection(env.NodeScanningEndpoint.Setting(), mtls.Subject{}, clientconn.UseInsecureNoTLS(true))
-		if err != nil {
-			l.log.Errorf("Disabling node scanning for this node: could not initialize connection to node-inventory container: %v", err)
-		}
-		if niConn != nil {
-			l.log.Info("Initialized gRPC connection to node-inventory container")
-			nodeInventoryClient = scannerV1.NewNodeInventoryServiceClient(niConn)
-		}
-	}
 
 	// Set up Compliance <-> Sensor connection
 	conn, err := clientconn.AuthenticatedGRPCConnection(env.AdvertisedEndpoint.Setting(), mtls.SensorSubject)
@@ -97,12 +86,12 @@ func (l *LocalCompliance) startCompliance() {
 	defer close(toSensorC)
 	// the anonymous go func will read from toSensorC and send it using the client
 	go func() {
-		l.manageStream(ctx, cli, &stoppedSig, toSensorC, nodeInventoryClient)
+		l.manageStream(ctx, cli, &stoppedSig, toSensorC)
 	}()
 
-	if env.RHCOSNodeScanning.BooleanSetting() && nodeInventoryClient != nil {
+	if env.RHCOSNodeScanning.BooleanSetting() && l.nodeScanner.IsActive() {
 		i := intervals.NewNodeScanIntervalFromEnv()
-		nodeInventoriesC := l.manageNodeScanLoop(ctx, i, nodeInventoryClient)
+		nodeInventoriesC := l.nodeScanner.ManageNodeScanLoop(ctx, i)
 
 		// sending nodeInventories into output toSensorC
 		for n := range nodeInventoriesC {
@@ -121,52 +110,7 @@ func (l *LocalCompliance) startCompliance() {
 	l.log.Info("Successfully closed Sensor communication")
 }
 
-func (l *LocalCompliance) manageNodeScanLoop(ctx context.Context, i intervals.NodeScanIntervals, scanner scannerV1.NodeInventoryServiceClient) <-chan *sensor.MsgFromCompliance {
-	nodeInventoriesC := make(chan *sensor.MsgFromCompliance)
-	nodeName := l.nodeProvider.getNode()
-	go func() {
-		defer close(nodeInventoriesC)
-		t := time.NewTicker(i.Initial())
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-t.C:
-				l.log.Infof("Scanning node %q", nodeName)
-				msg, err := l.scanNode(ctx, scanner)
-				if err != nil {
-					l.log.Errorf("error running node scan: %v", err)
-				} else {
-					nodeInventoriesC <- msg
-				}
-				interval := i.Next()
-				cmetrics.ObserveRescanInterval(interval, l.nodeProvider.getNode())
-				t.Reset(interval)
-			}
-		}
-	}()
-	return nodeInventoriesC
-}
-
-func (l *LocalCompliance) scanNode(ctx context.Context, scanner scannerV1.NodeInventoryServiceClient) (*sensor.MsgFromCompliance, error) {
-	ctx, cancel := context.WithTimeout(ctx, env.NodeAnalysisDeadline.DurationSetting())
-	defer cancel()
-	startCall := time.Now()
-	result, err := scanner.GetNodeInventory(ctx, &scannerV1.GetNodeInventoryRequest{})
-	if err != nil {
-		return nil, err
-	}
-	cmetrics.ObserveNodeInventoryCallDuration(time.Since(startCall), result.GetNodeName(), err)
-	inv := inventory.ToNodeInventory(result)
-	msg := &sensor.MsgFromCompliance{
-		Node: result.GetNodeName(),
-		Msg:  &sensor.MsgFromCompliance_NodeInventory{NodeInventory: inv},
-	}
-	cmetrics.ObserveInventoryProtobufMessage(msg)
-	return msg, nil
-}
-
-func (l *LocalCompliance) manageStream(ctx context.Context, cli sensor.ComplianceServiceClient, sig *concurrency.Signal, toSensorC <-chan *sensor.MsgFromCompliance, scanner scannerV1.NodeInventoryServiceClient) {
+func (l *LocalCompliance) manageStream(ctx context.Context, cli sensor.ComplianceServiceClient, sig *concurrency.Signal, toSensorC <-chan *sensor.MsgFromCompliance) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -190,7 +134,7 @@ func (l *LocalCompliance) manageStream(ctx context.Context, cli sensor.Complianc
 			if toSensorC != nil {
 				go l.manageSendToSensor(ctx2, client, toSensorC)
 			}
-			if err := l.runRecv(ctx, client, config, scanner); err != nil {
+			if err := l.runRecv(ctx, client, config); err != nil {
 				l.log.Errorf("error running recv: %v", err)
 			}
 			cancelFn() // runRecv is blocking, so the context is safely cancelled before the next  call to initializeStream
@@ -198,7 +142,7 @@ func (l *LocalCompliance) manageStream(ctx context.Context, cli sensor.Complianc
 	}
 }
 
-func (l *LocalCompliance) runRecv(ctx context.Context, client sensor.ComplianceService_CommunicateClient, config *sensor.MsgToCompliance_ScrapeConfig, scanner scannerV1.NodeInventoryServiceClient) error {
+func (l *LocalCompliance) runRecv(ctx context.Context, client sensor.ComplianceService_CommunicateClient, config *sensor.MsgToCompliance_ScrapeConfig) error {
 	var auditReader auditlog.Reader
 	defer func() {
 		if auditReader != nil {
@@ -214,7 +158,7 @@ func (l *LocalCompliance) runRecv(ctx context.Context, client sensor.ComplianceS
 		}
 		switch t := msg.Msg.(type) {
 		case *sensor.MsgToCompliance_Trigger:
-			if err := runChecks(client, config, t.Trigger); err != nil {
+			if err := runChecks(client, config, t.Trigger, l.nodeProvider); err != nil {
 				return errors.Wrap(err, "error running checks")
 			}
 		case *sensor.MsgToCompliance_AuditLogCollectionRequest_:
@@ -241,9 +185,9 @@ func (l *LocalCompliance) runRecv(ctx context.Context, client sensor.ComplianceS
 			l.log.Infof("Received NACK from Sensor, resending NodeInventory in 10 seconds.")
 			go func() {
 				time.Sleep(time.Second * 10)
-				msg, err := l.scanNode(ctx, scanner)
+				msg, err := l.nodeScanner.ScanNode(ctx)
 				if err != nil {
-					l.log.Errorf("error running scanNode: %v", err)
+					l.log.Errorf("error running ScanNode: %v", err)
 				} else {
 					err := client.Send(msg)
 					if err != nil {
