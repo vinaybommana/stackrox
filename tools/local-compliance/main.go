@@ -33,25 +33,35 @@ import (
 // it does not connect to a real central, but instead it dumps all gRPC messages that would be sent to central in a file.
 
 type LocalCompliance struct {
-	log          *logging.Logger
-	nodeProvider nodeNameProvider
-	nodeScanner  nodeScanner
+	log                *logging.Logger
+	nodeNameProvider   nodeNameProvider
+	nodeScanner        nodeScanner
+	sensorReplyHandler SensorReplyHandler
 }
 
 func main() {
 	log := logging.LoggerForModule()
 	np := &dummyNodeNameProvider{}
 
-	scanner := &NodeInventoryComponentScanner{
+	//scanner := &NodeInventoryComponentScanner{
+	//	log:              log,
+	//	nodeNameProvider: np,
+	//}
+	//scanner.Connect(env.NodeScanningEndpoint.Setting())
+
+	scanner := &LoadGeneratingNodeScanner{
 		log:          log,
 		nodeProvider: np,
 	}
-	scanner.Connect(env.NodeScanningEndpoint.Setting())
 
 	localCompliance := LocalCompliance{
-		log:          log,
-		nodeProvider: np,
-		nodeScanner:  scanner,
+		log:              log,
+		nodeNameProvider: np,
+		nodeScanner:      scanner,
+		sensorReplyHandler: &SensorReplyHandlerImpl{
+			log:         log,
+			nodeScanner: scanner,
+		},
 	}
 	localCompliance.startCompliance()
 }
@@ -78,7 +88,7 @@ func (l *LocalCompliance) startCompliance() {
 	cli := sensor.NewComplianceServiceClient(conn)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	ctx = metadata.AppendToOutgoingContext(ctx, "rox-compliance-nodename", l.nodeProvider.getNode())
+	ctx = metadata.AppendToOutgoingContext(ctx, "rox-compliance-nodename", l.nodeNameProvider.getNode())
 
 	stoppedSig := concurrency.NewSignal()
 
@@ -158,7 +168,7 @@ func (l *LocalCompliance) runRecv(ctx context.Context, client sensor.ComplianceS
 		}
 		switch t := msg.Msg.(type) {
 		case *sensor.MsgToCompliance_Trigger:
-			if err := runChecks(client, config, t.Trigger, l.nodeProvider); err != nil {
+			if err := runChecks(client, config, t.Trigger, l.nodeNameProvider); err != nil {
 				return errors.Wrap(err, "error running checks")
 			}
 		case *sensor.MsgToCompliance_AuditLogCollectionRequest_:
@@ -171,7 +181,7 @@ func (l *LocalCompliance) runRecv(ctx context.Context, client sensor.ComplianceS
 				auditReader = l.startAuditLogCollection(ctx, client, r.StartReq)
 			case *sensor.MsgToCompliance_AuditLogCollectionRequest_StopReq:
 				if auditReader != nil {
-					l.log.Infof("Stopping audit log reader on node %s.", l.nodeProvider.getNode())
+					l.log.Infof("Stopping audit log reader on node %s.", l.nodeNameProvider.getNode())
 					auditReader.StopReader()
 					auditReader = nil
 				} else {
@@ -181,20 +191,9 @@ func (l *LocalCompliance) runRecv(ctx context.Context, client sensor.ComplianceS
 		case *sensor.MsgToCompliance_Ack:
 			// TODO(ROX-16687): Implement behavior when receiving Ack here
 			// TODO(ROX-16549): Add metric to see the ratio of Ack/Nack(?)
+			l.sensorReplyHandler.HandleACK(ctx, client)
 		case *sensor.MsgToCompliance_Nack:
-			l.log.Infof("Received NACK from Sensor, resending NodeInventory in 10 seconds.")
-			go func() {
-				time.Sleep(time.Second * 10)
-				msg, err := l.nodeScanner.ScanNode(ctx)
-				if err != nil {
-					l.log.Errorf("error running ScanNode: %v", err)
-				} else {
-					err := client.Send(msg)
-					if err != nil {
-						l.log.Errorf("error sending to sensor: %v", err)
-					}
-				}
-			}()
+			l.sensorReplyHandler.HandleNACK(ctx, client)
 		default:
 			utils.Should(errors.Errorf("Unhandled msg type: %T", t))
 		}
@@ -203,13 +202,13 @@ func (l *LocalCompliance) runRecv(ctx context.Context, client sensor.ComplianceS
 
 func (l *LocalCompliance) startAuditLogCollection(ctx context.Context, client sensor.ComplianceService_CommunicateClient, request *sensor.MsgToCompliance_AuditLogCollectionRequest_StartRequest) auditlog.Reader {
 	if request.GetCollectStartState() == nil {
-		l.log.Infof("Starting audit log reader on node %s in cluster %s with no saved state", l.nodeProvider.getNode(), request.GetClusterId())
+		l.log.Infof("Starting audit log reader on node %s in cluster %s with no saved state", l.nodeNameProvider.getNode(), request.GetClusterId())
 	} else {
 		l.log.Infof("Starting audit log reader on node %s in cluster %s using previously saved state: %s)",
-			l.nodeProvider.getNode(), request.GetClusterId(), protoutils.NewWrapper(request.GetCollectStartState()))
+			l.nodeNameProvider.getNode(), request.GetClusterId(), protoutils.NewWrapper(request.GetCollectStartState()))
 	}
 
-	auditReader := auditlog.NewReader(client, l.nodeProvider.getNode(), request.GetClusterId(), request.GetCollectStartState())
+	auditReader := auditlog.NewReader(client, l.nodeNameProvider.getNode(), request.GetClusterId(), request.GetCollectStartState())
 	start, err := auditReader.StartReader(ctx)
 	if err != nil {
 		l.log.Errorf("Failed to start audit log reader %v", err)

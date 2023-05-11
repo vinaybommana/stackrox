@@ -23,9 +23,9 @@ type nodeScanner interface {
 }
 
 type NodeInventoryComponentScanner struct {
-	log          *logging.Logger
-	nodeProvider nodeNameProvider
-	client       scannerV1.NodeInventoryServiceClient
+	log              *logging.Logger
+	nodeNameProvider nodeNameProvider
+	client           scannerV1.NodeInventoryServiceClient
 }
 
 func (n *NodeInventoryComponentScanner) IsActive() bool {
@@ -54,7 +54,7 @@ func (n *NodeInventoryComponentScanner) Connect(address string) {
 
 func (n *NodeInventoryComponentScanner) ManageNodeScanLoop(ctx context.Context, i intervals.NodeScanIntervals) <-chan *sensor.MsgFromCompliance {
 	nodeInventoriesC := make(chan *sensor.MsgFromCompliance)
-	nodeName := n.nodeProvider.getNode()
+	nodeName := n.nodeNameProvider.getNode()
 	go func() {
 		defer close(nodeInventoriesC)
 		t := time.NewTicker(i.Initial())
@@ -71,7 +71,7 @@ func (n *NodeInventoryComponentScanner) ManageNodeScanLoop(ctx context.Context, 
 					nodeInventoriesC <- msg
 				}
 				interval := i.Next()
-				cmetrics.ObserveRescanInterval(interval, n.nodeProvider.getNode())
+				cmetrics.ObserveRescanInterval(interval, n.nodeNameProvider.getNode())
 				t.Reset(interval)
 			}
 		}
