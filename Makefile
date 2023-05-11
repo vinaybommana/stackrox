@@ -89,8 +89,10 @@ endif
 
 ifeq ($(UNAME_S),Linux)
 PLATFORM := linux/$(TARGET_ARCH)
+endif
 ifeq ($(UNAME_S),Darwin)
 PLATFORM := darwin/$(TARGET_ARCH)
+endif
 
 ifeq ($(BIND_GOCACHE),1)
 GOCACHE_VOLUME_SRC := $(CURDIR)/linux-gocache
@@ -563,9 +565,9 @@ $(CURDIR)/image/rhel/Dockerfile.gen:
 .PHONY: docker-build-main-image
 docker-build-main-image: copy-binaries-to-image-dir docker-build-data-image central-db-image \
                          $(CURDIR)/image/rhel/bundle.tar.gz $(CURDIR)/image/rhel/Dockerfile.gen
-	docker build \
+	docker buildx build --load --platform ${PLATFORM} \
 		-t stackrox/main:$(TAG) \
-		-t $(DEFAULT_IMAGE_REGISTRY)/main:$(TAG) \
+		-t $(DEFAULT_IMAGE_REGISTRY)/main:$(TAG)) \
 		--build-arg ROX_PRODUCT_BRANDING=$(ROX_PRODUCT_BRANDING) \
 		--build-arg TARGET_ARCH=$(TARGET_ARCH) \
 		--file image/rhel/Dockerfile.gen \
@@ -575,7 +577,7 @@ docker-build-main-image: copy-binaries-to-image-dir docker-build-data-image cent
 
 .PHONY: docker-build-data-image
 docker-build-data-image:
-	docker build -t stackrox-data:$(TAG) \
+	docker buildx build --load --platform ${PLATFORM} -t stackrox-data:$(TAG) \
 		--label quay.expires-after=$(QUAY_TAG_EXPIRATION) \
 		image/ \
 		--file image/stackrox-data.Dockerfile
@@ -663,7 +665,7 @@ mock-grpc-server-image: mock-grpc-server-build clean-image
 		integration-tests/mock-grpc-server/image
 
 $(CURDIR)/image/postgres/bundle.tar.gz:
-	/usr/bin/env DEBUG_BUILD="$(DEBUG_BUILD)" $(CURDIR)/image/postgres/create-bundle.sh $(CURDIR)/image/postgres $(CURDIR)/image/postgres $(TARGET_ARCH) $(PLATFORM)
+	/usr/bin/env DEBUG_BUILD="$(DEBUG_BUILD)" $(CURDIR)/image/postgres/create-bundle.sh $(CURDIR)/image/postgres $(CURDIR)/image/postgres
 
 .PHONY: $(CURDIR)/image/postgres/Dockerfile.gen
 $(CURDIR)/image/postgres/Dockerfile.gen:
@@ -674,8 +676,8 @@ $(CURDIR)/image/postgres/Dockerfile.gen:
 .PHONY: central-db-image
 central-db-image: $(CURDIR)/image/postgres/bundle.tar.gz $(CURDIR)/image/postgres/Dockerfile.gen
 	docker buildx build --load --platform ${PLATFORM} \
-		-t stackrox/central-db:$(TAG)-$(TARGET_ARCH) \
-		-t $(DEFAULT_IMAGE_REGISTRY)/central-db:$(TAG)-$(TARGET_ARCH) \
+		-t stackrox/central-db:$(TAG) \
+		-t $(DEFAULT_IMAGE_REGISTRY)/central-db:$(TAG) \
 		--build-arg ROX_IMAGE_FLAVOR=$(ROX_IMAGE_FLAVOR) \
 		--file image/postgres/Dockerfile.gen \
 		image/postgres
