@@ -111,7 +111,6 @@ import (
 	"github.com/stackrox/rox/central/reprocessor"
 	collectionService "github.com/stackrox/rox/central/resourcecollection/service"
 	"github.com/stackrox/rox/central/risk/handlers/timeline"
-	"github.com/stackrox/rox/central/role"
 	roleDataStore "github.com/stackrox/rox/central/role/datastore"
 	"github.com/stackrox/rox/central/role/mapper"
 	"github.com/stackrox/rox/central/role/resources"
@@ -156,6 +155,7 @@ import (
 	"github.com/stackrox/rox/pkg/clientconn"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/config"
+	"github.com/stackrox/rox/pkg/defaults/accesscontrol"
 	"github.com/stackrox/rox/pkg/devbuild"
 	"github.com/stackrox/rox/pkg/devmode"
 	"github.com/stackrox/rox/pkg/env"
@@ -694,17 +694,20 @@ func customRoutes() (customRoutes []routes.CustomRoute) {
 			Route:         "/db/v2/restore",
 			Authorizer:    dbAuthz.DBWriteAccessAuthorizer(),
 			ServerHandler: backupRestoreService.Singleton().RestoreHandler(),
+			EnableAudit:   true,
 		},
 		{
 			Route:         "/db/v2/resumerestore",
 			Authorizer:    dbAuthz.DBWriteAccessAuthorizer(),
 			ServerHandler: backupRestoreService.Singleton().ResumeRestoreHandler(),
+			EnableAudit:   true,
 		},
 		{
 			Route:         "/api/logimbue",
 			Authorizer:    user.With(),
 			ServerHandler: logimbueHandler.Singleton(),
 			Compression:   false,
+			EnableAudit:   true,
 		},
 	}
 
@@ -719,7 +722,7 @@ func customRoutes() (customRoutes []routes.CustomRoute) {
 		})
 		customRoutes = append(customRoutes, routes.CustomRoute{
 			Route:      "/api/extensions/backup",
-			Authorizer: user.WithRole(role.Admin),
+			Authorizer: user.WithRole(accesscontrol.Admin),
 			ServerHandler: notImplementedOnManagedServices(
 				globaldbHandlers.BackupDB(nil, nil, globaldb.GetPostgres(), listener.Singleton(), true),
 			),
@@ -752,7 +755,7 @@ func customRoutes() (customRoutes []routes.CustomRoute) {
 		})
 		customRoutes = append(customRoutes, routes.CustomRoute{
 			Route:         "/api/extensions/backup",
-			Authorizer:    user.WithRole(role.Admin),
+			Authorizer:    user.WithRole(accesscontrol.Admin),
 			ServerHandler: notImplementedOnManagedServices(globaldbHandlers.BackupDB(globaldb.GetGlobalDB(), globaldb.GetRocksDB(), nil, listener.Singleton(), true)),
 			Compression:   true,
 		})
@@ -762,6 +765,7 @@ func customRoutes() (customRoutes []routes.CustomRoute) {
 			Route:         "/db/restore",
 			Authorizer:    dbAuthz.DBWriteAccessAuthorizer(),
 			ServerHandler: globaldbHandlers.RestoreDB(globaldb.GetGlobalDB(), globaldb.GetRocksDB()),
+			EnableAudit:   true,
 		})
 	}
 
@@ -796,6 +800,7 @@ func customRoutes() (customRoutes []routes.CustomRoute) {
 				},
 			}),
 			ServerHandler: definitionsFileGzipHandler(scannerDefinitionsHandler.Singleton()),
+			EnableAudit:   true,
 		},
 	)
 
@@ -815,7 +820,7 @@ func debugRoutes() []routes.CustomRoute {
 	for r, h := range routes.DebugRoutes {
 		customRoutes = append(customRoutes, routes.CustomRoute{
 			Route:         r,
-			Authorizer:    user.WithRole(role.Admin),
+			Authorizer:    user.WithRole(accesscontrol.Admin),
 			ServerHandler: h,
 			Compression:   true,
 		})

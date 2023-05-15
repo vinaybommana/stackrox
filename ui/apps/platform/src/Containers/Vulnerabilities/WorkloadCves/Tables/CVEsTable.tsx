@@ -16,6 +16,7 @@ import { UseURLSortResult } from 'hooks/useURLSort';
 import useSet from 'hooks/useSet';
 
 import { getEntityPagePath } from '../searchUtils';
+import TooltipTh from '../components/TooltipTh';
 import SeverityCountLabels from '../components/SeverityCountLabels';
 import { DynamicColumnIcon } from '../components/DynamicIcon';
 import DatePhraseTd from '../components/DatePhraseTd';
@@ -77,24 +78,26 @@ function CVEsTable({ cves, unfilteredImageCount, getSortParams, isFiltered }: CV
     const expandedRowSet = useSet<string>();
     return (
         <TableComposable borders={false} variant="compact">
-            <Thead>
+            <Thead noWrap>
                 {/* TODO: need to double check sorting on columns  */}
                 <Tr>
                     <Th>{/* Header for expanded column */}</Th>
                     <Th sort={getSortParams('CVE')}>CVE</Th>
-                    <Th tooltip="Severity of this CVE across images">
+                    <TooltipTh tooltip="Severity of this CVE across images">
                         Images by severity
                         {isFiltered && <DynamicColumnIcon />}
-                    </Th>
-                    <Th tooltip="Highest CVSS score of this CVE across images">Top CVSS</Th>
-                    <Th tooltip="Ratio of total environment affect by this CVE">
+                    </TooltipTh>
+                    <TooltipTh tooltip="Highest CVSS score of this CVE across images">
+                        Top CVSS
+                    </TooltipTh>
+                    <TooltipTh tooltip="Ratio of total environment affect by this CVE">
                         Affected images
                         {isFiltered && <DynamicColumnIcon />}
-                    </Th>
-                    <Th tooltip="Time since this CVE first affected an entity">
+                    </TooltipTh>
+                    <TooltipTh tooltip="Time since this CVE first affected an entity">
                         First discovered
                         {isFiltered && <DynamicColumnIcon />}
-                    </Th>
+                    </TooltipTh>
                 </Tr>
             </Thead>
             {cves.map(
