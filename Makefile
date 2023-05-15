@@ -567,7 +567,7 @@ docker-build-main-image: copy-binaries-to-image-dir docker-build-data-image cent
                          $(CURDIR)/image/rhel/bundle.tar.gz $(CURDIR)/image/rhel/Dockerfile.gen
 	docker buildx build --load --platform ${PLATFORM} \
 		-t stackrox/main:$(TAG) \
-		-t $(DEFAULT_IMAGE_REGISTRY)/main:$(TAG)) \
+		-t $(DEFAULT_IMAGE_REGISTRY)/main:$(TAG) \
 		--build-arg ROX_PRODUCT_BRANDING=$(ROX_PRODUCT_BRANDING) \
 		--build-arg TARGET_ARCH=$(TARGET_ARCH) \
 		--file image/rhel/Dockerfile.gen \
