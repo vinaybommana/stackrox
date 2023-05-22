@@ -3,8 +3,8 @@ package processsignal
 import (
 	"time"
 
-	lru "github.com/hashicorp/golang-lru/v2"
 	"github.com/stackrox/rox/generated/storage"
+	"github.com/stackrox/rox/pkg/lru"
 	"github.com/stackrox/rox/pkg/sync"
 	"github.com/stackrox/rox/sensor/common/clusterentities"
 	"github.com/stackrox/rox/sensor/common/metrics"

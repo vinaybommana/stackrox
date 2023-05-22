@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"sync/atomic"
 
-	lru "github.com/hashicorp/golang-lru/v2"
 	"github.com/stackrox/rox/pkg/concurrency"
 	"github.com/stackrox/rox/pkg/httputil"
+	"github.com/stackrox/rox/pkg/lru"
 	"github.com/stackrox/rox/pkg/sync"
 )
 

@@ -4,9 +4,9 @@ import (
 	"math"
 	"sync/atomic"
 
-	lru "github.com/hashicorp/golang-lru/v2"
 	"github.com/pkg/errors"
 	"github.com/stackrox/rox/pkg/logging"
+	"github.com/stackrox/rox/pkg/lru"
 	"github.com/stackrox/rox/pkg/sync"
 )
 
