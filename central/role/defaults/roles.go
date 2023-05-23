@@ -1,13 +1,14 @@
-package accesscontrol
+package defaults
 
 import (
+	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/grpc/authn"
 	"github.com/stackrox/rox/pkg/set"
 )
 
 // All builtin, immutable role names are declared in the block below.
 const (
-	// Admin is a role that's, well, authorized to do anything.
+	// Admin is a role that's, well, authorized to do anything, with unrestricted scope.
 	Admin = "Admin"
 
 	// Analyst is a role that has read access to all resources.
@@ -34,18 +35,35 @@ const (
 	// TODO: ROX-14398 Remove default role VulnReporter
 	// VulnReporter is a role that has the minimal privileges required to create and manage vulnerability reporting configurations.
 	VulnReporter = "Vulnerability Report Creator"
-
-	// TODO: ROX-14398 Remove ScopeManager default role
-	// ScopeManager is a role that has the minimal privileges to view and modify scopes for use in access control, vulnerability reporting etc.
-	ScopeManager = "Scope Manager"
 )
 
 var (
 	// DefaultRoleNames is a string set containing the names of all default (built-in) Roles.
-	DefaultRoleNames = set.NewStringSet(Admin, Analyst, NetworkGraphViewer, None, ContinuousIntegration, ScopeManager, SensorCreator, VulnMgmtApprover, VulnMgmtRequester, VulnReporter)
-)
+	DefaultRoleNames = set.NewStringSet(Admin, Analyst, None, ContinuousIntegration, SensorCreator, VulnMgmtApprover, VulnMgmtRequester, VulnReporter)
 
-// IsDefaultRole will return true if the given role name is a default role.
-func IsDefaultRole(name string) bool {
-	return DefaultRoleNames.Contains(name)
-}
+	// defaultScopesIDs is a string set containing the names of all default (built-in) scopes.
+	defaultScopesIDs = set.NewFrozenStringSet(AccessScopeIncludeAll.Id, AccessScopeExcludeAll.Id)
+
+	// AccessScopeExcludeAll has empty rules and hence excludes all
+	// scoped resources. Global resources must be unaffected.
+	AccessScopeExcludeAll = &storage.SimpleAccessScope{
+		Id:          getAccessScopeExcludeAllID(),
+		Name:        "Deny All",
+		Description: "No access to scoped resources",
+		Rules:       &storage.SimpleAccessScope_Rules{},
+		Traits: &storage.Traits{
+			Origin: storage.Traits_DEFAULT,
+		},
+	}
+
+	// AccessScopeIncludeAll gives access to all resources. It is checked by ID, as
+	// Rules cannot represent unrestricted scope.
+	AccessScopeIncludeAll = &storage.SimpleAccessScope{
+		Id:          getAccessScopeIncludeAllID(),
+		Name:        "Unrestricted",
+		Description: "Access to all clusters and namespaces",
+		Traits: &storage.Traits{
+			Origin: storage.Traits_DEFAULT,
+		},
+	}
+)

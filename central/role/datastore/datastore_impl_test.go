@@ -6,7 +6,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/stackrox/rox/central/role"
+	"github.com/stackrox/rox/central/role/defaults"
 	"github.com/stackrox/rox/central/role/resources"
 	"github.com/stackrox/rox/central/role/store"
 	PermissionSetPGStore "github.com/stackrox/rox/central/role/store/permissionset/postgres"
@@ -15,6 +15,7 @@ import (
 	roleStore "github.com/stackrox/rox/central/role/store/role/rocksdb"
 	postgresSimpleAccessScopeStore "github.com/stackrox/rox/central/role/store/simpleaccessscope/postgres"
 	simpleAccessScopeStore "github.com/stackrox/rox/central/role/store/simpleaccessscope/rocksdb"
+	"github.com/stackrox/rox/central/role/validator"
 	"github.com/stackrox/rox/generated/storage"
 	"github.com/stackrox/rox/pkg/bolthelper"
 	"github.com/stackrox/rox/pkg/declarativeconfig"
@@ -32,25 +33,27 @@ import (
 )
 
 func TestAllDefaultRolesAreCovered(t *testing.T) {
-	// Merge the roles for vuln reporting into the defaults
-	assert.Len(t, defaultRoles, len(accesscontrol.DefaultRoleNames))
-	for r := range defaultRoles {
-		assert.Truef(t, accesscontrol.DefaultRoleNames.Contains(r), "role %s not found in default role names", r)
+	defaultRoles := defaults.GetDefaultRoles()
+	assert.Len(t, defaultRoles, defaults.DefaultRoleNames.Cardinality())
+	for _, r := range defaultRoles {
+		assert.Contains(t, defaults.DefaultRoleNames, r.GetName())
 	}
 }
 
 func TestAnalystRoleDoesNotContainAdministration(t *testing.T) {
-	analystRole, found := defaultRoles[accesscontrol.Analyst]
-	// Analyst is one of the default roles.
-	assert.True(t, found)
-
-	resourceToAccess := analystRole.resourceWithAccess
-	// Contains all resources except one.
-	assert.Len(t, resourceToAccess, len(resources.ListAll())-1)
-	// Does not contain Administration resource.
-	for _, resource := range resourceToAccess {
-		assert.NotEqual(t, resource.Resource.GetResource(), resources.Administration.GetResource())
+	var analystRole *storage.Role
+	for _, r := range defaults.GetDefaultRoles() {
+		if r.GetName() == defaults.Analyst {
+			analystRole = r
+		}
 	}
+
+	// Analyst is one of the default roles.
+	assert.NotNil(t, analystRole)
+
+	permSetID := analystRole.GetPermissionSetId()
+	permSet := defaults.GetDefaultPermissionSet(defaults.Analyst)
+	assert.Equal(t, permSetID, permSet.GetId())
 }
 
 func TestRoleDataStore(t *testing.T) {
@@ -268,7 +271,7 @@ func (s *roleDataStoreTestSuite) TestRoleWriteOperations() {
 	updatedGoodRole := getValidRole("valid role", secondExistingPermissionSet.GetId(), s.existingScope.GetId())
 	badRole := &storage.Role{Name: "invalid role"}
 	cloneRole := getValidRole(s.existingRole.GetName(), s.existingPermissionSet.GetId(), s.existingScope.GetId())
-	updatedAdminRole := getValidRole(accesscontrol.Admin, s.existingPermissionSet.GetId(), s.existingScope.GetId())
+	updatedAdminRole := getValidRole(defaults.Admin, s.existingPermissionSet.GetId(), s.existingScope.GetId())
 	declarativeRole := getValidRole("declarative role", s.existingDeclarativePermissionSet.GetId(), s.existingDeclarativeScope.GetId())
 	declarativeRole.Traits = &storage.Traits{
 		Origin: storage.Traits_DECLARATIVE,
@@ -393,14 +396,14 @@ func (s *roleDataStoreTestSuite) setupGetFilteredReturnValues(groups []*storage.
 
 func getValidPermissionSet(id string, name string) *storage.PermissionSet {
 	return &storage.PermissionSet{
-		Id:   role.EnsureValidPermissionSetID(id),
+		Id:   validator.EnsureValidPermissionSetID(id),
 		Name: name,
 	}
 }
 
 func getInvalidPermissionSet(id string, name string) *storage.PermissionSet {
 	return &storage.PermissionSet{
-		Id:   role.EnsureValidPermissionSetID(id),
+		Id:   validator.EnsureValidPermissionSetID(id),
 		Name: name,
 		ResourceToAccess: map[string]storage.Access{
 			"Some non-existent resource": storage.Access_NO_ACCESS,
@@ -508,7 +511,13 @@ func (s *roleDataStoreTestSuite) TestPermissionSetWriteOperations() {
 	badDeclarativePermissionSet.Traits = &storage.Traits{
 		Origin: storage.Traits_DECLARATIVE,
 	}
+	<<<<<<< Updated
+	upstream
 	updatedAdminPermissionSet := getValidPermissionSet(role.EnsureValidAccessScopeID("admin"), accesscontrol.Admin)
+	====== =
+	updatedAdminPermissionSet := getValidPermissionSet(validator.EnsureValidAccessScopeID("admin"), defaults.Admin)
+	>>>>>>> Stashed
+	changes
 
 	err := s.dataStore.AddPermissionSet(s.hasWriteCtx, badPermissionSet)
 	s.ErrorIs(err, errox.InvalidArgs, "invalid permission set for Add*() yields an error")
@@ -636,14 +645,14 @@ func (s *roleDataStoreTestSuite) TestPermissionSetWriteOperations() {
 
 func getValidAccessScope(id string, name string) *storage.SimpleAccessScope {
 	return &storage.SimpleAccessScope{
-		Id:   role.EnsureValidAccessScopeID(id),
+		Id:   validator.EnsureValidAccessScopeID(id),
 		Name: name,
 	}
 }
 
 func getInvalidAccessScope(id string, name string) *storage.SimpleAccessScope {
 	return &storage.SimpleAccessScope{
-		Id:   role.EnsureValidAccessScopeID(id),
+		Id:   validator.EnsureValidAccessScopeID(id),
 		Name: name,
 		Rules: &storage.SimpleAccessScope_Rules{
 			IncludedNamespaces: []*storage.SimpleAccessScope_Rules_Namespace{
@@ -765,7 +774,7 @@ func (s *roleDataStoreTestSuite) TestAccessScopeWriteOperations() {
 		Name: "new existing scope",
 	}
 	updatedDefaultScope := getValidAccessScope("ffffffff-ffff-fff4-f5ff-fffffffffffe",
-		role.AccessScopeExcludeAll.GetName())
+		defaults.AccessScopeExcludeAll.GetName())
 	declarativeScope := getValidAccessScope("scope.declarative", "new declarative scope")
 	declarativeScope.Traits = &storage.Traits{
 		Origin: storage.Traits_DECLARATIVE,

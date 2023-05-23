@@ -1,16 +1,16 @@
-package role
+package defaults
 
 import (
 	"testing"
 
 	"github.com/stackrox/rox/generated/storage"
-	"github.com/stackrox/rox/pkg/defaults/accesscontrol"
+	"github.com/stackrox/rox/pkg/set"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestIsDefaultRole(t *testing.T) {
-	defaultRoleWithTraits := &storage.Role{Name: accesscontrol.Admin, Traits: &storage.Traits{Origin: storage.Traits_DEFAULT}}
-	defaultRoleWithoutTraits := &storage.Role{Name: accesscontrol.Admin}
+	defaultRoleWithTraits := &storage.Role{Name: Admin, Traits: &storage.Traits{Origin: storage.Traits_DEFAULT}}
+	defaultRoleWithoutTraits := &storage.Role{Name: Admin}
 	nonDefaultRole := &storage.Role{Name: "some-random-role"}
 
 	assert.True(t, IsDefaultRole(defaultRoleWithTraits))
@@ -29,13 +29,14 @@ func TestIsDefaultAccessScope(t *testing.T) {
 	assert.False(t, IsDefaultAccessScope(nonDefaultAccessScope))
 }
 
-func TestIsDefaultPermissionSet(t *testing.T) {
-	defaultPermissionSetWithTraits := &storage.PermissionSet{Name: accesscontrol.Admin,
-		Traits: &storage.Traits{Origin: storage.Traits_DEFAULT}}
-	defaultPermissionSetWithoutTraits := &storage.PermissionSet{Name: accesscontrol.Admin}
-	nonDefaultPermissionSet := &storage.PermissionSet{Name: "some-random-permission-set"}
+func TestRoleToPermSetMapping(t *testing.T) {
+	defaultPermSets := GetDefaultPermissionSets()
+	var permSetNames set.Set[string]
+	for _, defaultPermSet := range defaultPermSets {
+		permSetNames.Add(defaultPermSet.GetName())
+	}
 
-	assert.True(t, IsDefaultPermissionSet(defaultPermissionSetWithTraits))
-	assert.True(t, IsDefaultPermissionSet(defaultPermissionSetWithoutTraits))
-	assert.False(t, IsDefaultPermissionSet(nonDefaultPermissionSet))
+	for _, roleName := range DefaultRoleNames.AsSlice() {
+		assert.True(t, permSetNames.Contains(roleName))
+	}
 }
