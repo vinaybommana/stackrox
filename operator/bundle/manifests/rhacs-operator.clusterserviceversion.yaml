@@ -54,6 +54,9 @@ spec:
           all user interaction.
         displayName: Central Component Settings
         path: central
+      - description: Monitoring configuration.
+        displayName: Monitoring
+        path: monitoring
       - description: Settings for the Scanner component, which is responsible for
           vulnerability scanning of container images.
         displayName: Scanner Component Settings

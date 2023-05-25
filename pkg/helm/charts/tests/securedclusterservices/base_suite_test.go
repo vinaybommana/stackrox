@@ -89,7 +89,9 @@ config:
   slimCollector: true
   exposeMonitoring: true
 
-enableOpenShiftMonitoring: true
+monitoring:
+  openshift:
+	enabled: true
 scanner:
   disable: false
 

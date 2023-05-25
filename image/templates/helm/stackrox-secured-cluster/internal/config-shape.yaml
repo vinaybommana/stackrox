@@ -141,7 +141,9 @@ customize:
   other: {} # dict
 allowNonstandardNamespace: null # bool
 allowNonstandardReleaseName: null # bool
-enableOpenShiftMonitoring: null # bool
+monitoring:
+  openshift:
+    enabled: null # bool
 meta:
   namespaceOverride: null # bool
   useLookup: null # bool

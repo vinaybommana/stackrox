@@ -1,6 +1,6 @@
 {{- include "srox.init" . -}}
 
-{{- if ._rox.enableOpenShiftMonitoring -}}
+{{- if and ._rox.monitoring ._rox.monitoring.openshift ._rox.monitoring.openshift.enabled -}}
 
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -66,5 +66,86 @@ spec:
   namespaceSelector:
     matchNames:
     - {{ .Release.Namespace }}
+
+---
+# https://stackoverflow.com/a/76276158
+# Create a service account for the namespace-labeling job:
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: central-namespace-labeler
+  labels:
+    {{- include "srox.labels" (list . "serviceaccount" "central-namespace-labeler") | nindent 4 }}
+  annotations:
+    {{- include "srox.annotations" (list . "serviceaccount" "central-namespace-labeler") | nindent 4 }}
+
+---
+
+# Create a role with the appropriate permissions:
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: label-ns
+  labels:
+    {{- include "srox.labels" (list . "role" "label-ns") | nindent 4 }}
+  annotations:
+    {{- include "srox.annotations" (list . "role" "label-ns") | nindent 4 }}
+rules:
+- apiGroups: [""]
+  resources: ["namespaces"]
+  resourceNames: [{{ .Release.Namespace }}]
+  verbs: ["get", "patch"]
+
+---
+
+# Bind the service account to the role:
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: label-ns-rolebinding
+  labels:
+    {{- include "srox.labels" (list . "rolebinding" "label-ns-rolebinding") | nindent 4 }}
+  annotations:
+    {{- include "srox.annotations" (list . "rolebinding" "label-ns-rolebinding") | nindent 4 }}
+subjects:
+- kind: ServiceAccount
+  name: central-namespace-labeler
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: label-ns
+  apiGroup: rbac.authorization.k8s.io
+
+---
+
+# Create your namespace-labeling job, making sure to use the appropriate serviceAccountName:
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: label-ns
+  labels:
+    {{- include "srox.labels" (list . "job" "label-ns") | nindent 4 }}
+  annotations:
+    {{- include "srox.annotations" (list . "job" "label-ns") | nindent 4 }}
+    "helm.sh/hook": post-install
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    metadata:
+      name: label-ns-job
+      labels:
+        {{- include "srox.labels" (list . "job" "label-ns-job") | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      serviceAccountName: central-namespace-labeler
+      containers:
+      - name: label-ns
+        image: "bitnami/kubectl:latest"
+        command:
+        - kubectl
+        - label
+        - ns
+        - {{ .Release.Namespace }}
+        - openshift.io/cluster-monitoring=true
 
 {{- end }}

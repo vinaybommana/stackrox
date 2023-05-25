@@ -87,7 +87,9 @@ func (t Translator) translate(ctx context.Context, c platform.Central) (chartuti
 		namespace: c.GetNamespace(),
 	}
 
-	central, err := getCentralComponentValues(centralSpec, checker, obsoletePVC)
+	monitoring := c.Spec.Monitoring
+	v.AddChild("monitoring", globalMonitoring(monitoring))
+	central, err := getCentralComponentValues(centralSpec, monitoring, checker, obsoletePVC)
 	if err != nil {
 		return nil, err
 	}
@@ -103,6 +105,14 @@ func (t Translator) translate(ctx context.Context, c platform.Central) (chartuti
 	v.AddAllFrom(translation.GetMisc(c.Spec.Misc))
 
 	return v.Build()
+}
+
+func globalMonitoring(m *platform.GlobalMonitoring) *translation.ValuesBuilder {
+	enabled := translation.NewValuesBuilder()
+	enabled.SetBoolValue("enabled", m.IsOpenShiftMonitoringEnabled())
+	openshift := translation.NewValuesBuilder()
+	openshift.AddChild("openshift", &enabled)
+	return &openshift
 }
 
 func getEnv(c platform.Central) *translation.ValuesBuilder {
@@ -195,7 +205,7 @@ func getCentralPersistenceValues(p *platform.Persistence, checker *pvcStateCheck
 	return &persistence, nil
 }
 
-func getCentralComponentValues(c *platform.CentralComponentSpec, checker *pvcStateChecker, obsoletePVC bool) (*translation.ValuesBuilder, error) {
+func getCentralComponentValues(c *platform.CentralComponentSpec, m *platform.GlobalMonitoring, checker *pvcStateChecker, obsoletePVC bool) (*translation.ValuesBuilder, error) {
 	cv := translation.NewValuesBuilder()
 
 	cv.AddChild(translation.ResourcesKey, translation.GetResources(c.Resources))
@@ -203,7 +213,7 @@ func getCentralComponentValues(c *platform.CentralComponentSpec, checker *pvcSta
 		cv.SetMap("defaultTLS", map[string]interface{}{"reference": c.DefaultTLSSecret.Name})
 	}
 
-	cv.SetBoolValue("exposeMonitoring", c.Monitoring.IsEnabled())
+	cv.SetBoolValue("exposeMonitoring", c.Monitoring.IsEnabled() || m.IsOpenShiftMonitoringEnabled())
 	cv.SetStringMap("nodeSelector", c.NodeSelector)
 	cv.AddAllFrom(translation.GetTolerations(translation.TolerationsKey, c.Tolerations))
 

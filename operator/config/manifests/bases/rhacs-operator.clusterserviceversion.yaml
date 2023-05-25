@@ -108,6 +108,9 @@ spec:
           other workloads.
         displayName: Create SecurityContextConstraints for Operand
         path: misc.createSCCs
+      - description: Monitoring configuration.
+        displayName: Monitoring
+        path: monitoring
       - description: Controls the number of analyzer replicas and autoscaling.
         displayName: Scaling
         path: scanner.analyzer.scaling

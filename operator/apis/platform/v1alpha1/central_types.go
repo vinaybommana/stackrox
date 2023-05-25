@@ -53,9 +53,27 @@ type CentralSpec struct {
 	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName=Customizations,order=6,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:advanced"}
 	Customize *CustomizeSpec `json:"customize,omitempty"`
 
+	// Monitoring configuration.
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,order=1
+	Monitoring *GlobalMonitoring `json:"monitoring,omitempty"`
+
 	// Miscellaneous settings.
 	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName=Miscellaneous,order=7,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:advanced"}
 	Misc *MiscSpec `json:"misc,omitempty"`
+}
+
+// GlobalMonitoring defines settings related to monitoring.
+type GlobalMonitoring struct {
+	OpenShiftMonitoring *OpenShiftMonitoring `json:"openshift,omitempty"`
+}
+
+// OpenShiftMonitoring define settings related to OpenShift Monitoring
+type OpenShiftMonitoring struct {
+	Enabled *bool `json:"enabled,omitempty"`
+}
+
+func (m *GlobalMonitoring) IsOpenShiftMonitoringEnabled() bool {
+	return m != nil && m.OpenShiftMonitoring != nil && m.OpenShiftMonitoring.Enabled != nil && *m.OpenShiftMonitoring.Enabled
 }
 
 // Egress defines settings related to outgoing network traffic.

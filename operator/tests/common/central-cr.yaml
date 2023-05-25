@@ -5,35 +5,53 @@ metadata:
 spec:
   # Resource settings should be in sync with /deploy/common/local-dev-values.yaml
   central:
-    resources:
-      requests:
-        memory: 1Gi
-        cpu: 1
-      limits:
-        memory: 4Gi
-        cpu: 1
-    adminPasswordSecret:
-      name: admin-pass
     db:
+      isEnabled: Default
+      persistence:
+        persistentVolumeClaim:
+          claimName: central-db
       resources:
-        requests:
-          memory: 1Gi
-          cpu: 1
         limits:
-          memory: 4Gi
-          cpu: 1
+          cpu: 100m
+          ephemeral-storage: 50Mi
+          memory: 500Mi
+        requests:
+          cpu: 50m
+          ephemeral-storage: 50Mi
+          memory: 500Mi
+    exposure:
+      loadBalancer:
+        enabled: false
+        port: 443
+      nodePort:
+        enabled: false
+      route:
+        enabled: true
+    monitoring:
+      exposeEndpoint: Enabled
+      openShiftMonitoring: Enabled
+    persistence:
+      persistentVolumeClaim:
+        claimName: stackrox-db
+    resources:
+      limits:
+        cpu: 100m
+        ephemeral-storage: 50Mi
+        memory: 500Mi
+      requests:
+        cpu: 50m
+        ephemeral-storage: 50Mi
+        memory: 500Mi
+  egress:
+    connectivityPolicy: Online
   scanner:
     analyzer:
       scaling:
-        autoScaling: Disabled
-        replicas: 1
-      resources:
-        requests:
-          memory: 500Mi
-          cpu: 500m
-        limits:
-          memory: 2500Mi
-          cpu: 2000m
+        autoScaling: Enabled
+        maxReplicas: 5
+        minReplicas: 2
+        replicas: 3
+    scannerComponent: Disabled
 ---
 apiVersion: v1
 kind: Secret

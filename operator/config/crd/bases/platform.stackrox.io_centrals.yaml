@@ -680,6 +680,17 @@ spec:
                       interfere with other workloads.
                     type: boolean
                 type: object
+              monitoring:
+                description: Monitoring configuration.
+                properties:
+                  openshift:
+                    description: OpenShiftMonitoring define settings related to OpenShift
+                      Monitoring
+                    properties:
+                      enabled:
+                        type: boolean
+                    type: object
+                type: object
               scanner:
                 description: Settings for the Scanner component, which is responsible
                   for vulnerability scanning of container images.

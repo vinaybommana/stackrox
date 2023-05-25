@@ -78,7 +78,9 @@ scanner:
   dbServiceTLS:
     cert: "scanner-db tls cert pem"
     key: "scanner-db tls key pem"
-enableOpenShiftMonitoring: true
+monitoring:
+  openshift:
+    enabled: true
 system:
     enablePodSecurityPolicies: true
 `
@@ -106,6 +108,9 @@ central:
     enabled: true
   persistence:
     none: true
+monitoring:
+  openshift:
+    enabled: true
 enableOpenShiftMonitoring: true
 system:
     enablePodSecurityPolicies: true

@@ -102,7 +102,9 @@ defaults:
     enablePodSecurityPolicies: [< .EnablePodSecurityPolicies >]
     [<- end >]
 
-  enableOpenShiftMonitoring: false
+monitoring:
+  openshift:
+    enabled: false
 
 pvcDefaults:
   claimName: "stackrox-db"
