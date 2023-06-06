@@ -78,14 +78,17 @@ func (m *Maintenance) validate() error {
 
 // CentralDB defines the config options to access central-db
 type CentralDB struct {
-	Source       string `yaml:"source"`
-	DatabaseName string
+	Source           string `yaml:"source"`
+	ExternalDatabase bool
+	DatabaseName     string
 }
 
 func (c *CentralDB) applyDefaults() {
 	c.Source = strings.TrimSpace(c.Source)
 	if c.Source == "" {
 		c.Source = defaultDBSource
+	} else {
+		c.ExternalDatabase = true
 	}
 
 	c.DatabaseName = strings.TrimSpace(c.DatabaseName)

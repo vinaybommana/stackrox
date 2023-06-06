@@ -39,7 +39,10 @@ func GetPostgresConfig() (map[string]string, *postgres.Config, error) {
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Could not parse postgres config")
 	}
-	config.ConnConfig.ConnectTimeout = connectTimeout
+
+	if !IsExternalDatabase() {
+		config.ConnConfig.ConnectTimeout = connectTimeout
+	}
 
 	sourceMap, err := ParseSource(source)
 	if err != nil {
@@ -76,4 +79,9 @@ func GetActiveDB() string {
 // GetPostgresCapacity - returns the capacity of the Postgres instance
 func GetPostgresCapacity() int64 {
 	return capacity
+}
+
+// IsExternalDatabase - retrieves whether Postgres is external
+func IsExternalDatabase() bool {
+	return config.GetConfig().CentralDB.ExternalDatabase
 }
