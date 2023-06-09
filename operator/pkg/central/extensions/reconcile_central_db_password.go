@@ -159,8 +159,5 @@ func validateCentralDBPassword(secret coreV1.Secret) (string, error) {
 	if strings.ContainsAny(password, "\r\n") {
 		return "", errors.Errorf("secret %q contains a multi-line %q entry", secret.Name, centralDBPasswordKey)
 	}
-	if strings.TrimSpace(password) != password {
-		return "", errors.Errorf("secret %q contains a %q entry with leading or trailing whitespace", secret.Name, centralDBPasswordKey)
-	}
 	return password, nil
 }
