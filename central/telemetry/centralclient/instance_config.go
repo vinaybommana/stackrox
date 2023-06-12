@@ -11,7 +11,6 @@ import (
 	"github.com/stackrox/rox/central/installation/store"
 	"github.com/stackrox/rox/central/role/resources"
 	"github.com/stackrox/rox/generated/storage"
-	"github.com/stackrox/rox/pkg/buildinfo"
 	"github.com/stackrox/rox/pkg/env"
 	"github.com/stackrox/rox/pkg/grpc"
 	"github.com/stackrox/rox/pkg/grpc/client/authn/basic"
@@ -64,12 +63,6 @@ func downloadConfig(u string) (*remoteConfig, error) {
 	return cfg, errors.Wrap(err, "cannot decode telemetry configuration")
 }
 
-func isReleaseBuild() bool {
-	return buildinfo.ReleaseBuild &&
-		version.GetMainVersion() != "" &&
-		!strings.Contains(version.GetMainVersion(), "-")
-}
-
 func getInstanceConfig() (*phonehome.Config, map[string]any, error) {
 	key := env.TelemetryStorageKey.Setting()
 	if key == disabledKey || env.OfflineModeEnv.BooleanSetting() {
@@ -78,13 +71,13 @@ func getInstanceConfig() (*phonehome.Config, map[string]any, error) {
 
 	if env.TelemetryConfigURL.Setting() != "" &&
 		// Development versions must provide a key on top of the URL.
-		(key == "" && isReleaseBuild() || key != "") {
+		(key == "" && version.IsReleaseVersion() || key != "") {
 		remoteCfg, err := downloadConfig(env.TelemetryConfigURL.Setting())
 		if err != nil {
 			return nil, nil, err
 		}
 		// The key has to match for development versions.
-		if remoteCfg != nil && (isReleaseBuild() || remoteCfg.Key == key) {
+		if remoteCfg != nil && (version.IsReleaseVersion() || remoteCfg.Key == key) {
 			key = remoteCfg.Key
 			log.Info("Telemetry configuration has been downloaded from ",
 				env.TelemetryConfigURL.Setting())
