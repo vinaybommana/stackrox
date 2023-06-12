@@ -94,8 +94,8 @@ deploy_earlier_central() {
     PATH="bin/$TEST_HOST_PLATFORM:$PATH" roxctl version
     PATH="bin/$TEST_HOST_PLATFORM:$PATH" \
     MAIN_IMAGE_TAG="$EARLIER_TAG" \
-    SCANNER_IMAGE="$REGISTRY/scanner:$(cat SCANNER_VERSION)" \
-    SCANNER_DB_IMAGE="$REGISTRY/scanner-db:$(cat SCANNER_VERSION)" \
+    SCANNER_IMAGE="$REGISTRY/scanner-classic:$(cat SCANNER_VERSION)" \
+    SCANNER_DB_IMAGE="$REGISTRY/scanner-db-classic:$(cat SCANNER_VERSION)" \
     ./deploy/k8s/central.sh
 
     export_central_basic_auth_creds

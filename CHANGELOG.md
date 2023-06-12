@@ -11,9 +11,16 @@ Please avoid adding duplicate information across this changelog and JIRA/doc inp
 
 ### Removed Features
 
-### Deprecated Fatures
+### Deprecated Features
 
 ### Technical Changes
+- Scanner is receiving a major overhaul this release, and the major version is bumped from 2 to 4.
+  - Scanner v2 images will continue to be served, but with the suffix "classic". That means, the previous
+    major version of Scanner is still available, but the images will have the following names:
+    - <repository>/scanner-classic:<tag>
+    - <repository>/scanner-db-classic:<tag>
+    - <repository>/scanner-slim-classic:<tag>
+    - <repository>/scanner-db-slim-classic:<tag>
 
 ## [4.1.0]
 
