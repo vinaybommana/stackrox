@@ -138,11 +138,16 @@ func updateCentralDBPasswordSecretDataIfNeeded(secret *coreV1.Secret, password s
 func unsetCentralDBPasswordSecretOwnerReferenceIfNeeded(c *platform.Central, secret *coreV1.Secret) bool {
 	// make sure that the secret owner reference is unset. This is to ensure that PVCs which are not deleted
 	// when Centrals are deleted do not have their passwords deleted.
+
+	if len(secret.OwnerReferences) == 0 {
+		return false
+	}
+
 	shouldUpdateOwnerReference := false
 	centralOwnerRef := v1.NewControllerRef(c, c.GroupVersionKind())
 	centralGK := c.GroupVersionKind().GroupKind()
-	for i := len(secret.OwnerReferences) - 1; i >= 0; i-- {
-		ownerRef := secret.OwnerReferences[i]
+	var resultOwnerRefs []v1.OwnerReference
+	for _, ownerRef := range secret.OwnerReferences {
 		ownerGV, err := schema.ParseGroupVersion(ownerRef.APIVersion)
 		if err != nil {
 			continue
@@ -151,9 +156,13 @@ func unsetCentralDBPasswordSecretOwnerReferenceIfNeeded(c *platform.Central, sec
 		if ownerRef.UID == centralOwnerRef.UID &&
 			ownerRef.Name == centralOwnerRef.Name &&
 			ownerGK == centralGK {
-			secret.OwnerReferences = append(secret.OwnerReferences[:i], secret.OwnerReferences[i+1:]...)
 			shouldUpdateOwnerReference = true
+		} else {
+			resultOwnerRefs = append(resultOwnerRefs, ownerRef)
 		}
+	}
+	if shouldUpdateOwnerReference {
+		secret.OwnerReferences = resultOwnerRefs
 	}
 	return shouldUpdateOwnerReference
 }
