@@ -27,9 +27,11 @@ const (
 
 // ReconcileCentralDBPasswordExtension returns an extension that takes care of reconciling the central-db-password secret.
 func ReconcileCentralDBPasswordExtension(client ctrlClient.Client) extensions.ReconcileExtension {
-	return wrapExtension(func(ctx context.Context, central *platform.Central, client ctrlClient.Client, statusUpdater func(statusFunc updateStatusFunc), log logr.Logger) error {
-		return reconcileCentralDBPassword(ctx, central, client)
-	}, client)
+	return wrapExtension(wrappedReconcileCentralDBPassword, client)
+}
+
+func wrappedReconcileCentralDBPassword(ctx context.Context, central *platform.Central, client ctrlClient.Client, _ func(statusFunc updateStatusFunc), _ logr.Logger) error {
+	return reconcileCentralDBPassword(ctx, central, client)
 }
 
 func reconcileCentralDBPassword(ctx context.Context, c *platform.Central, client ctrlClient.Client) error {
