@@ -14,6 +14,7 @@ import (
 	"github.com/stackrox/rox/pkg/expiringcache"
 	"github.com/stackrox/rox/pkg/grpc"
 	"github.com/stackrox/rox/pkg/logging"
+	"github.com/stackrox/rox/pkg/mtls"
 	"github.com/stackrox/rox/pkg/namespaces"
 	"github.com/stackrox/rox/pkg/protoutils"
 	"github.com/stackrox/rox/pkg/satoken"
@@ -60,6 +61,11 @@ func CreateSensor(cfg *CreateOptions) (*sensor.Sensor, error) {
 		log.Infof("Running sensor with Kubernetes re-sync disabled")
 	} else {
 		log.Infof("Running sensor with Kubernetes re-sync enabled. Re-sync time: %s", cfg.resyncPeriod.String())
+	}
+
+	if cfg.localSensor && cfg.certsParser != nil {
+		mtls.GetCertificateParser().Override(cfg.certsParser)
+		clusterid.GetParser().Override(cfg.certsParser)
 	}
 
 	storeProvider := resources.InitializeStore()
