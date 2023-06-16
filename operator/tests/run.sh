@@ -22,6 +22,19 @@ _EO_KUTTL_HELP_
 
     local FAILED=0
 
+    if [[ -n ${1:-} ]]; then
+        info "Preparing test directory for running under ${1}..."
+        case $1 in
+        openshift*)
+            delete_pattern='*-only-on-non-openshift*'
+            ;;
+        *)
+            delete_pattern='*-only-on-openshift*'
+            ;;
+        esac
+        find operator/tests -type f -name "${delete_pattern}" -printf "Removing %p\n" -delete
+    fi
+
     info "Fetching kuttl binary"
     junit_wrap fetch-kuttl \
                "Download kuttl binary." \
@@ -59,5 +72,5 @@ _EO_KUTTL_HELP_
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
-    test_operator_e2e "$*"
+    test_operator_e2e "$@"
 fi

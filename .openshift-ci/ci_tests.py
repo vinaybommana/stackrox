@@ -86,7 +86,7 @@ class OperatorE2eTest(BaseTest):
 
         print("Executing operator e2e tests")
         self.run_with_graceful_kill(
-            ["operator/tests/run.sh"],
+            ["operator/tests/run.sh", self._operator_cluster_type],
             OperatorE2eTest.TEST_TIMEOUT_SEC,
         )
 
