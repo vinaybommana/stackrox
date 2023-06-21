@@ -61,7 +61,7 @@ func (r *resolverImpl) Send(event *component.ResourceEvent) {
 	metrics.IncResolverChannelSize()
 }
 
-// runResolver reads messages from the inner queue and process the message
+// runResolver starts the runSingleDeploymentResolver and the runProcessMessages routines.
 func (r *resolverImpl) runResolver() {
 	defer r.stopper.Flow().ReportStopped()
 	wg := &sync.WaitGroup{}
@@ -71,6 +71,7 @@ func (r *resolverImpl) runResolver() {
 	wg.Wait()
 }
 
+// runProcessMessages reads messages from the innerQueue and process the message
 func (r *resolverImpl) runProcessMessages(wg *sync.WaitGroup) {
 	defer wg.Done()
 	for {
@@ -87,12 +88,14 @@ func (r *resolverImpl) runProcessMessages(wg *sync.WaitGroup) {
 	}
 }
 
+// pushDeploymentIDs pushes deployment IDs to the inner queue.
 func (r *resolverImpl) pushDeploymentIDs(skip bool, action central.ResourceAction, ids ...string) {
 	for _, id := range ids {
 		r.queue.PushC() <- deploymentRef{id, skip, action}
 	}
 }
 
+// runSingleDeploymentResolver reads deploymentRef from the inner queue and resolves them.
 func (r *resolverImpl) runSingleDeploymentResolver(wg *sync.WaitGroup) {
 	defer wg.Done()
 	for {
@@ -108,6 +111,7 @@ func (r *resolverImpl) runSingleDeploymentResolver(wg *sync.WaitGroup) {
 	}
 }
 
+// resolveDeployment resolves the dependencies of a deployment given its ID.
 func (r *resolverImpl) resolveDeployment(id string, skip bool, action central.ResourceAction) {
 	msg := component.NewEvent()
 	if skip {
@@ -153,7 +157,7 @@ func (r *resolverImpl) resolveDeployment(id string, skip bool, action central.Re
 	r.outputQueue.Send(msg)
 }
 
-// processMessage resolves the dependencies and forwards the message to the outputQueue
+// processMessage sends the ids from the DeploymentReferences to the inner queue, and forwards the message to the outputQueue
 func (r *resolverImpl) processMessage(msg *component.ResourceEvent) {
 	if msg.DeploymentReferences != nil {
 
