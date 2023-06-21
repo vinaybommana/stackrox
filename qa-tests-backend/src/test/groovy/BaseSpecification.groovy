@@ -150,7 +150,7 @@ class BaseSpecification extends Specification {
 
         // ROX-9950 Limit to GKE due to issues on other providers.
         if (orchestrator.isGKE()) {
-            recordResourcesAtSpecStart()
+            recordResourcesAtSpecStart(orchestrator)
         }
 
         addShutdownHook {
@@ -171,7 +171,7 @@ class BaseSpecification extends Specification {
 
             // ROX-9950 Limit to GKE due to issues on other providers.
             if (orchestrator.isGKE()) {
-                compareResourcesAtSpecEnd()
+                compareResourcesAtSpecEnd(orchestrator)
             }
         }
 
@@ -244,7 +244,7 @@ class BaseSpecification extends Specification {
         }
     }
 
-    def recordResourcesAtSpecStart() {
+    private static void recordResourcesAtSpecStart(OrchestratorMain orchestrator) {
         resourceRecord = [
                 "namespaces": orchestrator.getNamespaces(),
                 "deployments": orchestrator.getDeployments("default") +
@@ -291,7 +291,7 @@ class BaseSpecification extends Specification {
         }
     }
 
-    def compareResourcesAtSpecEnd() {
+    private static void compareResourcesAtSpecEnd(OrchestratorMain orchestrator) {
         Javers javers = JaversBuilder.javers()
                 .withListCompareAlgorithm(ListCompareAlgorithm.AS_SET)
                 .build()
@@ -299,8 +299,8 @@ class BaseSpecification extends Specification {
         List<String> namespaces = orchestrator.getNamespaces()
         Diff diff = javers.compare(resourceRecord["namespaces"], namespaces)
         if (diff.hasChanges()) {
-            log.info "There is a difference in namespaces between the start and end of this test spec:"
-            log.info diff.prettyPrint()
+            LOG.info "There is a difference in namespaces between the start and end of this test run:"
+            LOG.info diff.prettyPrint()
             throw new TestSpecRuntimeException("Namespaces have changed. Ensure that any namespace created " +
                     "in a test spec is deleted in that test spec.")
         }
@@ -309,8 +309,8 @@ class BaseSpecification extends Specification {
                 orchestrator.getDeployments(Constants.ORCHESTRATOR_NAMESPACE)
         diff = javers.compare(resourceRecord["deployments"], deployments)
         if (diff.hasChanges()) {
-            log.info "There is a difference in deployments between the start and end of this test spec"
-            log.info diff.prettyPrint()
+            LOG.info "There is a difference in deployments between the start and end of this test run"
+            LOG.info diff.prettyPrint()
             throw new TestSpecRuntimeException("Deployments have changed. Ensure that any deployments created " +
                     "in a test spec are destroyed in that test spec.")
         }
