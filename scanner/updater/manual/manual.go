@@ -13,17 +13,22 @@ import (
 // Factory is the UpdaterSetFactory exposed by this package.
 //
 // All configuration is done on the returned updaters. See the [Config] type.
-var Factory driver.UpdaterSetFactory = &factory{}
 
-type factory struct{}
+type Factory struct {
+}
 
-func (factory) UpdaterSet(context.Context) (s driver.UpdaterSet, err error) {
+func UpdaterSet(ctx context.Context, vulns []*claircore.Vulnerability) (s driver.UpdaterSet, err error) {
 	s = driver.NewUpdaterSet()
-	s.Add(&updater{})
+	if vulns != nil && len(vulns) > 0 {
+		s.Add(&updater{data: vulns})
+	} else {
+		s.Add(&updater{})
+	}
 	return s, nil
 }
 
 type updater struct {
+	data []*claircore.Vulnerability
 }
 
 var _ driver.Updater = (*updater)(nil)
@@ -43,5 +48,8 @@ func (u *updater) Fetch(ctx context.Context, f driver.Fingerprint) (io.ReadClose
 }
 
 func (u *updater) Parse(ctx context.Context, contents io.ReadCloser) ([]*claircore.Vulnerability, error) {
-	return manuallyEnrichedVulns, nil
+	if u.data == nil || len(u.data) == 0 {
+		return manuallyEnrichedVulns, nil
+	}
+	return u.data, nil
 }
