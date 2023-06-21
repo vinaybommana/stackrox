@@ -70,7 +70,13 @@ class BaseSpecification extends Specification {
 
     public static String coreImageIntegrationId = null
 
-    private static synchronized globalSetup() {
+    private static synchronizedGlobalSetup() {
+        synchronized(BaseSpecification) {
+            globalSetup()
+        }
+    }
+
+    private static globalSetup() {
         if (globalSetupDone) {
             return
         }
@@ -197,7 +203,7 @@ class BaseSpecification extends Specification {
         testStartTimeMillis = System.currentTimeMillis()
 
         RestAssured.useRelaxedHTTPSValidation()
-        globalSetup()
+        synchronizedGlobalSetup()
 
         try {
             orchestrator.setup()
