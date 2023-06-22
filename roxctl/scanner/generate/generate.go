@@ -120,5 +120,7 @@ func Command(cliEnvironment environment.Environment) *cobra.Command {
 		"it doesn't reach out to the internet for updates)")
 	utils.Must(c.Flags().MarkDeprecated("offline-mode", "The offline mode option has been deprecated, scanner will reach out to central for updates"))
 
+	flags.AddTimeout(c)
+
 	return c
 }
