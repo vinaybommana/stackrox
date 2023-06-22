@@ -83,5 +83,5 @@ func GetPostgresCapacity() int64 {
 
 // IsExternalDatabase - retrieves whether Postgres is external
 func IsExternalDatabase() bool {
-	return config.GetConfig().CentralDB.ExternalDatabase
+	return config.GetConfig().CentralDB.External
 }

@@ -78,9 +78,9 @@ func (m *Maintenance) validate() error {
 
 // CentralDB defines the config options to access central-db
 type CentralDB struct {
-	Source           string `yaml:"source"`
-	ExternalDatabase bool   `yaml:"external"`
-	DatabaseName     string
+	Source       string `yaml:"source"`
+	External     bool   `yaml:"external"`
+	DatabaseName string
 }
 
 func (c *CentralDB) applyDefaults() {
@@ -168,6 +168,7 @@ func readConfigs() (*Config, error) {
 		return nil, err
 	}
 
+	log.Infof("SHREWS -- DB Config --- %v", dbConf.CentralDB)
 	conf := Config{Maintenance: centralConf.Maintenance, CentralDB: dbConf.CentralDB}
 	conf.applyDefaults()
 	if err := conf.validate(); err != nil {
