@@ -83,6 +83,7 @@ func (d *dbCloneManagerImpl) ensureVersionCompatible() error {
 // Scan - checks the persistent data of central and gather the clone information
 // from disk.
 func (d *dbCloneManagerImpl) Scan() error {
+	
 	if pgconfig.IsExternalDatabase() {
 		return d.ensureVersionCompatible()
 	}
