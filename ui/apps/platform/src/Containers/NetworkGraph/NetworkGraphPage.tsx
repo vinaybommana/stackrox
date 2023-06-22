@@ -87,26 +87,38 @@ function NetworkGraphPage() {
     const [simulationQueryValue] = useURLParameter('simulation', undefined);
     const simulation = getSimulation(simulationQueryValue);
 
+    const { clusters } = useFetchClustersForPermissions(['NetworkGraph', 'Deployment']);
+
+    const scopeHierarchy = getScopeHierarchyFromSearch(searchFilter, clusters) ?? {
+        cluster: {
+            id: '',
+            name: '',
+        },
+        namespaces: [],
+        deployments: [],
+        remainingQuery: {},
+    };
     const {
-        cluster: clusterFromUrl,
+        cluster: selectedCluster,
         namespaces: namespacesFromUrl,
         deployments: deploymentsFromUrl,
         remainingQuery,
-    } = getScopeHierarchyFromSearch(searchFilter);
-    if (clusterFromUrl !== previouslySelectedCluster) {
+    } = scopeHierarchy;
+
+    const selectedClusterId = selectedCluster.id;
+
+    if (selectedCluster.name !== previouslySelectedCluster) {
         setModels({
             activeModel: emptyModel,
             extraneousModel: emptyModel,
         });
-        setPreviouslySelectedCluster(clusterFromUrl);
+        setPreviouslySelectedCluster(selectedCluster.name);
     }
 
-    const hasClusterNamespaceSelected = Boolean(clusterFromUrl && namespacesFromUrl.length);
-
-    const { clusters } = useFetchClustersForPermissions(['NetworkGraph', 'Deployment']);
+    const hasClusterNamespaceSelected = Boolean(selectedCluster && namespacesFromUrl.length);
 
     // if no cluster is selected, and there is only one cluster available, automatically select it
-    if (clusters.length === 1 && !clusterFromUrl) {
+    if (clusters.length === 1 && !selectedCluster.name) {
         const modifiedSearchObject = { ...searchFilter };
         modifiedSearchObject.Cluster = clusters[0].name;
         delete modifiedSearchObject.Namespace;
@@ -114,9 +126,7 @@ function NetworkGraphPage() {
         setSearchFilter(modifiedSearchObject);
     }
 
-    const selectedClusterId = clusters.find((cl) => cl.name === clusterFromUrl)?.id;
-    const selectedCluster = { name: clusterFromUrl, id: selectedClusterId };
-    const { deploymentCount } = useFetchDeploymentCount(selectedClusterId || '');
+    const { deploymentCount } = useFetchDeploymentCount(selectedClusterId);
 
     const [prevEpochCount, setPrevEpochCount] = useState(0);
     const [currentEpochCount, setCurrentEpochCount] = useState(0);
@@ -142,7 +152,7 @@ function NetworkGraphPage() {
 
         // only refresh the graph data from the API if both a cluster and at least one namespace are selected
         const isClusterNamespaceSelected =
-            clusterFromUrl && namespacesFromUrl.length > 0 && deploymentCount;
+            selectedCluster?.name && namespacesFromUrl.length > 0 && deploymentCount;
 
         if (isQueryFilterComplete && selectedClusterId && isClusterNamespaceSelected) {
             setIsLoading(true);
@@ -230,7 +240,7 @@ function NetworkGraphPage() {
     useDeepCompareEffect(() => {
         updateNetworkNodes();
     }, [
-        clusterFromUrl,
+        selectedCluster,
         namespacesFromUrl,
         deploymentsFromUrl,
         remainingQuery,
@@ -307,9 +317,7 @@ function NetworkGraphPage() {
                                 <ToolbarGroup className="pf-u-flex-grow-1">
                                     <ToolbarItem className="pf-u-flex-grow-1">
                                         <NetworkSearch
-                                            selectedCluster={clusterFromUrl}
-                                            selectedNamespaces={namespacesFromUrl}
-                                            selectedDeployments={deploymentsFromUrl}
+                                            scopeHierarchy={scopeHierarchy}
                                             isDisabled={!hasClusterNamespaceSelected}
                                         />
                                     </ToolbarItem>
@@ -355,7 +363,7 @@ function NetworkGraphPage() {
                             edgeState={edgeState}
                             displayOptions={displayOptions}
                             simulation={simulation}
-                            selectedClusterId={selectedClusterId || ''}
+                            scopeHierarchy={scopeHierarchy}
                             clusterDeploymentCount={deploymentCount || 0}
                         />
                     )}

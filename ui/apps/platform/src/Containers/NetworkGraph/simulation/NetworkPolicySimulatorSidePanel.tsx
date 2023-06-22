@@ -22,7 +22,6 @@ import {
 import { HelpIcon } from '@patternfly/react-icons';
 
 import useTabs from 'hooks/patternfly/useTabs';
-import useURLSearch from 'hooks/useURLSearch';
 import ViewActiveYAMLs from './ViewActiveYAMLs';
 import {
     NetworkPolicySimulator,
@@ -30,13 +29,13 @@ import {
 } from '../hooks/useNetworkPolicySimulator';
 import NetworkPoliciesYAML from './NetworkPoliciesYAML';
 import { getDisplayYAMLFromNetworkPolicyModification } from '../utils/simulatorUtils';
-import { getScopeHierarchyFromSearch } from '../utils/hierarchyUtils';
+import { NetworkScopeHierarchy } from '../utils/hierarchyUtils';
 import UploadYAMLButton from './UploadYAMLButton';
 import NetworkSimulatorActions from './NetworkSimulatorActions';
 import NotifyYAMLModal from './NotifyYAMLModal';
 
 type NetworkPolicySimulatorSidePanelProps = {
-    selectedClusterId: string;
+    scopeHierarchy: NetworkScopeHierarchy;
     simulator: NetworkPolicySimulator;
     setNetworkPolicyModification: SetNetworkPolicyModification;
 };
@@ -47,7 +46,7 @@ const tabs = {
 };
 
 function NetworkPolicySimulatorSidePanel({
-    selectedClusterId,
+    scopeHierarchy,
     simulator,
     setNetworkPolicyModification,
 }: NetworkPolicySimulatorSidePanelProps) {
@@ -57,9 +56,6 @@ function NetworkPolicySimulatorSidePanel({
     const [isExcludingPortsAndProtocols, setIsExcludingPortsAndProtocols] =
         React.useState<boolean>(false);
     const [isNotifyModalOpen, setIsNotifyModalOpen] = React.useState(false);
-
-    const { searchFilter } = useURLSearch();
-    const { cluster: clusterName } = getScopeHierarchyFromSearch(searchFilter);
 
     function handleFileInputChange(
         _event: React.ChangeEvent<HTMLInputElement> | React.DragEvent<HTMLElement>,
@@ -105,8 +101,7 @@ function NetworkPolicySimulatorSidePanel({
         setNetworkPolicyModification({
             state: 'GENERATED',
             options: {
-                clusterId: selectedClusterId,
-                searchQuery: '',
+                scopeHierarchy,
                 networkDataSince: '',
                 excludePortsAndProtocols: isExcludingPortsAndProtocols,
             },
@@ -117,7 +112,7 @@ function NetworkPolicySimulatorSidePanel({
         setNetworkPolicyModification({
             state: 'UNDO',
             options: {
-                clusterId: selectedClusterId,
+                clusterId: scopeHierarchy.cluster.id,
             },
         });
     }
@@ -161,9 +156,7 @@ function NetworkPolicySimulatorSidePanel({
                             title={
                                 simulator.error
                                     ? simulator.error
-                                    : `Policies generated from the baseline for cluster “${
-                                          clusterName ?? ''
-                                      }”`
+                                    : `Policies generated from the baseline for cluster “${scopeHierarchy.cluster.name}”`
                             }
                         />
                     </StackItem>
@@ -182,7 +175,7 @@ function NetworkPolicySimulatorSidePanel({
                 <NotifyYAMLModal
                     isModalOpen={isNotifyModalOpen}
                     setIsModalOpen={setIsNotifyModalOpen}
-                    clusterId={selectedClusterId}
+                    clusterId={scopeHierarchy.cluster.id}
                     modification={simulator.modification}
                 />
             </div>
@@ -236,7 +229,7 @@ function NetworkPolicySimulatorSidePanel({
                 <NotifyYAMLModal
                     isModalOpen={isNotifyModalOpen}
                     setIsModalOpen={setIsNotifyModalOpen}
-                    clusterId={selectedClusterId}
+                    clusterId={scopeHierarchy.cluster.id}
                     modification={simulator.modification}
                 />
             </div>
@@ -287,7 +280,7 @@ function NetworkPolicySimulatorSidePanel({
                 <NotifyYAMLModal
                     isModalOpen={isNotifyModalOpen}
                     setIsModalOpen={setIsNotifyModalOpen}
-                    clusterId={selectedClusterId}
+                    clusterId={scopeHierarchy.cluster.id}
                     modification={simulator.modification}
                 />
             </div>
@@ -304,7 +297,7 @@ function NetworkPolicySimulatorSidePanel({
                                 component={TextVariants.h2}
                                 className="pf-u-font-size-xl pf-u-mr-xl"
                             >
-                                Simulate network policy for cluster “{clusterName}”
+                                Simulate network policy for cluster “{scopeHierarchy.cluster.name}”
                             </Text>
                         </TextContent>
                     </FlexItem>

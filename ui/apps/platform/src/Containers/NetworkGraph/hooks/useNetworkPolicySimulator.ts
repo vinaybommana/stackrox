@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import useDeepCompareEffect from 'use-deep-compare-effect';
 
 import { NetworkPolicyModification } from 'Containers/Network/networkTypes';
 import { getAxiosErrorMessage } from 'utils/responseErrorUtils';
@@ -6,6 +7,7 @@ import * as networkService from 'services/NetworkService';
 import { ensureExhaustive } from 'utils/type.utils';
 import { NetworkPolicy } from 'types/networkPolicy.proto';
 import { Simulation } from '../utils/getSimulation';
+import { NetworkScopeHierarchy } from '../utils/hierarchyUtils';
 
 export type NetworkPolicySimulator =
     | {
@@ -27,15 +29,13 @@ type SetNetworkPolicyModificationAction =
     | {
           state: 'ACTIVE';
           options: {
-              clusterId: string;
-              searchQuery: string;
+              scopeHierarchy: NetworkScopeHierarchy;
           };
       }
     | {
           state: 'GENERATED';
           options: {
-              clusterId: string;
-              searchQuery: string;
+              scopeHierarchy: NetworkScopeHierarchy;
               networkDataSince: string;
               excludePortsAndProtocols: boolean;
           };
@@ -56,7 +56,7 @@ type SetNetworkPolicyModificationAction =
 
 type UseNetworkPolicySimulatorParams = {
     simulation: Simulation;
-    clusterId: string;
+    scopeHierarchy: NetworkScopeHierarchy;
 };
 
 const defaultResultState = {
@@ -66,21 +66,21 @@ const defaultResultState = {
     isLoading: true,
 } as NetworkPolicySimulator;
 
-function useNetworkPolicySimulator({ simulation, clusterId }: UseNetworkPolicySimulatorParams): {
+function useNetworkPolicySimulator({
+    simulation,
+    scopeHierarchy,
+}: UseNetworkPolicySimulatorParams): {
     simulator: NetworkPolicySimulator;
     setNetworkPolicyModification: SetNetworkPolicyModification;
 } {
     const [simulator, setSimulator] = useState<NetworkPolicySimulator>(defaultResultState);
 
-    useEffect(() => {
+    useDeepCompareEffect(() => {
         setNetworkPolicyModification({
             state: 'ACTIVE',
-            options: {
-                clusterId,
-                searchQuery: '',
-            },
+            options: { scopeHierarchy },
         });
-    }, [clusterId, simulation.isOn]);
+    }, [scopeHierarchy, simulation.isOn]);
 
     function setNetworkPolicyModification(action: SetNetworkPolicyModificationAction): void {
         const { state, options } = action;
@@ -103,7 +103,7 @@ function useNetworkPolicySimulator({ simulation, clusterId }: UseNetworkPolicySi
             case 'ACTIVE':
                 // @TODO: Add the network search query as a second argument
                 networkService
-                    .fetchNetworkPoliciesByClusterId(options.clusterId)
+                    .fetchNetworkPoliciesByClusterId(options.scopeHierarchy.cluster.id ?? '')
                     .then((data: NetworkPolicy[]) => {
                         setSimulator({
                             state,
@@ -126,11 +126,15 @@ function useNetworkPolicySimulator({ simulation, clusterId }: UseNetworkPolicySi
                         });
                     });
                 break;
-            case 'GENERATED':
+            case 'GENERATED': {
+                const searchQuery = {
+                    Namespace: options.scopeHierarchy.namespaces,
+                    Deployment: options.scopeHierarchy.deployments,
+                };
                 networkService
                     .generateNetworkModification(
-                        options.clusterId,
-                        options.searchQuery,
+                        options.scopeHierarchy.cluster.id,
+                        searchQuery,
                         options.networkDataSince,
                         options.excludePortsAndProtocols
                     )
@@ -156,6 +160,7 @@ function useNetworkPolicySimulator({ simulation, clusterId }: UseNetworkPolicySi
                         });
                     });
                 break;
+            }
             case 'UNDO':
                 networkService
                     .getUndoNetworkModification(options.clusterId)

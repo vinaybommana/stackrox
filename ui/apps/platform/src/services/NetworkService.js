@@ -2,6 +2,7 @@ import queryString from 'qs';
 
 import { ORCHESTRATOR_COMPONENTS_KEY } from 'utils/orchestratorComponents';
 
+import { getRequestQueryStringForSearchFilter } from 'utils/searchUtils';
 import axios from './instance';
 
 const networkPoliciesBaseUrl = '/v1/networkpolicies';
@@ -377,7 +378,7 @@ export function generateNetworkModification(
     networkDataSince,
     excludePortsProtocols = null
 ) {
-    const urlParams = query ? { query } : {};
+    const urlParams = query ? { query: getRequestQueryStringForSearchFilter(query) } : {};
     if (networkDataSince) {
         urlParams.networkDataSince = networkDataSince.toISOString();
     }

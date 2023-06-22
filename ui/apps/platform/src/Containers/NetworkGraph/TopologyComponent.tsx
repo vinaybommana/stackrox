@@ -33,6 +33,7 @@ import {
 } from './hooks/useNetworkPolicySimulator';
 import { EdgeState } from './components/EdgeStateSelect';
 import { deploymentTabs } from './utils/deploymentUtils';
+import { NetworkScopeHierarchy } from './utils/hierarchyUtils';
 
 // TODO: move these type defs to a central location
 export const UrlDetailType = {
@@ -53,7 +54,7 @@ function getUrlParamsForEntity(type, id): [UrlDetailTypeValue, string] {
 export type TopologyComponentProps = {
     model: CustomModel;
     simulation: Simulation;
-    selectedClusterId: string;
+    scopeHierarchy: NetworkScopeHierarchy;
     selectedNode?: CustomNodeModel;
     simulator: NetworkPolicySimulator;
     setNetworkPolicyModification: SetNetworkPolicyModification;
@@ -71,7 +72,7 @@ function clearSimulationQuery(search: string): string {
 const TopologyComponent = ({
     model,
     simulation,
-    selectedClusterId,
+    scopeHierarchy,
     selectedNode,
     simulator,
     setNetworkPolicyModification,
@@ -175,7 +176,7 @@ const TopologyComponent = ({
                 <TopologySideBar resizable onClose={closeSidebar}>
                     {simulation.isOn && simulation.type === 'networkPolicy' && (
                         <NetworkPolicySimulatorSidePanel
-                            selectedClusterId={selectedClusterId}
+                            scopeHierarchy={scopeHierarchy}
                             simulator={simulator}
                             setNetworkPolicyModification={setNetworkPolicyModification}
                         />

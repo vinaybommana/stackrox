@@ -12,18 +12,19 @@ import useNetworkPolicySimulator from './hooks/useNetworkPolicySimulator';
 import SimulationFrame from './simulation/SimulationFrame';
 import TopologyComponent from './TopologyComponent';
 import { EdgeState } from './components/EdgeStateSelect';
+import { NetworkScopeHierarchy } from './utils/hierarchyUtils';
 
 export type NetworkGraphProps = {
     model: CustomModel;
     simulation: Simulation;
     selectedNode?: CustomNodeModel;
-    selectedClusterId: string;
+    scopeHierarchy: NetworkScopeHierarchy;
     edgeState: EdgeState;
 };
 function NetworkGraph({
     model,
     simulation,
-    selectedClusterId,
+    scopeHierarchy,
     selectedNode,
     edgeState,
 }: NetworkGraphProps) {
@@ -34,9 +35,14 @@ function NetworkGraph({
         newController.registerComponentFactory(stylesComponentFactory);
         return newController;
     }, []);
+    const searchQuery = {
+        Namespace: scopeHierarchy.namespaces,
+        Deployment: scopeHierarchy.deployments,
+    };
+
     const { simulator, setNetworkPolicyModification } = useNetworkPolicySimulator({
         simulation,
-        clusterId: selectedClusterId,
+        scopeHierarchy,
     });
 
     const isSimulating =
@@ -51,7 +57,7 @@ function NetworkGraph({
                 <TopologyComponent
                     model={model}
                     simulation={simulation}
-                    selectedClusterId={selectedClusterId}
+                    scopeHierarchy={scopeHierarchy}
                     simulator={simulator}
                     selectedNode={selectedNode}
                     setNetworkPolicyModification={setNetworkPolicyModification}

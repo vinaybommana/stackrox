@@ -5,6 +5,7 @@ import useURLSearch from 'hooks/useURLSearch';
 import searchOptionsToQuery from 'services/searchOptionsToQuery';
 import { getSearchOptionsForCategory } from 'services/SearchService';
 import { orchestratorComponentsOption } from 'utils/orchestratorComponents';
+import { NetworkScopeHierarchy } from '../utils/hierarchyUtils';
 
 import './NetworkSearch.css';
 
@@ -17,19 +18,12 @@ const searchOptionExclusions = [
     'Orchestrator Component',
 ];
 
-type NetworkSearchsProps = {
-    selectedCluster?: string;
-    selectedNamespaces?: string[];
-    selectedDeployments?: string[];
+type NetworkSearchProps = {
+    scopeHierarchy: NetworkScopeHierarchy | null;
     isDisabled: boolean;
 };
 
-function NetworkSearch({
-    selectedCluster = '',
-    selectedNamespaces = [],
-    selectedDeployments = [],
-    isDisabled,
-}: NetworkSearchsProps) {
+function NetworkSearch({ scopeHierarchy, isDisabled }: NetworkSearchProps) {
     const [searchOptions, setSearchOptions] = useState<string[]>([]);
     const { searchFilter, setSearchFilter } = useURLSearch();
 
@@ -49,9 +43,9 @@ function NetworkSearch({
 
     function onSearch(options) {
         const newOptions = { ...options };
-        newOptions.Cluster = selectedCluster;
-        newOptions.Namespace = selectedNamespaces;
-        newOptions.Deployment = selectedDeployments;
+        newOptions.Cluster = scopeHierarchy?.cluster?.name ?? '';
+        newOptions.Namespace = scopeHierarchy?.namespaces ?? [];
+        newOptions.Deployment = scopeHierarchy?.deployments ?? [];
 
         setSearchFilter(newOptions);
     }
