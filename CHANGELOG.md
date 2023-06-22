@@ -17,6 +17,8 @@ Please avoid adding duplicate information across this changelog and JIRA/doc inp
 ### Technical Changes
 
 - ROX-16962: A new parameter `spec.admissionControl.replicas` has been added to the `SecuredCluster` CRD.
+- Rollback to a 3.y release or the 4.0 release will no longer be supported starting from 4.3.
+
 
 ## [4.1.0]
 

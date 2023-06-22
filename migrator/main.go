@@ -75,7 +75,7 @@ func run() error {
 	if err != nil {
 		return errors.Wrap(err, "unable to get Postgres DB config")
 	}
-	
+
 	dbm := cloneMgr.NewPostgres(migrations.DBMountPath(), rollbackVersion, adminConfig, sourceMap)
 
 	err = dbm.Scan()

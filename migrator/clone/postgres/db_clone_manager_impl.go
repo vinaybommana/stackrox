@@ -199,6 +199,7 @@ func (d *dbCloneManagerImpl) checkForRocksToExternal(rocksVersion *migrations.Mi
 			return "", true, nil
 		}
 	}
+	return "", false, nil
 }
 
 // GetCloneToMigrate - finds a clone to migrate.
